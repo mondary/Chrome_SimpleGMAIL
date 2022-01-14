@@ -1,54 +1,64 @@
-/*
-PK SIMPLE GMAIL
-My 1st test on chrome extension ;)
-*/
+/***********************************************
+**
+**		PK SIMPLE GMAIL
+**		My 1st test on chrome extension ;)
+**
+************************************************/
 
 /* Gmail logo translucid = nologo */
 .gb_rc {
 	opacity: 0.0;
 }
-/* Gmail logo no right padding */
-.gb_Cd.gb_Uc.gb_Vc {
-	padding-right: 0px;
+
+
+/* hide left bar pictos */
+/* .navPeek .aeN:not(.bym).bhZ .Xa,  :not(.navPeek):not(.isDragging) .aeN.bhZ .Xa {
+  display: none;
+}*/
+
+
+/* hide search text */
+#gb form[role='search']:not(.focused) input[name='q']::placeholder {
+  opacity: 0;
 }
 
-
-/* Styling searchbar : centered, white background, grey border */
-#aso_search_form_anchor {
-    margin-left: auto;
-    margin-right: auto;
-	background-color: rgb(255, 255, 255);
-	border: 1px solid rgb(222, 222, 222);
+/* light button */
+#gb form[role='search']:not(.focused) button {
+  opacity: 0.5;
 }
 
-/* Searchbar opacity
-.gb_Le.gb_jf {  
-	opacity: 1;
-	align-content: center;
+/*Put below the 2nd menu ex: refresh / more just near Categories*/
+  .G-atb {
+	position: fixed;
+	left : 195px ;
+	width: 80% !important;
 }
- */
-
-
-/* 1st header marging REFRESH MORE*/
-.Bn {
-	margin-left: 200px;
-}
-
-/*.G-asx.T-I-J3.J-J5-Ji {
-	opacity: 0.1;
- }
-
-.D.E.G-atb {
- margin-left: 150px;
-}
-*/
 
 /* 2nd header marging CATEGORIES*/
 .aAA.J-KU-Jg.J-KU-Jg-K9 { 
-	margin-top: 20px; margin-bottom: 20px; max-width: 75%; margin-left: auto; margin-right: auto; border: none; }
+	max-width: 75%; margin-left: auto; margin-right: auto; border: none; }
+	
+/* Hide keyboard option */
+  #gbwa,
+  .FI, .zo, .aBS, .bvE, .bvD, .bvI, .readingPaneToggle {
+  opacity: 0;
+}
+
+/* Hide layout option */
+  .G-Ni:not(.readingPaneToggle) > div.apF,   
+  .G-Ni:not(.readingPaneToggle) > div.apG {
+  opacity: 0;
+}
+
 
 /* Mail content and list centered, background transparent, padding*/
 .ae4.nH.oy8Mbf table, table.Bs.nH.iY.bAt { margin-top: 0px;  margin-top: 0px; max-width: 75%; margin-left: auto; margin-right: auto; border: none; }
 .ae4.nH.oy8Mbf table tr 				 { background: transparent !important; border: none; }
 .ae4.nH.oy8Mbf table td 				 { background: transparent !important; padding: 6px;}
 .ae4.nH.oy8Mbf table tr.zA:hover		 { background: rgba(0, 255, 40, 0.1) !important; box-shadow: none; }
+
+/* hide blue color on selected mail */
+:not(.contrastTheme) .zA.aps .PE.PF::before, 
+:not(.contrastTheme) .zA.btb .PE.PF::before {
+  background-color: transparent;
+}
