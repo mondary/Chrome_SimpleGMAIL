@@ -1,0 +1,20 @@
+{
+  "manifest_version": 1,
+  "name": "SimpleGMAIL",
+  "version": "0.1",
+
+  "description": "Transforms Gmail UI to a minimal interface",
+
+  "author": "cmondary",
+  "content_scripts": [
+    {
+      "css": ["gmail.css"],
+      "matches": ["https://mail.google.com/*"]
+    }
+  ],
+
+  "homepage_url": "https://github.com/mondary/SimpleGMAIL",
+  "host_permissions": ["https://mail.google.com/*"],
+  "offline_enabled": true,
+  "short_name": "SimpleGMAIL"
+}
