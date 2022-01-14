@@ -52,10 +52,11 @@
 
 
 /* Mail content and list centered, background transparent, padding*/
-.ae4.nH.oy8Mbf table, table.Bs.nH.iY.bAt { margin-top: 0px;  margin-top: 0px; max-width: 75%; margin-left: auto; margin-right: auto; border: none; }
-.ae4.nH.oy8Mbf table tr 				 { background: transparent !important; border: none; }
-.ae4.nH.oy8Mbf table td 				 { background: transparent !important; padding: 6px;}
-.ae4.nH.oy8Mbf table tr.zA:hover		 { background: rgba(0, 255, 40, 0.1) !important; box-shadow: none; }
+.ae4.nH.oy8Mbf table, 
+table.Bs.nH.iY.bAt { margin-top: 0px;  margin-top: 0px; max-width: 75%; margin-left: auto; margin-right: auto; border: none; }
+.ae4.nH.oy8Mbf table tr { background: transparent !important; border: none; }
+.ae4.nH.oy8Mbf table td { background: transparent !important; padding: 6px;}
+.ae4.nH.oy8Mbf table tr.zA:hover { background: rgba(0, 255, 40, 0.1) !important; box-shadow: none; }
 
 /* hide blue color on selected mail */
 :not(.contrastTheme) .zA.aps .PE.PF::before, 
