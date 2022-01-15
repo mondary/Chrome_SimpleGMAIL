@@ -3,12 +3,16 @@
   "name": "SimpleGMAIL",
   "version": "0.1",
 
-  "description": "Transforms Gmail UI to a minimal interface",
-
+  "description": "Transforms Gmail to a minimal interface",
   "author": "cmondary",
+
+  "action": {
+    "default_icon": "img/SimpleGMAIL.png"
+  },
+
   "content_scripts": [
     {
-      "css": ["gmail.css"],
+      "css": ["etx/gmail.css"],
       "matches": ["https://mail.google.com/*"]
     }
   ],
