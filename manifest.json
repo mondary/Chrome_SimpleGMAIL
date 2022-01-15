@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "name": "SimpleGMAIL",
-  "version": "1",
+  "version": "1.0",
 
   "description": "Transforms Gmail to a minimal interface",
   "author": "cmondary",
