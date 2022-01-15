@@ -1,10 +1,9 @@
 {
-  "manifest_version": 1,
   "name": "SimpleGMAIL",
-  "version": "1.0",
-
   "description": "Transforms Gmail to a minimal interface",
   "author": "cmondary",
+  "version": "1.0",
+  "manifest_version": 3,
 
   "action": {
     "default_icon": "img/SimpleGMAIL.png"
@@ -12,7 +11,7 @@
 
   "content_scripts": [
     {
-      "css": ["etx/gmail.css"],
+      "css": ["ext/gmail.css"],
       "matches": ["https://mail.google.com/*"]
     }
   ],
