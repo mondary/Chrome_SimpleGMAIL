@@ -51,35 +51,44 @@ async function getEmails(pageToken = null) {
     }
 }
 
-function renderEmailList(emails, append = false) {
+function renderEmailList(emails) {
     const container = document.getElementById('email-items');
-    if (!append) {
-        container.innerHTML = '';
-    }
+    container.innerHTML = '';
 
     emails.forEach((email) => {
         const date = new Date(email.payload.headers.find(h => h.name === 'Date')?.value);
         const sender = email.payload.headers.find(h => h.name === 'From')?.value;
         const subject = email.payload.headers.find(h => h.name === 'Subject')?.value;
+        const isUnread = email.labelIds?.includes('UNREAD');
         
         const emailElement = document.createElement('div');
-        emailElement.className = 'email-item';
+        emailElement.className = `email-item ${isUnread ? 'unread' : ''}`;
+        
+        // Extraction du nom de l'expéditeur
+        const senderName = sender.split('<')[0].trim().replace(/"/g, '') || sender;
         
         emailElement.innerHTML = `
-            <input type="checkbox" class="email-checkbox">
-            <button class="email-star">★</button>
-            <div class="email-sender">${sender}</div>
-            <div class="email-content">
-                <span class="email-title">${subject}</span>
-                <span class="email-snippet"> - ${email.snippet}</span>
-                ${email.labelIds?.includes('IMPORTANT') ? '<span class="label">Simplify</span>' : ''}
+            <div class="flex items-center space-x-4 w-full">
+                <input type="checkbox" class="h-4 w-4 rounded border-gray-300">
+                <button class="text-gray-400 hover:text-yellow-400">★</button>
+                
+                <div class="email-sender">${senderName}</div>
+                
+                <div class="email-content">
+                    <div class="email-subject">${subject}</div>
+                    <div class="email-snippet text-gray-600">
+                        ${email.snippet}
+                    </div>
+                </div>
+                
+                <div class="email-time">${formatDate(date)}</div>
             </div>
-            <div class="email-time">${formatDate(date)}</div>
         `;
         
         container.appendChild(emailElement);
     });
 }
+
 
 function formatDate(date) {
     const now = new Date();
