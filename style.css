@@ -48,3 +48,28 @@ body {
 .label {
     @apply px-2 py-0.5 text-xs rounded text-white bg-blue-500 ml-2;
 }
+
+/* Ajoute à la fin de styles.css */
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+.loading::after {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ddd;
+    border-radius: 50%;
+    border-top-color: #666;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

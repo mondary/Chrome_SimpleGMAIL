@@ -7,6 +7,27 @@
         body { margin: 0; padding: 0; }
         .tab-active { color: #d23f31; border-bottom: 2px solid #d23f31; }
         .tab-inactive { color: #5f6368; }
+        .email-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            border-bottom: 1px solid #eee;
+        }
+        .email-item:hover {
+            background-color: #f9f9f9;
+        }
+        .email-sender {
+            width: 200px;
+            font-weight: 500;
+        }
+        .email-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .email-time {
+            color: #666;
+            font-size: 0.875rem;
+        }
     </style>
 </head>
 <body>
@@ -22,16 +43,7 @@
 
         <!-- Email List -->
         <div id="email-items">
-            <!-- Test email -->
-            <div class="flex items-center p-4 border-b hover:bg-gray-100">
-                <input type="checkbox" class="mr-4">
-                <span class="mr-4">★</span>
-                <div class="flex-1">
-                    <div class="font-medium">Test Email</div>
-                    <div class="text-gray-600">This is a test email content</div>
-                </div>
-                <div class="text-sm text-gray-500">10:30 AM</div>
-            </div>
+            <!-- Les emails seront injectés ici -->
         </div>
     </div>
 
