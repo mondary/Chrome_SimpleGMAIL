@@ -15,23 +15,23 @@ async function getEmails(pageToken = null) {
             });
         });
 
-        const response = await fetch(
-            'https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=100',
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
-
-        const data = await response.json();
-        
-        if (!data.messages) {
-            console.error('No messages found:', data);
-            return [];
+        // Construction de l'URL avec les paramètres
+        let url = 'https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=100';
+        if (pageToken) {
+            url += `&pageToken=${pageToken}`;
         }
 
-        const emails = await Promise.all(
+        const response = await fetch(url, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        const data = await response.json();
+        nextPageToken = data.nextPageToken; // Sauvegarde du token pour la page suivante
+
+        // Récupération des détails pour chaque email
+        const emailDetails = await Promise.all(
             data.messages.map(async (message) => {
                 const messageDetails = await fetch(
                     `https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}`,
@@ -45,30 +45,16 @@ async function getEmails(pageToken = null) {
             })
         );
 
-        console.log('Fetched emails:', emails); // Pour le debug
-        return emails;
-
+        return emailDetails;
     } catch (error) {
         console.error('Error fetching emails:', error);
-        return [];
     }
 }
 
-function formatDate(date) {
-    const now = new Date();
-    if (date.toDateString() === now.toDateString()) {
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-}
-
-function renderEmailList(emails) {
+function renderEmailList(emails, append = false) {
     const container = document.getElementById('email-items');
-    container.innerHTML = ''; // Vide le conteneur
-
-    if (!emails || emails.length === 0) {
-        container.innerHTML = '<div class="p-4 text-center text-gray-500">No emails found</div>';
-        return;
+    if (!append) {
+        container.innerHTML = '';
     }
 
     emails.forEach((email) => {
@@ -80,32 +66,28 @@ function renderEmailList(emails) {
         emailElement.className = 'email-item';
         
         emailElement.innerHTML = `
-            <input type="checkbox" class="mr-4">
-            <div class="email-sender">${sender || 'No sender'}</div>
-            <div class="email-content ml-4">
-                <span class="font-medium">${subject || 'No subject'}</span>
-                <span class="text-gray-600"> - ${email.snippet || 'No preview'}</span>
+            <input type="checkbox" class="email-checkbox">
+            <button class="email-star">★</button>
+            <div class="email-sender">${sender}</div>
+            <div class="email-content">
+                <span class="email-title">${subject}</span>
+                <span class="email-snippet"> - ${email.snippet}</span>
+                ${email.labelIds?.includes('IMPORTANT') ? '<span class="label">Simplify</span>' : ''}
             </div>
-            <div class="email-time ml-4">${formatDate(date)}</div>
+            <div class="email-time">${formatDate(date)}</div>
         `;
         
         container.appendChild(emailElement);
     });
 }
 
-// Initialisation
-document.addEventListener('DOMContentLoaded', async () => {
-    console.log('Loading emails...'); // Pour le debug
-    const emails = await getEmails();
-    console.log('Emails loaded, rendering...'); // Pour le debug
-    renderEmailList(emails);
-});
-
-// Pour déboguer
-window.onerror = function(msg, url, lineNo, columnNo, error) {
-    console.error('Error: ', msg, '\nURL: ', url, '\nLine:', lineNo, '\nColumn:', columnNo, '\nError object:', error);
-    return false;
-};
+function formatDate(date) {
+    const now = new Date();
+    if (date.toDateString() === now.toDateString()) {
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
 
 // Fonction pour charger plus d'emails
 async function loadMoreEmails() {
@@ -143,4 +125,10 @@ document.querySelectorAll('.tab-inactive, .tab-active').forEach(tab => {
         });
         e.target.className = 'tab-active py-4 text-sm font-medium';
     });
+});
+
+// Ajoute ceci à la fin de ton addEventListener('DOMContentLoaded', ...)
+document.querySelector('.fab').addEventListener('click', () => {
+    // Ici tu peux ajouter la logique pour créer un nouveau mail
+    console.log('Compose new email');
 });

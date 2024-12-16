@@ -5,7 +5,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
         body { margin: 0; padding: 0; }
-        .tab-active { color: #d23f31; border-bottom: 2px solid #d23f31; }
+        .tab-active { color: #3054f3; border-bottom: 2px solid #3631d2; }
         .tab-inactive { color: #5f6368; }
         .email-item {
             display: flex;
@@ -23,29 +23,94 @@
         .email-content {
             flex: 1;
             min-width: 0;
+            padding: 0px 16px
         }
         .email-time {
             color: #666;
             font-size: 0.875rem;
         }
+        .fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 16px 24px;
+            background-color: #fff;
+            color: #685f5f;
+            border-radius: 24px;
+            box-shadow: 0 1px 3px 0 rgba(60,64,67,0.302), 0 4px 8px 3px rgba(60,64,67,0.149);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .fab:hover {
+            box-shadow: 0 1px 3px 0 rgba(60,64,67,0.402), 0 4px 8px 3px rgba(60,64,67,0.249);
+        }
+        .search-box {
+            background-color: #f1f3f4;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 720px;
+            transition: all 0.2s;
+        }
+        .search-box:focus {
+            background-color: #fff;
+            box-shadow: 0 1px 1px 0 rgba(65,69,73,0.3), 0 1px 3px 1px rgba(65,69,73,0.15);
+        }
     </style>
 </head>
 <body>
-    <div class="w-full max-w-5xl mx-auto p-4">
-        <!-- Navigation Tabs -->
-        <div class="flex space-x-12 border-b">
-            <a href="#" class="tab-active py-4 text-sm font-medium">PRIMARY</a>
-            <a href="#" class="tab-inactive py-4 text-sm font-medium">SOCIAL</a>
-            <a href="#" class="tab-inactive py-4 text-sm font-medium">PROMOTIONS</a>
-            <a href="#" class="tab-inactive py-4 text-sm font-medium">UPDATES</a>
-            <a href="#" class="tab-inactive py-4 text-sm font-medium">FORUMS</a>
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 h-16 bg-white border-b flex items-center px-4 z-50">
+        <button class="p-2 hover:bg-gray-100 rounded-full">
+            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+        </button>
+        <div class="ml-4 flex-1 max-w-2xl">
+            <input type="text" 
+                   placeholder="Search in mail" 
+                   class="search-box px-4 py-3 focus:outline-none">
         </div>
+        <div class="ml-4">
+            <button class="p-2 hover:bg-gray-100 rounded-full">
+                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+            </button>
+        </div>
+    </header>
 
-        <!-- Email List -->
-        <div id="email-items">
-            <!-- Les emails seront injectés ici -->
+    <!-- Main Content -->
+    <div class="pt-16">
+        <div class="w-full max-w-5xl mx-auto p-4">
+            <!-- Navigation Tabs -->
+            <div class="flex space-x-12 border-b">
+                <a href="#" class="tab-active py-4 text-sm font-medium">PRIMARY</a>
+                <a href="#" class="tab-inactive py-4 text-sm font-medium">SOCIAL</a>
+                <a href="#" class="tab-inactive py-4 text-sm font-medium">PROMOTIONS</a>
+                <a href="#" class="tab-inactive py-4 text-sm font-medium">UPDATES</a>
+                <a href="#" class="tab-inactive py-4 text-sm font-medium">FORUMS</a>
+            </div>
+
+            <!-- Email List -->
+            <div id="email-items">
+                <!-- Les emails seront injectés ici -->
+            </div>
         </div>
     </div>
+
+    <!-- Floating Action Button -->
+    <button class="fab">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Compose
+    </button>
 
     <script src="app.js"></script>
 </body>
