@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Modern Gmail Client",
+  "version": "1.0",
+  "description": "A modern Gmail client extension",
+  "permissions": [
+    "identity",
+    "gmail.readonly",
+    "storage"
+  ],
+  "action": {
+    "default_icon": "icon.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "oauth2": {
+    "client_id": "972215801802-64qe05idesl9r129rassjqens6gdlquq.apps.googleusercontent.com",
+    "scopes": ["https://www.googleapis.com/auth/gmail.readonly"]
+  },
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  }
+}

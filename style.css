@@ -1,0 +1,50 @@
+/* styles.css */
+body {
+    margin: 0;
+    padding: 0;
+    color: #202124;
+}
+
+.tab-active {
+    @apply py-4 text-sm font-medium border-b-2 border-red-500 text-red-500;
+}
+
+.tab-inactive {
+    @apply py-4 text-sm font-medium text-gray-500 hover:text-gray-700;
+}
+
+.email-item {
+    @apply flex items-start px-4 py-2 hover:bg-gray-100 border-b cursor-pointer;
+}
+
+.email-checkbox {
+    @apply mt-2 mr-4;
+}
+
+.email-star {
+    @apply mt-2 mr-4 text-gray-400 hover:text-yellow-400;
+}
+
+.email-sender {
+    @apply w-48 truncate font-medium;
+}
+
+.email-content {
+    @apply flex-1 min-w-0;
+}
+
+.email-title {
+    @apply font-medium truncate;
+}
+
+.email-snippet {
+    @apply text-gray-600 truncate;
+}
+
+.email-time {
+    @apply ml-4 text-sm text-gray-500 whitespace-nowrap;
+}
+
+.label {
+    @apply px-2 py-0.5 text-xs rounded text-white bg-blue-500 ml-2;
+}
