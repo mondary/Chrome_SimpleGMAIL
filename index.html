@@ -8,6 +8,13 @@
             margin: 0; 
             padding: 0; 
         }
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            align-items: center;
+        }
         .tab-active { 
             color: #d23f31; 
             border-bottom: 2px solid #d23f31; 
@@ -43,40 +50,23 @@
             min-width: 0;
             display: flex;
             align-items: baseline;
+            gap: 8px;
         }
         
         .email-subject {
-            color: #202124;
             font-weight: 600;
-            margin-right: 8px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            color: #000;
         }
         
         .email-snippet {
             color: #5f6368;
-            font-weight: normal;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-        }
-        
-        .email-time {
-            color: #5f6368;
-            font-size: 0.75rem;
-            white-space: nowrap;
-            margin-left: 16px;
-        }
-
-        .unread .email-sender,
-        .unread .email-subject {
-            font-weight: 700;
-            color: #202124;
-        }
-
-        .unread .email-snippet {
-            color: #202124;
+            font-weight: normal;
         }
 
         .fab {
@@ -96,55 +86,49 @@
             align-items: center;
             gap: 8px;
         }
-        .fab:hover {
-            box-shadow: 0 1px 3px 0 rgba(60,64,67,0.402), 0 4px 8px 3px rgba(60,64,67,0.249);
-        }
-        .search-box {
-            background-color: #f1f3f4;
-            border-radius: 8px;
-            width: 100%;
-            max-width: 720px;
-            transition: all 0.2s;
-        }
-        .search-box:focus {
-            background-color: #fff;
-            box-shadow: 0 1px 1px 0 rgba(65,69,73,0.3), 0 1px 3px 1px rgba(65,69,73,0.15);
-        }
     </style>
 </head>
-<body>
+<body class="bg-gray-50">
     <!-- Header -->
-    <header class="fixed top-0 left-0 right-0 h-16 bg-white border-b flex items-center px-4 z-50">
-        <button class="p-2 hover:bg-gray-100 rounded-full">
-            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-            </svg>
-        </button>
-        <div class="ml-4 flex-1 max-w-2xl">
-            <input type="text" 
-                   placeholder="Search in mail" 
-                   class="search-box px-4 py-3 focus:outline-none">
+    <header class="fixed top-0 left-0 right-0 h-16 bg-white border-b z-50">
+        <div class="header-container px-4 h-full">
+            <button class="p-2 hover:bg-gray-100 rounded-full">
+                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+            <div class="flex-1 flex justify-center max-w-4xl mx-auto px-4">
+                <input type="text" 
+                       placeholder="Search in mail" 
+                       class="w-full px-4 py-2 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white">
+            </div>
+            <button class="p-2 hover:bg-gray-100 rounded-full">
+                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+                </svg>
+            </button>
         </div>
     </header>
 
     <!-- Main Content -->
-    <div class="pt-16">
-        <div class="w-full max-w-5xl mx-auto p-4">
+    <main class="pt-16">
+        <div class="max-w-5xl mx-auto">
             <!-- Navigation Tabs -->
-            <div class="flex space-x-12 border-b">
-                <a href="#" class="tab-active py-4 text-sm font-medium">PRIMARY</a>
-                <a href="#" class="tab-inactive py-4 text-sm font-medium">SOCIAL</a>
-                <a href="#" class="tab-inactive py-4 text-sm font-medium">PROMOTIONS</a>
-                <a href="#" class="tab-inactive py-4 text-sm font-medium">UPDATES</a>
-                <a href="#" class="tab-inactive py-4 text-sm font-medium">FORUMS</a>
+            <div class="flex border-b px-4">
+                <a href="#" class="tab-active py-4 px-6">PRIMARY</a>
+                <a href="#" class="tab-inactive py-4 px-6">SOCIAL</a>
+                <a href="#" class="tab-inactive py-4 px-6">PROMOTIONS</a>
+                <a href="#" class="tab-inactive py-4 px-6">UPDATES</a>
+                <a href="#" class="tab-inactive py-4 px-6">FORUMS</a>
             </div>
 
             <!-- Email List -->
-            <div id="email-items">
+            <div id="email-items" class="bg-white">
                 <!-- Les emails seront injectés ici -->
             </div>
         </div>
-    </div>
+    </main>
 
     <!-- Floating Action Button -->
     <button class="fab">
