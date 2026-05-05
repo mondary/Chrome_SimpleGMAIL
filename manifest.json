@@ -6,12 +6,12 @@
   "manifest_version": 3,
 
   "action": {
-    "default_icon": "img/SimpleGMAIL.png"
+    "default_icon": "src/img/SimpleGMAIL.png"
   },
 
   "content_scripts": [
     {
-      "css": ["ext/gmail.css"],
+      "css": ["src/ext/gmail.css"],
       "matches": ["https://mail.google.com/*"]
     }
   ],
