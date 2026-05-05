@@ -2,6 +2,7 @@ inspi/
 .vscode/
 release/
 store/
+.claude/
 .agent
 /AGENT.md
 /AGENTS.md
