@@ -114,6 +114,17 @@
   .search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--faint); }
   .list-meta { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; font-size: 12px; color: var(--muted); }
   .list-meta .title { font-weight: 600; color: var(--text); }
+  .list-actions { display: flex; align-items: center; gap: 8px; }
+  .refresh-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 8px; border-radius: 7px;
+    color: var(--muted); font-size: 12px;
+    border: 1px solid var(--border); background: var(--surface-2);
+    transition: color .12s, border-color .12s, background .12s;
+  }
+  .refresh-btn:hover { color: var(--text); border-color: var(--faint); }
+  .refresh-btn[disabled] { opacity: .55; cursor: wait; }
+  .refresh-btn.loading .refresh-icon { animation: spin .7s linear infinite; }
   .list-scroll { flex: 1; overflow-y: auto; }
   .msg {
     display: grid; grid-template-columns: 36px 1fr auto; gap: 12px;
@@ -255,7 +266,13 @@
     </div>
     <div class="list-meta">
       <span class="title" id="list-title">Boîte de réception</span>
-      <span id="list-count"></span>
+      <div class="list-actions">
+        <span id="list-count"></span>
+        <button class="refresh-btn" id="refresh-btn" type="button" onclick="refreshMailbox()" title="Rafraîchir la boîte mail">
+          <span class="refresh-icon">↻</span>
+          <span>Rafraîchir</span>
+        </button>
+      </div>
     </div>
     <div class="list-scroll scrollbar" id="list-scroll"></div>
   </section>
@@ -359,6 +376,25 @@ async function loadMessages() {
   } catch (e) { S.messages = []; toast('Liste : ' + e.message, true); }
   document.getElementById('list-count').textContent = S.messages.length ? `${S.messages.length} messages` : '';
   renderList();
+}
+
+async function refreshMailbox() {
+  const btn = document.getElementById('refresh-btn');
+  if (btn?.disabled) return;
+  if (btn) {
+    btn.disabled = true;
+    btn.classList.add('loading');
+  }
+  try {
+    await loadFolders(S.currentAccount);
+    await loadMessages();
+    toast('Boîte mail rafraîchie.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+    }
+  }
 }
 
 function renderList() {
@@ -602,9 +638,15 @@ async function sendCompose(isReply) {
   if (!payload.to) return toast('Indiquez un destinataire.', true);
   const btn = event?.target; if (btn) { btn.disabled = true; btn.textContent = 'Envoi…'; }
   try {
-    await api('/api/send', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const sent = await api('/api/send', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
     document.querySelector('.modal-bg')?.remove();
-    toast('Message envoyé.');
+    const refused = sent.refused ? Object.keys(sent.refused) : [];
+    await loadFolders(payload.account);
+    if (sent.sent_folder && payload.account === S.currentAccount && sent.sent_folder === S.currentFolder) {
+      await loadMessages();
+    }
+    const sentStatus = sent.sent_folder ? ` Copié dans ${displayFolder(sent.sent_folder)}.` : ' Non copié dans Envoyés.';
+    toast(refused.length ? `SMTP accepté avec refus : ${refused.join(', ')}.` : `SMTP accepté.${sentStatus}`);
   } catch (e) {
     toast('Envoi échoué : ' + e.message, true);
     if (btn) { btn.disabled = false; btn.textContent = 'Envoyer'; }
@@ -709,13 +751,20 @@ async function silentRefresh() {
 
 /* ============ Helpers ============ */
 function favicon(addr) {
-  const d = domainOf(addr);
-  if (!d) return `<span class="initial">${(shortName(addr)[0]||'?').toUpperCase()}</span>`;
-  return `<img src="https://icons.duckduckgo.com/ip3/${encodeURIComponent(d)}.ico" onerror="this.parentNode.innerHTML='<span class=&quot;initial&quot;>${(escapeHtml(shortName(addr))[0]||'?').toUpperCase()}</span>'" referrerpolicy="no-referrer">`;
+  return `<span class="initial">${escapeHtml((shortName(addr)[0] || '?').toUpperCase())}</span>`;
 }
-function domainOf(addr) { try { return (addr.split('@')[1]||'').toLowerCase(); } catch { return ''; } }
-function shortName(name) { return name.includes('<') ? name.replace(/[<>]/g,'').split(' ')[0] : name; }
-function stripAngle(s) { return (s||'').replace(/[<>]/g,''); }
+function textValue(value) {
+  if (value == null) return '';
+  if (Array.isArray(value)) return value.map(textValue).filter(Boolean).join(', ');
+  if (typeof value === 'object') return Object.values(value).map(textValue).filter(Boolean).join(', ');
+  return String(value);
+}
+function domainOf(addr) { try { return (textValue(addr).split('@')[1]||'').toLowerCase(); } catch { return ''; } }
+function shortName(name) {
+  const s = textValue(name);
+  return s.includes('<') ? s.replace(/[<>]/g,'').split(' ')[0] : s;
+}
+function stripAngle(s) { return textValue(s).replace(/[<>]/g,''); }
 function displayFolder(name) {
   const map = { inbox:'Boîte de réception', sent:'Envoyés', drafts:'Brouillons', trash:'Corbeille', junk:'Indésirables', spam:'Spam', archive:'Archives' };
   const leaf = name.split(/[\/.]/).pop();

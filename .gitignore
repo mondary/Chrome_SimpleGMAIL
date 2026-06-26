@@ -18,6 +18,7 @@ node_modules/
 dist/
 build/
 .env
+secrets/
 .venv/
 __pycache__/
 *.log

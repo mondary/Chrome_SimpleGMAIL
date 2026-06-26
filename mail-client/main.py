@@ -16,7 +16,7 @@ imaplib.Debug = 0
 import base64
 import re
 
-from imap_tools import MailBox, AND, MailMessageFlags
+from imap_tools import MailBox, MailBoxStartTls, MailBoxUnencrypted, AND, MailMessageFlags
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse, Response, StreamingResponse
 from pydantic import BaseModel
@@ -81,7 +81,7 @@ def broadcast(event: dict):
 
 def _safe_load_config():
     try:
-        return load_config()
+        return load_config(configured_only=True)
     except Exception:
         return {"accounts": []}
 
@@ -142,7 +142,10 @@ async def lifespan(app):
     if _is_demo():
         print("[DEMO] Mode démo actif — identifiants non configurés. Données fictives.")
     else:
-        for acc in _safe_load_config().get("accounts", []):
+        accounts = _safe_load_config().get("accounts", [])
+        if not accounts:
+            print("[CONFIG] Aucun compte mail actif. Définissez MONDARY_MAIL_PASSWORD ou POUARK_MAIL_PASSWORD.")
+        for acc in accounts:
             threading.Thread(
                 target=idle_worker, args=(acc,), daemon=True, name=f"idle-{acc['id']}"
             ).start()
@@ -178,18 +181,31 @@ async def events():
     )
 
 
-def load_config():
+def load_config(configured_only: bool = False):
     if not CONFIG_PATH.exists():
         raise HTTPException(
             status_code=500,
             detail="config.json introuvable. Copiez config.example.json -> config.json et renseignez vos comptes.",
         )
     data = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+    data = _expand_env_values(data)
+    if configured_only:
+        data["accounts"] = [a for a in data.get("accounts", []) if _account_is_configured(a)]
     return data
 
 
+def _expand_env_values(value):
+    if isinstance(value, dict):
+        return {k: _expand_env_values(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_expand_env_values(v) for v in value]
+    if isinstance(value, str):
+        return re.sub(r"\$\{([^}]+)\}", lambda m: os.environ.get(m.group(1), ""), value)
+    return value
+
+
 def get_account(account_id: str):
-    cfg = load_config()
+    cfg = load_config(configured_only=True)
     for a in cfg.get("accounts", []):
         if a["id"] == account_id:
             return a
@@ -202,11 +218,18 @@ def open_mailbox(account):
     host, port = imap["host"], imap.get("port", 993)
     ssl = imap.get("ssl", True)
     starttls = imap.get("starttls", False)
-    box = MailBox(host, port)
+    if not imap.get("password"):
+        raise HTTPException(status_code=500, detail=f"Mot de passe IMAP manquant pour {imap['user']}")
     if starttls:
-        conn = box.login(imap["user"], imap["password"], starttls=True)
+        box = MailBoxStartTls(host, port)
+    elif ssl:
+        box = MailBox(host, port)
     else:
-        conn = box.login(imap["user"], imap["password"], ssl=ssl)
+        box = MailBoxUnencrypted(host, port)
+    try:
+        conn = box.login(imap["user"], imap["password"])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Connexion IMAP impossible pour {imap['user']} sur {host}:{port} ({e})")
     try:
         yield conn
     finally:
@@ -229,9 +252,18 @@ def send_via_smtp(account, msg: EmailMessage):
             s.starttls()
     try:
         s.login(smtp["user"], smtp["password"])
-        s.send_message(msg)
+        return s.send_message(msg)
     finally:
         s.quit()
+
+
+def header_value(headers, name: str, default: str = "") -> str:
+    value = headers.get(name, default)
+    if value is None:
+        return default
+    if isinstance(value, (list, tuple)):
+        return ", ".join(str(v) for v in value if v is not None)
+    return str(value)
 
 
 # ---------- Models ----------
@@ -254,13 +286,31 @@ class FlagUpdate(BaseModel):
 
 
 # ---------- Demo mode ----------
+def _demo_enabled():
+    return os.environ.get("MAIL_CLIENT_DEMO", "").lower() in {"1", "true", "yes", "on"}
+
+
 def _is_demo():
-    cfg = _safe_load_config()
-    for a in cfg.get("accounts", []):
-        pw = a.get("imap", {}).get("password", "")
-        if "MOT_DE_PASSE" in pw or pw == "":
-            return True
-    return False
+    return _demo_enabled()
+
+
+def active_config():
+    cfg = load_config(configured_only=True)
+    if not cfg.get("accounts"):
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "Aucun compte mail réel actif. Lancez avec MONDARY_MAIL_PASSWORD "
+                "et/ou POUARK_MAIL_PASSWORD, ou activez MAIL_CLIENT_DEMO=1 pour la démo."
+            ),
+        )
+    return cfg
+
+
+def _account_is_configured(account: dict):
+    imap_pw = account.get("imap", {}).get("password", "")
+    smtp_pw = account.get("smtp", {}).get("password", "")
+    return bool(imap_pw and smtp_pw and "MOT_DE_PASSE" not in imap_pw and "MOT_DE_PASSE" not in smtp_pw)
 
 
 DEMO_ACCOUNTS = [
@@ -341,7 +391,7 @@ def index():
 def accounts():
     if _is_demo():
         return DEMO_ACCOUNTS
-    cfg = load_config()
+    cfg = active_config()
     out = []
     for a in cfg.get("accounts", []):
         out.append({
@@ -441,7 +491,7 @@ def list_messages(
                 "flagged": "\\Flagged" in [str(f) for f in msg.flags],
                 "has_attachments": len(msg.attachments) > 0,
                 "snippet": snippet,
-                "message_id": msg.headers.get("message-id", ""),
+                "message_id": header_value(msg.headers, "message-id"),
             })
         return {"messages": msgs, "page": page}
 
@@ -480,14 +530,14 @@ def get_message(account: str, uid: str, folder: str = Query("INBOX")):
             "subject": msg.subject or "(sans objet)",
             "from_name": from_name or from_addr,
             "from_addr": from_addr,
-            "to": msg.headers.get("to", ""),
-            "cc": msg.headers.get("cc", ""),
+            "to": header_value(msg.headers, "to"),
+            "cc": header_value(msg.headers, "cc"),
             "date": msg.date.isoformat() if msg.date else None,
             "seen": "\\Seen" in [str(f) for f in msg.flags],
             "flagged": "\\Flagged" in [str(f) for f in msg.flags],
             "text": msg.text or "",
             "html": msg.html or "",
-            "message_id": msg.headers.get("message-id", ""),
+            "message_id": header_value(msg.headers, "message-id"),
             "attachments": attachments,
         }
         cache_set(ck, result)
@@ -597,17 +647,27 @@ def send_message(body: SendRequest):
                 filename=att.get("filename", "fichier"),
             )
 
-    send_via_smtp(acc, msg)
-    # Stocker dans Sent si possible
+    refused = send_via_smtp(acc, msg)
+    sent_folder = None
+    sent_error = None
+    # Stocker dans le dossier Envoyés si possible.
     try:
         with open_mailbox(acc) as mailbox:
             for sent_name in ("Sent", "INBOX.Sent", "Sent Items", "Boîte d'envoi"):
                 if mailbox.folder.exists(sent_name):
-                    mailbox.append(sent_name, str(msg), flag_set=[MailMessageFlags.SEEN])
+                    mailbox.append(msg.as_bytes(), folder=sent_name, flag_set=[MailMessageFlags.SEEN])
+                    sent_folder = sent_name
                     break
-    except Exception:
-        pass
-    return {"ok": True}
+    except Exception as e:
+        sent_error = str(e)
+    return {
+        "ok": True,
+        "message_id": msg["Message-ID"],
+        "refused": refused,
+        "sent_folder": sent_folder,
+        "sent_stored": sent_folder is not None,
+        "sent_error": sent_error,
+    }
 
 
 # ---------- Helpers ----------
