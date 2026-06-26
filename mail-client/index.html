@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sombre Mail</title>
+<style>
+  :root {
+    --bg: #f6f6f5;
+    --surface: #ffffff;
+    --surface-2: #fbfbfa;
+    --text: #1a1a1a;
+    --muted: #86827b;
+    --faint: #b6b2aa;
+    --border: #ebe9e4;
+    --accent: #1a1a1a;
+    --accent-contrast: #ffffff;
+    --unread: #1a1a1a;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e0e0d;
+      --surface: #181817;
+      --surface-2: #1f1f1e;
+      --text: #ececea;
+      --muted: #8a8780;
+      --faint: #55534d;
+      --border: #2a2926;
+      --accent: #ececea;
+      --accent-contrast: #0e0e0d;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.3);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  input, textarea { font-family: inherit; }
+  ::selection { background: var(--text); color: var(--bg); }
+
+  /* ---------- Layout ---------- */
+  .app { display: grid; grid-template-columns: 248px 380px 1fr; height: 100vh; }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar {
+    background: var(--surface-2);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .brand {
+    padding: 18px 20px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .brand .logo { font-weight: 600; letter-spacing: -.01em; font-size: 15px; }
+  .brand .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); display: inline-block; margin-right: 8px; vertical-align: middle; opacity: .3; transition: opacity .3s; }
+  .brand .dot.live { opacity: 1; animation: pulse 2.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.75); } }
+  .compose-btn {
+    margin: 4px 16px 12px;
+    padding: 10px 14px;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    text-align: left;
+    display: flex; align-items: center; gap: 8px;
+    transition: opacity .15s;
+  }
+  .compose-btn:hover { opacity: .85; }
+  .accounts { flex: 1; overflow-y: auto; padding: 4px 10px 20px; }
+  .account { margin-bottom: 14px; }
+  .account-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px; font-size: 12px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .04em; font-weight: 600;
+  }
+  .account-head .pill { font-size: 10px; background: var(--border); padding: 1px 6px; border-radius: 20px; text-transform: none; letter-spacing: 0; }
+  .folder {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px; border-radius: 7px; cursor: pointer;
+    font-size: 13.5px; color: var(--text);
+    transition: background .12s;
+  }
+  .folder:hover { background: var(--surface); }
+  .folder.active { background: var(--accent); color: var(--accent-contrast); }
+  .folder.active .count { background: rgba(255,255,255,.18); color: var(--accent-contrast); }
+  .folder .name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .folder .count { font-size: 11px; background: var(--border); color: var(--muted); padding: 1px 7px; border-radius: 20px; font-variant-numeric: tabular-nums; }
+  .folder .count.zero { display: none; }
+
+  /* ---------- List ---------- */
+  .list { border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--surface); overflow: hidden; }
+  .list-head { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
+  .search { position: relative; }
+  .search input {
+    width: 100%; padding: 9px 12px 9px 34px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-size: 13px; outline: none;
+    transition: border-color .15s;
+  }
+  .search input:focus { border-color: var(--accent); }
+  .search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--faint); }
+  .list-meta { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; font-size: 12px; color: var(--muted); }
+  .list-meta .title { font-weight: 600; color: var(--text); }
+  .list-scroll { flex: 1; overflow-y: auto; }
+  .msg {
+    display: grid; grid-template-columns: 36px 1fr auto; gap: 12px;
+    padding: 13px 16px; cursor: pointer; border-bottom: 1px solid var(--border);
+    align-items: start; transition: background .1s;
+  }
+  .msg:hover { background: var(--surface-2); }
+  .msg.active { background: var(--surface-2); box-shadow: inset 3px 0 0 var(--accent); }
+  .msg.unread .subject, .msg.unread .from { color: var(--text); font-weight: 600; }
+  .msg .subject, .msg .from { color: var(--muted); }
+  .fav { width: 36px; height: 36px; border-radius: 8px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--border); }
+  .fav img { width: 20px; height: 20px; }
+  .fav .initial { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .msg-body { min-width: 0; }
+  .msg-top { display: flex; align-items: baseline; gap: 8px; }
+  .from { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; max-width: 60%; }
+  .subject { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .snippet { font-size: 12px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+  .msg-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+  .date { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .msg.unread .date { color: var(--text); font-weight: 600; }
+  .flags { display: flex; gap: 4px; align-items: center; }
+  .flag-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  .att-icon { color: var(--faint); }
+  .empty { padding: 40px 20px; text-align: center; color: var(--muted); font-size: 13px; }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- Reader (panneau de droite / placeholder) ---------- */
+  .reader-pane {
+    background: var(--surface-2); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; color: var(--muted); text-align: center; padding: 40px;
+  }
+  .reader-pane .glyph { font-size: 40px; opacity: .3; margin-bottom: 16px; }
+
+  /* ---------- Reader (diaporama plein écran) ---------- */
+  .reader {
+    position: fixed; inset: 0; z-index: 50;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    animation: fade .2s ease;
+  }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  .reader-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 20px; border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+  .reader-bar .crumb { font-size: 12px; color: var(--muted); margin-right: auto; display: flex; align-items: center; gap: 8px; }
+  .reader-bar .crumb b { color: var(--text); font-weight: 600; }
+  .icon-btn {
+    width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    color: var(--muted); transition: background .12s, color .12s;
+  }
+  .icon-btn:hover { background: var(--surface-2); color: var(--text); }
+  .icon-btn.on { color: var(--text); }
+  .counter { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; padding: 0 6px; }
+  .reader-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
+  .reader-card { width: 100%; max-width: 720px; padding: 32px 40px 80px; }
+  .reader-head { padding-bottom: 24px; border-bottom: 1px solid var(--border); margin-bottom: 28px; }
+  .reader-subject { font-size: 24px; font-weight: 600; letter-spacing: -.015em; line-height: 1.3; margin-bottom: 18px; }
+  .reader-from { display: flex; align-items: center; gap: 12px; }
+  .reader-from .fav { width: 44px; height: 44px; }
+  .reader-from .fav img { width: 24px; height: 24px; }
+  .reader-from .meta { min-width: 0; }
+  .reader-from .name { font-weight: 600; font-size: 14px; }
+  .reader-from .addr { font-size: 12px; color: var(--muted); }
+  .reader-from .when { margin-left: auto; font-size: 12px; color: var(--muted); white-space: nowrap; text-align: right; }
+  .reader-from .when .to { display: block; font-size: 11px; color: var(--faint); margin-top: 2px; }
+  .reader-body { font-size: 15px; line-height: 1.7; color: var(--text); }
+  .reader-body iframe { width: 100%; min-height: 50vh; border: none; background: #fff; border-radius: 6px; }
+  .reader-text { white-space: pre-wrap; word-break: break-word; }
+  .attachments { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .attachments h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 12px; font-weight: 600; }
+  .att-list { display: flex; flex-wrap: wrap; gap: 10px; }
+  .att-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px; font-size: 13px;
+    text-decoration: none; color: var(--text); transition: border-color .12s;
+  }
+  .att-item:hover { border-color: var(--accent); }
+  .att-item .ext { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; background: var(--surface-2); padding: 3px 6px; border-radius: 4px; }
+  .att-item .size { font-size: 11px; color: var(--faint); }
+
+  /* ---------- Compose ---------- */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 60; display: flex; align-items: center; justify-content: center; animation: fade .15s ease; backdrop-filter: blur(2px); }
+  .compose {
+    width: 620px; max-width: 94vw; max-height: 88vh; background: var(--surface);
+    border-radius: 14px; box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .compose-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+  .compose-head h3 { font-size: 14px; font-weight: 600; }
+  .compose-body { padding: 16px 18px; overflow-y: auto; }
+  .compose-field { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .compose-field label { font-size: 12px; color: var(--muted); width: 56px; flex-shrink: 0; }
+  .compose-field input { flex: 1; border: none; background: none; outline: none; font-size: 14px; color: var(--text); padding: 4px 0; }
+  .compose select { border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; background: var(--surface-2); color: var(--text); font-size: 13px; }
+  .compose-editor { min-height: 220px; padding: 14px 0; outline: none; font-size: 14px; line-height: 1.6; }
+  .compose-editor:focus { outline: none; }
+  .compose-foot { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-top: 1px solid var(--border); }
+  .btn { padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; }
+  .btn-primary { background: var(--accent); color: var(--accent-contrast); }
+  .btn-primary:hover { opacity: .85; }
+  .btn-ghost { color: var(--muted); }
+  .btn-ghost:hover { color: var(--text); }
+  .format-bar { display: flex; gap: 4px; }
+  .format-bar button { padding: 5px 9px; border-radius: 6px; font-size: 12px; color: var(--muted); border: 1px solid transparent; }
+  .format-bar button:hover { border-color: var(--border); color: var(--text); }
+
+  /* ---------- Toast ---------- */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--accent); color: var(--accent-contrast); padding: 11px 18px; border-radius: 10px; font-size: 13px; z-index: 100; box-shadow: var(--shadow); animation: fade .2s ease; }
+  .toast.err { background: #c0392b; }
+
+  .kbd { font-family: var(--mono); font-size: 10px; padding: 1px 5px; border: 1px solid var(--border); border-radius: 4px; color: var(--faint); }
+  .hint { font-size: 11px; color: var(--faint); padding: 0 20px 16px; text-align: center; }
+  .scrollbar::-webkit-scrollbar { width: 9px; }
+  .scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 20px; border: 2px solid transparent; background-clip: padding-box; }
+  .scrollbar::-webkit-scrollbar-thumb:hover { background: var(--faint); background-clip: padding-box; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="sidebar scrollbar">
+    <div class="brand">
+      <div class="logo"><span class="dot" id="live-dot"></span>Sombre</div>
+    </div>
+    <button class="compose-btn" onclick="openCompose()">✎  Nouveau message</button>
+    <nav class="accounts scrollbar" id="accounts"></nav>
+  </aside>
+
+  <section class="list">
+    <div class="list-head">
+      <div class="search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="search" type="text" placeholder="Rechercher dans ce dossier…" oninput="onSearch(this.value)">
+      </div>
+    </div>
+    <div class="list-meta">
+      <span class="title" id="list-title">Boîte de réception</span>
+      <span id="list-count"></span>
+    </div>
+    <div class="list-scroll scrollbar" id="list-scroll"></div>
+  </section>
+
+  <section class="reader-pane" id="reader-pane">
+    <div class="glyph">✉</div>
+    <div style="font-size:15px; margin-bottom:6px; color:var(--text);">Aucun message sélectionné</div>
+    <div style="font-size:13px;">Sélectionnez un email pour la lecture plein écran.</div>
+    <div class="hint" style="margin-top:24px;">
+      Raccourcis : <span class="kbd">J</span> <span class="kbd">K</span> naviguer · <span class="kbd">↵</span> ouvrir · <span class="kbd">E</span> répondre · <span class="kbd">F</span> suivre · <span class="kbd">⌫</span> supprimer
+    </div>
+  </section>
+</div>
+
+<script>
+/* ============ State ============ */
+const S = {
+  accounts: [], folders: {},
+  currentAccount: null, currentFolder: 'INBOX',
+  messages: [], cursor: -1,
+  q: '', searchTimer: null,
+  open: false, openMsg: null,
+};
+
+/* ============ API ============ */
+async function api(path, opts = {}) {
+  const res = await fetch(path, opts);
+  if (!res.ok) {
+    let msg = res.statusText;
+    try { const j = await res.json(); msg = j.detail || msg; } catch {}
+    throw new Error(msg);
+  }
+  const ct = res.headers.get('content-type') || '';
+  return ct.includes('json') ? res.json() : res;
+}
+
+/* ============ Init ============ */
+async function init() {
+  try {
+    S.accounts = await api('/api/accounts');
+  } catch (e) { return toast('Configuration manquante : ' + e.message, true); }
+  if (!S.accounts.length) return toast('Aucun compte configuré.', true);
+  S.currentAccount = S.accounts[0].id;
+  await loadFolders(S.currentAccount);
+  await loadMessages();
+  bindKeys();
+  startRealtime();
+}
+
+async function loadFolders(accountId) {
+  let data;
+  try { data = await api(`/api/accounts/${accountId}/folders`); }
+  catch (e) { toast('Dossiers : ' + e.message, true); return; }
+  S.folders[accountId] = data;
+  renderSidebar();
+}
+
+/* ============ Sidebar ============ */
+function renderSidebar() {
+  const el = document.getElementById('accounts');
+  el.innerHTML = '';
+  for (const acc of S.accounts) {
+    const wrap = document.createElement('div');
+    wrap.className = 'account';
+    const head = document.createElement('div');
+    head.className = 'account-head';
+    head.innerHTML = `<span>${escapeHtml(acc.name)}</span><span class="pill">${escapeHtml(acc.email)}</span>`;
+    wrap.appendChild(head);
+    const folders = S.folders[acc.id] || [];
+    for (const f of folders) {
+      const isActive = acc.id === S.currentAccount && f.name === S.currentFolder;
+      const fe = document.createElement('div');
+      fe.className = 'folder' + (isActive ? ' active' : '');
+      fe.onclick = () => selectFolder(acc.id, f.name);
+      fe.innerHTML = `<span class="name">${iconFor(f.name)} ${escapeHtml(displayFolder(f.name))}</span>` +
+        `<span class="count ${f.unseen ? '' : 'zero'}">${f.unseen}</span>`;
+      wrap.appendChild(fe);
+    }
+    el.appendChild(wrap);
+  }
+}
+
+function selectFolder(accountId, folder) {
+  S.currentAccount = accountId;
+  S.currentFolder = folder;
+  S.cursor = -1;
+  document.getElementById('search').value = '';
+  S.q = '';
+  renderSidebar();
+  loadMessages();
+}
+
+/* ============ Messages list ============ */
+async function loadMessages() {
+  const scroll = document.getElementById('list-scroll');
+  scroll.innerHTML = '<div class="empty"><span class="spinner"></span></div>';
+  document.getElementById('list-title').textContent = displayFolder(S.currentFolder);
+  try {
+    const data = await api(`/api/messages?account=${encodeURIComponent(S.currentAccount)}&folder=${encodeURIComponent(S.currentFolder)}&q=${encodeURIComponent(S.q)}`);
+    S.messages = data.messages;
+  } catch (e) { S.messages = []; toast('Liste : ' + e.message, true); }
+  document.getElementById('list-count').textContent = S.messages.length ? `${S.messages.length} messages` : '';
+  renderList();
+}
+
+function renderList() {
+  const scroll = document.getElementById('list-scroll');
+  scroll.classList.add('scrollbar');
+  if (!S.messages.length) {
+    scroll.innerHTML = '<div class="empty">Aucun message.</div>';
+    return;
+  }
+  scroll.innerHTML = '';
+  S.messages.forEach((m, i) => {
+    const el = document.createElement('div');
+    el.className = 'msg' + (m.seen ? '' : ' unread') + (i === S.cursor ? ' active' : '');
+    el.onclick = () => openMessage(i);
+    const fav = favicon(m.from_addr);
+    el.innerHTML = `
+      <div class="fav">${fav}</div>
+      <div class="msg-body">
+        <div class="msg-top">
+          <span class="from">${escapeHtml(shortName(m.from_name))}</span>
+          <span class="subject">${escapeHtml(m.subject)}</span>
+        </div>
+        <div class="snippet">${escapeHtml(m.snippet || '')}</div>
+      </div>
+      <div class="msg-right">
+        <span class="date">${formatDate(m.date)}</span>
+        <div class="flags">
+          ${m.flagged ? '<span class="flag-dot"></span>' : ''}
+          ${m.has_attachments ? '<span class="att-icon">↥</span>' : ''}
+        </div>
+      </div>`;
+    scroll.appendChild(el);
+  });
+}
+
+/* ============ Reader (diaporama) ============ */
+async function openMessage(i) {
+  if (i < 0 || i >= S.messages.length) return;
+  S.cursor = i;
+  S.open = true;
+  const m = S.messages[i];
+  renderList();
+  showReaderLoading();
+  let full;
+  try {
+    full = await api(`/api/messages/${encodeURIComponent(m.account)}/${encodeURIComponent(m.uid)}?folder=${encodeURIComponent(S.currentFolder)}`);
+  } catch (e) { toast('Lecture : ' + e.message, true); return; }
+  S.openMsg = full;
+  // Marquer comme lu
+  if (!full.seen) {
+    api(`/api/messages/${encodeURIComponent(m.account)}/${encodeURIComponent(m.uid)}?folder=${encodeURIComponent(S.currentFolder)}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({seen:true}) });
+    m.seen = true; full.seen = true;
+    renderList();
+  }
+  renderReader(full);
+}
+
+function closeReader() {
+  S.open = false; S.openMsg = null;
+  document.getElementById('reader')?.remove();
+}
+
+function showReaderLoading() {
+  closeReader();
+  const r = document.createElement('div');
+  r.id = 'reader'; r.className = 'reader';
+  r.innerHTML = `<div class="reader-bar"><div class="crumb">Chargement…</div></div>
+    <div class="reader-content"><div style="padding:60px"><span class="spinner"></span></div></div>`;
+  document.body.appendChild(r);
+}
+
+function renderReader(m) {
+  document.getElementById('reader')?.remove();
+  const r = document.createElement('div');
+  r.id = 'reader'; r.className = 'reader';
+  const acc = S.accounts.find(a => a.id === m.account) || {};
+  r.innerHTML = `
+    <div class="reader-bar">
+      <div class="crumb">
+        <span class="fav" style="width:22px;height:22px;">${favicon(m.from_addr)}</span>
+        <b>${escapeHtml(acc.name || m.account)}</b> · ${escapeHtml(displayFolder(S.currentFolder))}
+      </div>
+      <button class="icon-btn on" title="Répondre (E)" onclick="doReply()">↩</button>
+      <button class="icon-btn ${m.flagged ? 'on' : ''}" title="Suivre (F)" onclick="toggleFlag()">★</button>
+      <button class="icon-btn" title="Lu/Non lu (R)" onclick="toggleSeen()">◉</button>
+      <button class="icon-btn" title="Supprimer (⌫)" onclick="doDelete()">🗑</button>
+      <span class="counter">${S.cursor + 1} / ${S.messages.length}</span>
+      <button class="icon-btn" title="Précédent (K)" onclick="move(-1)">‹</button>
+      <button class="icon-btn" title="Suivant (J)" onclick="move(1)">›</button>
+      <button class="icon-btn" title="Fermer (Esc)" onclick="closeReader()">✕</button>
+    </div>
+    <div class="reader-content scrollbar" onclick="if(event.target===this)closeReader()">
+      <div class="reader-card">
+        <div class="reader-head">
+          <div class="reader-subject">${escapeHtml(m.subject)}</div>
+          <div class="reader-from">
+            <div class="fav">${favicon(m.from_addr)}</div>
+            <div class="meta">
+              <div class="name">${escapeHtml(shortName(m.from_name))}</div>
+              <div class="addr">${escapeHtml(m.from_addr)}</div>
+            </div>
+            <div class="when">
+              ${formatDateFull(m.date)}
+              <span class="to">à ${escapeHtml(stripAngle(m.to))}</span>
+            </div>
+          </div>
+        </div>
+        <div class="reader-body" id="reader-body"></div>
+        ${m.attachments && m.attachments.length ? renderAttachments(m) : ''}
+      </div>
+    </div>`;
+  document.body.appendChild(r);
+  // corps du mail
+  const body = r.querySelector('#reader-body');
+  if (m.html) {
+    const html = rewriteHtml(m.html, m);
+    const frame = document.createElement('iframe');
+    frame.sandbox = 'allow-popups allow-popups-to-escape-sandbox';
+    frame.setAttribute('referrerPolicy', 'no-referrer');
+    frame.srcdoc = iframeDoc(html);
+    body.appendChild(frame);
+    frame.onload = () => { try { frame.style.height = frame.contentDocument.body.scrollHeight + 40 + 'px'; } catch {} };
+  } else {
+    const pre = document.createElement('div');
+    pre.className = 'reader-text';
+    pre.textContent = m.text || '(message vide)';
+    body.appendChild(pre);
+  }
+}
+
+function renderAttachments(m) {
+  const items = m.attachments.map(a => {
+    const ext = (a.filename.split('.').pop() || '?').slice(0,4).toUpperCase();
+    return `<a class="att-item" href="/api/messages/${encodeURIComponent(m.account)}/${encodeURIComponent(m.uid)}/attachment/${a.index}?folder=${encodeURIComponent(S.currentFolder)}" download="${escapeAttr(a.filename)}">
+      <span class="ext">${escapeHtml(ext)}</span>
+      <div><div>${escapeHtml(a.filename)}</div><div class="size">${humanSize(a.size)}</div></div>
+    </a>`;
+  }).join('');
+  return `<div class="attachments"><h4>${m.attachments.length} pièce(s) jointe(s)</h4><div class="att-list">${items}</div></div>`;
+}
+
+/* ============ Navigation / actions ============ */
+function move(dir) {
+  if (!S.open) return;
+  const n = S.cursor + dir;
+  if (n >= 0 && n < S.messages.length) openMessage(n);
+}
+
+async function toggleSeen() {
+  const m = S.openMsg; if (!m) return;
+  const next = !m.seen;
+  await api(`/api/messages/${encodeURIComponent(m.account)}/${encodeURIComponent(m.uid)}?folder=${encodeURIComponent(S.currentFolder)}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({seen: next}) });
+  m.seen = next; S.messages[S.cursor].seen = next;
+  renderReader(m); renderList();
+}
+
+async function toggleFlag() {
+  const m = S.openMsg; if (!m) return;
+  const next = !m.flagged;
+  await api(`/api/messages/${encodeURIComponent(m.account)}/${encodeURIComponent(m.uid)}?folder=${encodeURIComponent(S.currentFolder)}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({flagged: next}) });
+  m.flagged = next; S.messages[S.cursor].flagged = next;
+  renderReader(m); renderList();
+}
+
+async function doDelete() {
+  const m = S.openMsg; if (!m) return;
+  try {
+    await api(`/api/messages/${encodeURIComponent(m.account)}/${encodeURIComponent(m.uid)}?folder=${encodeURIComponent(S.currentFolder)}`, { method:'DELETE' });
+    toast('Message supprimé.');
+    S.messages.splice(S.cursor, 1);
+    closeReader(); renderList();
+    if (S.cursor < S.messages.length) openMessage(S.cursor);
+  } catch (e) { toast('Suppression : ' + e.message, true); }
+}
+
+/* ============ Compose ============ */
+let EDITOR_INIT = '';
+function openCompose(replyTo = null) {
+  document.querySelector('.modal-bg')?.remove();
+  const acc = S.accounts.find(a => a.id === (replyTo ? replyTo.account : S.currentAccount)) || S.accounts[0];
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  bg.onclick = (e) => { if (e.target === bg) bg.remove(); };
+  bg.innerHTML = `
+    <div class="compose">
+      <div class="compose-head">
+        <h3>${replyTo ? 'Répondre' : 'Nouveau message'}</h3>
+        <button class="icon-btn" onclick="this.closest('.modal-bg').remove()">✕</button>
+      </div>
+      <div class="compose-body">
+        <div class="compose-field">
+          <label>De</label>
+          <select id="c-account">${S.accounts.map(a => `<option value="${a.id}" ${a.id===acc.id?'selected':''}>${escapeHtml(a.name)} — ${escapeHtml(a.email)}</option>`).join('')}</select>
+        </div>
+        <div class="compose-field">
+          <label>À</label>
+          <input id="c-to" type="text" value="${replyTo ? escapeAttr(replyTo.from_addr) : ''}" placeholder="destinataire@example.com">
+        </div>
+        <div class="compose-field">
+          <label>Cc</label>
+          <input id="c-cc" type="text" value="${replyTo ? escapeAttr(stripAngle(replyTo.cc)) : ''}">
+        </div>
+        <div class="compose-field">
+          <label>Objet</label>
+          <input id="c-subject" type="text" value="${replyTo ? escapeAttr('Re: ' + replyTo.subject.replace(/^re:\s*/i,'')) : ''}">
+        </div>
+        <div class="format-bar" style="margin-top:10px;">
+          <button type="button" onclick="fmt('bold')" title="Gras"><b>G</b></button>
+          <button type="button" onclick="fmt('italic')" title="Italique"><i>I</i></button>
+          <button type="button" onclick="fmt('insertUnorderedList')" title="Liste">• Liste</button>
+          <button type="button" onclick="addLink()" title="Lien">🔗</button>
+        </div>
+        <div id="c-body" class="compose-editor" contenteditable="true"></div>
+      </div>
+      <div class="compose-foot">
+        <button class="btn btn-ghost" onclick="this.closest('.modal-bg').remove()">Annuler</button>
+        <button class="btn btn-primary" onclick="sendCompose('${replyTo ? '1' : ''}')">Envoyer</button>
+      </div>
+    </div>`;
+  document.body.appendChild(bg);
+  const editor = bg.querySelector('#c-body');
+  editor.innerHTML = replyTo ? `<br><br><blockquote style="border-left:3px solid var(--border);margin:0;padding-left:12px;color:var(--muted);">Le ${formatDateFull(replyTo.date)}, ${escapeHtml(replyTo.from_name)} a écrit :<br>${stripHtml(replyTo.html || replyTo.text || '')}</blockquote>` : '';
+  setTimeout(() => bg.querySelector('#c-to').focus(), 50);
+}
+
+function fmt(cmd) { document.execCommand(cmd, false, null); }
+function addLink() { const u = prompt('URL du lien :'); if (u) document.execCommand('createLink', false, u); }
+
+async function sendCompose(isReply) {
+  const get = id => document.getElementById(id).value.trim();
+  const payload = {
+    account: get('c-account'), to: get('c-to'), cc: get('c-cc'),
+    subject: get('c-subject'),
+    html: document.getElementById('c-body').innerHTML,
+    text: document.getElementById('c-body').innerText,
+  };
+  if (isReply && S.openMsg && S.openMsg.message_id) {
+    payload.in_reply_to = S.openMsg.message_id;
+    payload.references = S.openMsg.message_id;
+  }
+  if (!payload.to) return toast('Indiquez un destinataire.', true);
+  const btn = event?.target; if (btn) { btn.disabled = true; btn.textContent = 'Envoi…'; }
+  try {
+    await api('/api/send', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    document.querySelector('.modal-bg')?.remove();
+    toast('Message envoyé.');
+  } catch (e) {
+    toast('Envoi échoué : ' + e.message, true);
+    if (btn) { btn.disabled = false; btn.textContent = 'Envoyer'; }
+  }
+}
+
+function doReply() {
+  if (!S.openMsg) return;
+  openCompose({ ...S.openMsg });
+}
+
+/* ============ Search ============ */
+function onSearch(v) {
+  clearTimeout(S.searchTimer);
+  S.searchTimer = setTimeout(() => { S.q = v.trim(); S.cursor = -1; loadMessages(); }, 300);
+}
+
+/* ============ Keyboard ============ */
+function bindKeys() {
+  document.addEventListener('keydown', (e) => {
+    const typing = /INPUT|TEXTAREA/.test(document.activeElement.tagName) || document.activeElement.isContentEditable;
+    if (e.key === 'Escape') {
+      if (document.querySelector('.modal-bg')) { document.querySelector('.modal-bg').remove(); return; }
+      if (S.open) { closeReader(); }
+      return;
+    }
+    if (typing) return;
+    if (S.open) {
+      if (e.key === 'j' || e.key === 'ArrowDown') { e.preventDefault(); move(1); }
+      else if (e.key === 'k' || e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
+      else if (e.key === 'e') { e.preventDefault(); doReply(); }
+      else if (e.key === 'f') { e.preventDefault(); toggleFlag(); }
+      else if (e.key === 'r') { e.preventDefault(); toggleSeen(); }
+      else if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); doDelete(); }
+    } else {
+      if (e.key === 'j' || e.key === 'ArrowDown') { e.preventDefault(); navList(1); }
+      else if (e.key === 'k' || e.key === 'ArrowUp') { e.preventDefault(); navList(-1); }
+      else if (e.key === 'Enter' && S.cursor >= 0) { e.preventDefault(); openMessage(S.cursor); }
+      else if (e.key === '/') { e.preventDefault(); document.getElementById('search').focus(); }
+      else if (e.key === 'c') { e.preventDefault(); openCompose(); }
+    }
+  });
+}
+
+function navList(dir) {
+  S.cursor = Math.max(0, Math.min(S.messages.length - 1, S.cursor + dir));
+  renderList();
+  const el = document.querySelectorAll('.msg')[S.cursor];
+  el?.scrollIntoView({ block: 'nearest' });
+}
+
+/* ============ Realtime (SSE + polling de secours) ============ */
+function startRealtime() {
+  let es;
+  function connect() {
+    try {
+      es = new EventSource('/api/events');
+      es.onopen = () => document.getElementById('live-dot').classList.add('live');
+      es.onmessage = (e) => { try { handleEvent(JSON.parse(e.data)); } catch {} };
+      es.onerror = () => {
+        document.getElementById('live-dot').classList.remove('live');
+        try { es.close(); } catch {}
+        setTimeout(connect, 5000);
+      };
+    } catch { setTimeout(connect, 5000); }
+  }
+  connect();
+  setInterval(silentRefresh, 90000); // filet de sécurité
+}
+
+function handleEvent(ev) {
+  if (ev.type !== 'refresh') return;
+  updateFolderBadge(ev.account, ev.folder, ev.unseen);
+  if (ev.account === S.currentAccount && ev.folder === S.currentFolder) {
+    silentRefresh();
+  } else {
+    toast(`✉ ${accountName(ev.account)} · ${displayFolder(ev.folder)} — ${ev.unseen} non lu(s)`);
+  }
+}
+
+function updateFolderBadge(account, folder, unseen) {
+  const fs = S.folders[account];
+  if (!fs) return;
+  const f = fs.find(x => x.name === folder);
+  if (f) { f.unseen = unseen; renderSidebar(); }
+}
+
+function accountName(id) {
+  const a = S.accounts.find(x => x.id === id);
+  return a ? a.name : id;
+}
+
+async function silentRefresh() {
+  if (S.open) return;
+  try {
+    const data = await api(`/api/messages?account=${encodeURIComponent(S.currentAccount)}&folder=${encodeURIComponent(S.currentFolder)}&q=${encodeURIComponent(S.q)}`);
+    S.messages = data.messages;
+    document.getElementById('list-count').textContent = S.messages.length ? `${S.messages.length} messages` : '';
+    renderList();
+  } catch {}
+}
+
+/* ============ Helpers ============ */
+function favicon(addr) {
+  const d = domainOf(addr);
+  if (!d) return `<span class="initial">${(shortName(addr)[0]||'?').toUpperCase()}</span>`;
+  return `<img src="https://icons.duckduckgo.com/ip3/${encodeURIComponent(d)}.ico" onerror="this.parentNode.innerHTML='<span class=&quot;initial&quot;>${(escapeHtml(shortName(addr))[0]||'?').toUpperCase()}</span>'" referrerpolicy="no-referrer">`;
+}
+function domainOf(addr) { try { return (addr.split('@')[1]||'').toLowerCase(); } catch { return ''; } }
+function shortName(name) { return name.includes('<') ? name.replace(/[<>]/g,'').split(' ')[0] : name; }
+function stripAngle(s) { return (s||'').replace(/[<>]/g,''); }
+function displayFolder(name) {
+  const map = { inbox:'Boîte de réception', sent:'Envoyés', drafts:'Brouillons', trash:'Corbeille', junk:'Indésirables', spam:'Spam', archive:'Archives' };
+  const leaf = name.split(/[\/.]/).pop();
+  return map[leaf.toLowerCase()] || leaf;
+}
+function iconFor(name) {
+  const n = name.toLowerCase();
+  if (n.includes('inbox')) return '📥';
+  if (n.includes('sent')) return '📤';
+  if (n.includes('draft')) return '✎';
+  if (n.includes('trash')) return '🗑';
+  if (n.includes('spam')||n.includes('junk')) return '⚠';
+  if (n.includes('archive')) return '🗄';
+  return '📁';
+}
+function formatDate(d) {
+  if (!d) return '';
+  const date = new Date(d); const now = new Date();
+  const sameDay = date.toDateString() === now.toDateString();
+  if (sameDay) return date.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+  const sameYear = date.getFullYear() === now.getFullYear();
+  return date.toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
+}
+function formatDateFull(d) {
+  if (!d) return '';
+  const date = new Date(d);
+  return date.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) +
+    ' · ' + date.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+}
+function humanSize(b) {
+  if (!b) return '0 o';
+  const u = ['o','Ko','Mo','Go']; const i = Math.floor(Math.log(b)/Math.log(1024));
+  return (b / Math.pow(1024,i)).toFixed(i?1:0) + ' ' + u[i];
+}
+function rewriteHtml(html, m) {
+  // images inline cid: -> route backend
+  let out = html.replace(/src=["'](cid:([^"']+))["']/gi, (mm, full, cid) => {
+    return `src="/api/messages/${encodeURIComponent(m.account)}/${encodeURIComponent(m.uid)}/cid/${encodeURIComponent(cid)}?folder=${encodeURIComponent(S.currentFolder)}"`;
+  });
+  return out;
+}
+function iframeDoc(body) {
+  return `<!doctype html><html><head><meta charset="utf-8"><base target="_blank">
+  <style>
+    body{font-family:-apple-system,system-ui,'Segoe UI',sans-serif;font-size:15px;line-height:1.65;color:#1a1a1a;padding:4px 2px;margin:0;word-break:break-word;}
+    img{max-width:100%;height:auto;border-radius:4px;}
+    a{color:#1a66ff;}blockquote{border-left:3px solid #ddd;margin:0;padding-left:12px;color:#555;}
+    pre{background:#f4f4f4;padding:10px;border-radius:6px;overflow:auto;}table{max-width:100%;}
+  </style></head><body>${body}</body></html>`;
+}
+function stripHtml(h){const d=document.createElement('div');d.innerHTML=h;return d.textContent||'';}
+function escapeHtml(s){return (s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function escapeAttr(s){return escapeHtml(s).replace(/"/g,'&quot;');}
+function toast(msg, err){document.querySelectorAll('.toast').forEach(t=>t.remove());const t=document.createElement('div');t.className='toast'+(err?' err':'');t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3500);}
+
+init();
+</script>
+</body>
+</html>
