@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenMail - Focus Inbox</title>
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                        display: ['Instrument Serif', 'serif'],
+                    },
+                    colors: {
+                        zen: {
+                            bg: '#FBF9F6', // Soft warm cream
+                            darkbg: '#0D0E10', // Pure deep dark gray
+                            card: '#FFFFFF',
+                            darkcard: '#15171C',
+                            border: '#E8E5DF',
+                            darkborder: '#23262D',
+                            text: '#1C1E21',
+                            darktext: '#E3E4E6',
+                            muted: '#70747C',
+                            darkmuted: '#8C919C',
+                            accent: '#8C6C50', // Earthy warm accent
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/css">
+        body {
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        /* Tinder-style Card transitions */
+        .swipe-card {
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+            transform-origin: center bottom;
+        }
+        
+        .swipe-card.swiping-left {
+            transform: translate(-150%, 0) rotate(-20deg) !important;
+            opacity: 0;
+        }
+        
+        .swipe-card.swiping-right {
+            transform: translate(150%, 0) rotate(20deg) !important;
+            opacity: 0;
+        }
+        
+        .swipe-card.swiping-up {
+            transform: translate(0, -150%) scale(0.95) !important;
+            opacity: 0;
+        }
+
+        /* Hide Scrollbar */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Subtle noise overlay */
+        .noise-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            pointer-events: none;
+            opacity: 0.015;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+        
+        .dark .noise-overlay {
+            opacity: 0.025;
+        }
+
+        /* Immersive reader spacing */
+        .email-body-content p {
+            margin-bottom: 1.5rem;
+            line-height: 1.85;
+            font-size: 1.05rem;
+        }
+    </style>
+</head>
+<body class="bg-zen-bg dark:bg-zen-darkbg text-zen-text dark:text-zen-darktext h-dvh overflow-hidden select-none font-sans transition-colors duration-500">
+
+    <!-- Noise layer -->
+    <div class="noise-overlay"></div>
+
+    <!-- App Container -->
+    <div class="h-full w-full flex flex-col relative justify-between py-8 px-6 sm:px-12 md:px-24">
+        
+        <!-- TOP IMMERSIVE HEADER -->
+        <header class="flex items-center justify-between z-30 shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-2.5 h-2.5 rounded-full bg-zen-accent animate-pulse"></div>
+                <span class="font-display font-medium text-3xl tracking-tight italic select-none">ZenMail</span>
+            </div>
+            
+            <div class="flex items-center gap-6">
+                <!-- Archive/Inbox toggle -->
+                <button id="view-mode-btn" class="text-xs uppercase tracking-widest font-semibold text-zen-muted dark:text-zen-darkmuted hover:text-zen-text dark:hover:text-zen-darktext transition-colors">
+                    Archives
+                </button>
+                <!-- OAuth Live sync -->
+                <button id="sync-gmail-btn" class="text-xs uppercase tracking-widest font-semibold text-emerald-600 dark:text-emerald-400 hover:opacity-85 transition-opacity">
+                    Sync Gmail
+                </button>
+                <!-- Dark mode toggle -->
+                <button id="theme-toggle" class="p-1 hover:opacity-75 transition-opacity" aria-label="Toggle Theme">
+                    <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+                    <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN DECK WINDOW (CARD MODE) -->
+        <main id="deck-view" class="flex-1 flex flex-col items-center justify-center relative my-8 min-h-0 z-20">
+            
+            <!-- Minimal card stack container -->
+            <div class="relative w-full max-w-lg aspect-[3/4] sm:aspect-[4/5] flex items-center justify-center">
+                
+                <!-- Deck Completion Zen State -->
+                <div id="zen-completed-state" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center p-8">
+                    <div class="font-display text-8xl italic text-zen-accent/30 dark:text-zen-accent/20 mb-6">Calme.</div>
+                    <h3 class="font-serif text-2xl font-light text-slate-800 dark:text-slate-100 mb-2">Votre boîte de réception est vide</h3>
+                    <p id="zen-quote" class="text-xs text-zen-muted dark:text-zen-darkmuted max-w-xs leading-relaxed italic mb-8">"Rien n'est plus propice à la paix de l'esprit que de n'avoir aucune opinion."</p>
+                    
+                    <div class="flex gap-4">
+                        <button id="restart-deck-btn" class="px-5 py-2.5 rounded-full border border-zen-border dark:border-zen-darkborder text-xs uppercase tracking-widest font-semibold hover:bg-zen-text hover:text-zen-bg dark:hover:bg-zen-darktext dark:hover:text-zen-darkbg transition-all active:scale-95">
+                            Recommencer
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Cards stack dynamically generated -->
+                <div id="card-deck" class="relative w-full h-full">
+                    <!-- Cards injected here -->
+                </div>
+            </div>
+
+            <!-- CONTROLS & SHORTCUTS FOOTER -->
+            <div id="deck-controls" class="flex flex-col items-center gap-4 mt-8 shrink-0">
+                <!-- Visual Swiper buttons -->
+                <div class="flex items-center gap-6">
+                    <!-- Swipe Left (Archive) -->
+                    <button id="control-left" class="w-14 h-14 rounded-full border border-zen-border dark:border-zen-darkborder hover:border-rose-500/30 hover:bg-rose-500/5 text-zen-muted dark:text-zen-darkmuted hover:text-rose-500 transition-all flex items-center justify-center active:scale-90" title="Archiver (Flèche Gauche)">
+                        <i data-lucide="archive" class="w-5 h-5"></i>
+                    </button>
+                    <!-- Expand (Read) -->
+                    <button id="control-down" class="w-16 h-16 rounded-full bg-zen-text text-zen-bg dark:bg-zen-darktext dark:text-zen-darkbg hover:scale-105 active:scale-95 transition-all flex items-center justify-center shadow-lg shadow-black/10" title="Lire (Flèche Bas)">
+                        <i data-lucide="eye" class="w-6 h-6"></i>
+                    </button>
+                    <!-- Swipe Right (Keep) -->
+                    <button id="control-right" class="w-14 h-14 rounded-full border border-zen-border dark:border-zen-darkborder hover:border-emerald-500/30 hover:bg-emerald-500/5 text-zen-muted dark:text-zen-darkmuted hover:text-emerald-500 transition-all flex items-center justify-center active:scale-90" title="Conserver (Flèche Droite)">
+                        <i data-lucide="check" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Subtle shortcut tips -->
+                <div class="hidden sm:flex gap-6 text-[10px] uppercase tracking-widest text-zen-muted dark:text-zen-darkmuted font-medium">
+                    <span>← Archiver</span>
+                    <span>↓ Lire en Plein Écran</span>
+                    <span>→ Conserver</span>
+                </div>
+            </div>
+        </main>
+
+        <!-- FULL-SCREEN CINEMATIC READER (OVERLAY FOCUS) -->
+        <section id="immersive-reader" class="hidden fixed inset-0 bg-zen-bg dark:bg-zen-darkbg z-50 overflow-y-auto px-6 py-12 md:py-20 flex justify-center">
+            
+            <!-- Focus wrapper -->
+            <div class="w-full max-w-2xl flex flex-col justify-between min-h-full">
+                
+                <!-- Reader Navigation Header -->
+                <div class="flex items-center justify-between border-b border-zen-border/40 dark:border-zen-darkborder/40 pb-6 shrink-0">
+                    <button id="reader-close-btn" class="group flex items-center gap-2.5 text-xs uppercase tracking-widest font-semibold text-zen-muted dark:text-zen-darkmuted hover:text-zen-text dark:hover:text-zen-darktext transition-colors">
+                        <i data-lucide="arrow-left" class="w-4 h-4 transition-transform group-hover:-translate-x-1"></i>
+                        <span>Retour</span>
+                    </button>
+
+                    <div class="flex items-center gap-4">
+                        <button id="reader-star-btn" class="p-2 text-zen-muted dark:text-zen-darkmuted hover:text-amber-500 transition-colors">
+                            <i data-lucide="star" class="w-4.5 h-4.5"></i>
+                        </button>
+                        <button id="reader-archive-btn" class="p-2 text-zen-muted dark:text-zen-darkmuted hover:text-rose-500 transition-colors">
+                            <i data-lucide="archive" class="w-4.5 h-4.5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Main Scrollable Content area -->
+                <div class="flex-1 my-12 md:my-16 select-text space-y-8">
+                    <!-- Heading -->
+                    <div class="space-y-4">
+                        <h1 id="reader-subject" class="font-serif text-3xl sm:text-4xl md:text-5xl font-normal leading-tight tracking-tight">
+                            Objet du message
+                        </h1>
+                        <div class="flex items-baseline justify-between text-xs text-zen-muted dark:text-zen-darkmuted border-b border-zen-border/20 dark:border-zen-darkborder/20 pb-4">
+                            <div class="flex flex-col gap-0.5">
+                                <span id="reader-from-name" class="font-semibold text-zen-text dark:text-zen-darktext text-sm">Expéditeur</span>
+                                <span id="reader-from-email">sender@domain.com</span>
+                            </div>
+                            <span id="reader-date">Aujourd'hui, 10:45</span>
+                        </div>
+                    </div>
+
+                    <!-- Email Body Container -->
+                    <article id="reader-body" class="email-body-content prose dark:prose-invert max-w-none text-zen-text/90 dark:text-zen-darktext/90 font-serif text-lg leading-relaxed select-text">
+                        <!-- Content goes here -->
+                    </article>
+                </div>
+
+                <!-- Bottom Reply Bar -->
+                <div class="border-t border-zen-border/40 dark:border-zen-darkborder/40 pt-8 shrink-0 space-y-4">
+                    <!-- Quick response tags -->
+                    <div class="flex flex-wrap gap-2">
+                        <button class="smart-reply-btn text-[11px] uppercase tracking-widest font-semibold px-4 py-2 rounded-full border border-zen-border dark:border-zen-darkborder hover:border-zen-text dark:hover:border-zen-darktext transition-colors">
+                            D'accord, je m'en occupe !
+                        </button>
+                        <button class="smart-reply-btn text-[11px] uppercase tracking-widest font-semibold px-4 py-2 rounded-full border border-zen-border dark:border-zen-darkborder hover:border-zen-text dark:hover:border-zen-darktext transition-colors">
+                            Merci pour les détails.
+                        </button>
+                        <button class="smart-reply-btn text-[11px] uppercase tracking-widest font-semibold px-4 py-2 rounded-full border border-zen-border dark:border-zen-darkborder hover:border-zen-text dark:hover:border-zen-darktext transition-colors">
+                            Replanifions ça demain.
+                        </button>
+                    </div>
+
+                    <!-- Write area -->
+                    <div class="relative flex items-center bg-zen-card dark:bg-zen-darkcard border border-zen-border dark:border-zen-darkborder rounded-2xl p-2.5">
+                        <textarea id="reader-reply-textarea" placeholder="Répondre à cet expéditeur..." class="flex-1 bg-transparent border-0 ring-0 focus:ring-0 p-3 text-xs outline-none text-zen-text dark:text-zen-darktext resize-none h-12 no-scrollbar"></textarea>
+                        <button id="reader-reply-send-btn" class="p-3 bg-zen-text text-zen-bg dark:bg-zen-darktext dark:text-zen-darkbg rounded-xl transition-transform hover:scale-105 active:scale-95 shrink-0">
+                            <i data-lucide="send-horizontal" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FLOATING WRITER (Triggered by key "C") -->
+        <div id="compose-panel" class="hidden fixed bottom-6 right-6 w-96 max-w-full rounded-2xl bg-zen-card dark:bg-zen-darkcard border border-zen-border dark:border-zen-darkborder shadow-xl flex flex-col overflow-hidden z-40 transition-all duration-300 transform scale-95 opacity-0 pointer-events-none">
+            <div class="px-5 py-4 border-b border-zen-border/50 dark:border-zen-darkborder/50 flex items-center justify-between bg-slate-50/20 dark:bg-slate-900/10">
+                <span class="text-xs uppercase tracking-widest font-bold">Nouveau Message</span>
+                <button id="close-compose-btn" class="p-1 hover:opacity-75 transition-opacity">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div class="p-4 flex flex-col gap-2 bg-transparent">
+                <input type="text" id="compose-to" placeholder="À : destinataire@company.com" class="w-full bg-transparent border-b border-zen-border dark:border-zen-darkborder focus:border-zen-accent p-2 text-xs outline-none">
+                <input type="text" id="compose-subject" placeholder="Objet" class="w-full bg-transparent border-b border-zen-border dark:border-zen-darkborder focus:border-zen-accent p-2 text-xs outline-none">
+                <textarea id="compose-body" placeholder="Rédiger votre message..." class="w-full h-40 bg-transparent p-2 text-xs outline-none resize-none leading-relaxed"></textarea>
+            </div>
+            <div class="p-3 border-t border-zen-border/40 dark:border-zen-darkborder/40 flex justify-end bg-transparent">
+                <button id="send-btn" class="px-4 py-2 bg-zen-text text-zen-bg dark:bg-zen-darktext dark:text-zen-darkbg rounded-xl text-xs uppercase tracking-widest font-semibold hover:scale-102 transition-transform">
+                    Envoyer
+                </button>
+            </div>
+        </div>
+
+        <!-- Custom minimal notification toast -->
+        <div id="toast-container" class="fixed bottom-6 left-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    </div>
+
+    <!-- Core App JS Code -->
+    <script>
+        // --- DATA LAYERS: Interactive Mock Database & Live Sync ---
+        
+        let mockEmails = [
+            {
+                id: "msg-stripe-1",
+                folder: "INBOX",
+                labelIds: ["INBOX", "UNREAD"],
+                tags: ["Finance"],
+                from: "Stripe Payouts <payouts@stripe.com>",
+                subject: "Versement Stripe traité - $14,250.00",
+                snippet: "Votre versement pour la période du 1er au 15 juin a été traité et est en cours d'acheminement vers votre banque.",
+                date: new Date(Date.now() - 15 * 60000).toISOString(),
+                body: `
+                    <p>Bonjour Sarah,</p>
+                    <p>Nous vous confirmons le traitement du versement numéro <strong>TRN-90281-STRP</strong> pour un montant total de <strong>$14,250.00 USD</strong>.</p>
+                    <p>Les fonds ont été déposés sur le compte bancaire se terminant par 8829. Le délai habituel d'acheminement des fonds bancaires est de 1 à 2 jours ouvrables.</p>
+                    <p>Vous pouvez consulter vos factures mensuelles et vos relevés comptables directement sur votre Dashboard Stripe.</p>
+                    <p>Bien à vous,<br>L'équipe Stripe France</p>
+                `,
+                starred: false
+            },
+            {
+                id: "msg-openai-2",
+                folder: "INBOX",
+                labelIds: ["INBOX", "UNREAD"],
+                tags: ["Mises à jour"],
+                from: "OpenAI Launchpad <news@openai.com>",
+                subject: "Présentation de GPT-5 : La nouvelle frontière de l'Intelligence Générale",
+                snippet: "Nous sommes ravis d'annoncer la sortie de GPT-5, notre modèle le plus puissant à ce jour, repoussant les limites de la science.",
+                date: new Date(Date.now() - 3 * 3600000).toISOString(),
+                body: `
+                    <p>Bonjour,</p>
+                    <p>Aujourd'hui, nous franchissons une nouvelle étape majeure dans le développement de l'intelligence artificielle générale (AGI) avec la sortie de <strong>GPT-5</strong>.</p>
+                    <p>GPT-5 intègre des capacités de raisonnement logique de niveau doctoral, une fenêtre contextuelle de 500k tokens et une vitesse d'exécution optimisée.</p>
+                    <p>Le modèle est actuellement disponible en préversion pour les abonnés ChatGPT Pro et les développeurs agréés via notre API d'intégration.</p>
+                    <p>Cordialement,<br>L'équipe produit OpenAI</p>
+                `,
+                starred: false
+            },
+            {
+                id: "msg-github-3",
+                folder: "INBOX",
+                labelIds: ["INBOX"],
+                tags: ["Urgent"],
+                from: "GitHub Security <noreply@github.com>",
+                subject: "[GitHub] Alerte de sécurité critique sur le package webpack-dev-server",
+                snippet: "Un problème de sécurité de sévérité CRITIQUE (CVE-2026-98122) a été détecté dans l'un de vos dépôts actifs.",
+                date: new Date(Date.now() - 18 * 3600000).toISOString(),
+                body: `
+                    <p>Bonjour sarah-connor,</p>
+                    <p>Dependabot a détecté une vulnérabilité d'exécution de code à distance (RCE) critique dans le package <strong>webpack-dev-server</strong>.</p>
+                    <p>Le dépôt concerné est : <strong>Chrome_GmailPK</strong>. Nous vous recommandons vivement de mettre à niveau le package vers la version >= 4.15.2 dès à présent.</p>
+                    <p>Une pull request de mise à niveau automatique a été créée sur votre projet pour corriger le problème.</p>
+                `,
+                starred: true
+            },
+            {
+                id: "msg-vercel-4",
+                folder: "INBOX",
+                labelIds: ["INBOX"],
+                tags: ["Travail"],
+                from: "Vercel Deployments <deployments@vercel.com>",
+                subject: "Déploiement en production réussi pour 'aeromail-app'",
+                snippet: "Votre projet aeromail-app a été déployé en production. Le build a duré 42 secondes sur la branche main.",
+                date: new Date(Date.now() - 32 * 3600000).toISOString(),
+                body: `
+                    <p>Bonjour,</p>
+                    <p>Votre déploiement de production est en ligne pour le projet <strong>aeromail-app</strong>.</p>
+                    <p>Les détails du déploiement sont disponibles sur la console Vercel. Le commit associé est : <strong>fe456a (Feat: setup visual dashboard metrics)</strong>.</p>
+                    <p>Merci de faire confiance à Vercel.</p>
+                `,
+                starred: false
+            }
+        ];
+
+        let activeEmail = null;
+        let viewMode = "INBOX"; // "INBOX" or "ARCHIVE"
+        let isDarkMode = true;
+        let isSwiping = false;
+
+        // --- GMAIL LIVE SYNC IMPLEMENTATION ---
+        
+        let gmailConnected = false;
+        let gmailAuthToken = null;
+        const GMAIL_API_BASE = 'https://gmail.googleapis.com/gmail/v1/users/me';
+        const isChromeExtension = typeof chrome !== 'undefined' && chrome.identity && chrome.identity.getAuthToken;
+
+        function updateSyncBadge() {
+            const syncBtn = document.getElementById('sync-gmail-btn');
+            if (isChromeExtension) {
+                if (gmailConnected) {
+                    syncBtn.textContent = "Sync Ok";
+                    syncBtn.className = "text-xs uppercase tracking-widest font-semibold text-emerald-600 dark:text-emerald-400";
+                } else {
+                    syncBtn.textContent = "Sync Gmail";
+                    syncBtn.className = "text-xs uppercase tracking-widest font-semibold text-amber-500 hover:opacity-85";
+                }
+            } else {
+                syncBtn.textContent = "Démo active";
+                syncBtn.className = "text-xs uppercase tracking-widest font-semibold text-slate-400 dark:text-slate-500 pointer-events-none";
+            }
+        }
+
+        async function getGmailToken(interactive = true) {
+            if (gmailAuthToken) return gmailAuthToken;
+            return new Promise((resolve, reject) => {
+                chrome.identity.getAuthToken({ interactive }, (token) => {
+                    if (chrome.runtime.lastError) {
+                        reject(new Error(chrome.runtime.lastError.message));
+                    } else {
+                        gmailAuthToken = token;
+                        gmailConnected = true;
+                        resolve(token);
+                    }
+                });
+            });
+        }
+
+        async function makeGmailRequest(endpoint, options = {}) {
+            const token = await getGmailToken(true);
+            const url = endpoint.startsWith('http') ? endpoint : `${GMAIL_API_BASE}${endpoint}`;
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    ...options.headers,
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+            if (!response.ok) {
+                if (response.status === 401) {
+                    gmailAuthToken = null;
+                    gmailConnected = false;
+                    chrome.identity.removeCachedAuthToken({ token }, () => {});
+                }
+                throw new Error(`API error ${response.status}`);
+            }
+            return response.json();
+        }
+
+        async function connectGmail() {
+            if (!isChromeExtension) {
+                showToast("OAuth requis en mode extension Chrome.", "error");
+                return;
+            }
+            try {
+                await getGmailToken(true);
+                gmailConnected = true;
+                showToast("Gmail synchronisé !", "success");
+                updateSyncBadge();
+                await syncGmailEmails();
+            } catch (err) {
+                showToast(`Authentification échouée : ${err.message}`, "error");
+            }
+        }
+
+        async function syncGmailEmails() {
+            if (!gmailConnected) return;
+            showToast("Chargement de vos messages Gmail...", "info");
+            
+            try {
+                const data = await makeGmailRequest('/messages?maxResults=8');
+                if (!data.messages || data.messages.length === 0) {
+                    mockEmails = [];
+                    renderDeck();
+                    return;
+                }
+
+                const detailedPromises = data.messages.map(m => makeGmailRequest(`/messages/${m.id}`));
+                const detailedEmails = await Promise.all(detailedPromises);
+
+                mockEmails = detailedEmails.map(item => {
+                    const headers = item.payload.headers || [];
+                    const from = headers.find(h => h.name === 'From')?.value || 'Inconnu';
+                    const subject = headers.find(h => h.name === 'Subject')?.value || '(Sans objet)';
+                    const dateVal = headers.find(h => h.name === 'Date')?.value || new Date().toISOString();
+                    const snippet = item.snippet || '';
+                    
+                    let parsedBody = "<p>Aucun contenu lisible.</p>";
+                    if (item.payload.body && item.payload.body.data) {
+                        parsedBody = decodeBase64(item.payload.body.data);
+                    } else if (item.payload.parts) {
+                        const htmlPart = item.payload.parts.find(p => p.mimeType === 'text/html');
+                        if (htmlPart && htmlPart.body && htmlPart.body.data) {
+                            parsedBody = decodeBase64(htmlPart.body.data);
+                        } else if (item.payload.parts[0] && item.payload.parts[0].body && item.payload.parts[0].body.data) {
+                            parsedBody = decodeBase64(item.payload.parts[0].body.data);
+                        }
+                    }
+
+                    const labels = item.labelIds || [];
+                    const folder = labels.includes('TRASH') ? 'TRASH' : (labels.includes('SENT') ? 'SENT' : (labels.includes('DRAFT') ? 'DRAFTS' : 'INBOX'));
+
+                    return {
+                        id: item.id,
+                        folder: folder,
+                        labelIds: labels,
+                        tags: labels.includes('UNREAD') ? ['Mises à jour'] : [],
+                        from: from,
+                        subject: subject,
+                        snippet: snippet,
+                        date: new Date(dateVal).toISOString(),
+                        body: parsedBody,
+                        starred: labels.includes('STARRED')
+                    };
+                });
+
+                renderDeck();
+                showToast("Boîte mise à jour !", "success");
+            } catch (err) {
+                console.error(err);
+                showToast("Erreur de récupération Gmail.", "error");
+            }
+        }
+
+        function decodeBase64(data) {
+            try {
+                const base64 = data.replace(/-/g, '+').replace(/_/g, '/');
+                return decodeURIComponent(escape(atob(base64)));
+            } catch (e) { return "<p>[Erreur de décodage]</p>"; }
+        }
+
+        // --- DECK SWIPE CONTROLLER ---
+
+        function renderDeck() {
+            const deck = document.getElementById('card-deck');
+            deck.innerHTML = '';
+
+            // Filter emails
+            let filtered = mockEmails.filter(email => {
+                if (viewMode === "INBOX") {
+                    return email.folder === "INBOX";
+                } else {
+                    return email.folder === "ARCHIVE";
+                }
+            });
+
+            // Sort dates
+            filtered.sort((a,b) => new Date(a.date) - new Date(b.date)); // Oldest on top so we process in order
+
+            if (filtered.length === 0) {
+                document.getElementById('zen-completed-state').classList.remove('hidden');
+                document.getElementById('deck-controls').classList.add('opacity-0', 'pointer-events-none');
+                
+                // Set random zen quotes
+                const quotes = [
+                    '"Le silence est le plus grand art de la conversation."',
+                    '"Rien ne s\'en va avant de nous avoir enseigné ce que nous devons savoir."',
+                    '"La simplicité est la sophistication suprême."',
+                    '"Le calme est une super-puissance."',
+                    '"Faites moins. Soyez plus."'
+                ];
+                document.getElementById('zen-quote').textContent = quotes[Math.floor(Math.random() * quotes.length)];
+                return;
+            } else {
+                document.getElementById('zen-completed-state').classList.add('hidden');
+                document.getElementById('deck-controls').classList.remove('opacity-0', 'pointer-events-none');
+            }
+
+            // Render cards stacking
+            filtered.forEach((email, index) => {
+                const card = document.createElement('div');
+                const isTop = index === filtered.length - 1;
+                
+                // Visually offset cards behind
+                let zIndex = index + 10;
+                let scale = 1 - (filtered.length - 1 - index) * 0.03;
+                let translateY = (filtered.length - 1 - index) * -12;
+                
+                card.className = `swipe-card absolute inset-0 rounded-3xl p-8 sm:p-12 bg-white dark:bg-zen-darkcard border border-zen-border dark:border-zen-darkborder shadow-2xl flex flex-col justify-between select-none ${isTop ? 'cursor-grab active:cursor-grabbing z-30' : 'z-10 pointer-events-none'}`;
+                card.style.transform = `translateY(${translateY}px) scale(${scale})`;
+                card.style.zIndex = zIndex;
+                card.setAttribute('data-id', email.id);
+
+                const senderName = email.from.split('<')[0].trim().replace(/"/g, '') || email.from;
+                const formattedDate = new Date(email.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+
+                card.innerHTML = `
+                    <div class="space-y-6 flex-1 flex flex-col justify-center">
+                        <div class="flex items-center justify-between text-[11px] uppercase tracking-widest text-zen-muted dark:text-zen-darkmuted font-semibold">
+                            <span>${senderName}</span>
+                            <span>${formattedDate}</span>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <h2 class="font-serif text-2xl sm:text-3xl font-light text-zen-text dark:text-zen-darktext leading-tight">
+                                ${email.subject}
+                            </h2>
+                            <p class="text-sm sm:text-base text-zen-muted dark:text-zen-darkmuted font-light leading-relaxed line-clamp-4">
+                                ${email.snippet}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-6 border-t border-slate-100 dark:border-slate-800/40 flex items-center justify-between shrink-0">
+                        <span class="text-[10px] uppercase tracking-widest text-zen-accent font-semibold">${email.tags && email.tags[0] || 'Message'}</span>
+                        <div class="flex items-center gap-1">
+                            <i data-lucide="corner-down-right" class="w-3.5 h-3.5 text-zen-muted dark:text-zen-darkmuted"></i>
+                            <span class="text-[10px] uppercase tracking-widest text-zen-muted dark:text-zen-darkmuted font-medium">Glisser pour traiter</span>
+                        </div>
+                    </div>
+                `;
+
+                deck.appendChild(card);
+            });
+
+            // Initialize swipe drag for top card
+            setupDragAndDrop();
+            lucide.createIcons();
+        }
+
+        // Setup Drag mechanics
+        let startX = 0;
+        let startY = 0;
+        let currentX = 0;
+        let currentY = 0;
+
+        function setupDragAndDrop() {
+            const cards = document.querySelectorAll('.swipe-card');
+            if (cards.length === 0) return;
+            const topCard = cards[cards.length - 1];
+
+            topCard.addEventListener('mousedown', dragStart);
+            topCard.addEventListener('touchstart', dragStart, { passive: true });
+
+            function dragStart(e) {
+                if (isSwiping) return;
+                
+                if (e.type === 'touchstart') {
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                } else {
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    document.addEventListener('mousemove', dragMove);
+                    document.addEventListener('mouseup', dragEnd);
+                }
+                topCard.style.transition = 'none';
+            }
+
+            function dragMove(e) {
+                let clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+                let clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+                
+                currentX = clientX - startX;
+                currentY = clientY - startY;
+
+                let rotate = currentX * 0.05;
+                topCard.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${rotate}deg)`;
+            }
+
+            // Swipe touch handlers
+            topCard.addEventListener('touchmove', (e) => {
+                let clientX = e.touches[0].clientX;
+                let clientY = e.touches[0].clientY;
+                currentX = clientX - startX;
+                currentY = clientY - startY;
+                let rotate = currentX * 0.05;
+                topCard.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${rotate}deg)`;
+            }, { passive: true });
+
+            topCard.addEventListener('touchend', dragEnd);
+
+            function dragEnd() {
+                document.removeEventListener('mousemove', dragMove);
+                document.removeEventListener('mouseup', dragEnd);
+
+                topCard.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.15)';
+                
+                // Determine swipe action
+                if (currentX < -120) {
+                    swipeAction('left', topCard);
+                } else if (currentX > 120) {
+                    swipeAction('right', topCard);
+                } else if (currentY < -120) {
+                    swipeAction('up', topCard);
+                } else {
+                    // Snap back
+                    topCard.style.transform = 'translate(0px, 0px) rotate(0deg)';
+                }
+                currentX = 0;
+                currentY = 0;
+            }
+        }
+
+        // Animate Swipe Direction
+        function swipeAction(direction, cardEl) {
+            isSwiping = true;
+            const emailId = cardEl.getAttribute('data-id');
+            const email = mockEmails.find(e => e.id === emailId);
+
+            if (direction === 'left') {
+                cardEl.classList.add('swiping-left');
+                // Archive email
+                email.folder = "ARCHIVE";
+                if (isChromeExtension && gmailConnected) {
+                    removeGmailLabel(emailId, 'INBOX');
+                }
+                showToast("Message archivé", "info");
+            } else if (direction === 'right') {
+                cardEl.classList.add('swiping-right');
+                // Keep / Mark read
+                email.labelIds = email.labelIds.filter(l => l !== 'UNREAD');
+                if (isChromeExtension && gmailConnected) {
+                    removeGmailLabel(emailId, 'UNREAD');
+                }
+                showToast("Message conservé", "success");
+            } else if (direction === 'up') {
+                cardEl.classList.add('swiping-up');
+                // Star email
+                email.starred = !email.starred;
+                if (isChromeExtension && gmailConnected) {
+                    toggleGmailLabel(emailId, 'STARRED', email.starred);
+                }
+                showToast(email.starred ? "Message étoilé" : "Message retiré", "info");
+            }
+
+            setTimeout(() => {
+                cardEl.remove();
+                isSwiping = false;
+                renderDeck();
+            }, 350);
+        }
+
+        // --- BUTTON CONTROL TRIGGERS ---
+
+        document.getElementById('control-left').onclick = () => {
+            const topCard = getTopCard();
+            if (topCard) swipeAction('left', topCard);
+        };
+
+        document.getElementById('control-right').onclick = () => {
+            const topCard = getTopCard();
+            if (topCard) swipeAction('right', topCard);
+        };
+
+        document.getElementById('control-down').onclick = () => {
+            const topCard = getTopCard();
+            if (topCard) {
+                const id = topCard.getAttribute('data-id');
+                const mail = mockEmails.find(e => e.id === id);
+                openImmersiveReader(mail);
+            }
+        };
+
+        function getTopCard() {
+            const cards = document.querySelectorAll('.swipe-card');
+            return cards.length > 0 ? cards[cards.length - 1] : null;
+        }
+
+        // --- IMMERSIVE READER VIEW ---
+
+        const reader = document.getElementById('immersive-reader');
+
+        function openImmersiveReader(email) {
+            activeEmail = email;
+            
+            // Set details
+            document.getElementById('reader-subject').textContent = email.subject;
+            const senderName = email.from.split('<')[0].trim().replace(/"/g, '') || email.from;
+            document.getElementById('reader-from-name').textContent = senderName;
+            document.getElementById('reader-from-email').textContent = email.from;
+            document.getElementById('reader-date').textContent = new Date(email.date).toLocaleDateString('fr-FR', {
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+            document.getElementById('reader-body').innerHTML = email.body;
+
+            // Highlight star icon if starred
+            const starIcon = document.querySelector('#reader-star-btn i');
+            if (email.starred) {
+                starIcon.className = "w-4.5 h-4.5 fill-amber-500 text-amber-500";
+            } else {
+                starIcon.className = "w-4.5 h-4.5 text-zen-muted dark:text-zen-darkmuted";
+            }
+
+            // Mark read
+            if (email.labelIds.includes('UNREAD')) {
+                email.labelIds = email.labelIds.filter(l => l !== 'UNREAD');
+                if (isChromeExtension && gmailConnected) {
+                    removeGmailLabel(email.id, 'UNREAD');
+                }
+            }
+
+            // Clear textarea
+            document.getElementById('reader-reply-textarea').value = '';
+
+            // Open overlay animation
+            reader.classList.remove('hidden');
+            reader.scrollTop = 0;
+            lucide.createIcons();
+        }
+
+        function closeImmersiveReader() {
+            reader.classList.add('hidden');
+            activeEmail = null;
+            renderDeck();
+        }
+
+        document.getElementById('reader-close-btn').onclick = closeImmersiveReader;
+
+        // Header reader actions
+        document.getElementById('reader-star-btn').onclick = () => {
+            if (activeEmail) {
+                activeEmail.starred = !activeEmail.starred;
+                if (isChromeExtension && gmailConnected) {
+                    toggleGmailLabel(activeEmail.id, 'STARRED', activeEmail.starred);
+                }
+                showToast(activeEmail.starred ? "Suivi activé" : "Suivi désactivé", "info");
+                openImmersiveReader(activeEmail);
+            }
+        };
+
+        document.getElementById('reader-archive-btn').onclick = () => {
+            if (activeEmail) {
+                activeEmail.folder = "ARCHIVE";
+                if (isChromeExtension && gmailConnected) {
+                    removeGmailLabel(activeEmail.id, 'INBOX');
+                }
+                showToast("Message archivé", "info");
+                closeImmersiveReader();
+            }
+        };
+
+        // --- SMART REPLIES & REPLY SEND ---
+
+        document.querySelectorAll('.smart-reply-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.getElementById('reader-reply-textarea').value = btn.textContent.trim();
+                document.getElementById('reader-reply-textarea').focus();
+            };
+        });
+
+        // Quick Reply send
+        document.getElementById('reader-reply-send-btn').onclick = async () => {
+            const txt = document.getElementById('reader-reply-textarea').value.trim();
+            if (!txt || !activeEmail) return;
+
+            showToast("Envoi de la réponse...", "info");
+            
+            if (isChromeExtension && gmailConnected) {
+                try {
+                    const mime = makeGmailMime(activeEmail.from, `Re: ${activeEmail.subject}`, txt);
+                    await makeGmailRequest('/messages/send', {
+                        method: 'POST',
+                        body: JSON.stringify({ raw: mime })
+                    });
+                    showToast("Message envoyé avec succès !", "success");
+                } catch (err) {
+                    showToast(`Échec d'envoi : ${err.message}`, "error");
+                }
+            } else {
+                // Mock Sent
+                const newRep = {
+                    id: `msg-rep-${Date.now()}`,
+                    folder: "SENT",
+                    labelIds: ["SENT"],
+                    tags: [],
+                    from: "Sarah Connor <sarah@aero.co>",
+                    subject: `Re: ${activeEmail.subject}`,
+                    snippet: txt,
+                    date: new Date().toISOString(),
+                    body: txt,
+                    starred: false
+                };
+                mockEmails.push(newRep);
+                showToast("Réponse envoyée (Mode démo)", "success");
+            }
+            document.getElementById('reader-reply-textarea').value = '';
+            closeImmersiveReader();
+        };
+
+        function makeGmailMime(to, subject, message) {
+            const str = [
+                "Content-Type: text/html; charset=\"UTF-8\"\r\n",
+                "MIME-Version: 1.0\r\n",
+                "Content-Transfer-Encoding: 7bit\r\n",
+                "to: ", to, "\r\n",
+                "subject: ", subject, "\r\n\r\n",
+                message
+            ].join('');
+            return btoa(unescape(encodeURIComponent(str)))
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=+$/, '');
+        }
+
+        // --- GMAIL OAuth HELPER FUNCTIONS ---
+        async function toggleGmailLabel(id, labelName, add) {
+            if (!gmailConnected) return;
+            try {
+                const addLabels = add ? [labelName] : [];
+                const removeLabels = add ? [] : [labelName];
+                await makeGmailRequest(`/messages/${id}/modify`, {
+                    method: 'POST',
+                    body: JSON.stringify({ addLabelIds: addLabels, removeLabelIds: removeLabels })
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        async function removeGmailLabel(id, labelName) {
+            return toggleGmailLabel(id, labelName, false);
+        }
+
+        async function addGmailLabel(id, labelName) {
+            return toggleGmailLabel(id, labelName, true);
+        }
+
+        // --- FLOATING WRITER (COMPOSE) ---
+
+        const composePanel = document.getElementById('compose-panel');
+
+        function openCompose() {
+            composePanel.classList.remove('hidden');
+            setTimeout(() => {
+                composePanel.style.transform = "scale(1)";
+                composePanel.style.opacity = "1";
+                composePanel.style.pointerEvents = "auto";
+            }, 10);
+            document.getElementById('compose-to').focus();
+        }
+
+        function closeCompose() {
+            composePanel.style.transform = "scale(0.95)";
+            composePanel.style.opacity = "0";
+            composePanel.style.pointerEvents = "none";
+            setTimeout(() => {
+                composePanel.classList.add('hidden');
+                document.getElementById('compose-to').value = '';
+                document.getElementById('compose-subject').value = '';
+                document.getElementById('compose-body').value = '';
+            }, 300);
+        }
+
+        document.getElementById('close-compose-btn').onclick = closeCompose;
+
+        document.getElementById('send-btn').onclick = async () => {
+            const to = document.getElementById('compose-to').value.trim();
+            const subject = document.getElementById('compose-subject').value.trim() || "(Sans objet)";
+            const body = document.getElementById('compose-body').value;
+
+            if (!to) {
+                showToast("Veuillez renseigner un destinataire", "error");
+                return;
+            }
+
+            showToast("Envoi du message...", "info");
+
+            if (isChromeExtension && gmailConnected) {
+                try {
+                    const raw = makeGmailMime(to, subject, body);
+                    await makeGmailRequest('/messages/send', {
+                        method: 'POST',
+                        body: JSON.stringify({ raw })
+                    });
+                    showToast("Message envoyé !", "success");
+                } catch (err) {
+                    showToast(`Échec d'envoi Gmail : ${err.message}`, "error");
+                }
+            } else {
+                const newMail = {
+                    id: `msg-sent-${Date.now()}`,
+                    folder: "SENT",
+                    labelIds: ["SENT"],
+                    tags: [],
+                    from: "Sarah Connor <sarah@aero.co>",
+                    subject: subject,
+                    snippet: body.substring(0, 100),
+                    date: new Date().toISOString(),
+                    body: body.replace(/\n/g, '<br>'),
+                    starred: false
+                };
+                mockEmails.push(newMail);
+                showToast("Message envoyé (Démo)", "success");
+            }
+            closeCompose();
+            renderDeck();
+        };
+
+        // --- GENERAL EVENT HANDLERS ---
+
+        // Toggle Inbox vs Archive
+        document.getElementById('view-mode-btn').onclick = () => {
+            const btn = document.getElementById('view-mode-btn');
+            if (viewMode === "INBOX") {
+                viewMode = "ARCHIVE";
+                btn.textContent = "Boîte de réception";
+                showToast("Affichage des Archives", "info");
+            } else {
+                viewMode = "INBOX";
+                btn.textContent = "Archives";
+                showToast("Affichage de la Boîte de réception", "info");
+            }
+            renderDeck();
+        };
+
+        // Reset/Restart Deck button
+        document.getElementById('restart-deck-btn').onclick = () => {
+            // Put all archived emails back to inbox for demo reset
+            mockEmails.forEach(e => {
+                if (e.folder === "ARCHIVE" || e.folder === "TRASH") {
+                    e.folder = "INBOX";
+                }
+            });
+            showToast("Boîte réinitialisée", "success");
+            renderDeck();
+        };
+
+        // Dark mode toggles
+        document.getElementById('theme-toggle').onclick = () => {
+            isDarkMode = !isDarkMode;
+            if (isDarkMode) {
+                document.documentElement.classList.add('dark');
+                showToast("Thème sombre", "info");
+            } else {
+                document.documentElement.classList.remove('dark');
+                showToast("Thème clair", "info");
+            }
+        };
+
+        // Sync Gmail button
+        document.getElementById('sync-gmail-btn').onclick = async () => {
+            if (gmailConnected) {
+                await syncGmailEmails();
+            } else {
+                await connectGmail();
+            }
+        };
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            const tag = e.target.tagName.toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) {
+                return;
+            }
+
+            if (e.key === 'ArrowLeft') {
+                const top = getTopCard();
+                if (top) swipeAction('left', top);
+            } else if (e.key === 'ArrowRight') {
+                const top = getTopCard();
+                if (top) swipeAction('right', top);
+            } else if (e.key === 'ArrowUp') {
+                const top = getTopCard();
+                if (top) swipeAction('up', top);
+            } else if (e.key === 'ArrowDown') {
+                const top = getTopCard();
+                if (top) {
+                    const id = top.getAttribute('data-id');
+                    const mail = mockEmails.find(e => e.id === id);
+                    openImmersiveReader(mail);
+                }
+            } else if (e.key.toLowerCase() === 'c') {
+                e.preventDefault();
+                openCompose();
+            } else if (e.key === 'Escape') {
+                closeImmersiveReader();
+                closeCompose();
+            }
+        });
+
+        // --- TOAST NOTIFICATIONS HELPER ---
+        function showToast(message, type = "info") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bgClass = "bg-zen-text text-zen-bg dark:bg-zen-darktext dark:text-zen-darkbg";
+            let icon = "info";
+            
+            if (type === "success") {
+                bgClass = "bg-emerald-600 text-white shadow-emerald-500/10";
+                icon = "check-circle";
+            } else if (type === "error") {
+                bgClass = "bg-rose-600 text-white shadow-rose-500/10";
+                icon = "alert-circle";
+            }
+
+            toast.className = `p-4 rounded-xl shadow-xl flex items-center gap-3 text-xs font-semibold border border-white/5 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto ${bgClass}`;
+            toast.innerHTML = `
+                <i data-lucide="${icon}" class="w-4 h-4"></i>
+                <span>${message}</span>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderDeck();
+            updateSyncBadge();
+            
+            // Force dark theme as initial view
+            document.documentElement.className = "dark";
+            
+            if (isChromeExtension) {
+                getGmailToken(false).then(() => {
+                    updateSyncBadge();
+                    syncGmailEmails();
+                }).catch(() => {});
+            }
+        });
+    </script>
+</body>
+</html>

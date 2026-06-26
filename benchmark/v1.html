@@ -1,0 +1,1985 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroMail - Modern Email Client</title>
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f4f6fe',
+                            100: '#e9edfd',
+                            200: '#d3dcfa',
+                            300: '#adc0f6',
+                            400: '#7e9bf1',
+                            500: '#5272ea',
+                            600: '#3c53df',
+                            700: '#3041cb',
+                            800: '#2c37a6',
+                            900: '#273384',
+                            950: '#1b204e',
+                        },
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.04)',
+                        'glass-hover': '0 12px 40px 0 rgba(31, 38, 135, 0.08)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/css">
+        /* Custom scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.2);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.4);
+        }
+        
+        /* Glassmorphism utility classes */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .glass-sidebar {
+            background: rgba(248, 250, 252, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-right: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        
+        .dark .glass-sidebar {
+            background: rgba(9, 15, 29, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-right: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        /* Pulsing dot for live status */
+        .status-pulse {
+            position: relative;
+        }
+        .status-pulse::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: #10B981;
+            border-radius: 50%;
+            top: 0;
+            right: 0;
+            border: 2px solid white;
+            animation: pulse 2s infinite;
+        }
+        .dark .status-pulse::after {
+            border-color: #0f172a;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 1; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1.1); opacity: 0.8; box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.9); opacity: 1; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* Gradient backgrounds */
+        .bg-mesh {
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(244, 246, 254, 0.9) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, rgba(233, 240, 253, 0.9) 0, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(241, 245, 249, 0.9) 0, transparent 50%);
+        }
+        .dark .bg-mesh {
+            background-color: #060913;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(17, 24, 48, 0.8) 0, transparent 55%), 
+                radial-gradient(at 100% 0%, rgba(24, 15, 41, 0.8) 0, transparent 55%),
+                radial-gradient(at 50% 100%, rgba(8, 17, 32, 0.9) 0, transparent 55%);
+        }
+
+        /* Transition delays */
+        .transition-all-300 {
+            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Shimmer for loading skeleton */
+        .shimmer {
+            background: linear-gradient(90deg, rgba(229, 231, 235, 0.5) 25%, rgba(243, 244, 246, 0.8) 50%, rgba(229, 231, 235, 0.5) 75%);
+            background-size: 200% 100%;
+            animation: loading-shimmer 1.5s infinite;
+        }
+        .dark .shimmer {
+            background: linear-gradient(90deg, rgba(30, 41, 59, 0.5) 25%, rgba(51, 65, 85, 0.8) 50%, rgba(30, 41, 59, 0.5) 75%);
+            background-size: 200% 100%;
+            animation: loading-shimmer 1.5s infinite;
+        }
+        @keyframes loading-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body class="bg-mesh font-sans text-slate-800 dark:text-slate-200 h-dvh overflow-hidden select-none transition-colors duration-300">
+
+    <!-- App Wrapper -->
+    <div class="flex h-full w-full relative">
+
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 glass-sidebar flex flex-col justify-between z-20 transition-all duration-300 relative shrink-0">
+            <div>
+                <!-- Brand / Logo -->
+                <div class="px-6 py-5 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center shadow-lg shadow-brand-500/30">
+                            <i data-lucide="send" class="w-5 h-5 text-white transform -rotate-12"></i>
+                        </div>
+                        <span class="font-display font-bold text-xl tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">AeroMail</span>
+                    </div>
+                    <!-- Indicator Mode Chrome Extension vs Mock -->
+                    <span id="extension-badge" class="px-2 py-0.5 text-[9px] font-semibold tracking-wider uppercase rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">Demo</span>
+                </div>
+
+                <!-- Compose Mail Button -->
+                <div class="px-4 mb-5">
+                    <button id="compose-btn" class="w-full py-3.5 px-4 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white rounded-2xl font-semibold text-sm shadow-md hover:shadow-lg shadow-brand-600/25 hover:shadow-brand-600/35 transition-all duration-300 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Nouveau Message</span>
+                    </button>
+                </div>
+
+                <!-- Main Folders -->
+                <div class="px-3 space-y-1">
+                    <button data-folder="INBOX" class="folder-btn w-full py-2.5 px-3.5 rounded-xl text-sm font-medium flex items-center justify-between transition-all duration-200 bg-brand-500/10 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="inbox" class="w-4 h-4"></i>
+                            <span>Boîte de réception</span>
+                        </div>
+                        <span id="inbox-badge" class="px-2 py-0.5 text-xs font-semibold rounded-full bg-brand-500/20 text-brand-700 dark:text-brand-300">0</span>
+                    </button>
+
+                    <button data-folder="STARRED" class="folder-btn w-full py-2.5 px-3.5 rounded-xl text-sm font-medium flex items-center justify-between transition-all duration-200 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/40">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="star" class="w-4 h-4"></i>
+                            <span>Messages suivis</span>
+                        </div>
+                        <span id="starred-badge" class="px-2 py-0.5 text-xs font-semibold rounded-full bg-slate-200/50 text-slate-600 dark:bg-slate-800/50 dark:text-slate-400">0</span>
+                    </button>
+
+                    <button data-folder="SENT" class="folder-btn w-full py-2.5 px-3.5 rounded-xl text-sm font-medium flex items-center justify-between transition-all duration-200 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/40">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="send-horizontal" class="w-4 h-4"></i>
+                            <span>Messages envoyés</span>
+                        </div>
+                    </button>
+
+                    <button data-folder="DRAFTS" class="folder-btn w-full py-2.5 px-3.5 rounded-xl text-sm font-medium flex items-center justify-between transition-all duration-200 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/40">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="file" class="w-4 h-4"></i>
+                            <span>Brouillons</span>
+                        </div>
+                        <span id="drafts-badge" class="px-2 py-0.5 text-xs font-semibold rounded-full bg-slate-200/50 text-slate-600 dark:bg-slate-800/50 dark:text-slate-400">0</span>
+                    </button>
+
+                    <button data-folder="ARCHIVE" class="folder-btn w-full py-2.5 px-3.5 rounded-xl text-sm font-medium flex items-center justify-between transition-all duration-200 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/40">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="archive" class="w-4 h-4"></i>
+                            <span>Archives</span>
+                        </div>
+                    </button>
+
+                    <button data-folder="TRASH" class="folder-btn w-full py-2.5 px-3.5 rounded-xl text-sm font-medium flex items-center justify-between transition-all duration-200 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/40">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            <span>Corbeille</span>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Custom Tags -->
+                <div class="mt-8 px-6">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Étiquettes</span>
+                    <div class="mt-3 space-y-1">
+                        <button data-tag="Travail" class="tag-filter-btn w-full py-1.5 px-2 rounded-lg text-xs font-medium flex items-center gap-2.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/30">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            <span>Travail</span>
+                        </button>
+                        <button data-tag="Finance" class="tag-filter-btn w-full py-1.5 px-2 rounded-lg text-xs font-medium flex items-center gap-2.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/30">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                            <span>Finance</span>
+                        </button>
+                        <button data-tag="Mises à jour" class="tag-filter-btn w-full py-1.5 px-2 rounded-lg text-xs font-medium flex items-center gap-2.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/30">
+                            <span class="w-2.5 h-2.5 rounded-full bg-brand-500"></span>
+                            <span>Mises à jour</span>
+                        </button>
+                        <button data-tag="Urgent" class="tag-filter-btn w-full py-1.5 px-2 rounded-lg text-xs font-medium flex items-center gap-2.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/30">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                            <span>Urgent</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Extra Views -->
+                <div class="mt-6 px-3">
+                    <button id="dashboard-toggle-btn" class="w-full py-2 px-3 rounded-xl text-sm font-medium flex items-center gap-3 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/40">
+                        <i data-lucide="bar-chart-2" class="w-4 h-4 text-emerald-500"></i>
+                        <span>Productivité & Stats</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Profile and Settings Footer -->
+            <div class="p-4 border-t border-slate-200/50 dark:border-slate-850/30">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="status-pulse">
+                            <img id="user-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="Avatar" class="w-9 h-9 rounded-xl object-cover ring-2 ring-slate-100 dark:ring-slate-800">
+                        </div>
+                        <div class="text-left">
+                            <p id="user-name" class="text-xs font-semibold leading-tight">Sarah Connor</p>
+                            <p id="user-email" class="text-[10px] text-slate-400 dark:text-slate-500 truncate max-w-[120px]">sarah@aero.co</p>
+                        </div>
+                    </div>
+                    <button id="settings-btn" class="p-1.5 hover:bg-slate-200/60 dark:hover:bg-slate-800/50 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                        <i data-lucide="settings" class="w-4.5 h-4.5"></i>
+                    </button>
+                </div>
+
+                <!-- Storage Info -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-[9px] font-semibold text-slate-400">
+                        <span>Espace utilisé</span>
+                        <span>4.2 Go / 15 Go (28%)</span>
+                    </div>
+                    <div class="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div class="bg-gradient-to-r from-brand-500 to-indigo-500 h-full w-[28%] rounded-full"></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace Pane -->
+        <main class="flex-1 flex flex-col min-w-0 h-full relative z-10">
+
+            <!-- Top Header -->
+            <header class="h-16 px-6 border-b border-slate-200/60 dark:border-slate-800/30 flex items-center justify-between shrink-0 glass-panel">
+                <!-- Search & Filters -->
+                <div class="flex-1 max-w-xl">
+                    <div class="relative group">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 group-focus-within:text-brand-500 absolute left-4.5 top-1/2 transform -translate-y-1/2 transition-colors"></i>
+                        <input type="text" id="search-input" placeholder="Rechercher des e-mails, expéditeurs ou étiquettes... (Appuyez sur /)" class="w-full h-10 pl-11 pr-16 bg-slate-100/75 dark:bg-slate-800/60 focus:bg-white dark:focus:bg-slate-900 border-0 focus:ring-2 focus:ring-brand-500/40 rounded-xl text-sm transition-all outline-none text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-550 shadow-inner">
+                        <kbd class="hidden sm:inline-block absolute right-3 top-1/2 transform -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-medium bg-slate-200/70 dark:bg-slate-700/70 text-slate-500 dark:text-slate-400 rounded-md border border-slate-300/40 dark:border-slate-600/40 pointer-events-none">/</kbd>
+                    </div>
+                </div>
+
+                <!-- Top Actions & Mode Sync -->
+                <div class="flex items-center gap-4">
+                    <!-- Quick Connection Button -->
+                    <button id="sync-gmail-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                        <span>Sync Gmail</span>
+                    </button>
+
+                    <!-- Theme Toggle -->
+                    <button id="theme-toggle" class="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-xl transition-all active:scale-95" aria-label="Toggle Theme">
+                        <i data-lucide="sun" class="w-4.5 h-4.5 hidden dark:block"></i>
+                        <i data-lucide="moon" class="w-4.5 h-4.5 block dark:hidden"></i>
+                    </button>
+
+                    <!-- Notifications Dropdown -->
+                    <div class="relative">
+                        <button id="notif-btn" class="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-500 dark:text-slate-400 rounded-xl transition-all relative">
+                            <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+                            <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white dark:border-slate-800"></span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Workspace Columns Layout (Two-Column Master-Detail) -->
+            <div class="flex-1 flex min-h-0 relative">
+                
+                <!-- Email List Panel (Master) -->
+                <section id="list-panel" class="w-[380px] xl:w-[440px] border-r border-slate-200/50 dark:border-slate-800/30 flex flex-col shrink-0 bg-white/40 dark:bg-slate-900/10 transition-all duration-300">
+                    
+                    <!-- Filters bar -->
+                    <div class="px-5 py-3.5 border-b border-slate-200/50 dark:border-slate-800/30 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-900/30">
+                        <div class="flex items-center gap-1.5">
+                            <span id="folder-title" class="font-display font-semibold text-base">Boîte de réception</span>
+                            <span id="mail-count" class="text-xs text-slate-450 bg-slate-200/50 dark:bg-slate-800/50 px-2 py-0.5 rounded-full font-medium">0</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="filter-unread-btn" class="text-xs font-semibold px-2.5 py-1 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/40 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-800/40 transition-all">Non lus</button>
+                            <button id="refresh-list-btn" class="p-1 hover:bg-slate-250 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 rounded-md transition-colors" title="Actualiser">
+                                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Email Scroll List -->
+                    <div id="email-list-container" class="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/30">
+                        <!-- Loaded dynamically or Loading State -->
+                        <div id="loading-state" class="p-8 space-y-4 hidden">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl shimmer shrink-0"></div>
+                                <div class="flex-1 space-y-2">
+                                    <div class="h-3 w-1/3 shimmer rounded"></div>
+                                    <div class="h-4 w-4/5 shimmer rounded"></div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl shimmer shrink-0"></div>
+                                <div class="flex-1 space-y-2">
+                                    <div class="h-3 w-1/4 shimmer rounded"></div>
+                                    <div class="h-4 w-3/4 shimmer rounded"></div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl shimmer shrink-0"></div>
+                                <div class="flex-1 space-y-2">
+                                    <div class="h-3 w-1/2 shimmer rounded"></div>
+                                    <div class="h-4 w-2/3 shimmer rounded"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Empty State -->
+                        <div id="empty-state" class="hidden flex-col items-center justify-center p-12 text-center h-full">
+                            <div class="w-16 h-16 rounded-full bg-brand-500/10 text-brand-500 flex items-center justify-center mb-4">
+                                <i data-lucide="check-circle" class="w-8 h-8"></i>
+                            </div>
+                            <h3 class="font-display font-semibold text-lg text-slate-800 dark:text-slate-200">Inbox Zero !</h3>
+                            <p class="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[200px] leading-relaxed">Profitez de cet instant de clarté pour vous détendre.</p>
+                        </div>
+
+                        <!-- Email items injected here -->
+                    </div>
+                </section>
+
+                <!-- Email Reader Panel (Detail) -->
+                <section id="detail-panel" class="flex-1 flex flex-col min-w-0 bg-white/60 dark:bg-slate-900/20 relative">
+                    
+                    <!-- Blank state / Welcome -->
+                    <div id="reader-blank-state" class="flex-1 flex flex-col items-center justify-center p-16 text-center select-text">
+                        <div class="w-24 h-24 rounded-2xl bg-gradient-to-tr from-brand-600/10 to-indigo-600/10 flex items-center justify-center mb-6 border border-brand-500/10">
+                            <i data-lucide="mail-open" class="w-10 h-10 text-brand-500 dark:text-brand-400"></i>
+                        </div>
+                        <h2 class="font-display font-bold text-2xl text-slate-900 dark:text-white mb-2">Sélectionnez un message</h2>
+                        <p class="text-sm text-slate-400 dark:text-slate-500 max-w-sm mb-8 leading-relaxed">Cliquez sur un e-mail dans la liste de gauche pour l'ouvrir, lire son contenu ou y répondre avec l'assistant AI.</p>
+                        
+                        <!-- Keyboard Shortcuts Info -->
+                        <div class="p-5 max-w-sm w-full rounded-2xl border border-slate-200/50 dark:border-slate-800/30 bg-white/40 dark:bg-slate-900/40 text-left">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block mb-3">Raccourcis clavier utiles</span>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between items-center"><span class="text-slate-500">Nouveau message</span><kbd class="px-1.5 py-0.5 bg-slate-200/60 dark:bg-slate-800 text-[10px] font-bold rounded">C</kbd></div>
+                                <div class="flex justify-between items-center"><span class="text-slate-500">Rechercher</span><kbd class="px-1.5 py-0.5 bg-slate-200/60 dark:bg-slate-800 text-[10px] font-bold rounded">/</kbd></div>
+                                <div class="flex justify-between items-center"><span class="text-slate-500">Fermer / Retour</span><kbd class="px-1.5 py-0.5 bg-slate-200/60 dark:bg-slate-800 text-[10px] font-bold rounded">ESC</kbd></div>
+                                <div class="flex justify-between items-center"><span class="text-slate-500">Marquer comme suivi</span><kbd class="px-1.5 py-0.5 bg-slate-200/60 dark:bg-slate-800 text-[10px] font-bold rounded">S</kbd></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selected Email View -->
+                    <div id="reader-content-state" class="hidden flex-1 flex flex-col min-h-0 select-text">
+                        <!-- Top actions bar -->
+                        <div class="px-6 py-4 border-b border-slate-200/50 dark:border-slate-800/30 flex items-center justify-between shrink-0 bg-slate-50/20 dark:bg-slate-900/10">
+                            <!-- Left nav actions -->
+                            <div class="flex items-center gap-2">
+                                <button id="action-archive" class="p-2 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 text-slate-500 hover:text-slate-850 dark:text-slate-400 dark:hover:text-slate-100 rounded-xl transition-all" title="Archiver">
+                                    <i data-lucide="archive" class="w-4 h-4"></i>
+                                </button>
+                                <button id="action-trash" class="p-2 hover:bg-rose-500/10 hover:text-rose-600 text-slate-500 rounded-xl transition-all" title="Supprimer">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                                <button id="action-unread" class="p-2 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 text-slate-500 rounded-xl transition-all" title="Marquer comme non lu">
+                                    <i data-lucide="mail" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Right options -->
+                            <div class="flex items-center gap-2">
+                                <button id="action-star" class="p-2 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 text-slate-400 hover:text-amber-500 rounded-xl transition-all">
+                                    <i data-lucide="star" class="w-4 h-4"></i>
+                                </button>
+                                <button id="action-reply" class="p-2 bg-brand-500/10 hover:bg-brand-550/20 text-brand-600 dark:text-brand-400 rounded-xl transition-all flex items-center gap-1.5 text-xs font-semibold">
+                                    <i data-lucide="reply" class="w-3.5 h-3.5"></i>
+                                    <span>Répondre</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Header & Content View -->
+                        <div class="flex-1 overflow-y-auto p-8 space-y-6">
+                            
+                            <!-- AI Summary Box -->
+                            <div id="ai-summary-card" class="rounded-2xl bg-gradient-to-tr from-brand-500/5 to-indigo-500/5 border border-brand-500/10 dark:border-brand-500/20 p-5 shadow-glass relative overflow-hidden group">
+                                <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-brand-500/5 rounded-full blur-xl group-hover:scale-150 transition-all duration-700"></div>
+                                <div class="flex items-center gap-2 mb-3">
+                                    <div class="w-5 h-5 rounded-lg bg-brand-500/15 flex items-center justify-center text-brand-600 dark:text-brand-400">
+                                        <i data-lucide="sparkles" class="w-3 h-3"></i>
+                                    </div>
+                                    <span class="font-display font-bold text-xs uppercase tracking-wider text-brand-600 dark:text-brand-400">Synthèse AI par AeroAssist</span>
+                                </div>
+                                <p id="ai-summary-text" class="text-xs leading-relaxed text-slate-600 dark:text-slate-350 italic">Cette synthèse se génère automatiquement.</p>
+                            </div>
+
+                            <!-- Subject Header -->
+                            <div class="space-y-3">
+                                <div class="flex items-start justify-between">
+                                    <h1 id="read-subject" class="font-display font-bold text-2xl tracking-tight leading-snug max-w-xl">Objet de l'e-mail</h1>
+                                    <div id="read-tags" class="flex gap-1.5 shrink-0 mt-1"></div>
+                                </div>
+                            </div>
+
+                            <!-- Sender Details Card -->
+                            <div class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/20 border border-slate-200/40 dark:border-slate-800/40">
+                                <div class="flex items-center gap-3">
+                                    <div id="read-avatar" class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-500 font-bold flex items-center justify-center font-display">
+                                        AB
+                                    </div>
+                                    <div class="text-left text-xs">
+                                        <p id="read-from-name" class="font-semibold text-slate-800 dark:text-slate-200">Expéditeur</p>
+                                        <p id="read-from-email" class="text-slate-400 mt-0.5">sender@company.com</p>
+                                    </div>
+                                </div>
+                                <div class="text-right text-[10px] text-slate-400">
+                                    <p id="read-date">Aujourd'hui, 10:45</p>
+                                    <p class="mt-0.5">À moi &lt;sarah@aero.co&gt;</p>
+                                </div>
+                            </div>
+
+                            <!-- HTML Body Container -->
+                            <article id="read-body" class="text-sm leading-relaxed text-slate-700 dark:text-slate-300 select-text overflow-x-auto min-h-[150px] border-t border-slate-200/20 dark:border-slate-800/20 pt-6">
+                                <!-- Body text goes here -->
+                            </article>
+
+                            <!-- Attachments Area -->
+                            <div id="read-attachments-section" class="hidden space-y-3 pt-6 border-t border-slate-200/20 dark:border-slate-800/20">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Pièces jointes</span>
+                                <div id="read-attachments-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <!-- Attachment cards loaded here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Action Replies Bar -->
+                        <div class="p-6 border-t border-slate-200/50 dark:border-slate-800/30 bg-slate-50/20 dark:bg-slate-950/15 shrink-0">
+                            <!-- Smart Replies -->
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <button class="smart-reply-btn text-xs px-3 py-1.5 rounded-xl border border-slate-200 hover:border-brand-500 dark:border-slate-800 dark:hover:border-brand-500 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-brand-500 dark:hover:text-brand-400 transition-all">
+                                    Entièrement d'accord !
+                                </button>
+                                <button class="smart-reply-btn text-xs px-3 py-1.5 rounded-xl border border-slate-200 hover:border-brand-500 dark:border-slate-800 dark:hover:border-brand-500 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-brand-500 dark:hover:text-brand-400 transition-all">
+                                    Merci pour les détails.
+                                </button>
+                                <button class="smart-reply-btn text-xs px-3 py-1.5 rounded-xl border border-slate-200 hover:border-brand-500 dark:border-slate-800 dark:hover:border-brand-500 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-brand-500 dark:hover:text-brand-400 transition-all">
+                                    Je regarde ça aujourd'hui.
+                                </button>
+                            </div>
+
+                            <!-- Write reply form -->
+                            <div class="flex gap-4 items-start">
+                                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="Sarah" class="w-8 h-8 rounded-lg object-cover">
+                                <div class="flex-1 relative">
+                                    <textarea id="reply-textarea" placeholder="Répondre à cet expéditeur..." class="w-full min-h-[50px] max-h-[150px] p-3.5 pr-24 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-brand-500/60 focus:ring-2 focus:ring-brand-500/20 rounded-2xl text-xs transition-all outline-none text-slate-700 dark:text-slate-350 resize-none"></textarea>
+                                    <div class="absolute right-3.5 bottom-3 flex items-center gap-2">
+                                        <button id="reply-send-btn" class="p-2 bg-brand-500 hover:bg-brand-600 text-white rounded-xl shadow shadow-brand-500/20 transition-all hover:scale-105 active:scale-95" title="Envoyer la réponse">
+                                            <i data-lucide="send-horizontal" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Dashboard / Productivity View (Collapsible Overlay Panel) -->
+        <section id="dashboard-view" class="hidden absolute inset-0 z-30 bg-mesh p-8 overflow-y-auto flex flex-col gap-8">
+            <div class="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-850/40 pb-5">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-500">
+                        <i data-lucide="bar-chart-2" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-display font-bold text-2xl">Statistiques de Productivité</h2>
+                        <p class="text-xs text-slate-400 dark:text-slate-500">Tableau de bord de gestion du temps et Zero-Inbox</p>
+                    </div>
+                </div>
+                <button id="close-dashboard-btn" class="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-850 dark:hover:bg-slate-800 text-slate-500 rounded-xl transition-all">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+                <div class="p-5 bg-white/50 dark:bg-slate-900/50 rounded-2xl border border-slate-200/30 dark:border-slate-800/30 shadow-glass flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Taux de réponse</p>
+                        <h3 class="text-2xl font-bold font-display mt-1 text-slate-800 dark:text-white">92.4%</h3>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                        <i data-lucide="trending-up" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                <div class="p-5 bg-white/50 dark:bg-slate-900/50 rounded-2xl border border-slate-200/30 dark:border-slate-800/30 shadow-glass flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Temps de réponse moyen</p>
+                        <h3 class="text-2xl font-bold font-display mt-1 text-slate-800 dark:text-white">28 min</h3>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-brand-500/10 text-brand-500 flex items-center justify-center">
+                        <i data-lucide="clock" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                <div class="p-5 bg-white/50 dark:bg-slate-900/50 rounded-2xl border border-slate-200/30 dark:border-slate-800/30 shadow-glass flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Inbox Zero Streak</p>
+                        <h3 class="text-2xl font-bold font-display mt-1 text-slate-800 dark:text-white">5 jours</h3>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                        <i data-lucide="zap" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                <div class="p-5 bg-white/50 dark:bg-slate-900/50 rounded-2xl border border-slate-200/30 dark:border-slate-800/30 shadow-glass flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">E-mails reçus cette semaine</p>
+                        <h3 class="text-2xl font-bold font-display mt-1 text-slate-800 dark:text-white">148</h3>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+                        <i data-lucide="mail" class="w-5 h-5"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Weekly volume chart -->
+                <div class="col-span-2 p-6 bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-slate-200/30 dark:border-slate-800/30 shadow-glass flex flex-col gap-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Volume hebdomadaire d'e-mails</span>
+                        <span class="text-[10px] text-slate-400 font-medium">12 Juin - 18 Juin</span>
+                    </div>
+                    <!-- Mock chart using SVG -->
+                    <div class="flex-1 min-h-[220px] flex items-end justify-between px-2 pt-6">
+                        <div class="flex flex-col items-center gap-2 w-1/7">
+                            <span class="text-[10px] text-slate-400">24</span>
+                            <div class="w-8 bg-slate-350 dark:bg-slate-700 h-16 rounded-t-lg transition-all duration-500"></div>
+                            <span class="text-[10px] font-semibold">Lun</span>
+                        </div>
+                        <div class="flex flex-col items-center gap-2 w-1/7">
+                            <span class="text-[10px] text-slate-400">32</span>
+                            <div class="w-8 bg-slate-350 dark:bg-slate-700 h-24 rounded-t-lg transition-all duration-500"></div>
+                            <span class="text-[10px] font-semibold">Mar</span>
+                        </div>
+                        <div class="flex flex-col items-center gap-2 w-1/7">
+                            <span class="text-[10px] text-slate-400">45</span>
+                            <div class="w-8 bg-slate-350 dark:bg-slate-700 h-32 rounded-t-lg transition-all duration-500"></div>
+                            <span class="text-[10px] font-semibold">Mer</span>
+                        </div>
+                        <div class="flex flex-col items-center gap-2 w-1/7">
+                            <span class="text-[10px] text-slate-400">18</span>
+                            <div class="w-8 bg-slate-350 dark:bg-slate-700 h-12 rounded-t-lg transition-all duration-500"></div>
+                            <span class="text-[10px] font-semibold">Jeu</span>
+                        </div>
+                        <div class="flex flex-col items-center gap-2 w-1/7">
+                            <span class="text-[10px] text-slate-400">29</span>
+                            <div class="w-8 bg-slate-350 dark:bg-slate-700 h-20 rounded-t-lg transition-all duration-500"></div>
+                            <span class="text-[10px] font-semibold">Ven</span>
+                        </div>
+                        <div class="flex flex-col items-center gap-2 w-1/7">
+                            <span class="text-[10px] text-slate-400">8</span>
+                            <div class="w-8 bg-brand-500 h-6 rounded-t-lg transition-all duration-500"></div>
+                            <span class="text-[10px] font-semibold">Sam</span>
+                        </div>
+                        <div class="flex flex-col items-center gap-2 w-1/7">
+                            <span class="text-[10px] text-slate-400">5</span>
+                            <div class="w-8 bg-brand-500 h-4 rounded-t-lg transition-all duration-500"></div>
+                            <span class="text-[10px] font-semibold">Dim</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Storage breakdown & Efficiency -->
+                <div class="p-6 bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-slate-200/30 dark:border-slate-800/30 shadow-glass flex flex-col justify-between gap-4">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Efficacité de l'Inbox</span>
+                        <p class="text-[11px] text-slate-450">Objectif 100% de désarchivage ou classification immédiate</p>
+                    </div>
+
+                    <div class="flex justify-center py-4">
+                        <div class="relative w-28 h-28 flex items-center justify-center">
+                            <!-- Circular Progress Bar -->
+                            <svg class="w-full h-full transform -rotate-90">
+                                <circle cx="56" cy="56" r="48" stroke="currentColor" stroke-width="8" fill="transparent" class="text-slate-200 dark:text-slate-800" />
+                                <circle cx="56" cy="56" r="48" stroke="currentColor" stroke-width="8" fill="transparent" stroke-dasharray="301.6" stroke-dashoffset="60.3" class="text-brand-500 transition-all duration-1000" />
+                            </svg>
+                            <div class="absolute text-center">
+                                <span class="text-xl font-bold font-display block">80%</span>
+                                <span class="text-[8px] font-semibold text-slate-450 uppercase">Score</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 text-xs">
+                        <div class="flex items-center justify-between"><span class="text-slate-450 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-brand-500"></span>Lu immédiatement</span><span class="font-semibold">65%</span></div>
+                        <div class="flex items-center justify-between"><span class="text-slate-450 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>Classé en archives</span><span class="font-semibold">15%</span></div>
+                        <div class="flex items-center justify-between"><span class="text-slate-450 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span>Snoozé</span><span class="font-semibold">20%</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Floating Settings Modal -->
+        <dialog id="settings-dialog" class="backdrop:bg-slate-950/40 backdrop:backdrop-blur-sm rounded-3xl bg-mesh p-0 border border-slate-200 dark:border-slate-800/50 shadow-2xl max-w-lg w-full overflow-hidden text-slate-800 dark:text-slate-200 transition-all duration-300">
+            <div class="px-6 py-5 border-b border-slate-200/50 dark:border-slate-850/40 flex justify-between items-center bg-slate-50/20 dark:bg-slate-900/10">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="settings" class="w-5 h-5 text-brand-500"></i>
+                    <h3 class="font-display font-bold text-lg">Paramètres AeroMail</h3>
+                </div>
+                <button id="close-settings-dialog" class="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-600 transition-colors">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+                <!-- Connection Status -->
+                <div class="space-y-3">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Compte Gmail</span>
+                    <div id="settings-conn-card" class="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 flex flex-col gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                            </div>
+                            <div class="text-xs">
+                                <p class="font-bold text-amber-600 dark:text-amber-400">Mode Invité (Données de démonstration)</p>
+                                <p class="text-slate-400 dark:text-slate-500 mt-0.5">Le client fonctionne localement avec un jeu d'e-mails interactifs de démonstration.</p>
+                            </div>
+                        </div>
+                        <button id="settings-auth-btn" class="w-full py-2 bg-slate-800 hover:bg-slate-950 text-white dark:bg-white dark:hover:bg-slate-100 dark:text-slate-950 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="key" class="w-3.5 h-3.5"></i>
+                            <span>Associer mon compte Gmail avec OAuth</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Customizations & Layout Theme -->
+                <div class="space-y-3">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Personnalisation visuelle</span>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button class="theme-select-btn p-3 rounded-xl border text-xs font-semibold text-left transition-all border-brand-500 bg-brand-500/5 text-brand-600 dark:text-brand-400" data-theme-val="dark">
+                            🌙 Sombre Obsidian
+                        </button>
+                        <button class="theme-select-btn p-3 rounded-xl border text-xs font-semibold text-left transition-all border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/40" data-theme-val="light">
+                            ☀️ Lumineux Minimaliste
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AI settings -->
+                <div class="space-y-3">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Options de l'Assistant AI</span>
+                    <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/30 border border-slate-200/40 dark:border-slate-800/40">
+                        <div class="text-xs">
+                            <p class="font-bold">Synthèse automatique AI</p>
+                            <p class="text-slate-450 mt-0.5">Génère automatiquement les résumés des messages entrants.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" checked class="sr-only peer" id="ai-checkbox">
+                            <div class="w-9 h-5 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-500"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </dialog>
+
+        <!-- Floating Compose Panel (Standard Bottom-Right Layout) -->
+        <div id="compose-panel" class="hidden fixed bottom-6 right-6 w-[540px] max-w-full h-[520px] rounded-3xl glass-panel border border-slate-200 dark:border-slate-800/80 shadow-2xl flex flex-col overflow-hidden z-50 transition-all duration-300 transform scale-95 opacity-0 pointer-events-none">
+            <!-- Compose Header -->
+            <div class="px-5 py-4 bg-slate-900 text-white dark:bg-slate-950 dark:text-white flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="pen-tool" class="w-4.5 h-4.5 text-brand-400"></i>
+                    <span class="text-sm font-semibold">Nouveau message</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="compose-ai-help-btn" class="px-2.5 py-1 bg-brand-500/20 text-brand-400 hover:bg-brand-500/30 text-[10px] font-bold uppercase rounded-lg flex items-center gap-1 border border-brand-500/30 transition-all">
+                        <i data-lucide="sparkles" class="w-3 h-3"></i>
+                        <span>Aide à la rédaction AI</span>
+                    </button>
+                    <button id="close-compose-btn" class="p-1 hover:bg-white/10 rounded-lg text-slate-300 hover:text-white transition-colors">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Compose Form Fields -->
+            <div class="p-5 flex-1 flex flex-col gap-3 min-h-0 bg-white/40 dark:bg-slate-900/40">
+                <div class="flex items-center border-b border-slate-250 dark:border-slate-800 pb-2">
+                    <span class="text-xs font-semibold text-slate-400 w-12 text-left">À :</span>
+                    <input type="text" id="compose-to" placeholder="destinataire@mail.com" class="flex-1 bg-transparent border-0 ring-0 focus:ring-0 p-1 text-xs outline-none text-slate-800 dark:text-slate-100">
+                </div>
+                <div class="flex items-center border-b border-slate-250 dark:border-slate-800 pb-2">
+                    <span class="text-xs font-semibold text-slate-400 w-12 text-left">Objet :</span>
+                    <input type="text" id="compose-subject" placeholder="Saisir l'objet du message" class="flex-1 bg-transparent border-0 ring-0 focus:ring-0 p-1 text-xs font-bold outline-none text-slate-800 dark:text-slate-100">
+                </div>
+
+                <!-- Rich Rich Text / Textarea content -->
+                <textarea id="compose-body" placeholder="Rédigez votre e-mail ici... Utilisez le bouton AI pour perfectionner votre texte." class="flex-1 w-full bg-transparent border-0 focus:ring-0 p-1 text-xs outline-none resize-none leading-relaxed text-slate-800 dark:text-slate-300"></textarea>
+            </div>
+
+            <!-- Compose Footer -->
+            <div class="p-4 border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-950/20 shrink-0 flex items-center justify-between">
+                <div class="flex items-center gap-1">
+                    <button class="p-2 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-xl text-slate-400 hover:text-slate-700 transition-all" title="Pièce jointe">
+                        <i data-lucide="paperclip" class="w-4 h-4"></i>
+                    </button>
+                    <button class="p-2 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-xl text-slate-400 hover:text-slate-700 transition-all" title="Format de texte">
+                        <i data-lucide="type" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <button id="send-btn" class="px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white rounded-xl font-semibold text-xs shadow-md hover:shadow-lg shadow-brand-600/20 transition-all flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98]">
+                    <span>Envoyer</span>
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Notification Toast Container -->
+        <div id="toast-container" class="fixed bottom-6 left-6 z-50 flex flex-col gap-2 pointer-events-none">
+            <!-- Toast alerts dynamically injected here -->
+        </div>
+
+    </div>
+
+    <!-- Core App JS Code -->
+    <script>
+        // --- DATA LAYER: Interactive Mock Database & Live Sync ---
+        
+        let mockEmails = [
+            {
+                id: "msg-stripe-1",
+                folder: "INBOX",
+                labelIds: ["INBOX", "UNREAD"],
+                tags: ["Finance"],
+                from: "Stripe Payouts <payouts@stripe.com>",
+                subject: "Versement Stripe traité - $14,250.00",
+                snippet: "Votre versement pour la période du 1er au 15 juin a été traité et est en cours d'acheminement vers votre banque.",
+                date: new Date(Date.now() - 15 * 60000).toISOString(), // 15 mins ago
+                body: `
+                    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#333;line-height:1.6;max-width:560px;margin:0 auto;padding:10px 0;">
+                        <h3 style="font-family:'Outfit',sans-serif;font-size:22px;color:#635bff;margin-top:0;font-weight:700;">Votre versement est en route !</h3>
+                        <p>Bonjour Sarah,</p>
+                        <p>Nous vous confirmons le traitement du versement numéro <strong>TRN-90281-STRP</strong> pour un montant total de <strong>$14,250.00 USD</strong>.</p>
+                        
+                        <div style="background:#f6f9fc;border-radius:12px;padding:20px;margin:25px 0;border:1px solid #e6ebf1;">
+                            <table style="width:100%;font-size:14px;border-collapse:collapse;">
+                                <tr>
+                                    <td style="color:#6b7c93;padding-bottom:10px;">ID du versement</td>
+                                    <td style="text-align:right;font-weight:600;padding-bottom:10px;">TRN-90281-STRP</td>
+                                </tr>
+                                <tr>
+                                    <td style="color:#6b7c93;padding-bottom:10px;">Montant net</td>
+                                    <td style="text-align:right;font-weight:600;padding-bottom:10px;color:#635bff;font-size:16px;">$14,250.00</td>
+                                </tr>
+                                <tr>
+                                    <td style="color:#6b7c93;">Date de virement estimée</td>
+                                    <td style="text-align:right;font-weight:600;">19 Juin 2026</td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <p>Le délai de traitement bancaire usuel est de 1 à 2 jours ouvrables selon votre établissement.</p>
+                        <p style="margin-bottom:0;">L'équipe Stripe France</p>
+                    </div>
+                `,
+                aiSummary: "Versement de $14,250.00 USD traité avec succès par Stripe (ID : TRN-90281-STRP). Les fonds devraient arriver sur votre compte bancaire d'ici le 19 juin 2026. Aucune action requise.",
+                starred: false,
+                attachments: [
+                    { name: "invoice-TRN90281.pdf", size: "142 KB", type: "pdf" }
+                ]
+            },
+            {
+                id: "msg-openai-2",
+                folder: "INBOX",
+                labelIds: ["INBOX", "UNREAD"],
+                tags: ["Mises à jour"],
+                from: "OpenAI Launchpad <news@openai.com>",
+                subject: "Présentation de GPT-5 : La nouvelle frontière de l'Intelligence Générale",
+                snippet: "Nous sommes ravis d'annoncer la sortie de GPT-5, notre modèle le plus puissant à ce jour, repoussant les limites de la science et de l'ingénierie.",
+                date: new Date(Date.now() - 3 * 3600000).toISOString(), // 3 hours ago
+                body: `
+                    <div style="font-family:inherit;color:#1e293b;line-height:1.7;">
+                        <h2 style="font-size:24px;font-weight:800;color:#0f172a;margin-bottom:16px;">GPT-5 est désormais disponible en avant-première</h2>
+                        <p>Aujourd'hui, nous franchissons une nouvelle étape majeure dans le développement de l'intelligence artificielle générale (AGI).</p>
+                        <p><strong>GPT-5</strong> intègre des capacités de raisonnement multi-modal avancé, une mémoire contextuelle de 500k tokens et une vitesse de génération multipliée par 3 par rapport aux modèles précédents.</p>
+                        
+                        <h3 style="font-size:16px;font-weight:700;color:#0f172a;margin-top:24px;margin-bottom:8px;">Principales fonctionnalités :</h3>
+                        <ul>
+                            <li>Raisonnement mathématique et logique de niveau universitaire.</li>
+                            <li>Compréhension et analyse audio et vidéo native de haute précision.</li>
+                            <li>Exécution de tâches complexes de codage multi-fichiers en continu.</li>
+                        </ul>
+                        
+                        <p style="margin-top:24px;"><a href="#" style="background:#10a37f;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block;">Essayer GPT-5 Pro</a></p>
+                    </div>
+                `,
+                aiSummary: "Annonce du lancement de GPT-5 par OpenAI. Les nouveautés clés incluent : raisonnement multi-modal poussé, fenêtre de contexte étendue à 500k tokens et vitesse triplée. Possibilité de tester la préversion.",
+                starred: false
+            },
+            {
+                id: "msg-github-3",
+                folder: "INBOX",
+                labelIds: ["INBOX"],
+                tags: ["Urgent", "Travail"],
+                from: "GitHub Security <noreply@github.com>",
+                subject: "[GitHub] Alerte de sécurité critique sur le package webpack-dev-server",
+                snippet: "Un problème de sécurité de sévérité CRITIQUE (CVE-2026-98122) a été détecté dans l'un de vos dépôts actifs.",
+                date: new Date(Date.now() - 18 * 3600000).toISOString(), // 18 hours ago
+                body: `
+                    <div style="font-family:sans-serif;color:#24292e;line-height:1.5;max-width:600px;">
+                        <div style="background:#ffe3e6;border:1px solid #ff3b30;border-radius:10px;padding:16px;margin-bottom:20px;">
+                            <h4 style="margin:0;color:#d32f2f;font-size:16px;font-weight:700;">Alerte de sécurité critique</h4>
+                            <p style="margin:8px 0 0 0;font-size:13px;color:#586069;">Le dépôt <strong>Chrome_GmailPK</strong> utilise une version vulnérable de webpack-dev-server.</p>
+                        </div>
+                        <p>Bonjour sarah-connor,</p>
+                        <p>Dependabot a détecté une vulnérabilité d'exécution de code à distance (RCE) critique dans le package <strong>webpack-dev-server</strong>.</p>
+                        
+                        <table style="width:100%;font-size:13px;border-collapse:collapse;margin:20px 0;">
+                            <tr>
+                                <td style="padding:8px 0;border-bottom:1px solid #e1e4e8;color:#586069;">CVE</td>
+                                <td style="padding:8px 0;border-bottom:1px solid #e1e4e8;font-weight:600;">CVE-2026-98122</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:8px 0;border-bottom:1px solid #e1e4e8;color:#586069;">Version concernée</td>
+                                <td style="padding:8px 0;border-bottom:1px solid #e1e4e8;font-weight:600;color:#d32f2f;">&lt; 4.15.2</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:8px 0;border-bottom:1px solid #e1e4e8;color:#586069;">Version recommandée</td>
+                                <td style="padding:8px 0;border-bottom:1px solid #e1e4e8;font-weight:600;color:#2e7d32;">&gt;= 4.15.2</td>
+                            </tr>
+                        </table>
+                        
+                        <p>Veuillez fusionner la Pull Request de mise à niveau Dependabot #14 disponible sur votre projet dès maintenant.</p>
+                    </div>
+                `,
+                aiSummary: "Alerte de sécurité critique (CVE-2026-98122) identifiée sur votre projet GitHub dans webpack-dev-server. Risque d'exécution de code à distance (RCE). Action recommandée : mettre à jour vers >= 4.15.2 immédiatement.",
+                starred: true
+            },
+            {
+                id: "msg-vercel-4",
+                folder: "INBOX",
+                labelIds: ["INBOX"],
+                tags: ["Travail"],
+                from: "Vercel Deployments <deployments@vercel.com>",
+                subject: "Déploiement en production réussi pour 'aeromail-app'",
+                snippet: "Votre projet aeromail-app a été déployé en production. Le build a duré 42 secondes sur la branche main.",
+                date: new Date(Date.now() - 32 * 3600000).toISOString(), // 1.3 days ago
+                body: `
+                    <div style="font-family:sans-serif;color:#111;line-height:1.6;">
+                        <h3 style="font-weight:700;margin-top:0;">Déploiement réussi sur Vercel</h3>
+                        <p>Votre build de production est désormais en ligne.</p>
+                        
+                        <div style="border:1px solid #eaeaea;border-radius:12px;padding:16px;margin:20px 0;">
+                            <div style="font-size:14px;font-weight:600;margin-bottom:8px;">Détails :</div>
+                            <div style="font-size:12px;color:#666;">
+                                <p style="margin:4px 0;"><strong>Projet :</strong> aeromail-app</p>
+                                <p style="margin:4px 0;"><strong>URL :</strong> <a href="#" style="color:#0070f3;text-decoration:none;">aeromail-app.vercel.app</a></p>
+                                <p style="margin:4px 0;"><strong>Commit :</strong> fe456a (Feat: setup rich UI analytics dashboard)</p>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                aiSummary: "Déploiement automatique réussi de aeromail-app en production sur Vercel. URL : aeromail-app.vercel.app. Changement : Feat: setup rich UI analytics dashboard.",
+                starred: false
+            },
+            {
+                id: "msg-linear-5",
+                folder: "ARCHIVE",
+                labelIds: ["ARCHIVE"],
+                tags: ["Travail"],
+                from: "Linear <no-reply@linear.app>",
+                subject: "Nouveau ticket assigné : [AER-201] Optimisation du rendu CSS du panneau principal",
+                snippet: "Vous avez été assigné au ticket AER-201. Priorité : Haute. Description : Optimiser les performances de rendu.",
+                date: new Date(Date.now() - 48 * 3600000).toISOString(),
+                body: `<p>Ticket AER-201 assigné à Sarah Connor par Mark. Priorité Haute.</p>`,
+                aiSummary: "Sarah Connor a été assignée à la tâche AER-201 pour optimiser le rendu CSS du panneau principal (Priorité Haute).",
+                starred: false
+            }
+        ];
+
+        let currentFolder = "INBOX";
+        let activeEmail = null;
+        let activeTag = null;
+        let searchQuery = "";
+        let isDarkMode = true;
+
+        // --- GMAIL LIVE SYNC IMPLEMENTATION ---
+        
+        let gmailConnected = false;
+        let gmailAuthToken = null;
+        const GMAIL_API_BASE = 'https://gmail.googleapis.com/gmail/v1/users/me';
+
+        // Check if running as a Chrome Extension
+        const isChromeExtension = typeof chrome !== 'undefined' && chrome.identity && chrome.identity.getAuthToken;
+
+        function updateContextMode() {
+            const badge = document.getElementById('extension-badge');
+            const syncBtn = document.getElementById('sync-gmail-btn');
+            const connCard = document.getElementById('settings-conn-card');
+            
+            if (isChromeExtension) {
+                badge.textContent = "Extension";
+                badge.className = "px-2 py-0.5 text-[9px] font-semibold tracking-wider uppercase rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20";
+                
+                if (gmailConnected) {
+                    syncBtn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i><span>Synchro</span>`;
+                    syncBtn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500/20 text-emerald-700 dark:text-emerald-350 border border-emerald-500/30";
+                    connCard.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                                <i data-lucide="check" class="w-4 h-4"></i>
+                            </div>
+                            <div class="text-xs">
+                                <p class="font-bold text-emerald-600 dark:text-emerald-400">Gmail API Connectée</p>
+                                <p class="text-slate-400 mt-0.5">Vos vrais e-mails Gmail sont chargés en temps réel.</p>
+                            </div>
+                        </div>
+                        <button id="disconnect-gmail-btn" class="w-full py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 text-xs font-semibold rounded-xl transition-all">
+                            Déconnecter Gmail
+                        </button>
+                    `;
+                    document.getElementById('disconnect-gmail-btn').onclick = disconnectGmail;
+                } else {
+                    syncBtn.innerHTML = `<i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i><span>Sync Gmail</span>`;
+                    syncBtn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 hover:bg-brand-500/20 transition-all";
+                }
+            } else {
+                badge.textContent = "Démo / Mock";
+                badge.className = "px-2 py-0.5 text-[9px] font-semibold tracking-wider uppercase rounded-full bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20";
+            }
+            lucide.createIcons();
+        }
+
+        async function getGmailToken(interactive = true) {
+            if (gmailAuthToken) return gmailAuthToken;
+            return new Promise((resolve, reject) => {
+                chrome.identity.getAuthToken({ interactive }, (token) => {
+                    if (chrome.runtime.lastError) {
+                        reject(new Error(chrome.runtime.lastError.message));
+                    } else {
+                        gmailAuthToken = token;
+                        gmailConnected = true;
+                        resolve(token);
+                    }
+                });
+            });
+        }
+
+        async function makeGmailRequest(endpoint, options = {}) {
+            const token = await getGmailToken(true);
+            const url = endpoint.startsWith('http') ? endpoint : `${GMAIL_API_BASE}${endpoint}`;
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    ...options.headers,
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+            if (!response.ok) {
+                if (response.status === 401) {
+                    gmailAuthToken = null;
+                    gmailConnected = false;
+                    chrome.identity.removeCachedAuthToken({ token }, () => {});
+                }
+                throw new Error(`API error ${response.status}`);
+            }
+            return response.json();
+        }
+
+        async function connectGmail() {
+            if (!isChromeExtension) {
+                showToast("OAuth requiert de tourner en mode extension Chrome. Essayez de charger le dossier 'src' dans chrome://extensions/ !", "error");
+                return;
+            }
+            showToast("Demande d'autorisation Gmail...", "info");
+            try {
+                await getGmailToken(true);
+                gmailConnected = true;
+                showToast("Gmail connecté avec succès !", "success");
+                updateContextMode();
+                await syncGmailEmails();
+            } catch (err) {
+                showToast(`Échec d'authentification : ${err.message}`, "error");
+            }
+        }
+
+        function disconnectGmail() {
+            if (isChromeExtension && gmailAuthToken) {
+                const token = gmailAuthToken;
+                chrome.identity.removeCachedAuthToken({ token }, () => {
+                    gmailAuthToken = null;
+                    gmailConnected = false;
+                    showToast("Compte Gmail déconnecté", "info");
+                    updateContextMode();
+                    // Reload mock list
+                    renderEmailList();
+                });
+            }
+        }
+
+        async function syncGmailEmails() {
+            if (!gmailConnected) return;
+            
+            document.getElementById('loading-state').classList.remove('hidden');
+            const listContainer = document.getElementById('email-list-container');
+            // Remove previous items
+            const oldItems = listContainer.querySelectorAll('.email-item-card');
+            oldItems.forEach(el => el.remove());
+
+            try {
+                const data = await makeGmailRequest('/messages?maxResults=10');
+                if (!data.messages || data.messages.length === 0) {
+                    mockEmails = [];
+                    renderEmailList();
+                    return;
+                }
+
+                // Fetch details in parallel
+                const detailedPromises = data.messages.map(m => makeGmailRequest(`/messages/${m.id}`));
+                const detailedEmails = await Promise.all(detailedPromises);
+
+                // Map into mock format
+                mockEmails = detailedEmails.map(item => {
+                    const headers = item.payload.headers || [];
+                    const from = headers.find(h => h.name === 'From')?.value || 'Inconnu';
+                    const subject = headers.find(h => h.name === 'Subject')?.value || '(Sans objet)';
+                    const dateVal = headers.find(h => h.name === 'Date')?.value || new Date().toISOString();
+                    const snippet = item.snippet || '';
+                    
+                    // Body parse
+                    let parsedBody = "<i>Aucun contenu lisible</i>";
+                    if (item.payload.body && item.payload.body.data) {
+                        parsedBody = decodeBase64(item.payload.body.data);
+                    } else if (item.payload.parts) {
+                        const htmlPart = item.payload.parts.find(p => p.mimeType === 'text/html');
+                        if (htmlPart && htmlPart.body && htmlPart.body.data) {
+                            parsedBody = decodeBase64(htmlPart.body.data);
+                        } else if (item.payload.parts[0] && item.payload.parts[0].body && item.payload.parts[0].body.data) {
+                            parsedBody = decodeBase64(item.payload.parts[0].body.data);
+                        }
+                    }
+
+                    const labels = item.labelIds || [];
+                    const folder = labels.includes('TRASH') ? 'TRASH' : (labels.includes('SENT') ? 'SENT' : (labels.includes('DRAFT') ? 'DRAFTS' : 'INBOX'));
+
+                    // Generate dynamic AI Summary mock
+                    const cleanSnippet = snippet.replace(/[<>]/g, "");
+                    const dynamicSummary = `Email reçu de ${from.split('<')[0]}. Objet : ${subject}. Résumé rapide : ${cleanSnippet || "Pas de résumé disponible."}`;
+
+                    return {
+                        id: item.id,
+                        folder: folder,
+                        labelIds: labels,
+                        tags: labels.includes('UNREAD') ? ['Mises à jour'] : [],
+                        from: from,
+                        subject: subject,
+                        snippet: snippet,
+                        date: new Date(dateVal).toISOString(),
+                        body: parsedBody,
+                        aiSummary: dynamicSummary,
+                        starred: labels.includes('STARRED'),
+                        attachments: []
+                    };
+                });
+
+                renderEmailList();
+                showToast("Emails Gmail synchronisés avec succès !", "success");
+            } catch (err) {
+                console.error(err);
+                showToast("Erreur lors de la synchronisation Gmail.", "error");
+            } finally {
+                document.getElementById('loading-state').classList.add('hidden');
+            }
+        }
+
+        function decodeBase64(data) {
+            try {
+                const base64 = data.replace(/-/g, '+').replace(/_/g, '/');
+                return decodeURIComponent(escape(atob(base64)));
+            } catch (e) { return "<i>[Erreur de décodage du message]</i>"; }
+        }
+
+        // --- CORE UI CONTROLLER ---
+
+        // Render Folder navigation badges
+        function updateFolderBadges() {
+            const inboxCount = mockEmails.filter(e => e.folder === "INBOX" && e.labelIds.includes("UNREAD")).length;
+            const starredCount = mockEmails.filter(e => e.starred).length;
+            const draftsCount = mockEmails.filter(e => e.folder === "DRAFTS").length;
+
+            const inboxBadge = document.getElementById('inbox-badge');
+            const starredBadge = document.getElementById('starred-badge');
+            const draftsBadge = document.getElementById('drafts-badge');
+
+            if (inboxCount > 0) {
+                inboxBadge.textContent = inboxCount;
+                inboxBadge.classList.remove('hidden');
+            } else {
+                inboxBadge.classList.add('hidden');
+            }
+
+            if (starredCount > 0) {
+                starredBadge.textContent = starredCount;
+                starredBadge.classList.remove('hidden');
+            } else {
+                starredBadge.classList.add('hidden');
+            }
+
+            if (draftsCount > 0) {
+                draftsBadge.textContent = draftsCount;
+                draftsBadge.classList.remove('hidden');
+            } else {
+                draftsBadge.classList.add('hidden');
+            }
+        }
+
+        // Render current email list
+        function renderEmailList() {
+            const listContainer = document.getElementById('email-list-container');
+            // Remove previous items
+            const oldItems = listContainer.querySelectorAll('.email-item-card');
+            oldItems.forEach(el => el.remove());
+
+            // Filter emails based on folder/tags/search
+            let filtered = mockEmails.filter(email => {
+                // Folder check
+                if (currentFolder === 'STARRED') {
+                    if (!email.starred) return false;
+                } else if (email.folder !== currentFolder) {
+                    return false;
+                }
+
+                // Tag Filter check
+                if (activeTag && !email.tags.includes(activeTag)) {
+                    return false;
+                }
+
+                // Search query check
+                if (searchQuery) {
+                    const s = searchQuery.toLowerCase();
+                    const matchFrom = email.from.toLowerCase().includes(s);
+                    const matchSub = email.subject.toLowerCase().includes(s);
+                    const matchSnip = email.snippet.toLowerCase().includes(s);
+                    if (!matchFrom && !matchSub && !matchSnip) return false;
+                }
+
+                return true;
+            });
+
+            // Update Counts
+            document.getElementById('mail-count').textContent = filtered.length;
+            document.getElementById('folder-title').textContent = activeTag ? `Filtre : ${activeTag}` : getFolderNameFrench(currentFolder);
+
+            // Empty state check
+            const emptyState = document.getElementById('empty-state');
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            // Order by date desc
+            filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            // Render cards
+            filtered.forEach(email => {
+                const isUnread = email.labelIds.includes('UNREAD');
+                const senderName = email.from.split('<')[0].trim().replace(/"/g, '') || email.from;
+                const formattedDate = formatEmailDate(email.date);
+                const isSelected = activeEmail && activeEmail.id === email.id;
+
+                const card = document.createElement('div');
+                card.className = `email-item-card px-5 py-4 cursor-pointer flex gap-3.5 border-b border-slate-100 dark:border-slate-800/30 transition-all duration-200 group relative ${isSelected ? 'bg-brand-500/5 border-l-4 border-l-brand-600' : 'hover:bg-slate-50 dark:hover:bg-slate-800/20'}`;
+                
+                // Active indicators
+                let avatarColor = "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400";
+                if (isUnread) avatarColor = "bg-brand-500 text-white shadow shadow-brand-500/30";
+                const initials = senderName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() || "M";
+
+                card.innerHTML = `
+                    <div class="w-10 h-10 rounded-xl ${avatarColor} font-bold flex items-center justify-center text-xs shrink-0 select-none font-display">
+                        ${initials}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-baseline mb-1">
+                            <span class="text-xs font-semibold truncate ${isUnread ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-650 dark:text-slate-300'}">${senderName}</span>
+                            <span class="text-[10px] text-slate-400 shrink-0 font-medium">${formattedDate}</span>
+                        </div>
+                        <h4 class="text-xs font-semibold truncate mb-0.5 ${isUnread ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-800 dark:text-slate-350'}">${email.subject}</h4>
+                        <p class="text-xs text-slate-400 dark:text-slate-500 line-clamp-2 leading-relaxed">${email.snippet}</p>
+                        
+                        <!-- Tags & Attachment icons -->
+                        <div class="flex items-center justify-between mt-2.5">
+                            <div class="flex gap-1">
+                                ${email.tags.map(t => `<span class="px-1.5 py-0.5 text-[9px] font-semibold rounded-md ${getTagColorClass(t)}">${t}</span>`).join('')}
+                            </div>
+                            
+                            <!-- Action buttons visible on hover -->
+                            <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                <button data-action="star-click" class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-amber-500 rounded-md transition-colors">
+                                    <i data-lucide="star" class="w-3.5 h-3.5 ${email.starred ? 'fill-amber-500 text-amber-500' : ''}"></i>
+                                </button>
+                                <button data-action="archive-click" class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 rounded-md transition-colors">
+                                    <i data-lucide="archive" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <button data-action="trash-click" class="p-1 hover:bg-rose-100 hover:text-rose-600 dark:hover:bg-rose-950/40 text-slate-400 rounded-md transition-colors">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Handle click for selection
+                card.onclick = (e) => {
+                    // Check if clicked star or delete directly
+                    const actionBtn = e.target.closest('button[data-action]');
+                    if (actionBtn) {
+                        const action = actionBtn.getAttribute('data-action');
+                        if (action === 'star-click') {
+                            email.starred = !email.starred;
+                            if (isChromeExtension && gmailConnected) {
+                                // Real sync toggle label
+                                toggleGmailLabel(email.id, 'STARRED', email.starred);
+                            }
+                            showToast(email.starred ? "Message suivi" : "Message retiré des suivis", "info");
+                        } else if (action === 'archive-click') {
+                            email.folder = "ARCHIVE";
+                            if (isChromeExtension && gmailConnected) {
+                                removeGmailLabel(email.id, 'INBOX');
+                            }
+                            showToast("Message archivé", "info");
+                        } else if (action === 'trash-click') {
+                            email.folder = "TRASH";
+                            if (isChromeExtension && gmailConnected) {
+                                addGmailLabel(email.id, 'TRASH');
+                            }
+                            showToast("Message déplacé à la corbeille", "info");
+                        }
+                        updateFolderBadges();
+                        renderEmailList();
+                        return;
+                    }
+                    
+                    selectEmail(email);
+                };
+
+                listContainer.appendChild(card);
+            });
+
+            updateFolderBadges();
+            lucide.createIcons();
+        }
+
+        // Custom tags visual color mappings
+        function getTagColorClass(tag) {
+            const colors = {
+                'Travail': 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+                'Finance': 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+                'Mises à jour': 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20',
+                'Urgent': 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
+            };
+            return colors[tag] || 'bg-slate-100 text-slate-600';
+        }
+
+        function getFolderNameFrench(folder) {
+            const folders = {
+                'INBOX': 'Boîte de réception',
+                'STARRED': 'Messages suivis',
+                'SENT': 'Messages envoyés',
+                'DRAFTS': 'Brouillons',
+                'ARCHIVE': 'Archives',
+                'TRASH': 'Corbeille'
+            };
+            return folders[folder] || folder;
+        }
+
+        // Date layout custom formatter
+        function formatEmailDate(dateStr) {
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diffMs = now - date;
+            
+            // Check if today
+            if (date.toDateString() === now.toDateString()) {
+                return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+            }
+            
+            // Yesterday
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
+            if (date.toDateString() === yesterday.toDateString()) {
+                return "Hier";
+            }
+            
+            // This calendar year
+            if (date.getFullYear() === now.getFullYear()) {
+                return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+            }
+            
+            return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'numeric', year: 'numeric' });
+        }
+
+        // Handle Email Reading Detail
+        function selectEmail(email) {
+            activeEmail = email;
+            
+            // Mark read if unread
+            if (email.labelIds.includes('UNREAD')) {
+                email.labelIds = email.labelIds.filter(l => l !== 'UNREAD');
+                if (isChromeExtension && gmailConnected) {
+                    removeGmailLabel(email.id, 'UNREAD');
+                }
+                updateFolderBadges();
+            }
+
+            // Refresh lists active highlight
+            renderEmailList();
+
+            // Toggle state panels
+            document.getElementById('reader-blank-state').classList.add('hidden');
+            const contentState = document.getElementById('reader-content-state');
+            contentState.classList.remove('hidden');
+
+            // Set content details
+            document.getElementById('read-subject').textContent = email.subject;
+            
+            // Sender initials avatar
+            const senderName = email.from.split('<')[0].trim().replace(/"/g, '') || email.from;
+            const initials = senderName.split(' ').map(n => n[0]).slice(0,2).join('').toUpperCase();
+            document.getElementById('read-avatar').textContent = initials;
+            document.getElementById('read-from-name').textContent = senderName;
+            document.getElementById('read-from-email').textContent = email.from;
+            document.getElementById('read-date').textContent = new Date(email.date).toLocaleDateString('fr-FR', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+
+            // Set tags in reader
+            const tagsList = document.getElementById('read-tags');
+            tagsList.innerHTML = email.tags.map(t => `<span class="px-2 py-0.5 text-[10px] font-bold rounded-lg ${getTagColorClass(t)}">${t}</span>`).join('');
+
+            // Render HTML securely or fall back to text
+            const bodyContainer = document.getElementById('read-body');
+            bodyContainer.innerHTML = email.body;
+
+            // Render dynamic AI summary
+            const summaryText = document.getElementById('ai-summary-text');
+            if (email.aiSummary) {
+                summaryText.textContent = email.aiSummary;
+                document.getElementById('ai-summary-card').classList.remove('hidden');
+            } else {
+                document.getElementById('ai-summary-card').classList.add('hidden');
+            }
+
+            // Update Star active state in toolbar
+            const starIcon = document.querySelector('#action-star i');
+            if (email.starred) {
+                starIcon.className = "w-4 h-4 fill-amber-500 text-amber-500";
+            } else {
+                starIcon.className = "w-4 h-4 text-slate-400";
+            }
+
+            // Attachments
+            const attSection = document.getElementById('read-attachments-section');
+            const attList = document.getElementById('read-attachments-list');
+            attList.innerHTML = '';
+            if (email.attachments && email.attachments.length > 0) {
+                attSection.classList.remove('hidden');
+                email.attachments.forEach(att => {
+                    const attCard = document.createElement('div');
+                    attCard.className = "flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/40 dark:border-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all cursor-pointer";
+                    attCard.innerHTML = `
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center">
+                                <i data-lucide="file-text" class="w-4 h-4"></i>
+                            </div>
+                            <div class="text-left">
+                                <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[150px]">${att.name}</p>
+                                <p class="text-[9px] text-slate-400">${att.size}</p>
+                            </div>
+                        </div>
+                        <button class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-slate-700">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        </button>
+                    `;
+                    attCard.onclick = () => {
+                        showToast(`Téléchargement de ${att.name}...`, "info");
+                    };
+                    attList.appendChild(attCard);
+                });
+            } else {
+                attSection.classList.add('hidden');
+            }
+
+            // Reset Reply form text
+            document.getElementById('reply-textarea').value = '';
+
+            // Scroll reader pane to top
+            contentState.querySelector('.overflow-y-auto').scrollTop = 0;
+            lucide.createIcons();
+        }
+
+        // Close details view
+        function closeEmailReader() {
+            activeEmail = null;
+            document.getElementById('reader-blank-state').classList.remove('hidden');
+            document.getElementById('reader-content-state').classList.add('hidden');
+            renderEmailList();
+        }
+
+        // --- REAL GMAIL LABELS ACTIONS ---
+        async function toggleGmailLabel(id, labelName, add) {
+            if (!gmailConnected) return;
+            try {
+                const addLabels = add ? [labelName] : [];
+                const removeLabels = add ? [] : [labelName];
+                await makeGmailRequest(`/messages/${id}/modify`, {
+                    method: 'POST',
+                    body: JSON.stringify({ addLabelIds: addLabels, removeLabelIds: removeLabels })
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        async function addGmailLabel(id, labelName) {
+            return toggleGmailLabel(id, labelName, true);
+        }
+
+        async function removeGmailLabel(id, labelName) {
+            return toggleGmailLabel(id, labelName, false);
+        }
+
+        // --- INTERACTIVE ACTIONS (DELETE/ARCHIVE/STAR) ---
+
+        document.getElementById('action-archive').onclick = () => {
+            if (activeEmail) {
+                activeEmail.folder = "ARCHIVE";
+                if (isChromeExtension && gmailConnected) {
+                    removeGmailLabel(activeEmail.id, 'INBOX');
+                }
+                showToast("Message archivé", "info");
+                closeEmailReader();
+            }
+        };
+
+        document.getElementById('action-trash').onclick = () => {
+            if (activeEmail) {
+                activeEmail.folder = "TRASH";
+                if (isChromeExtension && gmailConnected) {
+                    addGmailLabel(activeEmail.id, 'TRASH');
+                }
+                showToast("Message envoyé à la corbeille", "info");
+                closeEmailReader();
+            }
+        };
+
+        document.getElementById('action-unread').onclick = () => {
+            if (activeEmail) {
+                if (!activeEmail.labelIds.includes('UNREAD')) {
+                    activeEmail.labelIds.push('UNREAD');
+                    if (isChromeExtension && gmailConnected) {
+                        addGmailLabel(activeEmail.id, 'UNREAD');
+                    }
+                    showToast("Message marqué comme non lu", "info");
+                    closeEmailReader();
+                }
+            }
+        };
+
+        document.getElementById('action-star').onclick = () => {
+            if (activeEmail) {
+                activeEmail.starred = !activeEmail.starred;
+                if (isChromeExtension && gmailConnected) {
+                    toggleGmailLabel(activeEmail.id, 'STARRED', activeEmail.starred);
+                }
+                showToast(activeEmail.starred ? "Message suivi" : "Message retiré des suivis", "info");
+                selectEmail(activeEmail);
+            }
+        };
+
+        // --- COMPOSE POPUP ACTIONS ---
+
+        const composePanel = document.getElementById('compose-panel');
+        const composeBtn = document.getElementById('compose-btn');
+        const closeComposeBtn = document.getElementById('close-compose-btn');
+        const sendBtn = document.getElementById('send-btn');
+
+        function openCompose() {
+            composePanel.classList.remove('hidden');
+            setTimeout(() => {
+                composePanel.style.transform = "scale(1)";
+                composePanel.style.opacity = "1";
+                composePanel.style.pointerEvents = "auto";
+            }, 10);
+            document.getElementById('compose-to').focus();
+        }
+
+        function closeCompose() {
+            composePanel.style.transform = "scale(0.95)";
+            composePanel.style.opacity = "0";
+            composePanel.style.pointerEvents = "none";
+            setTimeout(() => {
+                composePanel.classList.add('hidden');
+                document.getElementById('compose-to').value = '';
+                document.getElementById('compose-subject').value = '';
+                document.getElementById('compose-body').value = '';
+            }, 300);
+        }
+
+        composeBtn.onclick = openCompose;
+        closeComposeBtn.onclick = closeCompose;
+
+        // Compose AI Assistant help generator
+        document.getElementById('compose-ai-help-btn').onclick = () => {
+            const bodyArea = document.getElementById('compose-body');
+            const currentText = bodyArea.value;
+            const subject = document.getElementById('compose-subject').value || "Sujet";
+            
+            showToast("AeroAssist optimise votre brouillon...", "info");
+            
+            setTimeout(() => {
+                bodyArea.value = `Bonjour,\n\nJe me permets de faire suite à notre sujet concernant "${subject}".\n\nJ'ai bien étudié les différents aspects du projet et je reste disponible pour caler un court appel de synchronisation afin de finaliser l'ensemble.\n\nDans l'attente de votre retour,\n\nSarah Connor\nDirectrice Produits | AeroMail`;
+                showToast("Texte optimisé avec succès !", "success");
+            }, 1000);
+        };
+
+        // Click Send email
+        sendBtn.onclick = async () => {
+            const to = document.getElementById('compose-to').value.trim();
+            const subject = document.getElementById('compose-subject').value.trim() || "(Sans objet)";
+            const body = document.getElementById('compose-body').value;
+
+            if (!to) {
+                showToast("Veuillez renseigner un destinataire", "error");
+                return;
+            }
+
+            showToast("Envoi du message...", "info");
+
+            if (isChromeExtension && gmailConnected) {
+                try {
+                    // Send using Gmail API
+                    const mimeMsg = makeGmailMime(to, subject, body);
+                    await makeGmailRequest('/messages/send', {
+                        method: 'POST',
+                        body: JSON.stringify({ raw: mimeMsg })
+                    });
+                    showToast("Message envoyé avec succès !", "success");
+                } catch (err) {
+                    showToast(`Échec d'envoi Gmail : ${err.message}`, "error");
+                }
+            } else {
+                // Add to Mock Sent database
+                const newMail = {
+                    id: `msg-mock-sent-${Date.now()}`,
+                    folder: "SENT",
+                    labelIds: ["SENT"],
+                    tags: [],
+                    from: "Sarah Connor <sarah@aero.co>",
+                    subject: subject,
+                    snippet: body.substring(0, 100) + (body.length > 100 ? '...' : ''),
+                    date: new Date().toISOString(),
+                    body: body.replace(/\n/g, '<br>'),
+                    starred: false
+                };
+                mockEmails.push(newMail);
+                showToast("Message envoyé (Mode démo)", "success");
+            }
+
+            closeCompose();
+            renderEmailList();
+        };
+
+        // Utility to generate MIME raw for Gmail API
+        function makeGmailMime(to, subject, message) {
+            const str = [
+                "Content-Type: text/html; charset=\"UTF-8\"\r\n",
+                "MIME-Version: 1.0\r\n",
+                "Content-Transfer-Encoding: 7bit\r\n",
+                "to: ", to, "\r\n",
+                "subject: ", subject, "\r\n\r\n",
+                message
+            ].join('');
+            return btoa(unescape(encodeURIComponent(str)))
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=+$/, '');
+        }
+
+        // --- SMART REPLIES & REPLY ACTIONS ---
+
+        // Register smart replies buttons handler
+        document.querySelectorAll('.smart-reply-btn').forEach(btn => {
+            btn.onclick = () => {
+                const text = btn.textContent.trim();
+                document.getElementById('reply-textarea').value = text;
+                document.getElementById('reply-textarea').focus();
+            };
+        });
+
+        // Click Send Quick Reply
+        document.getElementById('reply-send-btn').onclick = async () => {
+            const txt = document.getElementById('reply-textarea').value.trim();
+            if (!txt || !activeEmail) return;
+
+            showToast("Envoi de la réponse rapide...", "info");
+
+            const cleanSender = activeEmail.from;
+
+            if (isChromeExtension && gmailConnected) {
+                try {
+                    const mime = makeGmailMime(cleanSender, `Re: ${activeEmail.subject}`, txt);
+                    await makeGmailRequest('/messages/send', {
+                        method: 'POST',
+                        body: JSON.stringify({ raw: mime })
+                    });
+                    showToast("Réponse envoyée avec succès !", "success");
+                } catch (err) {
+                    showToast(`Échec d'envoi : ${err.message}`, "error");
+                }
+            } else {
+                // Append mock sent email
+                const repMail = {
+                    id: `msg-mock-reply-${Date.now()}`,
+                    folder: "SENT",
+                    labelIds: ["SENT"],
+                    tags: [],
+                    from: "Sarah Connor <sarah@aero.co>",
+                    subject: `Re: ${activeEmail.subject}`,
+                    snippet: txt,
+                    date: new Date().toISOString(),
+                    body: txt,
+                    starred: false
+                };
+                mockEmails.push(repMail);
+                showToast("Réponse rapide simulée !", "success");
+            }
+
+            document.getElementById('reply-textarea').value = '';
+            renderEmailList();
+        };
+
+        // --- DIALOG & SETTINGS ACTIONS ---
+
+        const settingsDialog = document.getElementById('settings-dialog');
+        const settingsBtn = document.getElementById('settings-btn');
+        const closeSettingsDialog = document.getElementById('close-settings-dialog');
+
+        settingsBtn.onclick = () => {
+            settingsDialog.showModal();
+        };
+
+        closeSettingsDialog.onclick = () => {
+            settingsDialog.close();
+        };
+
+        // Dismiss settings if clicking outside the card
+        settingsDialog.onclick = (e) => {
+            const rect = settingsDialog.getBoundingClientRect();
+            if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
+                settingsDialog.close();
+            }
+        };
+
+        // Settings Auth Connect Button click
+        document.getElementById('settings-auth-btn').onclick = () => {
+            settingsDialog.close();
+            connectGmail();
+        };
+
+        // Switch App Layout Theme Mode (Dark vs Light)
+        document.querySelectorAll('.theme-select-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.theme-select-btn').forEach(b => {
+                    b.classList.remove('border-brand-500', 'bg-brand-500/5', 'text-brand-600', 'dark:text-brand-400');
+                    b.classList.add('border-slate-200', 'dark:border-slate-800');
+                });
+                
+                btn.classList.remove('border-slate-200', 'dark:border-slate-800');
+                btn.classList.add('border-brand-500', 'bg-brand-500/5', 'text-brand-600', 'dark:text-brand-400');
+                
+                const themeVal = btn.getAttribute('data-theme-val');
+                if (themeVal === 'light') {
+                    document.documentElement.classList.remove('dark');
+                    isDarkMode = false;
+                } else {
+                    document.documentElement.classList.add('dark');
+                    isDarkMode = true;
+                }
+                showToast(`Thème ${themeVal === 'light' ? 'clair' : 'sombre'} activé`, "info");
+            };
+        });
+
+        // Theme Toggle icon click
+        document.getElementById('theme-toggle').onclick = () => {
+            isDarkMode = !isDarkMode;
+            if (isDarkMode) {
+                document.documentElement.classList.add('dark');
+                showToast("Thème sombre activé", "info");
+            } else {
+                document.documentElement.classList.remove('dark');
+                showToast("Thème clair activé", "info");
+            }
+        };
+
+        // --- DASHBOARD TOGGLE & METRICS ---
+
+        const dashboardView = document.getElementById('dashboard-view');
+        const dbToggleBtn = document.getElementById('dashboard-toggle-btn');
+        const closeDbBtn = document.getElementById('close-dashboard-btn');
+
+        dbToggleBtn.onclick = () => {
+            dashboardView.classList.remove('hidden');
+        };
+
+        closeDbBtn.onclick = () => {
+            dashboardView.classList.add('hidden');
+        };
+
+        // --- SIDEBAR & FOLDERS CLICK HANDLERS ---
+
+        document.querySelectorAll('.folder-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.folder-btn').forEach(b => {
+                    b.className = "folder-btn w-full py-2.5 px-3.5 rounded-xl text-sm font-medium flex items-center justify-between transition-all duration-200 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/40";
+                });
+                // Remove Tag filter highlight
+                document.querySelectorAll('.tag-filter-btn').forEach(b => {
+                    b.className = "tag-filter-btn w-full py-1.5 px-2 rounded-lg text-xs font-medium flex items-center gap-2.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/30";
+                });
+                
+                activeTag = null;
+                btn.className = "folder-btn w-full py-2.5 px-3.5 rounded-xl text-sm font-medium flex items-center justify-between transition-all duration-200 bg-brand-500/10 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400";
+                
+                currentFolder = btn.getAttribute('data-folder');
+                
+                // Close active email view
+                activeEmail = null;
+                document.getElementById('reader-blank-state').classList.remove('hidden');
+                document.getElementById('reader-content-state').classList.add('hidden');
+                
+                renderEmailList();
+            };
+        });
+
+        // Tags Filter Buttons click
+        document.querySelectorAll('.tag-filter-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.tag-filter-btn').forEach(b => {
+                    b.className = "tag-filter-btn w-full py-1.5 px-2 rounded-lg text-xs font-medium flex items-center gap-2.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/30";
+                });
+                
+                const tagVal = btn.getAttribute('data-tag');
+                if (activeTag === tagVal) {
+                    // Toggle off filter
+                    activeTag = null;
+                } else {
+                    activeTag = tagVal;
+                    btn.className = "tag-filter-btn w-full py-1.5 px-2 rounded-lg text-xs font-medium flex items-center gap-2.5 bg-brand-500/10 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400 font-semibold";
+                }
+
+                // Close active email
+                activeEmail = null;
+                document.getElementById('reader-blank-state').classList.remove('hidden');
+                document.getElementById('reader-content-state').classList.add('hidden');
+
+                renderEmailList();
+            };
+        });
+
+        // --- FILTER UNREAD ACTIONS & REFRESH ---
+
+        let isFilterUnreadActive = false;
+        document.getElementById('filter-unread-btn').onclick = () => {
+            isFilterUnreadActive = !isFilterUnreadActive;
+            const btn = document.getElementById('filter-unread-btn');
+            
+            if (isFilterUnreadActive) {
+                btn.className = "text-xs font-bold px-2.5 py-1 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20";
+                searchQuery = "labelIds:unread"; // Set in search bar
+                document.getElementById('search-input').value = "is:unread";
+            } else {
+                btn.className = "text-xs font-semibold px-2.5 py-1 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/40 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-800/40 transition-all";
+                searchQuery = "";
+                document.getElementById('search-input').value = "";
+            }
+            
+            renderEmailList();
+        };
+
+        // Refresh Lists Action
+        document.getElementById('refresh-list-btn').onclick = async () => {
+            showToast("Actualisation de la liste...", "info");
+            if (isChromeExtension && gmailConnected) {
+                await syncGmailEmails();
+            } else {
+                setTimeout(() => {
+                    renderEmailList();
+                    showToast("Boîte actualisée avec succès !", "success");
+                }, 400);
+            }
+        };
+
+        // Header Sync Gmail button click
+        document.getElementById('sync-gmail-btn').onclick = async () => {
+            if (gmailConnected) {
+                await syncGmailEmails();
+            } else {
+                await connectGmail();
+            }
+        };
+
+        // --- INTERACTIVE SEARCH CONTROLLER ---
+
+        const searchInput = document.getElementById('search-input');
+        searchInput.oninput = (e) => {
+            const val = e.target.value.trim().toLowerCase();
+            if (val === 'is:unread') {
+                searchQuery = '';
+                // Filter only unread
+                mockEmails.filter(email => email.labelIds.includes('UNREAD'));
+            } else {
+                searchQuery = val;
+            }
+            renderEmailList();
+        };
+
+        // --- TOAST NOTIFICATIONS HELPER ---
+
+        function showToast(message, type = "info") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bgClass = "bg-slate-900 dark:bg-slate-800 text-white";
+            let icon = "info";
+            
+            if (type === "success") {
+                bgClass = "bg-emerald-600 text-white shadow-emerald-500/10";
+                icon = "check-circle";
+            } else if (type === "error") {
+                bgClass = "bg-rose-600 text-white shadow-rose-500/10";
+                icon = "alert-circle";
+            }
+
+            toast.className = `p-4 rounded-2xl shadow-xl flex items-center gap-3 text-xs font-semibold border border-white/10 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto ${bgClass}`;
+            toast.innerHTML = `
+                <i data-lucide="${icon}" class="w-4 h-4"></i>
+                <span>${message}</span>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            // Animate In
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            // Animate Out & remove
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3500);
+        }
+
+        // --- GLOBAL KEYBOARD SHORTCUTS ---
+
+        document.addEventListener('keydown', (e) => {
+            // Ignore if user is writing in input or textarea
+            const tag = e.target.tagName.toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) {
+                // If pressing Escape inside compose/reply, let it blur or handle it
+                if (e.key === 'Escape') {
+                    if (e.target.id === 'reply-textarea') {
+                        e.target.blur();
+                    }
+                }
+                return;
+            }
+
+            if (e.key === '/') {
+                e.preventDefault();
+                searchInput.focus();
+                searchInput.select();
+            } else if (e.key.toLowerCase() === 'c') {
+                e.preventDefault();
+                openCompose();
+            } else if (e.key === 'Escape') {
+                closeCompose();
+                settingsDialog.close();
+                closeEmailReader();
+            } else if (e.key.toLowerCase() === 's') {
+                // Star currently read message
+                if (activeEmail) {
+                    e.preventDefault();
+                    document.getElementById('action-star').click();
+                }
+            } else if (e.key.toLowerCase() === 'r') {
+                // Focus reply area
+                if (activeEmail) {
+                    e.preventDefault();
+                    document.getElementById('reply-textarea').focus();
+                }
+            }
+        });
+
+        // --- DOM RENDER INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial setup and lists rendering
+            updateFolderBadges();
+            renderEmailList();
+            updateContextMode();
+            lucide.createIcons();
+
+            // Set dynamic dark mode classes to HTML element
+            document.documentElement.className = "dark";
+        });
+    </script>
+</body>
+</html>

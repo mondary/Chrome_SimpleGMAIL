@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Benchmark 08 - Bauhaus Grid</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #E5E2D9; color: #1a1a1a; font-family: 'Helvetica', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 100px; border-right: 4px solid #000; background: #FFD700; height: 100%; writing-mode: vertical-rl; transform: rotate(180deg); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 40px; text-transform: uppercase; }
+        .content { flex: 1; display: grid; grid-template-columns: 2fr 1fr; }
+        .mail-list { border-right: 4px solid #000; padding: 40px; overflow-y: auto; }
+        .mail-item { border-bottom: 2px solid #000; padding: 20px 0; display: flex; gap: 20px; transition: all 0.3s; }
+        .mail-item:hover { transform: translateX(20px); }
+        .accent-box { width: 40px; height: 40px; background: #E30613; shrink-0; }
+        .accent-blue { background: #004F9A; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">M-Gmail</div>
+    <div class="content">
+        <div class="mail-list">
+            <div class="mail-item">
+                <div class="accent-box"></div>
+                <div>
+                    <h2 class="text-3xl font-black uppercase leading-none">Stripe</h2>
+                    <p class="font-bold tracking-tighter mt-1">PAYOUT PROCESSED</p>
+                </div>
+            </div>
+            <div class="mail-item">
+                <div class="accent-box accent-blue"></div>
+                <div>
+                    <h2 class="text-3xl font-black uppercase leading-none text-blue-800">OpenAI</h2>
+                    <p class="font-bold tracking-tighter mt-1">GPT-5 RELEASED</p>
+                </div>
+            </div>
+            <div class="mail-item">
+                <div class="accent-box" style="background:#000"></div>
+                <div>
+                    <h2 class="text-3xl font-black uppercase leading-none">GitHub</h2>
+                    <p class="font-bold tracking-tighter mt-1">SECURITY ALERT</p>
+                </div>
+            </div>
+        </div>
+        <div class="p-12 bg-white flex flex-col justify-between">
+            <div class="text-[120px] font-black leading-none tracking-tighter">01.</div>
+            <p class="text-sm font-bold uppercase leading-relaxed">Modernism is not a style, it's an attitude. Your inbox redefined through the lens of functional geometry.</p>
+        </div>
+    </div>
+</body>
+</html>

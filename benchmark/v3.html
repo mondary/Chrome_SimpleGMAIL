@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenMail V3 - Immersive Slider</title>
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                        display: ['Instrument Serif', 'serif'],
+                    },
+                    colors: {
+                        zen: {
+                            bg: '#FAF8F5', 
+                            darkbg: '#08090A', 
+                            card: '#FFFFFF',
+                            darkcard: '#101114',
+                            border: '#E3E0D8',
+                            darkborder: '#1B1D22',
+                            text: '#121315',
+                            darktext: '#EAEBEF',
+                            muted: '#6B6F76',
+                            darkmuted: '#7F848E',
+                            accent: '#AF8E70', 
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/css">
+        body {
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        /* Immersive vertical slider animation classes */
+        .slide-container {
+            perspective: 1000px;
+        }
+
+        .slide-item {
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Slide states */
+        .slide-item.active {
+            transform: translateY(0) translateZ(0) rotateX(0deg);
+            opacity: 1;
+            pointer-events: auto;
+            z-index: 20;
+        }
+
+        .slide-item.next-hidden {
+            transform: translateY(100%) translateZ(-100px) rotateX(5deg);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .slide-item.prev-hidden {
+            transform: translateY(-100%) translateZ(-100px) rotateX(-5deg);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Hide scrollbars */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Editorial row hover underline */
+        .editorial-row::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background-color: currentColor;
+            transform: scaleX(0);
+            transform-origin: right center;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0.15;
+        }
+
+        .editorial-row:hover::after {
+            transform: scaleX(1);
+            transform-origin: left center;
+        }
+        
+        /* Interactive text details font size */
+        .email-body-content p {
+            margin-bottom: 1.75rem;
+            line-height: 1.9;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body class="bg-zen-bg dark:bg-zen-darkbg text-zen-text dark:text-zen-darktext h-dvh overflow-hidden select-none font-sans transition-colors duration-500">
+
+    <!-- TOP HEADER -->
+    <header class="fixed top-0 inset-x-0 h-20 px-8 sm:px-12 md:px-20 flex items-center justify-between z-40 bg-gradient-to-b from-zen-bg via-zen-bg/90 to-transparent dark:from-zen-darkbg dark:via-zen-darkbg/90 pointer-events-none">
+        <div class="flex items-center gap-3 pointer-events-auto">
+            <span class="font-display font-medium text-3xl italic select-none">ZenMail <span class="font-sans text-xs uppercase tracking-widest font-semibold not-italic text-zen-accent ml-1.5">v3</span></span>
+        </div>
+        
+        <div class="flex items-center gap-6 pointer-events-auto">
+            <!-- Mail view toggle -->
+            <button id="view-mode-btn" class="text-xs uppercase tracking-widest font-bold text-zen-muted dark:text-zen-darkmuted hover:text-zen-text dark:hover:text-zen-darktext transition-colors">
+                Archives
+            </button>
+            <!-- Sync Status -->
+            <button id="sync-gmail-btn" class="text-xs uppercase tracking-widest font-bold text-emerald-600 dark:text-emerald-400 hover:opacity-80 transition-opacity">
+                Sync Gmail
+            </button>
+            <!-- Light/Dark toggle -->
+            <button id="theme-toggle" class="p-1 hover:opacity-75 transition-opacity" aria-label="Toggle Theme">
+                <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+                <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN INTERACTIVE WRAPPER -->
+    <div class="h-full w-full relative pt-24 pb-8 px-8 sm:px-12 md:px-20 flex flex-col justify-between">
+        
+        <!-- SECTION 1: FULL SCREEN MINIMALIST LIST -->
+        <section id="list-view" class="flex-1 flex flex-col justify-center my-auto z-20 transition-all duration-500">
+            <!-- Minimal search bar -->
+            <div class="w-full max-w-xl mb-12">
+                <input type="text" id="search-input" placeholder="Rechercher... (Appuyez sur /)" class="w-full bg-transparent border-b border-zen-border dark:border-zen-darkborder focus:border-zen-text dark:focus:border-zen-darktext py-3 text-sm outline-none text-zen-text dark:text-zen-darktext placeholder-zen-muted dark:placeholder-zen-darkmuted transition-colors">
+            </div>
+
+            <!-- Table of contents / editorial list -->
+            <div class="w-full max-w-5xl space-y-1">
+                <div class="text-[10px] uppercase tracking-widest font-bold text-zen-muted dark:text-zen-darkmuted mb-4 flex justify-between border-b border-zen-border/30 dark:border-zen-darkborder/30 pb-2">
+                    <span>Expéditeur & Objet</span>
+                    <span>Date</span>
+                </div>
+                
+                <div id="email-rows-container" class="divide-y divide-zen-border/20 dark:divide-zen-darkborder/20 max-h-[60vh] overflow-y-auto no-scrollbar">
+                    <!-- Dynamic rows injected here -->
+                </div>
+            </div>
+
+            <!-- Welcome footer quote -->
+            <div class="mt-12 text-[11px] uppercase tracking-widest text-zen-muted dark:text-zen-darkmuted flex justify-between max-w-5xl">
+                <span>Raccourci rédaction: <kbd class="px-1 py-0.5 rounded bg-zen-border/40 dark:bg-zen-darkborder font-bold">C</kbd></span>
+                <span id="zen-quote">"Le calme est le berceau du pouvoir."</span>
+            </div>
+        </section>
+
+        <!-- SECTION 2: CINEMATIC SLIDER PREVIEWS (OVERLAY FOCUS) -->
+        <section id="slider-view" class="hidden fixed inset-0 z-30 bg-zen-bg dark:bg-zen-darkbg flex flex-col justify-between py-12 px-8 sm:px-12 md:px-20">
+            
+            <!-- Slider Header controls -->
+            <div class="flex items-center justify-between border-b border-zen-border/30 dark:border-zen-darkborder/30 pb-6 shrink-0">
+                <button id="slider-close-btn" class="group flex items-center gap-2.5 text-xs uppercase tracking-widest font-bold text-zen-muted dark:text-zen-darkmuted hover:text-zen-text dark:hover:text-zen-darktext transition-colors">
+                    <i data-lucide="arrow-left" class="w-4 h-4 transition-transform group-hover:-translate-x-1"></i>
+                    <span>Retour à la liste</span>
+                </button>
+
+                <div class="flex items-center gap-4">
+                    <button id="slider-star-btn" class="p-2 text-zen-muted dark:text-zen-darkmuted hover:text-amber-500 transition-colors">
+                        <i data-lucide="star" class="w-4.5 h-4.5"></i>
+                    </button>
+                    <button id="slider-archive-btn" class="p-2 text-zen-muted dark:text-zen-darkmuted hover:text-rose-500 transition-colors">
+                        <i data-lucide="archive" class="w-4.5 h-4.5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Slide Window Frame -->
+            <div class="flex-1 my-10 relative slide-container min-h-0">
+                <!-- Slides are injected here dynamically -->
+                <div id="slides-viewport" class="w-full h-full relative">
+                    <!-- Slider content cards -->
+                </div>
+            </div>
+
+            <!-- Slider Footer Progress & Quick Reply -->
+            <div class="shrink-0 border-t border-zen-border/30 dark:border-zen-darkborder/30 pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                
+                <!-- Slide index tracker -->
+                <div class="flex items-center gap-4 text-xs font-semibold text-zen-muted dark:text-zen-darkmuted uppercase tracking-widest shrink-0">
+                    <span id="slider-progress-index">01 / 04</span>
+                    <div class="w-24 h-1 bg-zen-border dark:bg-zen-darkborder rounded-full overflow-hidden">
+                        <div id="slider-progress-bar" class="h-full bg-zen-text dark:bg-zen-darktext transition-all duration-300 w-1/4 rounded-full"></div>
+                    </div>
+                    <!-- Keyboard shortcut tip -->
+                    <span class="hidden md:inline text-[9px] opacity-75 font-normal">Suivant : <kbd class="px-1 font-bold rounded border">↓</kbd> ou <kbd class="px-1 font-bold rounded border">→</kbd></span>
+                </div>
+
+                <!-- Immersive Quick response -->
+                <div class="flex-1 max-w-lg relative flex items-center bg-white dark:bg-zen-darkcard border border-zen-border dark:border-zen-darkborder rounded-2xl p-2">
+                    <input type="text" id="slider-reply-input" placeholder="Répondre..." class="flex-1 bg-transparent border-0 ring-0 focus:ring-0 px-3 py-1.5 text-xs outline-none text-zen-text dark:text-zen-darktext">
+                    <button id="slider-reply-send-btn" class="p-2 bg-zen-text text-zen-bg dark:bg-zen-darktext dark:text-zen-darkbg rounded-xl transition-transform hover:scale-105 active:scale-95 shrink-0">
+                        <i data-lucide="send-horizontal" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- FLOATING WRITER (COMPOSE DIALOG) -->
+        <div id="compose-panel" class="hidden fixed bottom-6 right-6 w-96 max-w-full rounded-2xl bg-white dark:bg-zen-darkcard border border-zen-border dark:border-zen-darkborder shadow-xl flex flex-col overflow-hidden z-50 transition-all duration-300 transform scale-95 opacity-0 pointer-events-none">
+            <div class="px-5 py-4 border-b border-zen-border/30 dark:border-zen-darkborder/30 flex items-center justify-between bg-slate-50/20 dark:bg-slate-900/10">
+                <span class="text-xs uppercase tracking-widest font-bold">Nouveau Message</span>
+                <button id="close-compose-btn" class="p-1 hover:opacity-75 transition-opacity">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div class="p-4 flex flex-col gap-2">
+                <input type="text" id="compose-to" placeholder="À : destinataire@company.com" class="w-full bg-transparent border-b border-zen-border dark:border-zen-darkborder focus:border-zen-accent p-2 text-xs outline-none">
+                <input type="text" id="compose-subject" placeholder="Objet" class="w-full bg-transparent border-b border-zen-border dark:border-zen-darkborder focus:border-zen-accent p-2 text-xs outline-none">
+                <textarea id="compose-body" placeholder="Rédiger votre message..." class="w-full h-40 bg-transparent p-2 text-xs outline-none resize-none leading-relaxed"></textarea>
+            </div>
+            <div class="p-3 border-t border-zen-border/40 dark:border-zen-darkborder/40 flex justify-end bg-transparent">
+                <button id="send-btn" class="px-4 py-2 bg-zen-text text-zen-bg dark:bg-zen-darktext dark:text-zen-darkbg rounded-xl text-xs uppercase tracking-widest font-semibold hover:scale-102 transition-transform">
+                    Envoyer
+                </button>
+            </div>
+        </div>
+
+        <!-- Notification Toast Frame -->
+        <div id="toast-container" class="fixed bottom-6 left-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    </div>
+
+    <!-- Core App JS Code -->
+    <script>
+        // --- DATA LAYERS: Interactive Mock Database & Live Sync ---
+        
+        let mockEmails = [
+            {
+                id: "msg-stripe-1",
+                folder: "INBOX",
+                labelIds: ["INBOX", "UNREAD"],
+                tags: ["Finance"],
+                from: "Stripe Payouts <payouts@stripe.com>",
+                subject: "Versement Stripe traité - $14,250.00",
+                snippet: "Votre versement pour la période du 1er au 15 juin a été traité et est en cours d'acheminement vers votre banque.",
+                date: new Date(Date.now() - 15 * 60000).toISOString(),
+                body: `
+                    <p>Bonjour Sarah,</p>
+                    <p>Nous vous confirmons le traitement du versement numéro <strong>TRN-90281-STRP</strong> pour un montant total de <strong>$14,250.00 USD</strong>.</p>
+                    <p>Les fonds ont été déposés sur le compte de virement par défaut. Le délai de virement interbancaire usuel est de 1 à 2 jours ouvrables selon les banques.</p>
+                    <p>Vous pouvez accéder au récapitulatif complet de cette transaction directement depuis votre portail administrateur Stripe.</p>
+                    <p>Merci pour votre collaboration,<br>L'équipe Stripe France</p>
+                `,
+                starred: false
+            },
+            {
+                id: "msg-openai-2",
+                folder: "INBOX",
+                labelIds: ["INBOX", "UNREAD"],
+                tags: ["Mises à jour"],
+                from: "OpenAI Launchpad <news@openai.com>",
+                subject: "Présentation de GPT-5 : La nouvelle frontière de l'Intelligence Générale",
+                snippet: "Nous sommes ravis d'annoncer la sortie de GPT-5, notre modèle le plus puissant à ce jour, repoussant les limites de la science.",
+                date: new Date(Date.now() - 3 * 3600000).toISOString(),
+                body: `
+                    <p>Bonjour,</p>
+                    <p>Nous sommes ravis d'annoncer aujourd'hui la sortie de <strong>GPT-5</strong>, notre modèle de raisonnement de pointe.</p>
+                    <p>GPT-5 offre des capacités cognitives avancées, un fenêtrage de contexte étendu à 500k tokens ainsi qu'une intégration native complète pour les formats vidéo et audio complexes.</p>
+                    <p>Les clés d'accès API sont en cours de déploiement progressif pour les comptes Développeurs Payants.</p>
+                    <p>Cordialement,<br>L'équipe OpenAI</p>
+                `,
+                starred: false
+            },
+            {
+                id: "msg-github-3",
+                folder: "INBOX",
+                labelIds: ["INBOX"],
+                tags: ["Urgent"],
+                from: "GitHub Security <noreply@github.com>",
+                subject: "[GitHub] Alerte de sécurité critique sur le package webpack-dev-server",
+                snippet: "Un problème de sécurité de sévérité CRITIQUE (CVE-2026-98122) a été détecté dans l'un de vos dépôts actifs.",
+                date: new Date(Date.now() - 18 * 3600000).toISOString(),
+                body: `
+                    <p>Bonjour sarah-connor,</p>
+                    <p>Une alerte de vulnérabilité de sécurité critique a été identifiée sur le dépôt <strong>Chrome_GmailPK</strong> via le parseur Dependabot.</p>
+                    <p>Le package <strong>webpack-dev-server</strong> présente une faille de type RCE (Remote Code Execution) dans les versions antérieures à 4.15.2.</p>
+                    <p>Merci de fusionner la PR #14 de mise à niveau au plus vite pour sécuriser vos dépendances.</p>
+                `,
+                starred: true
+            },
+            {
+                id: "msg-vercel-4",
+                folder: "INBOX",
+                labelIds: ["INBOX"],
+                tags: ["Travail"],
+                from: "Vercel Deployments <deployments@vercel.com>",
+                subject: "Déploiement en production réussi pour 'aeromail-app'",
+                snippet: "Votre projet aeromail-app a été déployé en production. Le build a duré 42 secondes sur la branche main.",
+                date: new Date(Date.now() - 32 * 3600000).toISOString(),
+                body: `
+                    <p>Votre build de production a été déployé avec succès sur la plateforme Vercel.</p>
+                    <p>Le projet <strong>aeromail-app</strong> est en ligne sur l'URL principale. Les logs de build sont disponibles sur votre tableau de bord.</p>
+                    <p>Commit : <em>fe456a (Feat: setup rich UI analytics dashboard)</em>.</p>
+                `,
+                starred: false
+            }
+        ];
+
+        let activeEmailIndex = -1;
+        let filteredEmails = [];
+        let viewMode = "INBOX"; 
+        let isDarkMode = true;
+        let searchQuery = "";
+
+        // --- GMAIL LIVE SYNC IMPLEMENTATION ---
+        
+        let gmailConnected = false;
+        let gmailAuthToken = null;
+        const GMAIL_API_BASE = 'https://gmail.googleapis.com/gmail/v1/users/me';
+        const isChromeExtension = typeof chrome !== 'undefined' && chrome.identity && chrome.identity.getAuthToken;
+
+        function updateSyncState() {
+            const syncBtn = document.getElementById('sync-gmail-btn');
+            if (isChromeExtension) {
+                if (gmailConnected) {
+                    syncBtn.textContent = "Sync Gmail Ok";
+                    syncBtn.className = "text-xs uppercase tracking-widest font-bold text-emerald-600 dark:text-emerald-400";
+                } else {
+                    syncBtn.textContent = "Associer Gmail";
+                    syncBtn.className = "text-xs uppercase tracking-widest font-bold text-amber-500 hover:opacity-80";
+                }
+            } else {
+                syncBtn.textContent = "Démo Active";
+                syncBtn.className = "text-xs uppercase tracking-widest font-bold text-zen-muted dark:text-zen-darkmuted pointer-events-none";
+            }
+        }
+
+        async function getGmailToken(interactive = true) {
+            if (gmailAuthToken) return gmailAuthToken;
+            return new Promise((resolve, reject) => {
+                chrome.identity.getAuthToken({ interactive }, (token) => {
+                    if (chrome.runtime.lastError) {
+                        reject(new Error(chrome.runtime.lastError.message));
+                    } else {
+                        gmailAuthToken = token;
+                        gmailConnected = true;
+                        resolve(token);
+                    }
+                });
+            });
+        }
+
+        async function makeGmailRequest(endpoint, options = {}) {
+            const token = await getGmailToken(true);
+            const url = endpoint.startsWith('http') ? endpoint : `${GMAIL_API_BASE}${endpoint}`;
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    ...options.headers,
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+            if (!response.ok) {
+                if (response.status === 401) {
+                    gmailAuthToken = null;
+                    gmailConnected = false;
+                    chrome.identity.removeCachedAuthToken({ token }, () => {});
+                }
+                throw new Error(`API error ${response.status}`);
+            }
+            return response.json();
+        }
+
+        async function connectGmail() {
+            if (!isChromeExtension) {
+                showToast("OAuth requiert de tourner en mode extension Chrome.", "error");
+                return;
+            }
+            try {
+                await getGmailToken(true);
+                gmailConnected = true;
+                showToast("Gmail synchronisé !", "success");
+                updateSyncState();
+                await syncGmailEmails();
+            } catch (err) {
+                showToast(`Échec d'authentification : ${err.message}`, "error");
+            }
+        }
+
+        async function syncGmailEmails() {
+            if (!gmailConnected) return;
+            showToast("Chargement de vos messages Gmail...", "info");
+            
+            try {
+                const data = await makeGmailRequest('/messages?maxResults=8');
+                if (!data.messages || data.messages.length === 0) {
+                    mockEmails = [];
+                    renderList();
+                    return;
+                }
+
+                const detailedPromises = data.messages.map(m => makeGmailRequest(`/messages/${m.id}`));
+                const detailedEmails = await Promise.all(detailedPromises);
+
+                mockEmails = detailedEmails.map(item => {
+                    const headers = item.payload.headers || [];
+                    const from = headers.find(h => h.name === 'From')?.value || 'Inconnu';
+                    const subject = headers.find(h => h.name === 'Subject')?.value || '(Sans objet)';
+                    const dateVal = headers.find(h => h.name === 'Date')?.value || new Date().toISOString();
+                    const snippet = item.snippet || '';
+                    
+                    let parsedBody = "<p>Aucun contenu lisible.</p>";
+                    if (item.payload.body && item.payload.body.data) {
+                        parsedBody = decodeBase64(item.payload.body.data);
+                    } else if (item.payload.parts) {
+                        const htmlPart = item.payload.parts.find(p => p.mimeType === 'text/html');
+                        if (htmlPart && htmlPart.body && htmlPart.body.data) {
+                            parsedBody = decodeBase64(htmlPart.body.data);
+                        } else if (item.payload.parts[0] && item.payload.parts[0].body && item.payload.parts[0].body.data) {
+                            parsedBody = decodeBase64(item.payload.parts[0].body.data);
+                        }
+                    }
+
+                    const labels = item.labelIds || [];
+                    const folder = labels.includes('TRASH') ? 'TRASH' : (labels.includes('SENT') ? 'SENT' : (labels.includes('DRAFT') ? 'DRAFTS' : 'INBOX'));
+
+                    return {
+                        id: item.id,
+                        folder: folder,
+                        labelIds: labels,
+                        tags: labels.includes('UNREAD') ? ['Mises à jour'] : [],
+                        from: from,
+                        subject: subject,
+                        snippet: snippet,
+                        date: new Date(dateVal).toISOString(),
+                        body: parsedBody,
+                        starred: labels.includes('STARRED')
+                    };
+                });
+
+                renderList();
+                showToast("Emails Gmail mis à jour !", "success");
+            } catch (err) {
+                console.error(err);
+                showToast("Erreur de récupération Gmail.", "error");
+            }
+        }
+
+        function decodeBase64(data) {
+            try {
+                const base64 = data.replace(/-/g, '+').replace(/_/g, '/');
+                return decodeURIComponent(escape(atob(base64)));
+            } catch (e) { return "<p>[Erreur de décodage]</p>"; }
+        }
+
+        // --- GMAIL LABELS HELPER API ---
+        async function toggleGmailLabel(id, labelName, add) {
+            if (!gmailConnected) return;
+            try {
+                const addLabels = add ? [labelName] : [];
+                const removeLabels = add ? [] : [labelName];
+                await makeGmailRequest(`/messages/${id}/modify`, {
+                    method: 'POST',
+                    body: JSON.stringify({ addLabelIds: addLabels, removeLabelIds: removeLabels })
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        async function removeGmailLabel(id, labelName) {
+            return toggleGmailLabel(id, labelName, false);
+        }
+
+        async function addGmailLabel(id, labelName) {
+            return toggleGmailLabel(id, labelName, true);
+        }
+
+        // --- EDITORIAL LIST CONTROLLER ---
+
+        function renderList() {
+            const container = document.getElementById('email-rows-container');
+            container.innerHTML = '';
+
+            // Filter emails based on folder and search query
+            filteredEmails = mockEmails.filter(email => {
+                if (viewMode === "INBOX") {
+                    if (email.folder !== "INBOX") return false;
+                } else {
+                    if (email.folder !== "ARCHIVE") return false;
+                }
+
+                if (searchQuery) {
+                    const s = searchQuery.toLowerCase();
+                    const matchFrom = email.from.toLowerCase().includes(s);
+                    const matchSub = email.subject.toLowerCase().includes(s);
+                    const matchSnip = email.snippet.toLowerCase().includes(s);
+                    if (!matchFrom && !matchSub && !matchSnip) return false;
+                }
+
+                return true;
+            });
+
+            // Sort newest first
+            filteredEmails.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            if (filteredEmails.length === 0) {
+                container.innerHTML = `
+                    <div class="py-20 text-center font-serif text-xl text-zen-muted dark:text-zen-darkmuted">
+                        Aucun message à afficher
+                    </div>
+                `;
+                return;
+            }
+
+            filteredEmails.forEach((email, index) => {
+                const row = document.createElement('div');
+                const indexNum = String(index + 1).padStart(2, '0');
+                const senderName = email.from.split('<')[0].trim().replace(/"/g, '') || email.from;
+                const formattedDate = new Date(email.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+                const isUnread = email.labelIds && email.labelIds.includes('UNREAD');
+
+                row.className = "editorial-row py-6 flex items-center justify-between cursor-pointer group relative text-zen-text dark:text-zen-darktext transition-colors duration-200 hover:text-zen-accent dark:hover:text-zen-accent";
+                row.innerHTML = `
+                    <div class="flex items-center gap-6 sm:gap-10 min-w-0 pr-6">
+                        <span class="font-display font-light text-2xl sm:text-3xl opacity-35 group-hover:opacity-75 transition-opacity italic select-none">${indexNum}</span>
+                        <div class="min-w-0 space-y-1">
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] uppercase tracking-widest font-bold ${isUnread ? 'text-zen-accent' : 'text-zen-muted dark:text-zen-darkmuted'}">${senderName}</span>
+                                ${email.starred ? `<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>` : ''}
+                                ${isUnread ? `<span class="w-1.5 h-1.5 rounded-full bg-brand-500"></span>` : ''}
+                            </div>
+                            <h3 class="font-serif text-lg sm:text-xl font-normal truncate leading-snug">
+                                ${email.subject}
+                            </h3>
+                        </div>
+                    </div>
+                    <span class="text-xs text-zen-muted dark:text-zen-darkmuted tracking-widest shrink-0 font-medium">${formattedDate}</span>
+                `;
+
+                row.onclick = () => {
+                    openSlider(index);
+                };
+
+                container.appendChild(row);
+            });
+
+            lucide.createIcons();
+        }
+
+        // --- DYNAMIC SLIDER CONTROLLER (Arrow Navigator) ---
+
+        const sliderView = document.getElementById('slider-view');
+        const viewport = document.getElementById('slides-viewport');
+
+        function openSlider(index) {
+            activeEmailIndex = index;
+            sliderView.classList.remove('hidden');
+            
+            // Render slides
+            renderSlides();
+            updateSliderProgress();
+            
+            // Mark email as read
+            const email = filteredEmails[activeEmailIndex];
+            if (email.labelIds.includes('UNREAD')) {
+                email.labelIds = email.labelIds.filter(l => l !== 'UNREAD');
+                if (isChromeExtension && gmailConnected) {
+                    removeGmailLabel(email.id, 'UNREAD');
+                }
+            }
+        }
+
+        function closeSlider() {
+            sliderView.classList.add('hidden');
+            activeEmailIndex = -1;
+            renderList();
+        }
+
+        document.getElementById('slider-close-btn').onclick = closeSlider;
+
+        function renderSlides() {
+            viewport.innerHTML = '';
+
+            filteredEmails.forEach((email, index) => {
+                const slide = document.createElement('div');
+                slide.className = "slide-item select-text flex justify-center py-6 sm:py-10";
+                
+                // Add positioning class
+                if (index === activeEmailIndex) {
+                    slide.classList.add('active');
+                } else if (index < activeEmailIndex) {
+                    slide.classList.add('prev-hidden');
+                } else {
+                    slide.classList.add('next-hidden');
+                }
+
+                const senderName = email.from.split('<')[0].trim().replace(/"/g, '') || email.from;
+                const formattedDate = new Date(email.date).toLocaleDateString('fr-FR', {
+                    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+
+                slide.innerHTML = `
+                    <div class="w-full max-w-2xl flex flex-col justify-between overflow-y-auto no-scrollbar">
+                        <div class="space-y-8 pr-1">
+                            <div class="space-y-4">
+                                <h1 class="font-serif text-3xl sm:text-4xl md:text-5xl font-normal leading-tight tracking-tight text-zen-text dark:text-zen-darktext">
+                                    ${email.subject}
+                                </h1>
+                                <div class="flex items-baseline justify-between text-xs text-zen-muted dark:text-zen-darkmuted border-b border-zen-border/20 dark:border-zen-darkborder/20 pb-4">
+                                    <div class="flex flex-col gap-0.5">
+                                        <span class="font-semibold text-zen-text dark:text-zen-darktext text-sm">${senderName}</span>
+                                        <span>${email.from}</span>
+                                    </div>
+                                    <span>${formattedDate}</span>
+                                </div>
+                            </div>
+
+                            <article class="email-body-content prose dark:prose-invert max-w-none text-zen-text/90 dark:text-zen-darktext/90 font-serif text-lg leading-relaxed">
+                                ${email.body}
+                            </article>
+                        </div>
+                    </div>
+                `;
+
+                viewport.appendChild(slide);
+            });
+
+            // Update Star class in toolbar
+            const email = filteredEmails[activeEmailIndex];
+            const starIcon = document.querySelector('#slider-star-btn i');
+            if (email.starred) {
+                starIcon.className = "w-4.5 h-4.5 fill-amber-500 text-amber-500";
+            } else {
+                starIcon.className = "w-4.5 h-4.5 text-zen-muted dark:text-zen-darkmuted";
+            }
+            lucide.createIcons();
+        }
+
+        function updateSliderProgress() {
+            if (activeEmailIndex === -1 || filteredEmails.length === 0) return;
+            
+            const progressVal = ((activeEmailIndex + 1) / filteredEmails.length) * 100;
+            document.getElementById('slider-progress-bar').style.width = `${progressVal}%`;
+            
+            const countText = `${String(activeEmailIndex + 1).padStart(2, '0')} / ${String(filteredEmails.length).padStart(2, '0')}`;
+            document.getElementById('slider-progress-index').textContent = countText;
+        }
+
+        // Navigate Slider Index
+        function slideNext() {
+            if (activeEmailIndex < filteredEmails.length - 1) {
+                // Pre-fetch update styling classes on slides elements
+                const slides = viewport.querySelectorAll('.slide-item');
+                
+                slides[activeEmailIndex].className = "slide-item prev-hidden";
+                activeEmailIndex++;
+                slides[activeEmailIndex].className = "slide-item active";
+
+                updateSliderProgress();
+                renderSlides(); // Recalibrate active properties
+                
+                // Auto mark read next email
+                const email = filteredEmails[activeEmailIndex];
+                if (email.labelIds.includes('UNREAD')) {
+                    email.labelIds = email.labelIds.filter(l => l !== 'UNREAD');
+                    if (isChromeExtension && gmailConnected) {
+                        removeGmailLabel(email.id, 'UNREAD');
+                    }
+                }
+            } else {
+                showToast("Fin de la liste", "info");
+            }
+        }
+
+        function slidePrev() {
+            if (activeEmailIndex > 0) {
+                const slides = viewport.querySelectorAll('.slide-item');
+                
+                slides[activeEmailIndex].className = "slide-item next-hidden";
+                activeEmailIndex--;
+                slides[activeEmailIndex].className = "slide-item active";
+
+                updateSliderProgress();
+                renderSlides();
+            }
+        }
+
+        // --- BUTTON SLIDE TRANSITION EVENTS ---
+
+        document.getElementById('slider-star-btn').onclick = () => {
+            if (activeEmailIndex !== -1) {
+                const email = filteredEmails[activeEmailIndex];
+                email.starred = !email.starred;
+                if (isChromeExtension && gmailConnected) {
+                    toggleGmailLabel(email.id, 'STARRED', email.starred);
+                }
+                showToast(email.starred ? "Suivi activé" : "Suivi désactivé", "info");
+                renderSlides();
+            }
+        };
+
+        document.getElementById('slider-archive-btn').onclick = () => {
+            if (activeEmailIndex !== -1) {
+                const email = filteredEmails[activeEmailIndex];
+                email.folder = "ARCHIVE";
+                if (isChromeExtension && gmailConnected) {
+                    removeGmailLabel(email.id, 'INBOX');
+                }
+                showToast("Message archivé", "info");
+
+                // Auto slide next or close if empty
+                if (filteredEmails.length > 1) {
+                    // Remove current email index from list locally
+                    filteredEmails.splice(activeEmailIndex, 1);
+                    if (activeEmailIndex >= filteredEmails.length) {
+                        activeEmailIndex = filteredEmails.length - 1;
+                    }
+                    openSlider(activeEmailIndex);
+                } else {
+                    closeSlider();
+                }
+            }
+        };
+
+        // --- QUICK REPLY SEND ---
+
+        document.getElementById('slider-reply-send-btn').onclick = async () => {
+            const input = document.getElementById('slider-reply-input');
+            const txt = input.value.trim();
+            if (!txt || activeEmailIndex === -1) return;
+
+            const email = filteredEmails[activeEmailIndex];
+            showToast("Envoi de la réponse...", "info");
+
+            if (isChromeExtension && gmailConnected) {
+                try {
+                    const mime = makeGmailMime(email.from, `Re: ${email.subject}`, txt);
+                    await makeGmailRequest('/messages/send', {
+                        method: 'POST',
+                        body: JSON.stringify({ raw: mime })
+                    });
+                    showToast("Message envoyé avec succès !", "success");
+                } catch (err) {
+                    showToast(`Échec d'envoi : ${err.message}`, "error");
+                }
+            } else {
+                const repMail = {
+                    id: `msg-rep-${Date.now()}`,
+                    folder: "SENT",
+                    labelIds: ["SENT"],
+                    tags: [],
+                    from: "Sarah Connor <sarah@aero.co>",
+                    subject: `Re: ${email.subject}`,
+                    snippet: txt,
+                    date: new Date().toISOString(),
+                    body: txt,
+                    starred: false
+                };
+                mockEmails.push(repMail);
+                showToast("Réponse rapide simulée !", "success");
+            }
+
+            input.value = '';
+            
+            // Advance slide automatically on success
+            if (activeEmailIndex < filteredEmails.length - 1) {
+                slideNext();
+            } else {
+                closeSlider();
+            }
+        };
+
+        function makeGmailMime(to, subject, message) {
+            const str = [
+                "Content-Type: text/html; charset=\"UTF-8\"\r\n",
+                "MIME-Version: 1.0\r\n",
+                "Content-Transfer-Encoding: 7bit\r\n",
+                "to: ", to, "\r\n",
+                "subject: ", subject, "\r\n\r\n",
+                message
+            ].join('');
+            return btoa(unescape(encodeURIComponent(str)))
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=+$/, '');
+        }
+
+        // --- FLOATING WRITE (COMPOSE) ---
+
+        const composePanel = document.getElementById('compose-panel');
+
+        function openCompose() {
+            composePanel.classList.remove('hidden');
+            setTimeout(() => {
+                composePanel.style.transform = "scale(1)";
+                composePanel.style.opacity = "1";
+                composePanel.style.pointerEvents = "auto";
+            }, 10);
+            document.getElementById('compose-to').focus();
+        }
+
+        function closeCompose() {
+            composePanel.style.transform = "scale(0.95)";
+            composePanel.style.opacity = "0";
+            composePanel.style.pointerEvents = "none";
+            setTimeout(() => {
+                composePanel.classList.add('hidden');
+                document.getElementById('compose-to').value = '';
+                document.getElementById('compose-subject').value = '';
+                document.getElementById('compose-body').value = '';
+            }, 300);
+        }
+
+        document.getElementById('close-compose-btn').onclick = closeCompose;
+
+        document.getElementById('send-btn').onclick = async () => {
+            const to = document.getElementById('compose-to').value.trim();
+            const subject = document.getElementById('compose-subject').value.trim() || "(Sans objet)";
+            const body = document.getElementById('compose-body').value;
+
+            if (!to) {
+                showToast("Veuillez renseigner un destinataire", "error");
+                return;
+            }
+
+            showToast("Envoi en cours...", "info");
+
+            if (isChromeExtension && gmailConnected) {
+                try {
+                    const raw = makeGmailMime(to, subject, body);
+                    await makeGmailRequest('/messages/send', {
+                        method: 'POST',
+                        body: JSON.stringify({ raw })
+                    });
+                    showToast("Message envoyé !", "success");
+                } catch (err) {
+                    showToast(`Erreur Gmail API : ${err.message}`, "error");
+                }
+            } else {
+                const newMail = {
+                    id: `msg-sent-${Date.now()}`,
+                    folder: "SENT",
+                    labelIds: ["SENT"],
+                    tags: [],
+                    from: "Sarah Connor <sarah@aero.co>",
+                    subject: subject,
+                    snippet: body.substring(0, 100),
+                    date: new Date().toISOString(),
+                    body: body.replace(/\n/g, '<br>'),
+                    starred: false
+                };
+                mockEmails.push(newMail);
+                showToast("Message envoyé (Démo)", "success");
+            }
+            closeCompose();
+            renderList();
+        };
+
+        // --- GLOBAL APP SETTINGS EVENTS ---
+
+        // Toggle Inbox vs Archive view
+        document.getElementById('view-mode-btn').onclick = () => {
+            const btn = document.getElementById('view-mode-btn');
+            if (viewMode === "INBOX") {
+                viewMode = "ARCHIVE";
+                btn.textContent = "Boîte de réception";
+                showToast("Mode Archives", "info");
+            } else {
+                viewMode = "INBOX";
+                btn.textContent = "Archives";
+                showToast("Boîte de réception", "info");
+            }
+            renderList();
+        };
+
+        // Toggle Theme
+        document.getElementById('theme-toggle').onclick = () => {
+            isDarkMode = !isDarkMode;
+            if (isDarkMode) {
+                document.documentElement.classList.add('dark');
+                showToast("Thème sombre", "info");
+            } else {
+                document.documentElement.classList.remove('dark');
+                showToast("Thème clair", "info");
+            }
+        };
+
+        // Live Gmail Connection
+        document.getElementById('sync-gmail-btn').onclick = async () => {
+            if (gmailConnected) {
+                await syncGmailEmails();
+            } else {
+                await connectGmail();
+            }
+        };
+
+        // Search bar controller
+        const searchInput = document.getElementById('search-input');
+        searchInput.oninput = (e) => {
+            searchQuery = e.target.value.trim().toLowerCase();
+            renderList();
+        };
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            const tag = e.target.tagName.toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) {
+                // Let slider input enter submit replies
+                if (e.key === 'Enter' && e.target.id === 'slider-reply-input') {
+                    document.getElementById('slider-reply-send-btn').click();
+                }
+                return;
+            }
+
+            if (e.key === '/') {
+                e.preventDefault();
+                searchInput.focus();
+                searchInput.select();
+            } else if (e.key.toLowerCase() === 'c') {
+                e.preventDefault();
+                openCompose();
+            } else if (e.key === 'Escape') {
+                closeSlider();
+                closeCompose();
+            }
+
+            // Arrow controls when slider mode active
+            if (activeEmailIndex !== -1) {
+                if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ') {
+                    e.preventDefault();
+                    slideNext();
+                } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    slidePrev();
+                } else if (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 'e') {
+                    // Archive key
+                    e.preventDefault();
+                    document.getElementById('slider-archive-btn').click();
+                } else if (e.key.toLowerCase() === 's') {
+                    e.preventDefault();
+                    document.getElementById('slider-star-btn').click();
+                } else if (e.key.toLowerCase() === 'r') {
+                    e.preventDefault();
+                    document.getElementById('slider-reply-input').focus();
+                }
+            }
+        });
+
+        // --- TOAST NOTIFICATIONS ---
+        function showToast(message, type = "info") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bgClass = "bg-zen-text text-zen-bg dark:bg-zen-darktext dark:text-zen-darkbg";
+            let icon = "info";
+            
+            if (type === "success") {
+                bgClass = "bg-emerald-600 text-white shadow-emerald-500/10";
+                icon = "check-circle";
+            } else if (type === "error") {
+                bgClass = "bg-rose-600 text-white shadow-rose-500/10";
+                icon = "alert-circle";
+            }
+
+            toast.className = `p-4 rounded-xl shadow-xl flex items-center gap-3 text-xs font-semibold border border-white/5 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto ${bgClass}`;
+            toast.innerHTML = `
+                <i data-lucide="${icon}" class="w-4 h-4"></i>
+                <span>${message}</span>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderList();
+            updateSyncState();
+            
+            document.documentElement.className = "dark";
+            
+            if (isChromeExtension) {
+                getGmailToken(false).then(() => {
+                    updateSyncState();
+                    syncGmailEmails();
+                }).catch(() => {});
+            }
+        });
+    </script>
+</body>
+</html>

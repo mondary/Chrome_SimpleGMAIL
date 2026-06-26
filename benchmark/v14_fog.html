@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Benchmark 14 - Zen Fog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #eee; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .fog-container { position: relative; width: 600px; height: 400px; background: #fff; border-radius: 100px; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 30px 100px rgba(0,0,0,0.05); }
+        .fog-content { text-align: center; transition: all 1s; opacity: 1; }
+        .fog-content.hide { opacity: 0; transform: translateY(-20px); filter: blur(20px); }
+        .nav-hint { position: absolute; bottom: 40px; text-transform: uppercase; letter-spacing: 4px; font-size: 10px; font-weight: bold; opacity: 0.3; }
+    </style>
+</head>
+<body>
+    <div class="fog-container">
+        <div class="fog-content">
+            <span class="text-blue-500 font-bold uppercase tracking-widest text-xs">Stripe</span>
+            <h1 class="text-4xl font-light mt-4 tracking-tighter">Your $14k payout has arrived.</h1>
+            <p class="text-gray-400 mt-4 text-sm italic">Take a breath. The work is paying off.</p>
+        </div>
+        <div class="nav-hint">Scroll to breathe next</div>
+    </div>
+</body>
+</html>

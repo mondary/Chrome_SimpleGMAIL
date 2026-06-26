@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenMail - Elite Email Client</title>
+    <style>
+        /* --- CORE DESIGN SYSTEM (BENCHMARK INSPIRED) --- */
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
+        
+        :root {
+            /* Theme 1: Aero Glass (Inspired by v1) */
+            --bg-glass: rgba(255, 255, 255, 0.7);
+            --bg-blur: blur(20px);
+            --accent: #5272ea;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-glass: rgba(255, 255, 255, 0.4);
+            --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
+            --radius-xl: 24px;
+            --radius-lg: 16px;
+        }
+
+        [data-theme="nordic-zen"] {
+            /* Theme 2: Nordic Zen (Inspired by v2) */
+            --bg-glass: #fbf9f6;
+            --bg-blur: none;
+            --accent: #8c6c50;
+            --text-main: #1c1e21;
+            --text-muted: #70747c;
+            --border-glass: #e8e5df;
+            --shadow-glass: none;
+            --radius-xl: 32px;
+            --radius-lg: 12px;
+        }
+
+        [data-theme="editorial"] {
+            /* Theme 3: Editorial Focus (Inspired by v4) */
+            --bg-glass: #ffffff;
+            --bg-blur: none;
+            --accent: #000000;
+            --text-main: #111111;
+            --text-muted: #888888;
+            --border-glass: #eeeeee;
+            --shadow-glass: none;
+            --radius-xl: 0px;
+            --radius-lg: 0px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc;
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        [data-theme="nordic-zen"] body { background-color: #fbf9f6; }
+        [data-theme="editorial"] body { background-color: #ffffff; }
+
+        /* --- LAYOUT --- */
+        .app-shell {
+            display: flex;
+            height: 100%;
+            width: 100%;
+            position: relative;
+        }
+
+        /* --- SIDEBAR --- */
+        aside {
+            width: 280px;
+            background: var(--bg-glass);
+            backdrop-filter: var(--bg-blur);
+            border-right: 1px solid var(--border-glass);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            z-index: 50;
+            transition: width 0.4s ease;
+        }
+
+        .logo {
+            font-family: 'Instrument Serif', serif;
+            font-size: 28px;
+            font-style: italic;
+            margin-bottom: 40px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .compose-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent);
+            color: white;
+            border-radius: var(--radius-lg);
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.2s;
+        }
+        .compose-btn:hover { transform: translateY(-2px); }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-radius: var(--radius-lg);
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            transition: all 0.2s;
+        }
+        .nav-link:hover { background: rgba(0,0,0,0.03); color: var(--text-main); }
+        .nav-link.active { background: var(--bg-hover, rgba(0,0,0,0.05)); color: var(--accent); font-weight: 600; }
+
+        /* --- MAIN CONTENT --- */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            background: transparent;
+        }
+
+        header {
+            height: 72px;
+            padding: 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-glass);
+            background: var(--bg-glass);
+            backdrop-filter: var(--bg-blur);
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 600px;
+            position: relative;
+        }
+        .search-input {
+            width: 100%;
+            background: rgba(0,0,0,0.04);
+            border: 1px solid transparent;
+            border-radius: 12px;
+            padding: 12px 16px 12px 44px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .search-input:focus { background: white; border-color: var(--accent); box-shadow: var(--shadow-glass); }
+
+        /* --- EMAIL LIST --- */
+        .workspace-split {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .email-list {
+            width: 400px;
+            border-right: 1px solid var(--border-glass);
+            overflow-y: auto;
+            background: rgba(255,255,255,0.3);
+        }
+
+        .email-item {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-glass);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .email-item:hover { background: rgba(255,255,255,0.5); }
+        .email-item.unread { font-weight: 700; border-left: 3px solid var(--accent); }
+
+        .item-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+        .item-sender { font-size: 14px; color: var(--text-main); }
+        .item-date { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .item-subject { font-size: 14px; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .item-snippet { font-size: 13px; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+        /* --- READER --- */
+        .email-reader {
+            flex: 1;
+            padding: 48px;
+            overflow-y: auto;
+            background: var(--bg-glass);
+            backdrop-filter: var(--bg-blur);
+        }
+
+        .reader-placeholder {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            opacity: 0.4;
+            text-align: center;
+        }
+
+        .reader-content { display: none; max-width: 720px; margin: 0 auto; }
+        .reader-content.active { display: block; }
+
+        .reader-subject { font-family: 'Playfair Display', serif; font-size: 32px; margin-bottom: 24px; line-height: 1.2; }
+        .reader-meta { display: flex; align-items: center; gap: 16px; margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid var(--border-glass); }
+        .reader-avatar { width: 44px; height: 44px; border-radius: 12px; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        .reader-body { font-size: 16px; line-height: 1.8; color: var(--text-main); }
+
+        /* --- THEME SELECTOR --- */
+        .theme-pill {
+            display: flex;
+            background: rgba(0,0,0,0.05);
+            padding: 4px;
+            border-radius: 20px;
+            gap: 4px;
+        }
+        .theme-btn {
+            padding: 6px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-radius: 16px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+        .theme-btn.active { background: white; color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+
+        /* --- COMPOSE MODAL --- */
+        .compose-modal {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            width: 500px;
+            height: 600px;
+            background: white;
+            border-radius: var(--radius-xl);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 100;
+            border: 1px solid var(--border-glass);
+        }
+        .compose-modal.active { display: flex; }
+        .compose-header { padding: 16px 24px; background: var(--text-main); color: white; display: flex; justify-content: space-between; align-items: center; }
+        .compose-body { padding: 24px; display: flex; flex-direction: column; gap: 16px; flex: 1; }
+        .compose-input { border: none; border-bottom: 1px solid #eee; padding: 8px 0; outline: none; font-size: 14px; }
+        .compose-textarea { flex: 1; border: none; resize: none; outline: none; font-size: 14px; line-height: 1.6; }
+    </style>
+</head>
+<body data-theme="aero-glass">
+    <div class="app-shell">
+        <aside>
+            <div class="logo">ZenMail</div>
+            <button id="compose-btn" class="compose-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                New Draft
+            </button>
+            <nav>
+                <a href="#" data-folder="INBOX" class="nav-link active">Inbox <span id="inbox-count"></span></a>
+                <a href="#" data-folder="STARRED" class="nav-link">Starred</a>
+                <a href="#" data-folder="SENT" class="nav-link">Sent</a>
+                <a href="#" data-folder="TRASH" class="nav-link">Trash</a>
+            </nav>
+        </aside>
+
+        <main>
+            <header>
+                <div class="search-bar">
+                    <svg style="position: absolute; left: 16px; top: 12px; opacity: 0.4;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    <input type="text" id="search-input" class="search-input" placeholder="Search your archive...">
+                </div>
+                <div style="display: flex; align-items: center; gap: 24px;">
+                    <div class="theme-pill">
+                        <div class="theme-btn active" data-t="aero-glass">Aero</div>
+                        <div class="theme-btn" data-t="nordic-zen">Nordic</div>
+                        <div class="theme-btn" data-t="editorial">Edit</div>
+                    </div>
+                    <img id="user-avatar" class="avatar" style="width: 36px; height: 36px; border-radius: 12px;" src="icon.png">
+                </div>
+            </header>
+
+            <div class="workspace-split">
+                <section id="email-items" class="email-list">
+                    <!-- Dynamic List -->
+                    <div style="padding: 40px; text-align: center; color: var(--text-muted); opacity: 0.5; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+                        Syncing...
+                    </div>
+                </section>
+
+                <section class="email-reader">
+                    <div id="reader-placeholder" class="reader-placeholder">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom: 24px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
+                        <p style="font-family: 'Instrument Serif', serif; font-size: 24px; font-style: italic;">Select a story to read</p>
+                    </div>
+                    <div id="reader-content" class="reader-content">
+                        <h1 id="read-subject" class="reader-subject"></h1>
+                        <div class="reader-meta">
+                            <div id="read-avatar" class="reader-avatar"></div>
+                            <div>
+                                <div id="read-from" style="font-weight: 700; font-size: 14px;"></div>
+                                <div id="read-date" style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;"></div>
+                            </div>
+                        </div>
+                        <div id="read-body" class="reader-body"></div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="compose-modal" class="compose-modal">
+        <div class="compose-header">
+            <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">New Message</span>
+            <button id="close-compose" style="color: white; font-size: 18px;">&times;</button>
+        </div>
+        <div class="compose-body">
+            <input type="text" id="compose-to" class="compose-input" placeholder="Recipient">
+            <input type="text" id="compose-subject" class="compose-input" placeholder="Subject">
+            <textarea id="compose-body" class="compose-textarea" placeholder="Write something beautiful..."></textarea>
+        </div>
+        <div style="padding: 24px; border-top: 1px solid #eee; display: flex; justify-content: flex-end;">
+            <button id="send-btn" style="background: var(--accent); color: white; padding: 12px 32px; border-radius: 12px; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Send Now</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

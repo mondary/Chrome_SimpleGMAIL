@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Benchmark 07 - The Terminal Command</title>
+    <style>
+        body { background: #000; color: #00ff41; font-family: 'Courier New', monospace; padding: 40px; line-height: 1.5; }
+        .prompt { color: #fff; }
+        .cursor { display: inline-block; width: 10px; height: 18px; background: #00ff41; animation: blink 1s infinite; }
+        @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+        .mail-row { cursor: pointer; padding: 4px 0; }
+        .mail-row:hover { background: rgba(0,255,65,0.1); }
+        .unread { font-weight: bold; text-decoration: underline; }
+        .stats { border: 1px solid #00ff41; padding: 20px; margin-top: 40px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div>
+        <p class="prompt">root@zenmail:~# fetch --limit 5 --unread</p>
+        <p>Connecting to imap.gmail.com... [OK]</p>
+        <p>Downloading headers... [OK]</p>
+        <br>
+        <div class="mail-row unread">[01] 2026-06-18 | Stripe | Payout Processed ($14k)</div>
+        <div class="mail-row unread">[02] 2026-06-18 | OpenAI | Introducing GPT-5 Pro</div>
+        <div class="mail-row">[03] 2026-06-17 | Vercel | Build Successful (main)</div>
+        <div class="mail-row">[04] 2026-06-17 | GitHub | Security Alert: critical</div>
+        <div class="mail-row">[05] 2026-06-16 | Figma | Sarah Connor commented...</div>
+        <br>
+        <p class="prompt">root@zenmail:~# <span class="cursor"></span></p>
+    </div>
+
+    <div class="stats">
+        <p>INBOX: 142</p>
+        <p>UNREAD: 12</p>
+        <p>UPTIME: 99.98%</p>
+    </div>
+</body>
+</html>
