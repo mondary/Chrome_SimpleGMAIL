@@ -12,3 +12,12 @@ store/
 /GLM.md
 /OPENCODE.md
 archives/
+.*
+.DS_Store
+node_modules/
+dist/
+build/
+.env
+.venv/
+__pycache__/
+*.log
