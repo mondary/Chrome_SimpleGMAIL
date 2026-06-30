@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WallSpace - Immersive View</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0b;
+            color: white;
+            overflow: hidden;
+        }
+        .glass {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-hover:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden">
+
+    <!-- App Window Frame (Mockup) -->
+    <div class="h-full w-full bg-slate-900 flex items-center justify-center p-4 md:p-12">
+        <div class="relative w-full h-full max-w-7xl rounded-3xl overflow-hidden shadow-2xl bg-black">
+            
+            <!-- OS Window Controls -->
+            <div class="absolute top-4 left-6 flex gap-2 z-50">
+                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+            </div>
+
+            <!-- IMMERSIVE WALLPAPER -->
+            <div class="absolute inset-0 w-full h-full">
+                <img src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=1920&q=80" 
+                     class="w-full h-full object-cover" alt="Wallpaper">
+            </div>
+
+            <!-- BOTTOM OVERLAY CONTROLS -->
+            <div class="absolute bottom-12 left-0 w-full px-12 flex justify-center">
+                <div class="glass px-6 py-4 rounded-full flex items-center gap-8 z-50">
+                    
+                    <!-- Back Button -->
+                    <button class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-all">
+                        <span class="material-symbols-outlined">chevron_left</span>
+                    </button>
+
+                    <!-- Info Section -->
+                    <div class="flex flex-col">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-semibold">Ghibli Lofi Coffee</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-[10px] text-white/60 font-medium">
+                            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[10px]">aspect_ratio</span> 3840x2160</span>
+                            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[10px]">save</span> 26MB</span>
+                            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[10px]">schedule</span> 0:12s</span>
+                        </div>
+                    </div>
+
+                    <!-- Vertical Divider -->
+                    <div class="w-px h-8 bg-white/20"></div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center gap-3">
+                        <button class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-all">
+                            <span class="material-symbols-outlined text-sm">upload</span>
+                        </button>
+                        <button class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-all">
+                            <span class="material-symbols-outlined text-sm">layers</span>
+                        </button>
+                        <button class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-all">
+                            <span class="material-symbols-outlined text-sm">favorite</span>
+                        </button>
+                    </div>
+
+                    <!-- CTA -->
+                    <button class="bg-white text-black px-6 py-2 rounded-full text-xs font-bold hover:bg-stone-200 transition-all ml-4">
+                        Get Premium
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

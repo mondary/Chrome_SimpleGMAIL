@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monolith Mail - v24 Zen Immersive</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-color: #F5F2EB;
+      --text-color: #161719;
+      --accent-color: #967456;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      overflow: hidden;
+      transition: background-color 0.8s ease;
+    }
+
+    .font-serif { font-family: 'Playfair Display', serif; }
+    .font-display { font-family: 'Instrument Serif', serif; }
+
+    /* Background Immersion */
+    .ambient-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background-image: url('bg.jpg');
+      background-size: cover;
+      background-position: center;
+      filter: brightness(0.4) blur(40px);
+      opacity: 0.6;
+      transition: opacity 1s ease;
+    }
+
+    /* Grain Texture */
+    .grain {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      pointer-events: none;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* Navigation UI */
+    .nav-btn {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.1);
+    }
+
+    /* The Magic: Transition System */
+    #content-container {
+      perspective: 1200px;
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    .email-view {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      will-change: transform, opacity;
+      padding: 2rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .email-card {
+      background: white;
+      width: 100%;
+      max-width: 850px;
+      height: 100%;
+      max-height: 85vh;
+      border-radius: 1.5rem;
+      padding: 3rem;
+      overflow-y: auto;
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Animations classes */
+    .slide-out-left { transform: translateX(-120%) scale(0.9) rotateY(10deg); opacity: 0; }
+    .slide-out-right { transform: translateX(120%) scale(0.9) rotateY(-10deg); opacity: 0; }
+    .slide-in-left { transform: translateX(120%) scale(1.1) rotateY(-10deg); opacity: 0; }
+    .slide-in-right { transform: translateX(-120%) scale(1.1) rotateY(10deg); opacity: 0; }
+    .slide-center { transform: translateX(0) scale(1) rotateY(0); opacity: 1; }
+
+    /* Hide scrollbar */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body>
+
+  <div class="ambient-bg"></div>
+  <div class="grain"></div>
+
+  <!-- Header -->
+  <header class="h-20 flex items-center justify-between px-12 relative z-40">
+    <div class="flex items-center gap-4">
+      <button onclick="showInbox()" class="nav-btn w-10 h-10 rounded-full flex items-center justify-center text-white">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </button>
+      <span class="font-display text-2xl italic text-white/80">Monolith Zen</span>
+    </div>
+    
+    <div class="flex items-center gap-8 text-white/60 text-xs uppercase tracking-[0.3em] font-bold">
+      <span id="progress-text">01 / 10</span>
+      <div class="h-4 w-[1px] bg-white/20"></div>
+      <button onclick="toggleTheme()" class="hover:text-white transition-colors">Mode</button>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="flex-1 relative flex items-center justify-center w-full h-full">
+    
+    <!-- Inbox List (Hidden by default) -->
+    <div id="inbox-view" class="hidden w-full max-w-3xl h-[70vh] bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl z-30 overflow-hidden flex flex-col">
+      <div class="p-8 border-b border-black/5">
+        <h2 class="font-display text-3xl">Boîte de réception</h2>
+      </div>
+      <div id="inbox-list" class="flex-1 overflow-y-auto no-scrollbar divide-y divide-black/5"></div>
+    </div>
+
+    <!-- Reader View -->
+    <div id="reader-view" class="w-full h-full relative">
+      <!-- Controls -->
+      <button onclick="navigateMail(-1)" class="nav-btn absolute left-8 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full flex items-center justify-center z-40 text-white">
+        <span class="material-symbols-outlined">chevron_left</span>
+      </button>
+      <button onclick="navigateMail(1)" class="nav-btn absolute right-8 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full flex items-center justify-center z-40 text-white">
+        <span class="material-symbols-outlined">chevron_right</span>
+      </button>
+
+      <!-- The Container for email cards -->
+      <div id="content-container"></div>
+    </div>
+  </main>
+
+  <script>
+    let emails = [];
+    let currentIndex = 0;
+    let isDarkMode = true;
+
+    const initialMockEmails = [
+      { id: 1, sender: "Hart Leggett", initial: "H", color: "bg-indigo-500", date: "Jan 11, 2021", subject: "Yard swing?", body: "<p>Hey Bryan,</p><p>Welcome home! I think you already closed on the house over the weekend. Hope it went smoothly.</p><p>I'm about to order the gifts and wanted to triple check on one: a big swing meant to hang from a tree. Is there a good spot?</p><p>Thanks,<br>Hart</p>" },
+      { id: 2, sender: "Ben Thompson", initial: "S", color: "bg-orange-500", date: "Nov 17, 2020", subject: "Playing on Hard Mode", body: "<p>One way to understand how the Internet is different is to examine what business models work. Start with text and images, long the province of newspapers…</p><p>Thanks for reading,<br>Ben</p>" },
+      { id: 3, sender: "Dieter Bohn", initial: "P", color: "bg-gray-700", date: "Nov 25, 2020", subject: "Samsung's rumored Galaxy S21 lineup", body: "<p>The hardware review cycle is settling down. Let's talk about CES and the rumors of early Samsung announcements…</p><p>Dieter</p>" },
+      { id: 4, sender: "Jam Club", initial: "J", color: "bg-teal-600", date: "Nov 22, 2020", subject: "You only have 30 days to join the Jam Club", body: "<p>Registration for the upcoming creative prototyping workshops closes in exactly 30 days. Don't miss out!</p><p>Jam Club</p>" },
+      { id: 5, sender: "Monzo HQ", initial: "M", color: "bg-blue-700", date: "Nov 20, 2020", subject: "Introducing our new metal card", body: "<p>Introducing Monzo Premium. Our new account tier comes with a heavy metal card made from precision-machined stainless steel…</p><p>Monzo</p>" },
+      { id: 6, sender: "Sarah Chen", initial: "S", color: "bg-purple-500", date: "Jan 10, 2021", subject: "Q4 Report finalized", body: "<p>Hi,</p><p>The Q4 report is attached. Could you review the revenue projections section before our meeting on Thursday?</p><p>Thanks,<br>Sarah</p>" },
+      { id: 7, sender: "Mike Rodriguez", initial: "M", color: "bg-pink-500", date: "Jan 9, 2021", subject: "Updated mockups", body: "<p>Hey! I've updated the dashboard mockups based on last week's feedback. The new charts section should address the data density concerns.</p><p>Mike</p>" },
+      { id: 8, sender: "LinkedIn", initial: "L", color: "bg-blue-600", date: "Jan 8, 2021", subject: "3 new connection requests", body: "<p>You have 3 new connection requests from people in your network.</p>" },
+      { id: 9, sender: "GitHub", initial: "G", color: "bg-gray-800", date: "Jan 7, 2021", subject: "[monolith-mail] PR #142 merged", body: "<p>Pull request #142 'Fix pagination bug in message list' has been merged into main by @developer.</p>" },
+      { id: 10, sender: "Ben Thompson", initial: "S", color: "bg-orange-500", date: "Nov 24, 2020", subject: "The Tech IPO Season", body: "<p>We are witnessing one of the busiest IPO windows for enterprise SaaS and technology platforms in history.</p><p>Best,<br>Ben</p>" }
+    ];
+
+    function init() {
+      emails = initialMockEmails.map(e => ({
+        ...e,
+        html: `
+          <div class="flex flex-col h-full">
+            <div class="flex items-center justify-between mb-12">
+              <div class="flex items-center gap-6">
+                <div class="w-16 h-16 rounded-2xl ${e.color} flex items-center justify-center text-white text-2xl font-bold shadow-lg">${e.initial}</div>
+                <div>
+                  <h3 class="text-2xl font-bold text-gray-900">${e.sender}</h3>
+                  <p class="text-gray-500 font-medium">${e.date}</p>
+                </div>
+              </div>
+            </div>
+            <div class="flex-1">
+              <h2 class="text-4xl font-serif font-medium mb-8 text-gray-900 leading-tight">${e.subject}</h2>
+              <div class="prose prose-lg text-gray-700 leading-relaxed font-serif">${e.body}</div>
+            </div>
+          </div>
+        `
+      }));
+      
+      renderInitial();
+      setupKeyboard();
+    }
+
+    function renderInitial() {
+      const container = document.getElementById('content-container');
+      const view = document.createElement('div');
+      view.className = 'email-view';
+      view.innerHTML = `<div class="email-card">${emails[currentIndex].html}</div>`;
+      container.appendChild(view);
+      updateUI();
+    }
+
+    function updateUI() {
+      document.getElementById('progress-text').innerText = `${String(currentIndex + 1).padStart(2, '0')} / ${String(emails.length).padStart(2, '0')}`;
+    }
+
+    function navigateMail(direction) {
+      const container = document.getElementById('content-container');
+      const oldView = container.querySelector('.email-view');
+      const newIndex = currentIndex + direction;
+
+      if (newIndex < 0 || newIndex >= emails.length) return;
+
+      currentIndex = newIndex;
+
+      // 1. Create new view
+      const newView = document.createElement('div');
+      newView.className = 'email-view';
+      newView.innerHTML = `<div class="email-card">${emails[currentIndex].html}</div>`;
+
+      // 2. Set initial state of new view (opposite side)
+      const isNext = direction === 1;
+      newView.classList.add(isNext ? 'slide-in-right' : 'slide-in-left');
+      container.appendChild(newView);
+
+      // 3. Trigger transition
+      const duration = 600;
+      const ease = 'cubic-bezier(0.4, 0, 0.2, 1)';
+
+      // Animate Old View Out
+      oldView.style.transition = `all ${duration}ms ${ease}`;
+      oldView.classList.add(isNext ? 'slide-out-left' : 'slide-out-right');
+
+      // Animate New View In
+      newView.style.transition = `all ${duration}ms ${ease}`;
+      newView.classList.remove('slide-in-left', 'slide-in-right');
+      newView.classList.add('slide-center');
+
+      // 4. Cleanup
+      setTimeout(() => {
+        container.removeChild(oldView);
+      }, duration);
+
+      updateUI();
+    }
+
+    function showInbox() {
+      document.getElementById('reader-view').classList.add('hidden');
+      const inbox = document.getElementById('inbox-view');
+      inbox.classList.remove('hidden');
+      
+      const list = document.getElementById('inbox-list');
+      list.innerHTML = '';
+      emails.forEach((e, idx) => {
+        const row = document.createElement('div');
+        row.className = "p-6 hover:bg-black/5 cursor-pointer transition-colors flex items-center justify-between";
+        row.innerHTML = `
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-lg ${e.color} flex items-center justify-center text-white font-bold">${e.initial}</div>
+            <div>
+              <div class="font-bold text-gray-900">${e.sender}</div>
+              <div class="text-sm text-gray-500">${e.subject}</div>
+            </div>
+          </div>
+          <div class="text-xs text-gray-400 font-medium">${e.date}</div>
+        `;
+        row.onclick = () => {
+          currentIndex = idx;
+          enterReaderMode();
+        };
+        list.appendChild(row);
+      });
+    }
+
+    function enterReaderMode() {
+      document.getElementById('inbox-view').classList.add('hidden');
+      document.getElementById('reader-view').classList.remove('hidden');
+      
+      // Refresh container
+      const container = document.getElementById('content-container');
+      container.innerHTML = '';
+      renderInitial();
+    }
+
+    function toggleTheme() {
+      isDarkMode = !isDarkMode;
+      if (isDarkMode) {
+        document.body.style.setProperty('--bg-color', '#F5F2EB');
+        document.body.style.setProperty('--text-color', '#161719');
+        document.documentElement.classList.remove('dark');
+      } else {
+        document.body.style.setProperty('--bg-color', '#121316');
+        document.body.style.setProperty('--text-color', '#E5E6EA');
+        document.documentElement.classList.add('dark');
+      }
+    }
+
+    function setupKeyboard() {
+      document.addEventListener('keydown', (e) => {
+        if (document.getElementById('inbox-view').classList.contains('hidden')) return;
+        if (e.key === 'ArrowLeft') navigateMail(-1);
+        if (e.key === 'ArrowRight') navigateMail(1);
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1938 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monolith Mail - v22 Newsletters (Netflix Hero)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Material Symbols (Outlined) -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', Roboto, RobotoDraft, Helvetica, Arial, sans-serif;
+      color: #202124;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 0.3s, background-color 0.3s;
+    }
+    body.theme-image {
+      background-image: var(--bg-image, url('bg.jpg'));
+    }
+    body.theme-white {
+      background-image: none;
+      background-color: #ffffff;
+    }
+
+    /* ===== Settings popover (theme + background picker) ===== */
+    #settings-popover {
+      transform-origin: top right;
+      animation: popIn 160ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .theme-opt {
+      color: #5f6368;
+    }
+    .theme-opt.is-active {
+      background: #ffffff;
+      color: #202124;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+    .bg-thumb {
+      aspect-ratio: 16 / 10;
+      border-radius: 8px;
+      background-size: cover;
+      background-position: center;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 150ms, transform 150ms;
+      position: relative;
+      overflow: hidden;
+    }
+    .bg-thumb:hover { transform: translateY(-2px); }
+    .bg-thumb.is-active { border-color: #1a73e8; box-shadow: 0 0 0 2px rgba(26,115,232,0.25); }
+    .bg-thumb.is-active::after {
+      content: 'check';
+      font-family: 'Material Symbols Outlined';
+      position: absolute;
+      top: 4px; right: 4px;
+      width: 20px; height: 20px;
+      background: #1a73e8;
+      color: #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      font-variation-settings: 'FILL' 1, 'wght' 700;
+    }
+    body.theme-dark #settings-popover {
+      background: #1f1f1f !important;
+      border-color: rgba(255,255,255,0.08) !important;
+      color: #e5e5e5;
+    }
+    body.theme-dark #settings-popover .text-gray-400 { color: #8d8d8d !important; }
+    body.theme-dark #settings-popover .bg-gray-100 { background: #141414 !important; }
+    body.theme-dark .theme-opt { color: #b3b3b3; }
+    body.theme-dark .theme-opt.is-active {
+      background: #2a2a2a; color: #fff; box-shadow: none;
+    }
+
+    .material-symbols-outlined {
+      font-size: 20px;
+      color: #5f6368;
+      cursor: pointer;
+      user-select: none;
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      transition: color 0.2s, background-color 0.2s;
+    }
+    
+    .header-style-light .material-symbols-outlined { color: #5f6368; }
+    .header-style-light .material-symbols-outlined:hover { background-color: rgba(60, 64, 67, 0.08); border-radius: 50%; }
+    .header-style-dark .material-symbols-outlined { color: rgba(255, 255, 255, 0.85); }
+    .header-style-dark .material-symbols-outlined:hover { color: #ffffff; background-color: rgba(255, 255, 255, 0.12); border-radius: 50%; }
+
+    .icon-btn-container {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      transition: background-color 150ms;
+      flex-shrink: 0;
+    }
+    .header-style-light .icon-btn-container:hover { background-color: rgba(60,64,67,0.08); }
+    .header-style-dark .icon-btn-container:hover { background-color: rgba(255, 255, 255, 0.12); }
+
+    .fab-shadow { box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15); }
+    .fab-shadow:hover { box-shadow: 0 2px 3px 0 rgba(60,64,67,0.3), 0 6px 10px 4px rgba(60,64,67,0.15); }
+
+    /* Compose FAB — frosted glass, matches the inbox-zero badge */
+    .compose-fab {
+      background: rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.92);
+    }
+    .compose-fab:hover { background: rgba(0, 0, 0, 0.38); }
+    body.theme-white .compose-fab {
+      background: rgba(255, 255, 255, 0.72);
+      border-color: rgba(0, 0, 0, 0.08);
+      color: #3c4043;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 6px 16px rgba(0,0,0,0.10);
+    }
+    body.theme-white .compose-fab:hover { background: rgba(255, 255, 255, 0.95); }
+    body.theme-dark .compose-fab {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+    }
+    body.theme-dark .compose-fab:hover { background: rgba(255, 255, 255, 0.16); }
+
+    .glass-container {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .theme-white .glass-container {
+      background: transparent;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border: none;
+      box-shadow: none;
+    }
+
+    #conversation-card { transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s; }
+    .theme-image #conversation-card {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    .theme-white #conversation-card {
+      background: #ffffff;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border: none;
+      box-shadow: none;
+    }
+
+    .glass-search {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+    }
+    .glass-search input::placeholder { color: rgba(255, 255, 255, 0.7); }
+
+    .solid-search {
+      background: #f1f3f4;
+      border: 1px solid transparent;
+      color: #202124;
+    }
+    .solid-search input::placeholder { color: #5f6368; }
+    .solid-search .material-symbols-outlined { color: #5f6368; }
+
+    .badge-inbox { background-color: #f1f3f4; color: #5f6368; font-size: 12px; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
+    .avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+
+    .carousel-container {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+    .carousel-container::-webkit-scrollbar { display: none; }
+    .carousel-item { scroll-snap-align: start; flex: 0 0 auto; }
+    /* "Toutes les newsletters" : grille repliée au lieu du carousel horizontal */
+    .carousel-container.nl-expanded {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      overflow-x: visible;
+    }
+    /* Surface du header de liste (sticky) — colle au fond du glass-container */
+    .list-header-surface { background: #ffffff; }
+    body.theme-image .list-header-surface {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    body.theme-dark .list-header-surface { background: #1c1c1c; }
+    .nl-toggle-btn {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.02em;
+      color: #5f6368; display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; border-radius: 6px; transition: background 150ms, color 150ms;
+    }
+    .nl-toggle-btn:hover { background: rgba(0,0,0,0.05); color: #202124; }
+    body.theme-dark .nl-toggle-btn { color: #9aa0a6; }
+    body.theme-dark .nl-toggle-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+    /* Gmail category tabs */
+    .cat-tabs-surface { background: #ffffff; }
+    body.theme-image .cat-tabs-surface {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    body.theme-dark .cat-tabs-surface { background: #1c1c1c; }
+    .cat-tab {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 11px 6px; font-size: 12px; font-weight: 500; color: #5f6368;
+      border-bottom: 3px solid transparent; transition: color 150ms, border-color 150ms, background 150ms;
+      cursor: pointer; white-space: nowrap; min-width: 0;
+    }
+    .cat-tab:hover { color: #202124; background: rgba(0,0,0,0.03); }
+    .cat-tab.is-active { color: #1a73e8; border-bottom-color: #1a73e8; font-weight: 600; }
+    .cat-tab-icon { font-size: 16px !important; color: inherit; flex-shrink: 0; }
+    .cat-tab-label { overflow: hidden; text-overflow: ellipsis; }
+    .cat-count {
+      font-size: 10px; font-weight: 700; line-height: 1;
+      background: #f1f3f4; color: #5f6368; padding: 2px 6px; border-radius: 8px; min-width: 16px; text-align: center;
+    }
+    .cat-tab.is-active .cat-count { background: #1a73e8; color: #fff; }
+    .cat-count:empty { display: none; }
+    body.theme-dark .cat-tab { color: #9aa0a6; border-bottom-color: transparent; }
+    body.theme-dark .cat-tab:hover { color: #fff; background: rgba(255,255,255,0.06); }
+    body.theme-dark .cat-tab.is-active { color: #8ac4ff; border-bottom-color: #8ac4ff; }
+    body.theme-dark .cat-count { background: #2a2a2a; color: #9aa0a6; }
+    body.theme-dark .cat-tab.is-active .cat-count { background: #8ac4ff; color: #141414; }
+    @media (max-width: 640px) { .cat-tab-label { display: none; } }
+
+    /* ========== V20: Newsletter Hero with Image ========== */
+    .newsletter-hero-img {
+      position: relative;
+      overflow: hidden;
+      background-size: cover;
+      background-position: center;
+    }
+    .newsletter-hero-img::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.6) 100%);
+    }
+
+    /* ========== V22: Netflix-style Full-Screen Newsletter Hero ========== */
+    #newsletter-detail-view {
+      background: #141414;
+    }
+    .nl-hero-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center top;
+      transform: scale(1.08);
+      animation: nlKenBurns 18s ease-out forwards;
+      will-change: transform;
+    }
+    @keyframes nlKenBurns {
+      from { transform: scale(1.08); }
+      to   { transform: scale(1.18); }
+    }
+    .nl-fade-in {
+      opacity: 0;
+      transform: translateY(14px);
+      animation: nlFadeUp 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    .nl-fade-in.delay-1 { animation-delay: 120ms; }
+    .nl-fade-in.delay-2 { animation-delay: 240ms; }
+    .nl-fade-in.delay-3 { animation-delay: 360ms; }
+    .nl-fade-in.delay-4 { animation-delay: 480ms; }
+    .nl-fade-in.delay-5 { animation-delay: 600ms; }
+    @keyframes nlFadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .nl-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.9);
+      letter-spacing: 0.02em;
+    }
+    .nl-match {
+      color: #46d369;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .nl-btn-primary {
+      background: #ffffff;
+      color: #141414;
+      transition: background 150ms;
+    }
+    .nl-btn-primary:hover { background: rgba(255,255,255,0.82); }
+    .nl-btn-ghost {
+      background: rgba(255,255,255,0.14);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #ffffff;
+      transition: background 150ms;
+    }
+    .nl-btn-ghost:hover { background: rgba(255,255,255,0.22); }
+    .nl-icon-btn {
+      width: 44px; height: 44px;
+      border-radius: 9999px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.14);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #ffffff;
+      transition: background 150ms;
+    }
+    .nl-icon-btn:hover { background: rgba(255,255,255,0.22); }
+    .nl-top-btn {
+      width: 42px; height: 42px;
+      border-radius: 9999px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #ffffff;
+      transition: background 150ms;
+      cursor: pointer;
+    }
+    .nl-top-btn:hover { background: rgba(0,0,0,0.65); }
+    .nl-edition-card {
+      display: flex;
+      gap: 16px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      background: #1f1f1f;
+      border: 1px solid rgba(255,255,255,0.06);
+      cursor: pointer;
+      transition: background 150ms, transform 150ms;
+    }
+    .nl-edition-card:hover { background: #2a2a2a; }
+    .nl-edition-num {
+      flex-shrink: 0;
+      width: 36px;
+      font-size: 28px;
+      font-weight: 700;
+      color: #5a5a5a;
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    /* ============================================================
+       V22 — DARK THEME (whole-app overrides, scoped to body.theme-dark)
+       ============================================================ */
+    body.theme-dark {
+      background-color: #141414;
+      background-image: none;
+      color: #e5e5e5;
+    }
+    /* Glass container becomes a solid dark surface */
+    body.theme-dark .glass-container {
+      background: #1c1c1c;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: none;
+    }
+    /* Conversation card */
+    body.theme-dark #conversation-card {
+      background: #1c1c1c !important;
+      color: #e5e5e5;
+      border: none !important;
+    }
+    body.theme-dark #conversation-card .text-\[\#202124\],
+    body.theme-dark #thread-content h1,
+    body.theme-dark #thread-content h2 {
+      color: #f5f5f5 !important;
+    }
+    body.theme-dark #conversation-card .text-\[\#5f6368\] {
+      color: #a8a8a8 !important;
+    }
+    body.theme-dark .badge-inbox {
+      background-color: #2a2a2a;
+      color: #b3b3b3;
+    }
+    /* Messages list items — flip every hardcoded light surface */
+    body.theme-dark #messages-container > div,
+    body.theme-dark #newsletter-messages-container > div {
+      background-color: #141414 !important;
+      border-color: rgba(255, 255, 255, 0.06) !important;
+    }
+    body.theme-dark #messages-container > div:hover,
+    body.theme-dark #newsletter-messages-container > div:hover {
+      background-color: #222 !important;
+    }
+    body.theme-dark #messages-container > div .text-gray-900,
+    body.theme-dark #messages-container > div .text-gray-800 {
+      color: #f5f5f5 !important;
+    }
+    body.theme-dark #messages-container > div .text-gray-700 {
+      color: #b3b3b3 !important;
+    }
+    body.theme-dark #messages-container > div .text-gray-400,
+    body.theme-dark #messages-container > div .text-gray-500 {
+      color: #7d7d7d !important;
+    }
+    /* Section headers + list-header bar in dark */
+    body.theme-dark #list-header-bar,
+    body.theme-dark .border-gray-200\/80 {
+      border-color: rgba(255, 255, 255, 0.06) !important;
+    }
+    body.theme-dark #list-header-bar .text-gray-500,
+    body.theme-dark #inbox-list-view .text-gray-400,
+    body.theme-dark #inbox-list-view .uppercase.tracking-widest {
+      color: #8d8d8d !important;
+    }
+    /* Header icon colour in dark surfaces */
+    body.theme-dark.header-style-light .material-symbols-outlined,
+    body.theme-dark .header-style-light .material-symbols-outlined {
+      color: rgba(255, 255, 255, 0.7);
+    }
+    body.theme-dark .header-style-light .icon-btn-container:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    /* Dark search bar variant */
+    .dark-search {
+      background: #2a2a2a;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: #e5e5e5;
+    }
+    .dark-search input::placeholder { color: #8d8d8d; }
+    .dark-search .material-symbols-outlined { color: #8d8d8d; }
+    /* Empty / zero state in dark */
+    body.theme-dark #white-theme-empty-state h2 { color: #e5e5e5 !important; }
+    body.theme-dark #white-theme-empty-state p { color: #8d8d8d !important; }
+    body.theme-dark #white-theme-empty-state .text-gray-200 { color: #333 !important; }
+    body.theme-dark #white-theme-empty-state button {
+      color: #e5e5e5 !important;
+      border-color: rgba(255, 255, 255, 0.15) !important;
+    }
+    body.theme-dark #white-theme-empty-state button:hover { background: #222 !important; }
+    /* FAB button in dark */
+    body.theme-dark .fab-shadow { background: #2a2a2a !important; }
+    body.theme-dark .fab-shadow:hover { background: #333 !important; }
+    /* Theme toggle pills inherit dark text */
+    body.theme-dark #main-header button.text-inherit { color: #e5e5e5; }
+    body.theme-dark #main-header .bg-black\/10 { background-color: rgba(255,255,255,0.08); }
+
+    /* ============================================================
+       V22 — CONVERSATION THREADING + HTML MAIL + ATTACHMENTS
+       ============================================================ */
+    /* Thread badge (count of messages in a conversation) */
+    .thread-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 18px; height: 18px; padding: 0 5px;
+      border-radius: 9px;
+      background: rgba(26,115,232,0.12);
+      color: #1a73e8;
+      font-size: 10px; font-weight: 700;
+      line-height: 1;
+    }
+    body.theme-dark .thread-badge { background: rgba(124,172,248,0.18); color: #8ac4ff; }
+
+    /* Collapsible messages inside a thread */
+    .thread-msg { border-bottom: 1px solid rgba(0,0,0,0.06); }
+    .thread-msg:last-child { border-bottom: 0; }
+    body.theme-dark .thread-msg { border-color: rgba(255,255,255,0.06); }
+    .thread-msg-head {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0; cursor: pointer; user-select: none;
+    }
+    .thread-msg-head:hover .thread-msg-subject { color: #1a73e8; }
+    body.theme-dark .thread-msg-head:hover .thread-msg-subject { color: #8ac4ff; }
+    .thread-msg.collapsed .thread-msg-body { display: none; }
+    .thread-msg-chevron { transition: transform 200ms; color: #5f6368; font-size: 18px !important; }
+    body.theme-dark .thread-msg-chevron { color: #9aa0a6; }
+    .thread-msg.collapsed .thread-msg-chevron { transform: rotate(-90deg); }
+    .thread-msg-subject { font-size: 13px; font-weight: 600; color: #202124; transition: color 150ms; }
+    body.theme-dark .thread-msg-subject { color: #e8e8e8; }
+    .thread-msg-preview { font-size: 12px; color: #5f6368; flex: 1; min-width: 0; }
+    body.theme-dark .thread-msg-preview { color: #9aa0a6; }
+    .thread-msg-body { padding: 4px 0 18px 52px; }
+
+    /* HTML email iframe */
+    .html-mail-frame {
+      width: 100%; min-height: 120px;
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 10px;
+      background: #ffffff;
+      overflow: hidden;
+    }
+    body.theme-dark .html-mail-frame { border-color: rgba(255,255,255,0.08); }
+
+    /* Attachment chips */
+    .att-chip {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: #f1f3f4;
+      border: 1px solid transparent;
+      transition: background 150ms, border-color 150ms;
+      cursor: pointer; max-width: 100%;
+    }
+    .att-chip:hover { background: #e8eaed; border-color: rgba(0,0,0,0.06); }
+    body.theme-dark .att-chip { background: #2a2a2a; }
+    body.theme-dark .att-chip:hover { background: #333; border-color: rgba(255,255,255,0.08); }
+    .att-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 11px; font-weight: 800; color: #fff;
+      letter-spacing: 0.02em;
+    }
+    .att-meta { min-width: 0; }
+    .att-name { font-size: 12px; font-weight: 600; color: #202124; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+    body.theme-dark .att-name { color: #e8e8e8; }
+    .att-size { font-size: 11px; color: #5f6368; }
+    body.theme-dark .att-size { color: #9aa0a6; }
+    .att-dl { color: #5f6368; font-size: 18px !important; flex-shrink: 0; }
+    body.theme-dark .att-dl { color: #9aa0a6; }
+
+    /* ============================================================
+       V22 — IMMERSIVE READER (à la v4 : full-screen, serif, slides)
+       ============================================================ */
+    .immersive-surface {
+      background: rgba(250, 248, 244, 0.97);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      color: #202124;
+    }
+    body.theme-dark .immersive-surface {
+      background: rgba(16, 16, 16, 0.985);
+      color: #e8e8e8;
+    }
+    body.theme-white .immersive-surface {
+      background: #ffffff;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+    .immersive-border { border-color: rgba(0,0,0,0.08); }
+    body.theme-dark .immersive-border { border-color: rgba(255,255,255,0.08); }
+    .immersive-muted { color: #5f6368; }
+    body.theme-dark .immersive-muted { color: #9a9a9a; }
+    .immersive-serif { font-family: 'Newsreader', Georgia, 'Times New Roman', serif; }
+    .immersive-top-btn { color: #5f6368; transition: color 150ms; }
+    .immersive-top-btn:hover { color: #202124; }
+    body.theme-dark .immersive-top-btn { color: #b3b3b3; }
+    body.theme-dark .immersive-top-btn:hover { color: #fff; }
+    .immersive-icon-btn {
+      width: 36px; height: 36px; border-radius: 9999px;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #5f6368; transition: background 150ms, color 150ms; cursor: pointer;
+    }
+    .immersive-icon-btn:hover { background: rgba(0,0,0,0.06); color: #202124; }
+    body.theme-dark .immersive-icon-btn { color: #b3b3b3; }
+    body.theme-dark .immersive-icon-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .immersive-icon-btn .material-symbols-outlined { font-size: 20px; color: inherit; }
+    .immersive-nav-btn {
+      width: 32px; height: 32px; border-radius: 9999px;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: background 150ms; cursor: pointer;
+    }
+    .immersive-nav-btn:hover { background: rgba(0,0,0,0.06); }
+    body.theme-dark .immersive-nav-btn:hover { background: rgba(255,255,255,0.1); }
+    .immersive-nav-btn .material-symbols-outlined { font-size: 22px; color: inherit; }
+    .immersive-reply-box {
+      background: rgba(0,0,0,0.04);
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+    body.theme-dark .immersive-reply-box {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.08);
+    }
+    .immersive-input { color: inherit; }
+    .immersive-input::placeholder { color: #999; }
+    body.theme-dark .immersive-input::placeholder { color: #777; }
+    .immersive-send-btn {
+      background: #202124; color: #fff;
+    }
+    body.theme-dark .immersive-send-btn { background: #e8e8e8; color: #141414; }
+    .immersive-star-on { color: #f59e0b !important; }
+    .immersive-star-on .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
+
+    /* Slide transitions */
+    .im-slide {
+      position: absolute; inset: 0;
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+    }
+    .im-slide.active { transform: translateX(0); opacity: 1; z-index: 2; }
+    .im-slide.next    { transform: translateX(6%); opacity: 0; z-index: 1; pointer-events: none; }
+    .im-slide.prev    { transform: translateX(-6%); opacity: 0; z-index: 1; pointer-events: none; }
+    .im-title { font-size: clamp(1.9rem, 4vw, 2.6rem); line-height: 1.15; letter-spacing: -0.02em; font-weight: 500; }
+    .im-article { font-size: 1.125rem; line-height: 1.85; color: inherit; opacity: 0.92; }
+    .im-article p { margin-bottom: 1.15em; }
+    .im-drop-cap::first-letter {
+      font-size: 3.2em; font-weight: 500; float: left;
+      line-height: 0.85; padding: 0.08em 0.12em 0 0; color: inherit;
+    }
+  </style>
+</head>
+<body class="h-screen w-screen flex flex-col overflow-hidden relative theme-white">
+
+  <!-- ================= UNIFIED HEADER (CONTINUITY) ================= -->
+  <header id="main-header" class="h-16 flex items-center justify-between px-6 shrink-0 select-none z-30 transition-all duration-300 header-style-dark">
+    
+    <div class="flex items-center">
+      <div class="icon-btn-container">
+        <span class="material-symbols-outlined" id="menu-icon">menu</span>
+      </div>
+    </div>
+
+    <div class="flex-1 max-w-4xl mx-8 relative h-10 flex items-center justify-center">
+      
+      <!-- Search Bar -->
+      <div id="header-search-bar" class="w-full max-w-xl glass-search rounded-lg px-4 py-2 flex items-center gap-3 transition-all duration-300 absolute inset-y-0 flex items-center">
+        <span class="material-symbols-outlined text-inherit opacity-70" id="search-bar-icon">search</span>
+        <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="Rechercher des e-mails" class="w-full bg-transparent text-inherit text-sm focus:outline-none">
+      </div>
+
+      <!-- Action Buttons -->
+      <div id="header-actions" class="w-full flex items-center gap-1.5 opacity-0 pointer-events-none transition-all duration-300 absolute inset-y-0">
+        <div class="icon-btn-container" id="back-btn" title="Retour" onclick="handleBack()">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </div>
+        <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
+        <div class="icon-btn-container" title="Archiver" onclick="archiveCurrent()"><span class="material-symbols-outlined">archive</span></div>
+        <div class="icon-btn-container" title="Signaler comme spam"><span class="material-symbols-outlined">report</span></div>
+        <div class="icon-btn-container" title="Supprimer" onclick="deleteCurrent()"><span class="material-symbols-outlined">delete</span></div>
+        <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
+        <div class="icon-btn-container" title="Marquer comme non lu" onclick="toggleUnreadCurrent()"><span class="material-symbols-outlined">mail</span></div>
+        <div class="icon-btn-container" title="Mettre en attente"><span class="material-symbols-outlined">schedule</span></div>
+        <div class="icon-btn-container" title="Ajouter aux tâches"><span class="material-symbols-outlined">add_task</span></div>
+        <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
+        <div class="icon-btn-container" title="Déplacer vers"><span class="material-symbols-outlined">drive_file_move</span></div>
+        <div class="icon-btn-container" title="Libellés"><span class="material-symbols-outlined">label</span></div>
+        <div class="icon-btn-container" title="Plus"><span class="material-symbols-outlined">more_vert</span></div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <div id="header-nav-arrows" class="flex items-center gap-1 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="icon-btn-container" title="Rechercher"><span class="material-symbols-outlined">search</span></div>
+        <div class="icon-btn-container" title="Plus ancien" onclick="navigateMail(-1)"><span class="material-symbols-outlined">chevron_left</span></div>
+        <div class="icon-btn-container" title="Plus récent" onclick="navigateMail(1)"><span class="material-symbols-outlined">chevron_right</span></div>
+        <div class="h-5 w-[1px] bg-gray-200 mx-1"></div>
+        <div class="icon-btn-container"><span class="material-symbols-outlined">more_vert</span></div>
+      </div>
+      <div class="relative mr-1">
+        <button onclick="toggleSettingsPopover(event)" class="text-[10px] text-inherit bg-black/10 border border-current/20 hover:bg-black/20 px-2.5 py-1 rounded-md transition-all duration-200 flex items-center gap-1.5" title="Apparence">
+          <span class="material-symbols-outlined" style="font-size:14px">palette</span>
+          Thème: <span id="theme-indicator" class="font-semibold">Clair</span>
+        </button>
+        <div id="settings-popover" class="hidden absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-2xl border border-gray-100 p-4 z-50">
+          <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Thème</div>
+          <div class="grid grid-cols-3 gap-1 bg-gray-100 p-1 rounded-lg mb-4" id="theme-segmented">
+            <button onclick="setTheme('image')" data-theme="image" class="theme-opt py-1.5 text-xs font-medium rounded-md transition-colors">Image</button>
+            <button onclick="setTheme('white')" data-theme="white" class="theme-opt py-1.5 text-xs font-medium rounded-md transition-colors">Clair</button>
+            <button onclick="setTheme('dark')" data-theme="dark" class="theme-opt py-1.5 text-xs font-medium rounded-md transition-colors">Sombre</button>
+          </div>
+          <div id="bg-gallery-wrap">
+            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Fond (chill)</div>
+            <div class="grid grid-cols-3 gap-2" id="bg-gallery"></div>
+          </div>
+        </div>
+      </div>
+      <button onclick="toggleInboxState()" class="text-[10px] text-inherit bg-black/10 border border-current/20 hover:bg-black/20 px-2.5 py-1 rounded-md transition-all duration-200" title="Basculez entre boîte vide ou non-vide">
+        Mode: <span id="state-indicator" class="font-semibold">Zero</span>
+      </button>
+      <div class="ml-2 w-8 h-8 rounded-full overflow-hidden border border-current/25 cursor-pointer shrink-0">
+        <img class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="User Profile">
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= CONTENT WRAPPER ================= -->
+  <div class="flex-1 relative overflow-hidden z-10 flex flex-col">
+    
+    <!-- State 1: Inbox Zero View -->
+    <main id="inbox-zero-view" class="absolute inset-0 flex flex-col justify-center items-center p-8 transition-all duration-300">
+      <div id="image-theme-badge-container" class="absolute bottom-8 left-8">
+        <button id="inbox-zero-badge" onclick="simulateEmails()" class="bg-black/25 text-white/90 border border-white/10 hover:bg-black/35 backdrop-blur-md px-4 py-2.5 rounded-lg text-xs font-normal tracking-wide transition-all select-none">
+          No new mail! <span class="opacity-60 text-[10px] ml-1.5">(Cliquez pour recevoir des e-mails)</span>
+        </button>
+      </div>
+      <div id="white-theme-empty-state" class="flex flex-col items-center justify-center text-center max-w-sm hidden">
+        <div class="w-20 h-20 mb-6 text-gray-200 select-none flex items-center justify-center">
+          <svg viewBox="0 0 24 24" width="72" height="72" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2" />
+            <path d="M22 6l-10 7L2 6" />
+            <circle cx="18" cy="14" r="3" stroke-width="1" class="text-blue-400" />
+            <path d="M16.5 14l1 1 2-2" stroke-width="1" class="text-blue-400" />
+          </svg>
+        </div>
+        <h2 class="text-base font-medium text-gray-800 mb-2">Votre boîte est propre</h2>
+        <p class="text-xs text-gray-400 leading-relaxed mb-6">Aucun nouveau message pour le moment. Profitez de votre journée !</p>
+        <button onclick="simulateEmails()" class="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-xs font-medium text-gray-600 transition-colors">
+          Simuler l'arrivée de messages
+        </button>
+      </div>
+    </main>
+
+    <!-- State 2: Inbox List View -->
+    <main id="inbox-list-view" class="absolute inset-0 flex flex-col items-center px-6 pb-6 pt-2 overflow-hidden opacity-0 pointer-events-none transition-all duration-300">
+      <div class="glass-container w-full max-w-4xl flex-1 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        <!-- Zone de scroll unique : la section newsletters défile et passe sous le list-header sticky -->
+        <div class="flex-1 overflow-y-auto">
+
+        <!-- SECTION CAROUSEL NEWSLETTERS (défile avec la liste) -->
+        <div class="p-6 border-b border-gray-200/50">
+          <div class="flex items-center justify-between mb-3.5">
+            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-widest select-none">Newsletters récentes</h3>
+            <button id="nl-toggle-btn" onclick="toggleAllNewsletters()" class="nl-toggle-btn" title="Afficher toutes les newsletters">
+              <span class="material-symbols-outlined" style="font-size:14px">grid_view</span> Toutes les newsletters
+            </button>
+          </div>
+          <div class="carousel-container gap-4">
+            <div onclick="openNewsletter('Stratechery')" class="carousel-item w-44 h-52 rounded-xl overflow-hidden cursor-pointer relative group shadow-md transition-transform hover:-translate-y-1 duration-200">
+              <div class="absolute inset-0 bg-gradient-to-t from-orange-950 via-orange-900/50 to-orange-800 flex flex-col justify-between p-4">
+                <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center border border-white/20 select-none"><span class="material-symbols-outlined !text-white text-lg font-light">article</span></div>
+                <div class="flex flex-col">
+                  <span class="text-[10px] text-orange-200 uppercase font-semibold tracking-wider">Ben Thompson</span>
+                  <h4 class="text-xs font-bold text-white leading-snug mt-1 group-hover:underline">Stratechery Weekly</h4>
+                  <span class="text-[9px] text-orange-200/70 mt-1" id="nl-count-Stratechery">0 non lus</span>
+                </div>
+              </div>
+            </div>
+            <div onclick="openNewsletter('Processor')" class="carousel-item w-44 h-52 rounded-xl overflow-hidden cursor-pointer relative group shadow-md transition-transform hover:-translate-y-1 duration-200">
+              <div class="absolute inset-0 bg-gradient-to-t from-[#1b1c1e] via-[#2d2e30]/50 to-[#4e4f52] flex flex-col justify-between p-4">
+                <div class="w-10 h-10 rounded-lg bg-orange-500 flex items-center justify-center select-none shadow"><span class="material-symbols-outlined !text-white text-lg">terminal</span></div>
+                <div class="flex flex-col">
+                  <span class="text-[10px] text-gray-300 uppercase font-semibold tracking-wider">Dieter Bohn</span>
+                  <h4 class="text-xs font-bold text-white leading-snug mt-1 group-hover:underline">Processor Tech</h4>
+                  <span class="text-[9px] text-gray-400 mt-1" id="nl-count-Processor">0 non lus</span>
+                </div>
+              </div>
+            </div>
+            <div onclick="openNewsletter('Jam')" class="carousel-item w-44 h-52 rounded-xl overflow-hidden cursor-pointer relative group shadow-md transition-transform hover:-translate-y-1 duration-200">
+              <div class="absolute inset-0 bg-gradient-to-t from-teal-950 via-teal-900/50 to-teal-700 flex flex-col justify-between p-4">
+                <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center select-none shadow"><span class="material-symbols-outlined !text-teal-600 text-lg">music_note</span></div>
+                <div class="flex flex-col">
+                  <span class="text-[10px] text-teal-200 uppercase font-semibold tracking-wider">Jam Club</span>
+                  <h4 class="text-xs font-bold text-white leading-snug mt-1 group-hover:underline">Jam Workshops</h4>
+                  <span class="text-[9px] text-teal-300/80 mt-1" id="nl-count-Jam">0 messages</span>
+                </div>
+              </div>
+            </div>
+            <div onclick="openNewsletter('Monzo')" class="carousel-item w-44 h-52 rounded-xl overflow-hidden cursor-pointer relative group shadow-md transition-transform hover:-translate-y-1 duration-200">
+              <div class="absolute inset-0 bg-gradient-to-t from-blue-950 via-blue-900/50 to-blue-700 flex flex-col justify-between p-4">
+                <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center border border-white/20 select-none"><span class="material-symbols-outlined !text-white text-lg">payments</span></div>
+                <div class="flex flex-col">
+                  <span class="text-[10px] text-blue-200 uppercase font-semibold tracking-wider">Monzo HQ</span>
+                  <h4 class="text-xs font-bold text-white leading-snug mt-1 group-hover:underline">Introducing Shiny</h4>
+                  <span class="text-[9px] text-blue-300/80 mt-1" id="nl-count-Monzo">0 messages</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- List Header (sticky : les cartes newsletters passent dessous au scroll) -->
+        <div class="sticky top-0 z-10 h-14 border-b border-gray-200/80 flex items-center justify-between px-6 select-none list-header-surface" id="list-header-bar">
+          <div class="flex items-center gap-1.5">
+            <div class="icon-btn-container" title="Sélectionner tout"><span class="material-symbols-outlined">check_box_outline_blank</span></div>
+            <div class="icon-btn-container" title="Rafraîchir" onclick="renderInboxList()"><span class="material-symbols-outlined">refresh</span></div>
+            <div class="icon-btn-container" title="Plus"><span class="material-symbols-outlined">more_vert</span></div>
+          </div>
+          <div class="text-xs text-gray-500 font-medium">
+            Tous les messages &bull; <span id="list-count">0</span> messages
+          </div>
+        </div>
+
+        <!-- Gmail category tabs (sticky sous le list header) -->
+        <div class="category-tabs sticky top-14 z-10 flex border-b border-gray-200/80 cat-tabs-surface select-none">
+          <button onclick="setCategory('primary')" data-cat="primary" class="cat-tab is-active"><span class="material-symbols-outlined cat-tab-icon">inbox</span><span class="cat-tab-label">Principal</span><span class="cat-count"></span></button>
+          <button onclick="setCategory('promotions')" data-cat="promotions" class="cat-tab"><span class="material-symbols-outlined cat-tab-icon">local_offer</span><span class="cat-tab-label">Promotions</span><span class="cat-count"></span></button>
+          <button onclick="setCategory('social')" data-cat="social" class="cat-tab"><span class="material-symbols-outlined cat-tab-icon">group</span><span class="cat-tab-label">Réseaux</span><span class="cat-count"></span></button>
+          <button onclick="setCategory('updates')" data-cat="updates" class="cat-tab"><span class="material-symbols-outlined cat-tab-icon">info</span><span class="cat-tab-label">Mises à jour</span><span class="cat-count"></span></button>
+          <button onclick="setCategory('forums')" data-cat="forums" class="cat-tab"><span class="material-symbols-outlined cat-tab-icon">forum</span><span class="cat-tab-label">Forums</span><span class="cat-count"></span></button>
+        </div>
+
+        <!-- Messages list (flux naturel, le scroll est géré par le conteneur parent) -->
+        <div id="messages-container" class="divide-y divide-gray-100"></div>
+
+        </div><!-- /scroll area -->
+      </div>
+    </main>
+
+    <!-- State 3: Conversation View -->
+    <main id="conversation-view" class="absolute inset-0 flex flex-col items-center px-6 pb-6 pt-2 overflow-hidden opacity-0 pointer-events-none transition-all duration-300">
+      <div class="w-full max-w-4xl bg-white flex-1 rounded-2xl p-6 lg:p-10 flex flex-col overflow-y-auto" id="conversation-card">
+        <div id="thread-content" class="w-full flex flex-col"></div>
+      </div>
+    </main>
+
+  </div>
+  <!-- newsletter-detail-view is a sibling of the header (body level) so its
+       fixed z-40 covers the z-30 header instead of being trapped in the z-10 wrapper -->
+
+  <!-- State 4: Newsletter Detail View (V22 - Netflix-style Full-Screen Hero) -->
+    <main id="newsletter-detail-view" class="fixed inset-0 z-40 overflow-y-auto overflow-x-hidden opacity-0 pointer-events-none transition-opacity duration-300">
+      
+      <!-- ============ FULL-SCREEN HERO ============ -->
+      <section class="relative w-full min-h-screen flex flex-col justify-end">
+        <!-- Background image (Ken Burns) -->
+        <div id="nl-hero-bg" class="nl-hero-bg"></div>
+
+        <!-- Gradient overlays -->
+        <div class="absolute inset-0 bg-gradient-to-t from-[#141414] via-black/45 to-black/30 pointer-events-none"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent pointer-events-none"></div>
+
+        <!-- Top overlay bar -->
+        <div class="absolute top-0 inset-x-0 z-30 flex items-center justify-between px-6 py-5">
+          <div class="nl-top-btn" title="Retour" onclick="handleBack()">
+            <span class="material-symbols-outlined !text-white" style="font-size:22px">arrow_back</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="nl-top-btn" title="Partager"><span class="material-symbols-outlined !text-white" style="font-size:20px">share</span></div>
+            <div class="nl-top-btn" title="Plus"><span class="material-symbols-outlined !text-white" style="font-size:20px">more_vert</span></div>
+          </div>
+        </div>
+
+        <!-- Hero content -->
+        <div class="relative z-10 px-6 pb-14 w-full max-w-4xl mx-auto">
+          <div id="nl-hero-logo" class="nl-fade-in w-16 h-16 rounded-2xl bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center shadow-2xl mb-6">
+            <span id="nl-hero-logo-icon" class="material-symbols-outlined !text-white" style="font-size:34px">article</span>
+          </div>
+
+          <h1 id="nl-hero-title" class="nl-fade-in delay-1 text-5xl md:text-6xl font-black text-white tracking-tight drop-shadow-2xl mb-4 leading-[1.05]">Newsletter</h1>
+
+          <div class="nl-fade-in delay-2 flex flex-wrap items-center gap-3 mb-5 text-sm">
+            <span class="nl-match" id="nl-hero-match">98% Match</span>
+            <span id="nl-hero-year" class="text-white/75">2019</span>
+            <span class="nl-chip" id="nl-hero-rating">Tout public</span>
+            <span id="nl-hero-editions-count" class="text-white/85 font-semibold">0 éditions</span>
+            <span class="nl-chip" id="nl-hero-frequency"><span class="material-symbols-outlined !text-white" style="font-size:14px">schedule</span>Hebdo</span>
+          </div>
+
+          <p id="nl-hero-desc" class="nl-fade-in delay-3 text-white/90 text-base md:text-lg leading-relaxed mb-7 max-w-xl drop-shadow-md"></p>
+
+          <div id="nl-hero-email-row" class="nl-fade-in delay-3 flex items-center gap-2 mb-7 text-xs text-white/65">
+            <span class="material-symbols-outlined !text-white/70" style="font-size:16px">alternate_email</span>
+            <span id="nl-hero-email">email@example.com</span>
+          </div>
+
+          <div class="nl-fade-in delay-4 flex flex-wrap items-center gap-3">
+            <button onclick="readLatestNewsletter()" class="nl-btn-primary px-7 py-2.5 rounded-md font-semibold flex items-center gap-2">
+              <span class="material-symbols-outlined !text-black" style="font-size:24px">play_arrow</span>
+              Lire la dernière édition
+            </button>
+            <button onclick="markNewsletterRead()" class="nl-btn-ghost px-5 py-2.5 rounded-md font-semibold flex items-center gap-2">
+              <span class="material-symbols-outlined !text-white" style="font-size:22px">drafts</span>
+              Tout marquer comme lu
+            </button>
+            <button class="nl-icon-btn" title="Ajouter aux favoris"><span class="material-symbols-outlined !text-white">add</span></button>
+            <button class="nl-icon-btn" title="Se désabonner"><span class="material-symbols-outlined !text-white">unsubscribe</span></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ EDITIONS LIST (revealed on scroll) ============ -->
+      <section class="bg-[#141414] text-white px-6 py-10">
+        <div class="max-w-4xl mx-auto">
+          <div class="flex items-baseline justify-between mb-6">
+            <h2 class="text-2xl font-bold tracking-tight">Éditions</h2>
+            <span id="nl-editions-count-2" class="text-sm text-white/60">0 e-mails</span>
+          </div>
+          <div id="nl-editions-grid" class="flex flex-col gap-2"></div>
+        </div>
+      </section>
+
+    </main>
+
+  <!-- ================= IMMERSIVE READER (full-screen, serif, à la v4) ================= -->
+  <div id="immersive-reader" class="immersive-surface fixed inset-0 z-50 flex flex-col opacity-0 pointer-events-none transition-opacity duration-300">
+    <!-- Top bar -->
+    <div class="flex items-center justify-between border-b immersive-border px-8 py-4 shrink-0">
+      <button onclick="closeImmersive()" class="immersive-top-btn flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] font-bold">
+        <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span>
+        Retour
+      </button>
+      <div class="flex items-center gap-1">
+        <button onclick="immersiveToggleStar()" id="im-star-btn" class="immersive-icon-btn" title="Suivi"><span class="material-symbols-outlined">star</span></button>
+        <button onclick="immersiveArchive()" class="immersive-icon-btn" title="Archiver"><span class="material-symbols-outlined">archive</span></button>
+        <button onclick="immersiveDelete()" class="immersive-icon-btn" title="Supprimer"><span class="material-symbols-outlined">delete</span></button>
+        <button onclick="immersiveToggleUnread()" class="immersive-icon-btn" title="Marquer non lu"><span class="material-symbols-outlined">mail</span></button>
+      </div>
+    </div>
+
+    <!-- Slide viewport -->
+    <div class="flex-1 relative overflow-hidden">
+      <div id="immersive-viewport" class="absolute inset-0"></div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="border-t immersive-border px-8 py-4 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.18em] immersive-muted">
+        <button onclick="immersiveNext(-1)" class="immersive-nav-btn" title="Précédent (←)"><span class="material-symbols-outlined">chevron_left</span></button>
+        <span id="immersive-counter" class="tabular-nums min-w-[68px] text-center">01 / 00</span>
+        <button onclick="immersiveNext(1)" class="immersive-nav-btn" title="Suivant (→)"><span class="material-symbols-outlined">chevron_right</span></button>
+        <div class="w-24 h-[3px] rounded-full overflow-hidden" style="background:currentColor;opacity:0.18">
+          <div id="immersive-progress" class="h-full transition-all duration-300" style="width:0;background:currentColor;opacity:1"></div>
+        </div>
+      </div>
+      <div class="flex-1 max-w-lg flex items-center immersive-reply-box rounded-xl p-1.5">
+        <input type="text" id="immersive-reply" placeholder="Répondre rapidement..." class="immersive-input flex-1 bg-transparent px-3 py-1.5 text-sm outline-none">
+        <button onclick="immersiveSendReply()" class="immersive-send-btn p-2 rounded-lg transition-transform hover:scale-105 active:scale-95 shrink-0 flex items-center justify-center">
+          <span class="material-symbols-outlined" style="font-size:18px;color:inherit">send</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= FLOATING ACTION BUTTON (frosted glass, matches inbox-zero badge) ================= -->
+  <div class="fixed bottom-6 right-6 select-none z-30">
+    <button onclick="showToast('Nouveau message — brouillon')" class="compose-fab rounded-full pl-4 pr-5 py-2.5 flex items-center gap-2 text-xs font-medium tracking-wide transition-all duration-200 focus:outline-none">
+      <span class="material-symbols-outlined" style="font-size:20px;color:inherit">edit</span>
+      Composer
+    </button>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-6 left-6 px-4 py-3 bg-[#323232] text-white text-xs font-normal rounded-lg shadow-xl translate-y-20 opacity-0 transition-all duration-300 z-50 pointer-events-none">
+    Toast message
+  </div>
+
+  <!-- ================= APP LOGIC ================= -->
+  <script>
+    let emails = [];
+    let currentSelectedId = null;
+    let searchText = '';
+    let currentTheme = 'white';
+    let currentActiveView = 'zero';
+    let currentNewsletterFilter = '';
+
+    // ===== Chill background options (image theme) =====
+    const backgrounds = [
+      { name: 'Brouillard', url: 'bg.jpg' },
+      { name: 'Forêt',      url: 'https://images.unsplash.com/photo-1488972685288-c3fd157d7c7a?auto=format&fit=crop&w=1920&q=80' },
+      { name: 'Océan',      url: 'https://images.unsplash.com/photo-1505228395891-9a51e7e86bf6?auto=format&fit=crop&w=1920&q=80' },
+      { name: 'Montagne',   url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1920&q=80' },
+      { name: 'Aurore',     url: 'https://images.unsplash.com/photo-1483347756197-71ef80e95f73?auto=format&fit=crop&w=1920&q=80' },
+      { name: 'Dunes',      url: 'https://images.unsplash.com/photo-1473580044384-7ba9967e16a0?auto=format&fit=crop&w=1920&q=80' },
+    ];
+    let currentBgUrl = backgrounds[0].url;
+
+    // ===== Theme config (header surface per theme) =====
+    const THEME_CFG = {
+      image: { headerSurface: 'bg-white/70 backdrop-blur-md border-b border-white/20', headerIcons: 'header-style-light', searchStyle: 'solid-search', zeroHeaderTransparent: true },
+      white: { headerSurface: 'bg-white',                                       headerIcons: 'header-style-light', searchStyle: 'solid-search', zeroHeaderTransparent: false },
+      dark:  { headerSurface: 'bg-[#141414]',                                    headerIcons: 'header-style-dark', searchStyle: 'dark-search',  zeroHeaderTransparent: false },
+    };
+
+    // Generate a simple mail body HTML
+    function makeMailBody(sender, initial, bgColor, date, subject, bodyText) {
+      return `
+        <div class="flex flex-col">
+          <div class="flex items-start justify-between">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-full ${bgColor} flex items-center justify-center font-bold text-white text-xs select-none">${initial}</div>
+              <div>
+                <div class="flex items-baseline gap-2">
+                  <span class="font-semibold text-sm text-[#202124]">${sender}</span>
+                  <span class="text-xs text-[#5f6368] font-normal">${date}</span>
+                </div>
+                <div class="text-xs text-[#5f6368] mt-0.5">to me</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 select-none">
+              <div class="icon-btn-container w-8 h-8"><span class="material-symbols-outlined">star</span></div>
+              <div class="icon-btn-container w-8 h-8"><span class="material-symbols-outlined">reply</span></div>
+              <div class="icon-btn-container w-8 h-8"><span class="material-symbols-outlined">more_vert</span></div>
+            </div>
+          </div>
+          <div class="pl-14 pr-4 mt-6 text-sm text-[#202124] leading-relaxed space-y-4">
+            <h2 class="text-xl font-bold">${subject}</h2>
+            ${bodyText}
+          </div>
+        </div>
+      `;
+    }
+
+    // Build a full designed HTML email document (self-contained, inline styles)
+    // Rendered inside a sandboxed iframe so its styles never leak into the app.
+    function makeHtmlEmail(opts) {
+      const { preheader, heroBg, heroTitle, heroSub, bodyHtml, ctaLabel, ctaHref, footerHtml } = opts;
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${heroTitle}</title></head>
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${preheader || ''}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7;padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+        <tr><td style="background:${heroBg};padding:48px 40px;text-align:center;">
+          <div style="font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#ffffff;line-height:1.2;">${heroTitle}</div>
+          <div style="margin-top:10px;font-size:14px;color:rgba(255,255,255,0.85);font-weight:500;">${heroSub || ''}</div>
+        </td></tr>
+        <tr><td style="padding:36px 40px;font-size:15px;line-height:1.65;color:#333;">${bodyHtml || ''}</td></tr>
+        ${ctaLabel ? `<tr><td style="padding:0 40px 36px;text-align:center;">
+          <a href="${ctaHref || '#'}" style="display:inline-block;background:${heroBg};color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:14px 32px;border-radius:10px;">${ctaLabel}</a>
+        </td></tr>` : ''}
+        <tr><td style="padding:28px 40px;background:#fafbfc;border-top:1px solid #eee;font-size:12px;color:#888;line-height:1.6;">${footerHtml || ''}</td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+    }
+
+    function makeMonzoHtmlEmail() {
+      return makeHtmlEmail({
+        preheader: 'Meet Monzo Premium — a metal card, 2.1mm of stainless steel.',
+        heroBg: 'linear-gradient(135deg,#14233f,#0a1a3a)',
+        heroTitle: 'Meet Monzo Premium',
+        heroSub: 'A metal card. Built for the long haul.',
+        bodyHtml: `<p style="margin:0 0 16px;">We took everything you love about Monzo and wrapped it in <strong>2.1mm of precision-machined stainless steel</strong>. Heavier in the hand. Sleeker in the wallet.</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;border-radius:12px;overflow:hidden;">
+            <tr><td style="padding:18px 20px;background:#f4f6fb;border-bottom:1px solid #e8ecf4;"><div style="font-size:12px;color:#5b6b8c;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">0.75% interest</div><div style="font-size:15px;color:#1a1a1a;margin-top:4px;">On balances up to £2,000</div></td></tr>
+            <tr><td style="padding:18px 20px;background:#f4f6fb;border-bottom:1px solid #e8ecf4;"><div style="font-size:12px;color:#5b6b8c;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">Worldwide withdrawals</div><div style="font-size:15px;color:#1a1a1a;margin-top:4px;">No fees, anywhere on earth</div></td></tr>
+            <tr><td style="padding:18px 20px;background:#f4f6fb;"><div style="font-size:12px;color:#5b6b8c;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">Custom travel insurance</div><div style="font-size:15px;color:#1a1a1a;margin-top:4px;">Covered, wherever you roam</div></td></tr>
+          </table>
+          <p style="margin:0;color:#666;font-size:14px;">From <strong style="color:#1a1a1a;">£15/month</strong>. Cancel anytime — no lock-in.</p>`,
+        ctaLabel: 'Get Monzo Premium',
+        ctaHref: '#',
+        footerHtml: 'You received this email because you opted into Monzo product updates.<br>Monzo Bank Limited, Broadwalk House, 5 Appold St, London EC2A 2AG.'
+      });
+    }
+
+    // Mock Mail Database (lots of emails!)
+    const initialMockEmails = [
+      {
+        id: 1, sender: "Hart Leggett", email: "hart@yardswing.com",
+        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80",
+        subject: "Yard swing?", date: "Jan 11, 2021", time: "9:40 PM",
+        starred: false, unread: true, newsletter: "", threadId: "yard",
+        body: makeMailBody("Hart Leggett", "H", "bg-indigo-500", "Jan 11, 2021, 9:40 PM", "Yard swing?",
+          `<p>Hey Bryan,</p><p>Welcome home! I think you already closed on the house over the weekend. Hope it went smoothly.</p><p>I'm about to order the gifts and wanted to triple check on one: a big swing meant to hang from a tree. Is there a good spot?</p><p>Thanks,<br>Hart</p>`)
+      },
+      {
+        id: 2, sender: "Bryan Mayer", email: "me@company.com",
+        subject: "Re: Yard swing?", date: "Jan 11, 2021", time: "10:02 PM",
+        starred: false, unread: false, newsletter: "", threadId: "yard",
+        body: makeMailBody("Bryan Mayer", "B", "bg-emerald-600", "Jan 11, 2021, 10:02 PM", "Re: Yard swing?",
+          `<p>Hey Hart,</p><p>Yes — closing went great, thanks! There's a big oak in the back yard, the branch is solid. A swing would be perfect there.</p><p>Go ahead and order it 🙌</p><p>Bryan</p>`)
+      },
+      // ===== STRATECHERY (8 editions) =====
+      { id: 10, sender: "Ben Thompson", email: "ben@stratechery.com", subject: "Playing on Hard Mode", date: "Nov 17, 2020", time: "3:02 PM", starred: false, unread: true, newsletter: "Stratechery",
+        body: makeMailBody("Stratechery", "S", "bg-orange-500", "Nov 17, 2020, 3:02 PM", "Playing on Hard Mode", `<p>One way to understand how the Internet is different is to examine what business models work. Start with text and images, long the province of newspapers…</p><p>Thanks for reading,<br>Ben</p>`) },
+      { id: 11, sender: "Ben Thompson", email: "ben@stratechery.com", subject: "The Tech IPO Season", date: "Nov 24, 2020", time: "9:12 AM", starred: true, unread: true, newsletter: "Stratechery",
+        body: makeMailBody("Stratechery", "S", "bg-orange-500", "Nov 24, 2020, 9:12 AM", "The Tech IPO Season", `<p>We are witnessing one of the busiest IPO windows for enterprise SaaS and technology platforms in history. From Snowflake to Airbnb…</p><p>Best,<br>Ben</p>`) },
+      { id: 12, sender: "Ben Thompson", email: "ben@stratechery.com", subject: "Apple's Shifting Priorities", date: "Dec 1, 2020", time: "8:45 AM", starred: false, unread: true, newsletter: "Stratechery",
+        body: makeMailBody("Stratechery", "S", "bg-orange-500", "Dec 1, 2020, 8:45 AM", "Apple's Shifting Priorities", `<p>Apple's latest earnings call reveals subtle but important shifts in how the company thinks about services revenue versus hardware margins…</p><p>Ben</p>`) },
+      { id: 13, sender: "Ben Thompson", email: "ben@stratechery.com", subject: "The Great Unbundling", date: "Dec 8, 2020", time: "7:30 AM", starred: false, unread: false, newsletter: "Stratechery",
+        body: makeMailBody("Stratechery", "S", "bg-orange-500", "Dec 8, 2020, 7:30 AM", "The Great Unbundling", `<p>The Internet is the great unbundler: newspapers, cable TV, and now enterprise software are all being disaggregated into their component parts…</p><p>Ben</p>`) },
+      { id: 14, sender: "Ben Thompson", email: "ben@stratechery.com", subject: "Antitrust and Aggregation", date: "Dec 15, 2020", time: "10:05 AM", starred: false, unread: false, newsletter: "Stratechery",
+        body: makeMailBody("Stratechery", "S", "bg-orange-500", "Dec 15, 2020, 10:05 AM", "Antitrust and Aggregation", `<p>The FTC's antitrust case against Facebook is fundamentally about Aggregation Theory: when you control demand, you don't need to compete on supply…</p><p>Ben</p>`) },
+      { id: 15, sender: "Ben Thompson", email: "ben@stratechery.com", subject: "Platforms vs. Aggregators", date: "Dec 22, 2020", time: "6:55 AM", starred: false, unread: false, newsletter: "Stratechery",
+        body: makeMailBody("Stratechery", "S", "bg-orange-500", "Dec 22, 2020, 6:55 AM", "Platforms vs. Aggregators", `<p>Understanding the distinction between platforms and aggregators is critical: platforms create value through enabling third parties, aggregators through controlling demand…</p><p>Ben</p>`) },
+      { id: 16, sender: "Ben Thompson", email: "ben@stratechery.com", subject: "2020 Year in Review", date: "Dec 29, 2020", time: "9:00 AM", starred: true, unread: false, newsletter: "Stratechery",
+        body: makeMailBody("Stratechery", "S", "bg-orange-500", "Dec 29, 2020, 9:00 AM", "2020 Year in Review", `<p>2020 was the year the Internet went from being part of our lives to being the infrastructure of our lives. From remote work to e-commerce to streaming…</p><p>Happy New Year,<br>Ben</p>`) },
+      { id: 17, sender: "Ben Thompson", email: "ben@stratechery.com", subject: "The Future of Work Post-Pandemic", date: "Jan 5, 2021", time: "8:20 AM", starred: false, unread: true, newsletter: "Stratechery",
+        body: makeMailBody("Stratechery", "S", "bg-orange-500", "Jan 5, 2021, 8:20 AM", "The Future of Work Post-Pandemic", `<p>Remote work is not going away. The question is how companies will adapt their organizational structures to a world where talent is distributed…</p><p>Ben</p>`) },
+      // ===== PROCESSOR (6 editions) =====
+      { id: 20, sender: "Dieter Bohn", email: "dieter@processor.com", subject: "Samsung's rumored Galaxy S21 lineup", date: "Nov 25, 2020", time: "11:10 AM", starred: false, unread: true, newsletter: "Processor",
+        body: makeMailBody("Processor", "P", "bg-gray-700", "Nov 25, 2020, 11:10 AM", "Samsung's S21 leaks", `<p>The hardware review cycle is settling down. Let's talk about CES and the rumors of early Samsung announcements…</p><p>Dieter</p>`) },
+      { id: 21, sender: "Dieter Bohn", email: "dieter@processor.com", subject: "M1 MacBooks: The Real-World Experience", date: "Dec 2, 2020", time: "10:30 AM", starred: false, unread: true, newsletter: "Processor",
+        body: makeMailBody("Processor", "P", "bg-gray-700", "Dec 2, 2020, 10:30 AM", "M1 MacBooks: Real-World", `<p>After a month with the M1 MacBook Air and Pro, the real-world performance data tells a compelling story about Apple's silicon strategy…</p><p>Dieter</p>`) },
+      { id: 22, sender: "Dieter Bohn", email: "dieter@processor.com", subject: "The Best Tech Gifts for 2020", date: "Dec 10, 2020", time: "2:15 PM", starred: false, unread: false, newsletter: "Processor",
+        body: makeMailBody("Processor", "P", "bg-gray-700", "Dec 10, 2020, 2:15 PM", "Best Tech Gifts 2020", `<p>Our curated list of the best tech gifts this holiday season, from budget-friendly gadgets to premium splurges…</p><p>Dieter</p>`) },
+      { id: 23, sender: "Dieter Bohn", email: "dieter@processor.com", subject: "CES 2021 Preview: What to Expect", date: "Dec 18, 2020", time: "9:45 AM", starred: false, unread: false, newsletter: "Processor",
+        body: makeMailBody("Processor", "P", "bg-gray-700", "Dec 18, 2020, 9:45 AM", "CES 2021 Preview", `<p>CES is going virtual this year. Here's what we're expecting from the biggest tech trade show and why it still matters…</p><p>Dieter</p>`) },
+      { id: 24, sender: "Dieter Bohn", email: "dieter@processor.com", subject: "Qualcomm's New Chips Could Change Android", date: "Jan 2, 2021", time: "11:00 AM", starred: false, unread: true, newsletter: "Processor",
+        body: makeMailBody("Processor", "P", "bg-gray-700", "Jan 2, 2021, 11:00 AM", "Qualcomm's New Chips", `<p>The Snapdragon 888 represents a significant leap. But will Android OEMs actually take advantage of its capabilities?</p><p>Dieter</p>`) },
+      { id: 25, sender: "Dieter Bohn", email: "dieter@processor.com", subject: "The State of Foldable Phones in 2021", date: "Jan 8, 2021", time: "3:30 PM", starred: false, unread: true, newsletter: "Processor",
+        body: makeMailBody("Processor", "P", "bg-gray-700", "Jan 8, 2021, 3:30 PM", "Foldable Phones 2021", `<p>Samsung's Galaxy Z Fold and Z Flip proved the concept. Now the question is whether foldables will go mainstream this year…</p><p>Dieter</p>`) },
+      // ===== JAM (5 editions) =====
+      { id: 30, sender: "Jam Club", email: "jam@jamworkshops.com", subject: "You only have 30 days to join the Jam Club", date: "Nov 22, 2020", time: "6:40 PM", starred: false, unread: false, newsletter: "Jam",
+        body: makeMailBody("Jam Club", "J", "bg-teal-600", "Nov 22, 2020, 6:40 PM", "30 Days Left", `<p>Registration for the upcoming creative prototyping workshops closes in exactly 30 days. Don't miss out!</p><p>Jam Club</p>`) },
+      { id: 31, sender: "Jam Club", email: "jam@jamworkshops.com", subject: "Workshop Recap: Building with Figma + Code", date: "Dec 5, 2020", time: "4:00 PM", starred: false, unread: false, newsletter: "Jam",
+        body: makeMailBody("Jam Club", "J", "bg-teal-600", "Dec 5, 2020, 4:00 PM", "Figma + Code Workshop", `<p>Last week's workshop on bridging Figma designs with production code was a hit. Here's a recap and the resources shared…</p><p>Jam Club</p>`) },
+      { id: 32, sender: "Jam Club", email: "jam@jamworkshops.com", subject: "New Workshop: Advanced Prototyping Techniques", date: "Dec 12, 2020", time: "10:00 AM", starred: false, unread: true, newsletter: "Jam",
+        body: makeMailBody("Jam Club", "J", "bg-teal-600", "Dec 12, 2020, 10:00 AM", "Advanced Prototyping", `<p>Join us for a deep dive into advanced prototyping techniques using ProtoPie, Principle, and SwiftUI…</p><p>Jam Club</p>`) },
+      { id: 33, sender: "Jam Club", email: "jam@jamworkshops.com", subject: "Design Systems Masterclass Announced", date: "Dec 20, 2020", time: "11:30 AM", starred: true, unread: true, newsletter: "Jam",
+        body: makeMailBody("Jam Club", "J", "bg-teal-600", "Dec 20, 2020, 11:30 AM", "Design Systems Masterclass", `<p>We're thrilled to announce our biggest event yet: a full-day masterclass on building and scaling design systems…</p><p>Jam Club</p>`) },
+      { id: 34, sender: "Jam Club", email: "jam@jamworkshops.com", subject: "2021 Workshop Calendar Now Available", date: "Jan 3, 2021", time: "9:00 AM", starred: false, unread: true, newsletter: "Jam",
+        body: makeMailBody("Jam Club", "J", "bg-teal-600", "Jan 3, 2021, 9:00 AM", "2021 Calendar", `<p>The full 2021 workshop calendar is now live. From motion design to accessibility audits, we've packed an incredible lineup…</p><p>Jam Club</p>`) },
+      // ===== MONZO (5 editions) =====
+      { id: 40, sender: "Monzo HQ", email: "news@monzo.com", subject: "Introducing our new metal card (and a shiny blue one)", date: "Nov 20, 2020", time: "4:00 PM", starred: false, unread: false, newsletter: "Monzo",
+        body: makeMailBody("Monzo", "M", "bg-blue-700", "Nov 20, 2020, 4:00 PM", "New Metal Card", `<p>Introducing Monzo Premium. Our new account tier comes with a heavy metal card made from precision-machined stainless steel…</p><p>Monzo</p>`),
+        html: makeMonzoHtmlEmail() },
+      { id: 41, sender: "Monzo HQ", email: "news@monzo.com", subject: "Salary Sorting is here: automate your finances", date: "Dec 3, 2020", time: "2:00 PM", starred: false, unread: false, newsletter: "Monzo",
+        body: makeMailBody("Monzo", "M", "bg-blue-700", "Dec 3, 2020, 2:00 PM", "Salary Sorting", `<p>Salary Sorting automatically splits your paycheck into pots for bills, savings, and spending the moment it arrives…</p><p>Monzo</p>`) },
+      { id: 42, sender: "Monzo HQ", email: "news@monzo.com", subject: "Your 2020 Year in Monzo", date: "Dec 15, 2020", time: "10:00 AM", starred: false, unread: true, newsletter: "Monzo",
+        body: makeMailBody("Monzo", "M", "bg-blue-700", "Dec 15, 2020, 10:00 AM", "Year in Monzo 2020", `<p>Your personalized 2020 spending review is ready. See where your money went, your biggest categories, and how you compared…</p><p>Monzo</p>`) },
+      { id: 43, sender: "Monzo HQ", email: "news@monzo.com", subject: "Monzo Plus: New perks and credit tracking", date: "Dec 28, 2020", time: "3:30 PM", starred: false, unread: true, newsletter: "Monzo",
+        body: makeMailBody("Monzo", "M", "bg-blue-700", "Dec 28, 2020, 3:30 PM", "Monzo Plus Perks", `<p>We've added new perks to Monzo Plus including credit score tracking, custom categories, and advanced budgeting tools…</p><p>Monzo</p>`) },
+      { id: 44, sender: "Monzo HQ", email: "news@monzo.com", subject: "International transfers just got cheaper", date: "Jan 7, 2021", time: "11:15 AM", starred: false, unread: true, newsletter: "Monzo",
+        body: makeMailBody("Monzo", "M", "bg-blue-700", "Jan 7, 2021, 11:15 AM", "Cheaper Transfers", `<p>We've partnered with Wise to bring you the best exchange rates for international transfers, directly from your Monzo app…</p><p>Monzo</p>`) },
+      // ===== Regular emails (non-newsletter) =====
+      { id: 50, sender: "Sarah Chen", email: "sarah@company.com", subject: "Q4 Report finalized — please review", date: "Jan 10, 2021", time: "2:15 PM", starred: false, unread: true, newsletter: "", threadId: "q4",
+        body: makeMailBody("Sarah Chen", "S", "bg-purple-500", "Jan 10, 2021, 2:15 PM", "Q4 Report", `<p>Hi,</p><p>The Q4 report is attached. Could you review the revenue projections section before our meeting on Thursday?</p><p>Thanks,<br>Sarah</p>`),
+        attachments: [{ name: "Q4_Report_2020.pdf", size: "2.4 MB", type: "pdf" }, { name: "Revenue_Projections.xlsx", size: "184 KB", type: "sheet" }] },
+      { id: 54, sender: "Bryan Mayer", email: "me@company.com", subject: "Re: Q4 Report finalized — please review", date: "Jan 10, 2021", time: "3:48 PM", starred: false, unread: true, newsletter: "", threadId: "q4",
+        body: makeMailBody("Bryan Mayer", "B", "bg-emerald-600", "Jan 10, 2021, 3:48 PM", "Re: Q4 Report", `<p>Sarah,</p><p>Numbers look solid. One question — the EMEA line on p.14 seems to double-count the enterprise tier. Can you confirm before Thursday?</p><p>Bryan</p>`) },
+      { id: 55, sender: "Sarah Chen", email: "sarah@company.com", subject: "Re: Q4 Report finalized — please review", date: "Jan 10, 2021", time: "4:05 PM", starred: false, unread: true, newsletter: "", threadId: "q4",
+        body: makeMailBody("Sarah Chen", "S", "bg-purple-500", "Jan 10, 2021, 4:05 PM", "Re: Q4 Report", `<p>Good catch — you're right, I'll restate it as a single line and resend in 10 min. Updated PDF attached.</p><p>S</p>`),
+        attachments: [{ name: "Q4_Report_2020_v2.pdf", size: "2.5 MB", type: "pdf" }] },
+      { id: 51, sender: "Mike Rodriguez", email: "mike@design.co", subject: "Updated mockups for the dashboard", date: "Jan 9, 2021", time: "5:30 PM", starred: true, unread: true, newsletter: "", threadId: "mockups",
+        body: makeMailBody("Mike Rodriguez", "M", "bg-pink-500", "Jan 9, 2021, 5:30 PM", "Dashboard Mockups", `<p>Hey! I've updated the dashboard mockups based on last week's feedback. The new charts section should address the data density concerns.</p><p>Mike</p>`),
+        attachments: [{ name: "dashboard_v2.fig", size: "8.1 MB", type: "figma" }, { name: "charts_spec.png", size: "740 KB", type: "image" }] },
+      { id: 56, sender: "Bryan Mayer", email: "me@company.com", subject: "Re: Updated mockups for the dashboard", date: "Jan 9, 2021", time: "6:12 PM", starred: false, unread: false, newsletter: "", threadId: "mockups",
+        body: makeMailBody("Bryan Mayer", "B", "bg-emerald-600", "Jan 9, 2021, 6:12 PM", "Re: Dashboard Mockups", `<p>These are gorgeous. Ship it. 🚀</p>`) },
+      { id: 52, sender: "LinkedIn", email: "notifications@linkedin.com", subject: "You have 3 new connection requests", date: "Jan 8, 2021", time: "8:00 AM", starred: false, unread: false, newsletter: "", category: "social",
+        body: makeMailBody("LinkedIn", "in", "bg-blue-600", "Jan 8, 2021, 8:00 AM", "New Connections", `<p>You have 3 new connection requests from people in your network.</p>`) },
+      { id: 53, sender: "GitHub", email: "noreply@github.com", subject: "[monolith-mail] PR #142 merged: Fix pagination bug", date: "Jan 7, 2021", time: "7:45 PM", starred: false, unread: true, newsletter: "", category: "updates",
+        body: makeMailBody("GitHub", "G", "bg-gray-800", "Jan 7, 2021, 7:45 PM", "PR #142 Merged", `<p>Pull request #142 "Fix pagination bug in message list" has been merged into main by @developer.</p>`) },
+      // ===== FORUMS =====
+      { id: 60, sender: "r/webdev", email: "digest@reddit.com", subject: "Votre récap hebdo : Tailwind v4, les débats de la semaine", date: "Jan 10, 2021", time: "7:00 AM", starred: false, unread: true, newsletter: "", category: "forums",
+        body: makeMailBody("r/webdev", "R", "bg-orange-600", "Jan 10, 2021, 7:00 AM", "Récap r/webdev", `<p>Les sujets chauds cette semaine : Tailwind v4 passe en RC, le débat CSS-in-JS vs utility-first recommence, et un guide complet sur les Web Components.</p><p>3 412 upvotes au total.</p>`) },
+      { id: 61, sender: "Stack Overflow", email: "do-not-reply@stackoverflow.email", subject: "Nouvelles réponses sur « How to center a div »", date: "Jan 9, 2021", time: "11:30 PM", starred: false, unread: false, newsletter: "", category: "forums",
+        body: makeMailBody("Stack Overflow", "SO", "bg-orange-500", "Jan 9, 2021, 11:30 PM", "Nouvelles réponses", `<p>2 nouvelles réponses ont été postées sur votre question « How to center a div ». L'une d'elles a été acceptée par la communauté.</p>`) },
+      { id: 62, sender: "Hacker News", email: "digest@ycombinator.com", subject: "Top stories — Show HN: une app mail en HTML seul", date: "Jan 8, 2021", time: "9:00 AM", starred: false, unread: true, newsletter: "", category: "forums",
+        body: makeMailBody("Hacker News", "Y", "bg-orange-700", "Jan 8, 2021, 9:00 AM", "Top stories HN", `<p>Show HN: une app mail codée en un seul fichier HTML atteint la première page. Suivi de débats sur le futuro du web, et un papier sur les LLM et la productivité.</p>`) },
+    ];
+
+    // Newsletter metadata
+    const newsletterMeta = {
+      Stratechery: {
+        title: "Stratechery", email: "ben@stratechery.com", icon: "article",
+        heroImg: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1600&q=80",
+        match: "98%", year: "2013", rating: "Analysis", frequency: "Quotidien",
+        desc: "Analyse stratégique de la tech et des business models. Ben Thompson dissèque comment Internet redistribue la valeur entre plateformes, agrégateurs et créateurs."
+      },
+      Processor: {
+        title: "Processor", email: "dieter@processor.com", icon: "terminal",
+        heroImg: "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&w=1600&q=80",
+        match: "94%", year: "2018", rating: "Hardware", frequency: "Hebdo",
+        desc: "Le point de vue de Dieter Bohn sur le hardware, les gadgets et la culture tech. Tests, rumeurs et réflexions sur la façon dont la technologie façonne nos vies."
+      },
+      Jam: {
+        title: "Jam Club", email: "jam@jamworkshops.com", icon: "music_note",
+        heroImg: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1600&q=80",
+        match: "91%", year: "2019", rating: "Design", frequency: "Bimensuel",
+        desc: "Workshops de prototypage créatif. Du Figma au code, en passant par l'animation et les design systems — des sessions pratiques pour designers curieux."
+      },
+      Monzo: {
+        title: "Monzo", email: "news@monzo.com", icon: "payments",
+        heroImg: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=1600&q=80",
+        match: "89%", year: "2015", rating: "Fintech", frequency: "Mensuel",
+        desc: "Actualités produits, nouvelles fonctionnalités et coulisses de la banque mobile préférée des Britanniques. Salary sorting, pots, transfers et plus encore."
+      }
+    };
+
+    function getFilteredEmails() {
+      if (!searchText.trim()) return emails;
+      const q = searchText.toLowerCase();
+      return emails.filter(e => e.sender.toLowerCase().includes(q) || e.subject.toLowerCase().includes(q));
+    }
+
+    // ===== Gmail-style category tabs =====
+    const CATEGORIES = [
+      { id: 'primary',     label: 'Principal',         icon: 'inbox' },
+      { id: 'promotions',  label: 'Promotions',        icon: 'local_offer' },
+      { id: 'social',      label: 'Réseaux sociaux',   icon: 'group' },
+      { id: 'updates',     label: 'Mises à jour',      icon: 'info' },
+      { id: 'forums',      label: 'Forums',            icon: 'forum' },
+    ];
+    let currentCategory = 'primary';
+
+    function getCategoryEmails(list) {
+      const src = list || getFilteredEmails();
+      return src.filter(e => (e.category || 'primary') === currentCategory);
+    }
+    function setCategory(cat) {
+      currentCategory = cat;
+      renderInboxList();
+    }
+    function updateCategoryTabs() {
+      const filtered = getFilteredEmails();
+      CATEGORIES.forEach(c => {
+        const catEmails = filtered.filter(e => (e.category || 'primary') === c.id);
+        const unread = catEmails.filter(e => e.unread).length;
+        const tab = document.querySelector('.cat-tab[data-cat="' + c.id + '"]');
+        if (!tab) return;
+        tab.classList.toggle('is-active', c.id === currentCategory);
+        const countEl = tab.querySelector('.cat-count');
+        if (countEl) countEl.textContent = unread > 0 ? unread : '';
+      });
+    }
+
+    // Group emails into conversations by threadId (emails without threadId are their own thread of 1)
+    function getThreads(list) {
+      const source = list || getFilteredEmails();
+      const map = new Map();
+      source.forEach(e => {
+        const key = e.threadId || ('single-' + e.id);
+        if (!map.has(key)) map.set(key, []);
+        map.get(key).push(e);
+      });
+      // Sort each thread's messages oldest -> newest (by date+time string)
+      const threads = [];
+      map.forEach(msgs => {
+        msgs.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+        threads.push({ id: msgs[0].threadId || ('single-' + msgs[0].id), messages: msgs });
+      });
+      // Sort threads by latest message date desc
+      threads.sort((a, b) => {
+        const la = a.messages[a.messages.length - 1];
+        const lb = b.messages[b.messages.length - 1];
+        return (lb.date + lb.time).localeCompare(la.date + la.time);
+      });
+      return threads;
+    }
+
+    function setTheme(theme) {
+      currentTheme = theme;
+      const body = document.body;
+      body.classList.remove('theme-image', 'theme-white', 'theme-dark');
+      body.classList.add('theme-' + theme);
+
+      const indicator = document.getElementById('theme-indicator');
+      indicator.innerText = theme === 'image' ? 'Image' : (theme === 'white' ? 'Clair' : 'Sombre');
+
+      // Conversation card surface tweaks (mirror white for dark)
+      const convCard = document.getElementById('conversation-card');
+      const listHeaderBar = document.getElementById('list-header-bar');
+      if (theme === 'image') {
+        convCard.classList.add('border', 'border-gray-100', 'shadow-xl'); convCard.classList.remove('shadow-none');
+      } else {
+        convCard.classList.remove('border', 'border-gray-100', 'shadow-xl'); convCard.classList.add('shadow-none');
+      }
+      // Le list-header est sticky : on garde toujours un séparateur (couleur adaptée via CSS dark)
+      listHeaderBar.classList.remove('border-transparent');
+      listHeaderBar.classList.add('border-b', 'border-gray-200/80');
+
+      // Apply background for image theme
+      if (theme === 'image') {
+        body.style.setProperty('--bg-image', `url('${currentBgUrl}')`);
+      } else {
+        body.style.setProperty('--bg-image', 'none');
+      }
+
+      // Gallery only relevant in image theme
+      document.getElementById('bg-gallery-wrap').style.display = (theme === 'image') ? '' : 'none';
+
+      updateThemeSegmented();
+      updateUIState();
+    }
+
+    function setBackground(url) {
+      currentBgUrl = url;
+      if (currentTheme === 'image') {
+        document.body.style.setProperty('--bg-image', `url('${url}')`);
+      }
+      renderBgGallery();
+    }
+
+    function renderBgGallery() {
+      const gallery = document.getElementById('bg-gallery');
+      gallery.innerHTML = '';
+      backgrounds.forEach(bg => {
+        const thumb = document.createElement('div');
+        thumb.className = 'bg-thumb' + (bg.url === currentBgUrl ? ' is-active' : '');
+        thumb.style.backgroundImage = `url('${bg.url}')`;
+        thumb.title = bg.name;
+        thumb.onclick = () => setBackground(bg.url);
+        gallery.appendChild(thumb);
+      });
+    }
+
+    function updateThemeSegmented() {
+      document.querySelectorAll('.theme-opt').forEach(btn => {
+        btn.classList.toggle('is-active', btn.dataset.theme === currentTheme);
+      });
+    }
+
+    function toggleSettingsPopover(e) {
+      if (e) e.stopPropagation();
+      const pop = document.getElementById('settings-popover');
+      pop.classList.toggle('hidden');
+    }
+    // Close popover on outside click
+    document.addEventListener('click', (e) => {
+      const pop = document.getElementById('settings-popover');
+      if (pop && !pop.classList.contains('hidden') && !pop.contains(e.target) && !e.target.closest('[onclick*="toggleSettingsPopover"]')) {
+        pop.classList.add('hidden');
+      }
+    });
+
+    function toggleTheme() {
+      // Legacy cycle kept for convenience: image -> white -> dark -> image
+      const order = ['image', 'white', 'dark'];
+      const next = order[(order.indexOf(currentTheme) + 1) % order.length];
+      setTheme(next);
+    }
+
+    function toggleInboxState() {
+      if (emails.length === 0) { simulateEmails(); }
+      else { emails = []; currentSelectedId = null; currentActiveView = 'zero'; updateUIState(); }
+    }
+
+    function simulateEmails() {
+      emails = JSON.parse(JSON.stringify(initialMockEmails));
+      // Catégorisation auto : les newsletters vont en Promotions, le reste en Principal
+      // sauf catégorie explicite (social/updates/forums).
+      emails.forEach(e => { if (!e.category) e.category = e.newsletter ? 'promotions' : 'primary'; });
+      currentCategory = 'primary';
+      currentSelectedId = null;
+      currentActiveView = 'list';
+      updateUIState();
+      showToast("Messages et Newsletters importés !");
+    }
+
+    function handleSearch(val) {
+      searchText = val;
+      if (emails.length > 0) renderInboxList();
+    }
+
+    function handleBack() {
+      if (currentActiveView === 'conversation') {
+        if (currentNewsletterFilter) { currentSelectedId = null; currentActiveView = 'newsletter'; }
+        else { currentSelectedId = null; currentActiveView = 'list'; }
+      } else if (currentActiveView === 'newsletter') {
+        currentNewsletterFilter = '';
+        currentActiveView = 'list';
+      }
+      updateUIState();
+    }
+
+    function setHeaderState(state) {
+      const header = document.getElementById('main-header');
+      const searchBar = document.getElementById('header-search-bar');
+      const actionButtons = document.getElementById('header-actions');
+      const navArrows = document.getElementById('header-nav-arrows');
+      const cfg = THEME_CFG[currentTheme];
+      const base = "h-16 flex items-center justify-between px-6 shrink-0 select-none z-30 transition-all duration-300";
+
+      const showActions = (state === 'conversation');
+      const showNav = (state === 'conversation');
+      const showSearch = (state === 'list' || state === 'zero');
+
+      // Header surface
+      if (state === 'zero' && cfg.zeroHeaderTransparent) {
+        // Image theme, zero state: transparent header over image, dark icons
+        header.className = `${base} header-style-dark`;
+        searchBar.className = "w-full max-w-xl glass-search rounded-lg px-4 py-2 flex items-center gap-3 transition-all duration-300 absolute inset-y-0 flex items-center";
+      } else {
+        header.className = `${base} ${cfg.headerSurface} ${cfg.headerIcons}`;
+        searchBar.className = `w-full max-w-xl ${cfg.searchStyle} rounded-lg px-4 py-2 flex items-center gap-3 transition-all duration-300 absolute inset-y-0 flex items-center`;
+      }
+
+      if (showSearch) searchBar.classList.remove('opacity-0', 'pointer-events-none');
+      else searchBar.classList.add('opacity-0', 'pointer-events-none');
+
+      if (showActions) actionButtons.classList.remove('opacity-0', 'pointer-events-none');
+      else actionButtons.classList.add('opacity-0', 'pointer-events-none');
+
+      if (showNav) navArrows.classList.remove('opacity-0', 'pointer-events-none');
+      else navArrows.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    function updateUIState() {
+      const isZero = emails.length === 0;
+      const indicator = document.getElementById('state-indicator');
+      const zeroView = document.getElementById('inbox-zero-view');
+      const listView = document.getElementById('inbox-list-view');
+      const convView = document.getElementById('conversation-view');
+      const newsletterView = document.getElementById('newsletter-detail-view');
+      const imageBadge = document.getElementById('image-theme-badge-container');
+      const whiteState = document.getElementById('white-theme-empty-state');
+
+      if (currentActiveView === 'conversation') {
+        indicator.innerText = "Reader";
+        convView.classList.remove('opacity-0', 'pointer-events-none');
+        zeroView.classList.add('opacity-0', 'pointer-events-none');
+        listView.classList.add('opacity-0', 'pointer-events-none');
+        newsletterView.classList.add('opacity-0', 'pointer-events-none');
+        setHeaderState('conversation');
+      } else if (currentActiveView === 'newsletter') {
+        indicator.innerText = "Newsletter";
+        newsletterView.classList.remove('opacity-0', 'pointer-events-none');
+        convView.classList.add('opacity-0', 'pointer-events-none');
+        zeroView.classList.add('opacity-0', 'pointer-events-none');
+        listView.classList.add('opacity-0', 'pointer-events-none');
+        setHeaderState('newsletter');
+        renderNewsletterDetail();
+      } else if (isZero) {
+        currentActiveView = 'zero';
+        indicator.innerText = "Zero";
+        zeroView.classList.remove('opacity-0', 'pointer-events-none');
+        listView.classList.add('opacity-0', 'pointer-events-none');
+        convView.classList.add('opacity-0', 'pointer-events-none');
+        newsletterView.classList.add('opacity-0', 'pointer-events-none');
+        if (currentTheme === 'image') { imageBadge.classList.remove('hidden'); whiteState.classList.add('hidden'); }
+        else { imageBadge.classList.add('hidden'); whiteState.classList.remove('hidden'); }
+        setHeaderState('zero');
+        document.getElementById('search-input').value = '';
+        searchText = '';
+      } else {
+        currentActiveView = 'list';
+        indicator.innerText = "List";
+        listView.classList.remove('opacity-0', 'pointer-events-none');
+        zeroView.classList.add('opacity-0', 'pointer-events-none');
+        convView.classList.add('opacity-0', 'pointer-events-none');
+        newsletterView.classList.add('opacity-0', 'pointer-events-none');
+        setHeaderState('list');
+        renderInboxList();
+      }
+    }
+
+    function renderInboxList() {
+      const container = document.getElementById('messages-container');
+      const countLabel = document.getElementById('list-count');
+      const threads = getThreads(getCategoryEmails());
+      countLabel.innerText = threads.length;
+      container.innerHTML = '';
+
+      // Refresh category tab counts + active state
+      updateCategoryTabs();
+
+      if (threads.length === 0) {
+        const catLabel = (CATEGORIES.find(c => c.id === currentCategory) || {}).label || '';
+        container.innerHTML = `<div class="p-12 text-center text-gray-500 text-sm">Aucun message dans « ${catLabel} ».</div>`;
+        return;
+      }
+
+      // Update newsletter counts
+      ['Stratechery', 'Processor', 'Jam', 'Monzo'].forEach(nl => {
+        const el = document.getElementById('nl-count-' + nl);
+        if (el) {
+          const unread = emails.filter(e => e.newsletter === nl && e.unread).length;
+          const total = emails.filter(e => e.newsletter === nl).length;
+          el.textContent = unread > 0 ? `${unread} non lu${unread > 1 ? 's' : ''}` : `${total} message${total > 1 ? 's' : ''}`;
+        }
+      });
+
+      threads.forEach((thread, index) => {
+        const msgs = thread.messages;
+        const latest = msgs[msgs.length - 1];
+        const hasUnread = msgs.some(m => m.unread);
+        const starred = msgs.some(m => m.starred);
+        const isMulti = msgs.length > 1;
+        const participants = [...new Set(msgs.map(m => m.sender))].length;
+
+        const item = document.createElement('div');
+        let borderClass = "border-b border-gray-100";
+        if (currentTheme !== 'image' && index === threads.length - 1) borderClass = "border-transparent";
+
+        item.className = `flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50/80 transition-colors select-none ${borderClass} ${hasUnread ? 'bg-white font-semibold' : 'bg-gray-50/30 text-gray-700'}`;
+        item.onclick = () => openConversation(latest.id);
+
+        const senderLabel = isMulti && participants > 1
+          ? `${latest.sender} (+${participants - 1})`
+          : latest.sender;
+
+        item.innerHTML = `
+          <div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="material-symbols-outlined hover:text-[#f2a600] shrink-0" onclick="toggleStarItem(event, ${latest.id})">
+                ${starred ? 'star' : 'star_border'}
+              </span>
+            </div>
+            <div class="w-48 truncate shrink-0 text-sm ${hasUnread ? 'text-gray-900 font-bold' : 'text-gray-800'}">${senderLabel}</div>
+            <div class="truncate text-sm flex items-center gap-2 min-w-0">
+              <span class="${hasUnread ? 'text-gray-900 font-bold' : 'text-gray-800'} truncate">${latest.subject}</span>
+              ${isMulti ? `<span class="thread-badge shrink-0">${msgs.length}</span>` : ''}
+              <span class="text-gray-400 text-xs font-normal opacity-80 truncate hidden lg:inline">- ${msgs.length} message${msgs.length>1?'s':''} dans la conversation</span>
+            </div>
+          </div>
+          <div class="text-xs text-gray-400 shrink-0 font-normal flex items-center gap-2">
+            ${latest.attachments ? '<span class="material-symbols-outlined" style="font-size:16px">attach_file</span>' : ''}
+            ${latest.html ? '<span class="material-symbols-outlined" style="font-size:16px">code</span>' : ''}
+            ${latest.date}
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function openNewsletter(name) {
+      currentNewsletterFilter = name;
+      currentActiveView = 'newsletter';
+      updateUIState();
+    }
+
+    // Bascule le carousel newsletters entre défilement horizontal et grille complète
+    function toggleAllNewsletters() {
+      const c = document.querySelector('#inbox-list-view .carousel-container');
+      const btn = document.getElementById('nl-toggle-btn');
+      if (!c || !btn) return;
+      c.classList.toggle('nl-expanded');
+      const expanded = c.classList.contains('nl-expanded');
+      btn.innerHTML = expanded
+        ? '<span class="material-symbols-outlined" style="font-size:14px">unfold_less</span> Réduire'
+        : '<span class="material-symbols-outlined" style="font-size:14px">grid_view</span> Toutes les newsletters';
+    }
+
+    // V22: Render newsletter detail — Netflix-style full-screen hero + scrollable editions
+    function renderNewsletterDetail() {
+      const meta = newsletterMeta[currentNewsletterFilter];
+      if (!meta) return;
+
+      // Reset scroll to top
+      const view = document.getElementById('newsletter-detail-view');
+      view.scrollTop = 0;
+
+      // Restart Ken Burns animation by re-injecting the node
+      const bg = document.getElementById('nl-hero-bg');
+      bg.style.backgroundImage = `url('${meta.heroImg}')`;
+      bg.style.animation = 'none';
+      // Force reflow then restart animation + fade-ins
+      void bg.offsetWidth;
+      bg.style.animation = '';
+
+      // Restart fade-in animations for all .nl-fade-in elements
+      view.querySelectorAll('.nl-fade-in').forEach(el => {
+        el.style.animation = 'none';
+        void el.offsetWidth;
+        el.style.animation = '';
+      });
+
+      // Populate hero
+      document.getElementById('nl-hero-logo-icon').textContent = meta.icon;
+      document.getElementById('nl-hero-title').textContent = meta.title;
+      document.getElementById('nl-hero-desc').textContent = meta.desc;
+      document.getElementById('nl-hero-email').textContent = meta.email;
+      document.getElementById('nl-hero-match').textContent = meta.match + ' Match';
+      document.getElementById('nl-hero-year').textContent = meta.year;
+      document.getElementById('nl-hero-rating').textContent = meta.rating;
+      document.getElementById('nl-hero-frequency').innerHTML = '<span class="material-symbols-outlined !text-white" style="font-size:14px">schedule</span>' + meta.frequency;
+
+      // Filter newsletter editions (newest first — reverse the array)
+      const newsletterEmails = emails.filter(e => e.newsletter === currentNewsletterFilter).reverse();
+      const countText = `${newsletterEmails.length} édition${newsletterEmails.length > 1 ? 's' : ''}`;
+      document.getElementById('nl-hero-editions-count').textContent = countText;
+      document.getElementById('nl-editions-count-2').textContent = `${newsletterEmails.length} e-mail${newsletterEmails.length > 1 ? 's' : ''}`;
+
+      // Render editions grid
+      const grid = document.getElementById('nl-editions-grid');
+      grid.innerHTML = '';
+      newsletterEmails.forEach((email, i) => {
+        const card = document.createElement('div');
+        card.className = 'nl-edition-card';
+        card.onclick = () => openConversation(email.id);
+        card.innerHTML = `
+          <div class="nl-edition-num">${String(newsletterEmails.length - i).padStart(2, '0')}</div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-3 mb-1">
+              <h3 class="text-sm font-semibold text-white truncate ${email.unread ? '' : 'text-white/75'}">${email.subject}</h3>
+              <div class="flex items-center gap-2 shrink-0 text-xs text-white/45 font-normal">
+                ${email.starred ? '<span class="material-symbols-outlined !text-yellow-400" style="font-size:16px">star</span>' : ''}
+                ${email.unread ? '<span class="w-2 h-2 rounded-full bg-blue-500"></span>' : ''}
+                <span>${email.date}</span>
+              </div>
+            </div>
+            <p class="text-xs text-white/55 line-clamp-1">${email.body.match(/<p>([\s\S]*?)<\/p>/)?.[1]?.replace(/<[^>]+>/g, '').slice(0, 140) || 'Aperçu non disponible.'}…</p>
+          </div>
+          <div class="flex items-center self-center">
+            <span class="material-symbols-outlined !text-white/80 hover:!text-white" style="font-size:28px">play_circle</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function readLatestNewsletter() {
+      const latest = emails.filter(e => e.newsletter === currentNewsletterFilter).pop();
+      if (latest) openConversation(latest.id);
+    }
+
+    function markNewsletterRead() {
+      emails.forEach(e => { if (e.newsletter === currentNewsletterFilter) e.unread = false; });
+      renderNewsletterDetail();
+      showToast('Toutes les éditions marquées comme lues');
+    }
+
+    function toggleStarItem(event, id) {
+      event.stopPropagation();
+      const mail = emails.find(e => e.id === id);
+      if (mail) { mail.starred = !mail.starred; renderInboxList(); }
+    }
+
+    function escapeHtml(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+    function escapeAttr(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
+    function avatarBg(name){
+      const colors = ['bg-indigo-500','bg-purple-500','bg-pink-500','bg-emerald-600','bg-blue-600','bg-orange-500','bg-teal-600','bg-gray-700','bg-blue-700','bg-rose-500'];
+      let h=0; for(const c of (name||'?')) h=(h*31+c.charCodeAt(0))>>>0;
+      return colors[h % colors.length];
+    }
+    function messageSnippet(mail){
+      const m = mail.body.match(/<p>([\s\S]*?)<\/p>/);
+      return m ? m[1].replace(/<[^>]+>/g,'').slice(0,90) : '';
+    }
+    function messageProse(mail){
+      return (mail.body.match(/<p>[\s\S]*?<\/p>/g) || []).join('');
+    }
+    const ATT_META = {
+      pdf:{bg:'#e23b3b',label:'PDF'}, sheet:{bg:'#1a7f37',label:'XLS'},
+      figma:{bg:'#a259ff',label:'FIG'}, image:{bg:'#0a66c2',label:'IMG'},
+      doc:{bg:'#2b7cd3',label:'DOC'}, zip:{bg:'#8a6d3b',label:'ZIP'},
+      text:{bg:'#5f6368',label:'TXT'}
+    };
+    function attachmentsHtml(mail){
+      if(!mail.attachments || !mail.attachments.length) return '';
+      const chips = mail.attachments.map(a => {
+        const m = ATT_META[a.type] || {bg:'#5f6368',label:'FILE'};
+        return `<div class="att-chip" onclick="showToast('Téléchargement de ${escapeHtml(a.name)}')">
+          <div class="att-icon" style="background:${m.bg}">${m.label}</div>
+          <div class="att-meta">
+            <div class="att-name">${escapeHtml(a.name)}</div>
+            <div class="att-size">${a.size}</div>
+          </div>
+          <span class="material-symbols-outlined att-dl">download</span>
+        </div>`;
+      }).join('');
+      return `<div class="mt-5"><div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">${mail.attachments.length} pièce${mail.attachments.length>1?'s':''} jointe${mail.attachments.length>1?'s':''}</div><div class="flex flex-wrap gap-2">${chips}</div></div>`;
+    }
+    function htmlMailBlock(mail){
+      if(!mail.html) return '';
+      const fid = 'htmlframe-' + mail.id + '-' + Math.random().toString(36).slice(2,7);
+      return `<div class="mt-5">
+        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:14px">code</span>Email HTML · rendu isolé</div>
+        <iframe id="${fid}" class="html-mail-frame" sandbox="allow-same-origin" srcdoc="${escapeAttr(mail.html)}" onload="resizeHtmlFrame('${fid}')"></iframe>
+      </div>`;
+    }
+    function resizeHtmlFrame(id){
+      const f = document.getElementById(id);
+      if(!f) return;
+      try {
+        const retry = () => {
+          const doc = f.contentDocument;
+          if(!doc || !doc.body) return false;
+          const h = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight);
+          if(h) { f.style.height = (h + 4) + 'px'; return true; }
+          return false;
+        };
+        if(!retry()) setTimeout(retry, 150);
+      } catch(e) {}
+    }
+    function toggleThreadMsg(headEl){
+      const msg = headEl.closest('.thread-msg');
+      if(msg) msg.classList.toggle('collapsed');
+    }
+    function toggleAllThreadMsgs(){
+      const msgs = document.querySelectorAll('#thread-chain .thread-msg');
+      if(!msgs.length) return;
+      const anyCollapsed = Array.from(msgs).some(m => m.classList.contains('collapsed'));
+      msgs.forEach(m => anyCollapsed ? m.classList.remove('collapsed') : m.classList.add('collapsed'));
+    }
+
+    function openConversation(id) {
+      currentSelectedId = id;
+      // Find the conversation thread containing this email
+      const allThreads = getThreads(emails);
+      let thread = allThreads.find(t => t.messages.some(m => m.id === id));
+      if (!thread) {
+        const m = emails.find(e => e.id === id);
+        thread = { id: 'single-' + id, messages: m ? [m] : [] };
+      }
+      const msgs = thread.messages; // oldest -> newest
+      msgs.forEach(m => { if (m) m.unread = false; });
+      if (!msgs.length) return;
+
+      const subject = msgs[0].subject.replace(/^Re:\s*/i, '');
+
+      const threadEl = document.getElementById('thread-content');
+      threadEl.innerHTML = `
+        <div class="flex items-center justify-between mb-6 select-none gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <h1 class="text-xl font-normal text-[#202124] dark:text-white tracking-tight truncate">${escapeHtml(subject)}</h1>
+            ${msgs.length > 1 ? `<span class="thread-badge shrink-0" title="${msgs.length} messages dans la conversation">${msgs.length}</span>` : ''}
+            <span class="badge-inbox flex items-center gap-1 cursor-pointer shrink-0">Inbox <span class="text-[10px] font-bold">×</span></span>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <div class="icon-btn-container w-8 h-8" title="Mode immersif" onclick="openImmersive(${id})" style="cursor:pointer"><span class="material-symbols-outlined">menu_book</span></div>
+            <div class="icon-btn-container w-8 h-8" title="Tout déplier / replier" onclick="toggleAllThreadMsgs()" style="cursor:pointer"><span class="material-symbols-outlined">unfold_more</span></div>
+            <div class="icon-btn-container w-8 h-8" title="Imprimer"><span class="material-symbols-outlined">print</span></div>
+          </div>
+        </div>
+        <div id="thread-chain"></div>
+      `;
+
+      const chain = document.getElementById('thread-chain');
+      msgs.forEach((m, i) => {
+        const expanded = (i === msgs.length - 1);
+        const div = document.createElement('div');
+        div.className = 'thread-msg' + (expanded ? '' : ' collapsed');
+        div.innerHTML = `
+          <div class="thread-msg-head" onclick="toggleThreadMsg(this)">
+            <span class="material-symbols-outlined thread-msg-chevron">expand_more</span>
+            <div class="w-8 h-8 rounded-full ${avatarBg(m.sender)} flex items-center justify-center font-bold text-white text-xs shrink-0">${escapeHtml((m.sender||'?')[0])}</div>
+            <div class="flex flex-col min-w-0 flex-1">
+              <span class="thread-msg-subject">${escapeHtml(m.sender)} <span class="font-normal text-gray-400">· ${escapeHtml(m.email)}</span></span>
+              <span class="thread-msg-preview truncate">${escapeHtml(messageSnippet(m))}</span>
+            </div>
+            <div class="text-xs text-gray-400 shrink-0 pl-3 whitespace-nowrap">${m.date} · ${m.time}</div>
+          </div>
+          <div class="thread-msg-body">
+            <div class="text-sm leading-relaxed">${messageProse(m) || m.body}</div>
+            ${htmlMailBlock(m)}
+            ${attachmentsHtml(m)}
+          </div>
+        `;
+        chain.appendChild(div);
+      });
+
+      currentActiveView = 'conversation';
+      updateUIState();
+    }
+
+    function closeConversation() { handleBack(); }
+
+    function navigateMail(direction) {
+      let threads;
+      if (currentNewsletterFilter) threads = getThreads(emails.filter(e => e.newsletter === currentNewsletterFilter));
+      else threads = getThreads(getCategoryEmails());
+      const idx = threads.findIndex(t => t.messages.some(m => m.id === currentSelectedId));
+      const nextIdx = idx + direction;
+      if (nextIdx >= 0 && nextIdx < threads.length) {
+        const latest = threads[nextIdx].messages[threads[nextIdx].messages.length - 1];
+        openConversation(latest.id);
+      } else {
+        showToast("Pas d'autre message dans cette direction");
+      }
+    }
+
+    function deleteCurrent() { emails = emails.filter(e => e.id !== currentSelectedId); closeConversation(); showToast("Message supprimé"); }
+    function archiveCurrent() { emails = emails.filter(e => e.id !== currentSelectedId); closeConversation(); showToast("Message archivé"); }
+    function toggleUnreadCurrent() {
+      const mail = emails.find(e => e.id === currentSelectedId);
+      if (mail) { mail.unread = true; closeConversation(); showToast("Marqué comme non lu"); }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 2500);
+    }
+
+    // ============================================================
+    // IMMERSIVE READER (à la v4 — full-screen serif reading)
+    // ============================================================
+    let immersiveOpen = false;
+    let immersiveList = [];
+    let immersiveIndex = 0;
+
+    function getImmersiveList() {
+      // Context-aware: newsletter editions if inside a newsletter, else all (filtered) emails
+      if (currentNewsletterFilter) return emails.filter(e => e.newsletter === currentNewsletterFilter);
+      return getFilteredEmails().length ? getFilteredEmails() : emails;
+    }
+
+    function openImmersive(id) {
+      immersiveList = getImmersiveList();
+      immersiveIndex = Math.max(0, immersiveList.findIndex(e => e.id === id));
+      if (immersiveIndex < 0 && immersiveList.length) immersiveIndex = 0;
+      const reader = document.getElementById('immersive-reader');
+      reader.classList.remove('opacity-0', 'pointer-events-none');
+      immersiveOpen = true;
+      renderImmersiveSlides();
+      document.getElementById('immersive-reply').value = '';
+    }
+
+    function closeImmersive() {
+      const reader = document.getElementById('immersive-reader');
+      reader.classList.add('opacity-0', 'pointer-events-none');
+      immersiveOpen = false;
+    }
+
+    function immersiveNext(dir) {
+      const next = immersiveIndex + dir;
+      if (next < 0 || next >= immersiveList.length) {
+        showToast(dir > 0 ? "Dernier message" : "Premier message");
+        return;
+      }
+      // Animate slide out, then swap
+      const viewport = document.getElementById('immersive-viewport');
+      const cur = viewport.querySelector('.im-slide.active');
+      if (cur) cur.className = 'im-slide ' + (dir > 0 ? 'prev' : 'next');
+      immersiveIndex = next;
+      // mark read
+      const mail = immersiveList[immersiveIndex];
+      if (mail) mail.unread = false;
+      // Render new set after a tick
+      setTimeout(renderImmersiveSlides, 60);
+    }
+
+    function renderImmersiveSlides() {
+      const viewport = document.getElementById('immersive-viewport');
+      const mail = immersiveList[immersiveIndex];
+      if (!mail) { viewport.innerHTML = ''; updateImmersiveChrome(); return; }
+      mail.unread = false;
+
+      const formattedDate = (mail.date + (mail.time ? ' · ' + mail.time : ''));
+      const prose = (mail.body.match(/<p>[\s\S]*?<\/p>/g) || []).join('');
+      const firstIsDropCap = true;
+
+      const slide = document.createElement('div');
+      slide.className = 'im-slide active';
+      slide.innerHTML = `
+        <div class="h-full overflow-y-auto flex justify-center">
+          <div class="w-full max-w-2xl px-8 py-10">
+            <h1 class="immersive-serif im-title">${mail.subject}</h1>
+            <div class="flex items-baseline justify-between gap-4 border-b immersive-border pb-5 mt-5 mb-9">
+              <div class="flex flex-col gap-0.5 min-w-0">
+                <span class="font-semibold text-sm">${mail.sender}</span>
+                <span class="text-xs immersive-muted truncate">${mail.email}</span>
+              </div>
+              <span class="text-xs immersive-muted whitespace-nowrap">${formattedDate}</span>
+            </div>
+            <article class="immersive-serif im-article ${firstIsDropCap ? 'im-drop-cap' : ''}">
+              ${prose || mail.body}
+            </article>
+            <div class="h-24"></div>
+          </div>
+        </div>
+      `;
+      viewport.innerHTML = '';
+      viewport.appendChild(slide);
+      slide.querySelector('.overflow-y-auto').scrollTop = 0;
+      updateImmersiveChrome();
+    }
+
+    function updateImmersiveChrome() {
+      const total = immersiveList.length;
+      const n = immersiveIndex + 1;
+      document.getElementById('immersive-counter').textContent =
+        String(n).padStart(2, '0') + ' / ' + String(total).padStart(2, '0');
+      const pct = total > 0 ? (n / total) * 100 : 0;
+      document.getElementById('immersive-progress').style.width = pct + '%';
+      // Star button state
+      const starBtn = document.getElementById('im-star-btn');
+      const mail = immersiveList[immersiveIndex];
+      if (mail && mail.starred) starBtn.classList.add('immersive-star-on');
+      else starBtn.classList.remove('immersive-star-on');
+    }
+
+    function immersiveToggleStar() {
+      const mail = immersiveList[immersiveIndex];
+      if (!mail) return;
+      mail.starred = !mail.starred;
+      updateImmersiveChrome();
+      showToast(mail.starred ? "Ajouté aux suivis" : "Retiré des suivis");
+    }
+    function immersiveArchive() {
+      const mail = immersiveList[immersiveIndex];
+      if (!mail) return;
+      emails = emails.filter(e => e.id !== mail.id);
+      immersiveList = getImmersiveList();
+      if (immersiveIndex >= immersiveList.length) immersiveIndex = immersiveList.length - 1;
+      if (immersiveList.length === 0) { closeImmersive(); showToast("Archivé — liste vide"); return; }
+      renderImmersiveSlides();
+      showToast("Message archivé");
+    }
+    function immersiveDelete() {
+      const mail = immersiveList[immersiveIndex];
+      if (!mail) return;
+      emails = emails.filter(e => e.id !== mail.id);
+      immersiveList = getImmersiveList();
+      if (immersiveIndex >= immersiveList.length) immersiveIndex = immersiveList.length - 1;
+      if (immersiveList.length === 0) { closeImmersive(); showToast("Supprimé — liste vide"); return; }
+      renderImmersiveSlides();
+      showToast("Message supprimé");
+    }
+    function immersiveToggleUnread() {
+      const mail = immersiveList[immersiveIndex];
+      if (!mail) return;
+      mail.unread = !mail.unread;
+      showToast(mail.unread ? "Marqué comme non lu" : "Marqué comme lu");
+    }
+    function immersiveSendReply() {
+      const input = document.getElementById('immersive-reply');
+      if (input.value.trim()) { showToast("Réponse envoyée"); input.value = ''; }
+    }
+
+    // Keyboard navigation while immersive reader is open
+    document.addEventListener('keydown', (e) => {
+      if (!immersiveOpen) return;
+      const tag = (e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea') return;
+      if (e.key === 'ArrowRight' || e.key === 'j') { e.preventDefault(); immersiveNext(1); }
+      else if (e.key === 'ArrowLeft' || e.key === 'k') { e.preventDefault(); immersiveNext(-1); }
+      else if (e.key === 'Escape') { e.preventDefault(); closeImmersive(); }
+    });
+
+    // ===== Global keyboard shortcuts (Gmail-style) =====
+    function replyCurrent() {
+      const mail = emails.find(e => e.id === currentSelectedId);
+      showToast(mail ? `Répondre à ${mail.sender}` : 'Répondre');
+    }
+    function labelCurrent() { showToast('Libellés — sélectionnez un libellé'); }
+
+    document.addEventListener('keydown', (e) => {
+      if (immersiveOpen) return;                       // le lecteur immersif a son propre handler
+      const tag = (e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea') return; // ne pas hijack la saisie
+      const meta = e.metaKey || e.ctrlKey || e.altKey;
+      if (meta) return;
+
+      if (e.key === 'Escape') {
+        if (currentActiveView === 'conversation' || currentActiveView === 'newsletter') {
+          e.preventDefault(); handleBack();
+        }
+      } else if (currentActiveView === 'conversation') {
+        if      (e.key === 'j') { e.preventDefault(); navigateMail(1); }
+        else if (e.key === 'k') { e.preventDefault(); navigateMail(-1); }
+        else if (e.key === 'r') { e.preventDefault(); replyCurrent(); }
+        else if (e.key === 'l') { e.preventDefault(); labelCurrent(); }
+      }
+    });
+
+    // ===== Boot =====
+    renderBgGallery();
+    setTheme('white');
+  </script>
+</body>
+</html>

@@ -1,0 +1,1827 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monolith Mail - v22 Newsletters (Netflix Hero)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Material Symbols (Outlined) -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', Roboto, RobotoDraft, Helvetica, Arial, sans-serif;
+      color: #202124;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 0.3s, background-color 0.3s;
+    }
+    body.theme-image {
+      background-image: var(--bg-image, url('bg.jpg'));
+    }
+    body.theme-white {
+      background-image: none;
+      background-color: #ffffff;
+    }
+
+    /* ===== Settings popover (theme + background picker) ===== */
+    #settings-popover {
+      transform-origin: top right;
+      animation: popIn 160ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .theme-opt {
+      color: #5f6368;
+    }
+    .theme-opt.is-active {
+      background: #ffffff;
+      color: #202124;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+    .bg-thumb {
+      aspect-ratio: 16 / 10;
+      border-radius: 8px;
+      background-size: cover;
+      background-position: center;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 150ms, transform 150ms;
+      position: relative;
+      overflow: hidden;
+    }
+    .bg-thumb:hover { transform: translateY(-2px); }
+    .bg-thumb.is-active { border-color: #1a73e8; box-shadow: 0 0 0 2px rgba(26,115,232,0.25); }
+    .bg-thumb.is-active::after {
+      content: 'check';
+      font-family: 'Material Symbols Outlined';
+      position: absolute;
+      top: 4px; right: 4px;
+      width: 20px; height: 20px;
+      background: #1a73e8;
+      color: #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      font-variation-settings: 'FILL' 1, 'wght' 700;
+    }
+    body.theme-dark #settings-popover {
+      background: #1f1f1f !important;
+      border-color: rgba(255,255,255,0.08) !important;
+      color: #e5e5e5;
+    }
+    body.theme-dark #settings-popover .text-gray-400 { color: #8d8d8d !important; }
+    body.theme-dark #settings-popover .bg-gray-100 { background: #141414 !important; }
+    body.theme-dark .theme-opt { color: #b3b3b3; }
+    body.theme-dark .theme-opt.is-active {
+      background: #2a2a2a; color: #fff; box-shadow: none;
+    }
+
+    .material-symbols-outlined {
+      font-size: 20px;
+      color: #5f6368;
+      cursor: pointer;
+      user-select: none;
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      transition: color 0.2s, background-color 0.2s;
+    }
+    
+    .header-style-light .material-symbols-outlined { color: #5f6368; }
+    .header-style-light .material-symbols-outlined:hover { background-color: rgba(60, 64, 67, 0.08); border-radius: 50%; }
+    .header-style-dark .material-symbols-outlined { color: rgba(255, 255, 255, 0.85); }
+    .header-style-dark .material-symbols-outlined:hover { color: #ffffff; background-color: rgba(255, 255, 255, 0.12); border-radius: 50%; }
+
+    .icon-btn-container {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      transition: background-color 150ms;
+      flex-shrink: 0;
+    }
+    .header-style-light .icon-btn-container:hover { background-color: rgba(60,64,67,0.08); }
+    .header-style-dark .icon-btn-container:hover { background-color: rgba(255, 255, 255, 0.12); }
+
+    .fab-shadow { box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15); }
+    .fab-shadow:hover { box-shadow: 0 2px 3px 0 rgba(60,64,67,0.3), 0 6px 10px 4px rgba(60,64,67,0.15); }
+
+    /* Compose FAB — frosted glass, matches the inbox-zero badge */
+    .compose-fab {
+      background: rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.92);
+    }
+    .compose-fab:hover { background: rgba(0, 0, 0, 0.38); }
+    body.theme-white .compose-fab {
+      background: rgba(255, 255, 255, 0.72);
+      border-color: rgba(0, 0, 0, 0.08);
+      color: #3c4043;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 6px 16px rgba(0,0,0,0.10);
+    }
+    body.theme-white .compose-fab:hover { background: rgba(255, 255, 255, 0.95); }
+    body.theme-dark .compose-fab {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+    }
+    body.theme-dark .compose-fab:hover { background: rgba(255, 255, 255, 0.16); }
+
+    .glass-container {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .theme-white .glass-container {
+      background: transparent;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border: none;
+      box-shadow: none;
+    }
+
+    #conversation-card { transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s; }
+    .theme-image #conversation-card {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    .theme-white #conversation-card {
+      background: #ffffff;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border: none;
+      box-shadow: none;
+    }
+
+    .glass-search {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+    }
+    .glass-search input::placeholder { color: rgba(255, 255, 255, 0.7); }
+
+    .solid-search {
+      background: #f1f3f4;
+      border: 1px solid transparent;
+      color: #202124;
+    }
+    .solid-search input::placeholder { color: #5f6368; }
+    .solid-search .material-symbols-outlined { color: #5f6368; }
+
+    .badge-inbox { background-color: #f1f3f4; color: #5f6368; font-size: 12px; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
+    .avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+
+    .carousel-container {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+    .carousel-container::-webkit-scrollbar { display: none; }
+    .carousel-item { scroll-snap-align: start; flex: 0 0 auto; }
+    /* "Toutes les newsletters" : grille repliée au lieu du carousel horizontal */
+    .carousel-container.nl-expanded {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      overflow-x: visible;
+    }
+    /* Surface du header de liste (sticky) — colle au fond du glass-container */
+    .list-header-surface { background: #ffffff; }
+    body.theme-image .list-header-surface {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    body.theme-dark .list-header-surface { background: #1c1c1c; }
+    .nl-toggle-btn {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.02em;
+      color: #5f6368; display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; border-radius: 6px; transition: background 150ms, color 150ms;
+    }
+    .nl-toggle-btn:hover { background: rgba(0,0,0,0.05); color: #202124; }
+    body.theme-dark .nl-toggle-btn { color: #9aa0a6; }
+    body.theme-dark .nl-toggle-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+    /* Gmail category tabs */
+    .cat-tabs-surface { background: #ffffff; }
+    body.theme-image .cat-tabs-surface {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    body.theme-dark .cat-tabs-surface { background: #1c1c1c; }
+    .cat-tab {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 11px 6px; font-size: 12px; font-weight: 500; color: #5f6368;
+      border-bottom: 3px solid transparent; transition: color 150ms, border-color 150ms, background 150ms;
+      cursor: pointer; white-space: nowrap; min-width: 0;
+    }
+    .cat-tab:hover { color: #202124; background: rgba(0,0,0,0.03); }
+    .cat-tab.is-active { color: #1a73e8; border-bottom-color: #1a73e8; font-weight: 600; }
+    .cat-tab-icon { font-size: 16px !important; color: inherit; flex-shrink: 0; }
+    .cat-tab-label { overflow: hidden; text-overflow: ellipsis; }
+    .cat-count {
+      font-size: 10px; font-weight: 700; line-height: 1;
+      background: #f1f3f4; color: #5f6368; padding: 2px 6px; border-radius: 8px; min-width: 16px; text-align: center;
+    }
+    .cat-tab.is-active .cat-count { background: #1a73e8; color: #fff; }
+    .cat-count:empty { display: none; }
+    body.theme-dark .cat-tab { color: #9aa0a6; border-bottom-color: transparent; }
+    body.theme-dark .cat-tab:hover { color: #fff; background: rgba(255,255,255,0.06); }
+    body.theme-dark .cat-tab.is-active { color: #8ac4ff; border-bottom-color: #8ac4ff; }
+    body.theme-dark .cat-count { background: #2a2a2a; color: #9aa0a6; }
+    body.theme-dark .cat-tab.is-active .cat-count { background: #8ac4ff; color: #141414; }
+    @media (max-width: 640px) { .cat-tab-label { display: none; } }
+
+    /* ========== V20: Newsletter Hero with Image ========== */
+    .newsletter-hero-img {
+      position: relative;
+      overflow: hidden;
+      background-size: cover;
+      background-position: center;
+    }
+    .newsletter-hero-img::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.6) 100%);
+    }
+
+    /* ========== V22: Netflix-style Full-Screen Newsletter Hero ========== */
+    #newsletter-detail-view {
+      background: #141414;
+    }
+    .nl-hero-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center top;
+      transform: scale(1.08);
+      animation: nlKenBurns 18s ease-out forwards;
+      will-change: transform;
+    }
+    @keyframes nlKenBurns {
+      from { transform: scale(1.08); }
+      to   { transform: scale(1.18); }
+    }
+    .nl-fade-in {
+      opacity: 0;
+      transform: translateY(14px);
+      animation: nlFadeUp 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    .nl-fade-in.delay-1 { animation-delay: 120ms; }
+    .nl-fade-in.delay-2 { animation-delay: 240ms; }
+    .nl-fade-in.delay-3 { animation-delay: 360ms; }
+    .nl-fade-in.delay-4 { animation-delay: 480ms; }
+    .nl-fade-in.delay-5 { animation-delay: 600ms; }
+    @keyframes nlFadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .nl-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.9);
+      letter-spacing: 0.02em;
+    }
+    .nl-match {
+      color: #46d369;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .nl-btn-primary {
+      background: #ffffff;
+      color: #141414;
+      transition: background 150ms;
+    }
+    .nl-btn-primary:hover { background: rgba(255,255,255,0.82); }
+    .nl-btn-ghost {
+      background: rgba(255,255,255,0.14);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #ffffff;
+      transition: background 150ms;
+    }
+    .nl-btn-ghost:hover { background: rgba(255,255,255,0.22); }
+    .nl-icon-btn {
+      width: 44px; height: 44px;
+      border-radius: 9999px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.14);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #ffffff;
+      transition: background 150ms;
+    }
+    .nl-icon-btn:hover { background: rgba(255,255,255,0.22); }
+    .nl-top-btn {
+      width: 42px; height: 42px;
+      border-radius: 9999px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #ffffff;
+      transition: background 150ms;
+      cursor: pointer;
+    }
+    .nl-top-btn:hover { background: rgba(0,0,0,0.65); }
+    .nl-edition-card {
+      display: flex;
+      gap: 16px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      background: #1f1f1f;
+      border: 1px solid rgba(255,255,255,0.06);
+      cursor: pointer;
+      transition: background 150ms, transform 150ms;
+    }
+    .nl-edition-card:hover { background: #2a2a2a; }
+    .nl-edition-num {
+      flex-shrink: 0;
+      width: 36px;
+      font-size: 28px;
+      font-weight: 700;
+      color: #5a5a5a;
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    /* ============================================================
+       V22 — DARK THEME (whole-app overrides, scoped to body.theme-dark)
+       ============================================================ */
+    body.theme-dark {
+      background-color: #141414;
+      background-image: none;
+      color: #e5e5e5;
+    }
+    /* Glass container becomes a solid dark surface */
+    body.theme-dark .glass-container {
+      background: #1c1c1c;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: none;
+    }
+    /* Conversation card */
+    body.theme-dark #conversation-card {
+      background: #1c1c1c !important;
+      color: #e5e5e5;
+      border: none !important;
+    }
+    body.theme-dark #conversation-card .text-\[\#202124\],
+    body.theme-dark #thread-content h1,
+    body.theme-dark #thread-content h2 {
+      color: #f5f5f5 !important;
+    }
+    body.theme-dark #conversation-card .text-\[\#5f6368\] {
+      color: #a8a8a8 !important;
+    }
+    body.theme-dark .badge-inbox {
+      background-color: #2a2a2a;
+      color: #b3b3b3;
+    }
+    /* Messages list items — flip every hardcoded light surface */
+    body.theme-dark #messages-container > div,
+    body.theme-dark #newsletter-messages-container > div {
+      background-color: #141414 !important;
+      border-color: rgba(255, 255, 255, 0.06) !important;
+    }
+    body.theme-dark #messages-container > div:hover,
+    body.theme-dark #newsletter-messages-container > div:hover {
+      background-color: #222 !important;
+    }
+    body.theme-dark #messages-container > div .text-gray-900,
+    body.theme-dark #messages-container > div .text-gray-800 {
+      color: #f5f5f5 !important;
+    }
+    body.theme-dark #messages-container > div .text-gray-700 {
+      color: #b3b3b3 !important;
+    }
+    body.theme-dark #messages-container > div .text-gray-400,
+    body.theme-dark #messages-container > div .text-gray-500 {
+      color: #7d7d7d !important;
+    }
+    /* Section headers + list-header bar in dark */
+    body.theme-dark #list-header-bar,
+    body.theme-dark .border-gray-200\/80 {
+      border-color: rgba(255, 255, 255, 0.06) !important;
+    }
+    body.theme-dark #list-header-bar .text-gray-500,
+    body.theme-dark #inbox-list-view .text-gray-400,
+    body.theme-dark #inbox-list-view .uppercase.tracking-widest {
+      color: #8d8d8d !important;
+    }
+    /* Header icon colour in dark surfaces */
+    body.theme-dark.header-style-light .material-symbols-outlined,
+    body.theme-dark .header-style-light .material-symbols-outlined {
+      color: rgba(255, 255, 255, 0.7);
+    }
+    body.theme-dark .header-style-light .icon-btn-container:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    /* Dark search bar variant */
+    .dark-search {
+      background: #2a2a2a;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: #e5e5e5;
+    }
+    .dark-search input::placeholder { color: #8d8d8d; }
+    .dark-search .material-symbols-outlined { color: #8d8d8d; }
+    /* Empty / zero state in dark */
+    body.theme-dark #white-theme-empty-state h2 { color: #e5e5e5 !important; }
+    body.theme-dark #white-theme-empty-state p { color: #8d8d8d !important; }
+    body.theme-dark #white-theme-empty-state .text-gray-200 { color: #333 !important; }
+    body.theme-dark #white-theme-empty-state button {
+      color: #e5e5e5 !important;
+      border-color: rgba(255, 255, 255, 0.15) !important;
+    }
+    body.theme-dark #white-theme-empty-state button:hover { background: #222 !important; }
+    /* FAB button in dark */
+    body.theme-dark .fab-shadow { background: #2a2a2a !important; }
+    body.theme-dark .fab-shadow:hover { background: #333 !important; }
+    /* Theme toggle pills inherit dark text */
+    body.theme-dark #main-header button.text-inherit { color: #e5e5e5; }
+    body.theme-dark #main-header .bg-black\/10 { background-color: rgba(255,255,255,0.08); }
+
+    /* ============================================================
+       V22 — CONVERSATION THREADING + HTML MAIL + ATTACHMENTS
+       ============================================================ */
+    /* Thread badge (count of messages in a conversation) */
+    .thread-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 18px; height: 18px; padding: 0 5px;
+      border-radius: 9px;
+      background: rgba(26,115,232,0.12);
+      color: #1a73e8;
+      font-size: 10px; font-weight: 700;
+      line-height: 1;
+    }
+    body.theme-dark .thread-badge { background: rgba(124,172,248,0.18); color: #8ac4ff; }
+
+    /* Collapsible messages inside a thread */
+    .thread-msg { border-bottom: 1px solid rgba(0,0,0,0.06); }
+    .thread-msg:last-child { border-bottom: 0; }
+    body.theme-dark .thread-msg { border-color: rgba(255,255,255,0.06); }
+    .thread-msg-head {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0; cursor: pointer; user-select: none;
+    }
+    .thread-msg-head:hover .thread-msg-subject { color: #1a73e8; }
+    body.theme-dark .thread-msg-head:hover .thread-msg-subject { color: #8ac4ff; }
+    .thread-msg.collapsed .thread-msg-body { display: none; }
+    .thread-msg-chevron { transition: transform 200ms; color: #5f6368; font-size: 18px !important; }
+    body.theme-dark .thread-msg-chevron { color: #9aa0a6; }
+    .thread-msg.collapsed .thread-msg-chevron { transform: rotate(-90deg); }
+    .thread-msg-subject { font-size: 13px; font-weight: 600; color: #202124; transition: color 150ms; }
+    body.theme-dark .thread-msg-subject { color: #e8e8e8; }
+    .thread-msg-preview { font-size: 12px; color: #5f6368; flex: 1; min-width: 0; }
+    body.theme-dark .thread-msg-preview { color: #9aa0a6; }
+    .thread-msg-body { padding: 4px 0 18px 52px; }
+
+    /* HTML email iframe */
+    .html-mail-frame {
+      width: 100%; min-height: 120px;
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 10px;
+      background: #ffffff;
+      overflow: hidden;
+    }
+    body.theme-dark .html-mail-frame { border-color: rgba(255,255,255,0.08); }
+
+    /* Attachment chips */
+    .att-chip {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: #f1f3f4;
+      border: 1px solid transparent;
+      transition: background 150ms, border-color 150ms;
+      cursor: pointer; max-width: 100%;
+    }
+    .att-chip:hover { background: #e8eaed; border-color: rgba(0,0,0,0.06); }
+    body.theme-dark .att-chip { background: #2a2a2a; }
+    body.theme-dark .att-chip:hover { background: #333; border-color: rgba(255,255,255,0.08); }
+    .att-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 11px; font-weight: 800; color: #fff;
+      letter-spacing: 0.02em;
+    }
+    .att-meta { min-width: 0; }
+    .att-name { font-size: 12px; font-weight: 600; color: #202124; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+    body.theme-dark .att-name { color: #e8e8e8; }
+    .att-size { font-size: 11px; color: #5f6368; }
+    body.theme-dark .att-size { color: #9aa0a6; }
+    .att-dl { color: #5f6368; font-size: 18px !important; flex-shrink: 0; }
+    body.theme-dark .att-dl { color: #9aa0a6; }
+
+    /* ============================================================
+       V22 — IMMERSIVE READER (à la v4 : full-screen, serif, slides)
+       ============================================================ */
+    .immersive-surface {
+      background: rgba(250, 248, 244, 0.97);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      color: #202124;
+    }
+    body.theme-dark .immersive-surface {
+      background: rgba(16, 16, 16, 0.985);
+      color: #e8e8e8;
+    }
+    body.theme-white .immersive-surface {
+      background: #ffffff;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+    .immersive-border { border-color: rgba(0,0,0,0.08); }
+    body.theme-dark .immersive-border { border-color: rgba(255,255,255,0.08); }
+    .immersive-muted { color: #5f6368; }
+    body.theme-dark .immersive-muted { color: #9a9a9a; }
+    .immersive-serif { font-family: 'Newsreader', Georgia, 'Times New Roman', serif; }
+    .immersive-top-btn { color: #5f6368; transition: color 150ms; }
+    .immersive-top-btn:hover { color: #202124; }
+    body.theme-dark .immersive-top-btn { color: #b3b3b3; }
+    body.theme-dark .immersive-top-btn:hover { color: #fff; }
+    .immersive-icon-btn {
+      width: 36px; height: 36px; border-radius: 9999px;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #5f6368; transition: background 150ms, color 150ms; cursor: pointer;
+    }
+    .immersive-icon-btn:hover { background: rgba(0,0,0,0.06); color: #202124; }
+    body.theme-dark .immersive-icon-btn { color: #b3b3b3; }
+    body.theme-dark .immersive-icon-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .immersive-icon-btn .material-symbols-outlined { font-size: 20px; color: inherit; }
+    .immersive-nav-btn {
+      width: 32px; height: 32px; border-radius: 9999px;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: background 150ms; cursor: pointer;
+    }
+    .immersive-nav-btn:hover { background: rgba(0,0,0,0.06); }
+    body.theme-dark .immersive-nav-btn:hover { background: rgba(255,255,255,0.1); }
+    .immersive-nav-btn .material-symbols-outlined { font-size: 22px; color: inherit; }
+    .immersive-reply-box {
+      background: rgba(0,0,0,0.04);
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+    body.theme-dark .immersive-reply-box {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.08);
+    }
+    .immersive-input { color: inherit; }
+    .immersive-input::placeholder { color: #999; }
+    body.theme-dark .immersive-input::placeholder { color: #777; }
+    .immersive-send-btn {
+      background: #202124; color: #fff;
+    }
+    body.theme-dark .immersive-send-btn { background: #e8e8e8; color: #141414; }
+    .immersive-star-on { color: #f59e0b !important; }
+    .immersive-star-on .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
+
+    /* Slide transitions */
+    .im-slide {
+      position: absolute; inset: 0;
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+    }
+    .im-slide.active { transform: translateX(0); opacity: 1; z-index: 2; }
+    .im-slide.next    { transform: translateX(6%); opacity: 0; z-index: 1; pointer-events: none; }
+    .im-slide.prev    { transform: translateX(-6%); opacity: 0; z-index: 1; pointer-events: none; }
+    .im-title { font-size: clamp(1.9rem, 4vw, 2.6rem); line-height: 1.15; letter-spacing: -0.02em; font-weight: 500; }
+    .im-article { font-size: 1.125rem; line-height: 1.85; color: inherit; opacity: 0.92; }
+    .im-article p { margin-bottom: 1.15em; }
+    .im-drop-cap::first-letter {
+      font-size: 3.2em; font-weight: 500; float: left;
+      line-height: 0.85; padding: 0.08em 0.12em 0 0; color: inherit;
+    }
+    /* ============ NAVIGATION DRAWER (burger → sidebar Gmail-like) ============ */
+    #drawer-overlay { background: rgba(0,0,0,0.45); transition: opacity 250ms; }
+    #nav-drawer {
+      width: 288px; max-width: 86vw;
+      transform: translateX(-100%); transition: transform 280ms cubic-bezier(0.22,1,0.36,1);
+      box-shadow: 2px 0 24px rgba(0,0,0,0.18);
+    }
+    #nav-drawer.open { transform: translateX(0); }
+    .drawer-surface { background: #ffffff; color: #202124; }
+    body.theme-image .drawer-surface { background: rgba(255,255,255,0.96); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+    body.theme-dark .drawer-surface { background: #1c1c1c; color: #e8e8e8; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 8px 10px; margin: 1px 8px; border-radius: 0 14px 14px 0;
+      cursor: pointer; font-size: 13px; color: inherit; transition: background 120ms;
+      user-select: none;
+    }
+    .nav-item:hover { background: rgba(0,0,0,0.05); }
+    body.theme-dark .nav-item:hover { background: rgba(255,255,255,0.07); }
+    .nav-item.is-active { background: #fef0c7; color: #202124; font-weight: 600; }
+    body.theme-dark .nav-item.is-active { background: rgba(250,204,21,0.16); color: #fff; }
+    .nav-item .material-symbols-outlined { font-size: 18px; color: #5f6368; flex-shrink: 0; }
+    body.theme-dark .nav-item .material-symbols-outlined { color: #9aa0a6; }
+    .nav-item.is-active .material-symbols-outlined { color: inherit; }
+    .nav-item .nav-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .nav-item .nav-count { font-size: 11px; color: #5f6368; font-weight: 500; }
+    body.theme-dark .nav-item .nav-count { color: #9aa0a6; }
+    .nav-section-title {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      color: #5f6368; padding: 14px 22px 6px;
+    }
+    body.theme-dark .nav-section-title { color: #8a8a8a; }
+    .nav-compose {
+      margin: 12px 16px 4px; background: #1a73e8; color: #fff; border: none;
+      padding: 12px 18px; border-radius: 8px; font-weight: 600; font-size: 13px;
+      display: flex; align-items: center; gap: 10px; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      transition: background 120ms, transform 120ms;
+    }
+    .nav-compose:hover { background: #1765cc; }
+    .nav-compose:active { transform: scale(0.98); }
+    body.theme-dark .nav-compose { background: #8ab4f8; color: #141414; }
+    .nav-label-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  </style>
+</head>
+<body class="h-screen w-screen flex flex-col overflow-hidden relative theme-white">
+
+  <!-- ================= NAVIGATION DRAWER (burger) ================= -->
+  <div id="drawer-overlay" class="fixed inset-0 z-[55] opacity-0 pointer-events-none transition-opacity duration-300" onclick="toggleDrawer(false)"></div>
+  <aside id="nav-drawer" class="drawer-surface fixed top-0 left-0 bottom-0 z-[56] flex flex-col">
+    <div class="px-5 pt-5 pb-2 flex items-center gap-2">
+      <span class="material-symbols-outlined text-[#1a73e8]" style="font-size:24px">mail</span>
+      <span class="font-bold text-base tracking-tight">Monolith Mail</span>
+    </div>
+    <button class="nav-compose" onclick="toggleDrawer(false); openCompose()"><span class="material-symbols-outlined !text-inherit" style="font-size:20px">edit</span> Composer</button>
+    <nav class="flex-1 overflow-y-auto py-2">
+      <div id="drawer-folders"></div>
+      <div class="nav-section-title">Catégories</div>
+      <div id="drawer-categories"></div>
+      <div class="nav-section-title">Libellés</div>
+      <div id="drawer-labels">
+        <div class="nav-item" onclick="showToast('Gérer les libellés — IMAP : via dossiers serveur')"><span class="material-symbols-outlined">settings</span><span class="nav-label">Gérer les libellés</span></div>
+        <div class="nav-item" onclick="showToast('Créer un libellé — créé un dossier IMAP')"><span class="material-symbols-outlined">add</span><span class="nav-label">Créer un libellé</span></div>
+      </div>
+    </nav>
+    <div class="px-5 py-3 text-[11px] text-gray-400 border-t border-current/10" id="drawer-foot">Aucun compte connecté</div>
+  </aside>
+
+  <!-- ================= UNIFIED HEADER (CONTINUITY) ================= -->
+  <header id="main-header" class="h-16 flex items-center justify-between px-6 shrink-0 select-none z-30 transition-all duration-300 header-style-dark">
+    
+    <div class="flex items-center gap-2 relative z-40">
+      <div class="icon-btn-container" id="burger-btn" title="Menu (dossiers, libellés)" onclick="toggleDrawer()">
+        <span class="material-symbols-outlined">menu</span>
+      </div>
+      <select id="account-select" onchange="onAccountChange(this.value)" class="text-xs bg-transparent border border-current/20 rounded-md px-2 py-1 outline-none cursor-pointer max-w-[140px]" title="Compte"></select>
+    </div>
+
+    <div class="absolute left-1/2 -translate-x-1/2 w-full max-w-[944px] px-6 h-10 flex items-center justify-center pointer-events-none">
+      
+      <!-- Search Bar -->
+      <div id="header-search-bar" class="pointer-events-auto w-full glass-search rounded-lg px-4 py-2 flex items-center gap-3 transition-all duration-300 absolute inset-y-0">
+        <span class="material-symbols-outlined text-inherit opacity-70" id="search-bar-icon">search</span>
+        <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="Rechercher des e-mails" class="w-full bg-transparent text-inherit text-sm focus:outline-none">
+      </div>
+
+      <!-- Action Buttons -->
+      <div id="header-actions" class="pointer-events-auto w-full flex items-center gap-1.5 opacity-0 pointer-events-none transition-all duration-300 absolute inset-y-0">
+        <div class="icon-btn-container" id="back-btn" title="Retour" onclick="handleBack()">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </div>
+        <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
+        <div class="icon-btn-container" title="Archiver" onclick="archiveCurrent()"><span class="material-symbols-outlined">archive</span></div>
+        <div class="icon-btn-container" title="Signaler comme spam"><span class="material-symbols-outlined">report</span></div>
+        <div class="icon-btn-container" title="Supprimer" onclick="deleteCurrent()"><span class="material-symbols-outlined">delete</span></div>
+        <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
+        <div class="icon-btn-container" title="Marquer comme non lu" onclick="toggleUnreadCurrent()"><span class="material-symbols-outlined">mail</span></div>
+        <div class="icon-btn-container" title="Mettre en attente"><span class="material-symbols-outlined">schedule</span></div>
+        <div class="icon-btn-container" title="Ajouter aux tâches"><span class="material-symbols-outlined">add_task</span></div>
+        <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
+        <div class="icon-btn-container" title="Déplacer vers"><span class="material-symbols-outlined">drive_file_move</span></div>
+        <div class="icon-btn-container" title="Libellés"><span class="material-symbols-outlined">label</span></div>
+        <div class="icon-btn-container" title="Plus"><span class="material-symbols-outlined">more_vert</span></div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <div id="header-nav-arrows" class="flex items-center gap-1 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="icon-btn-container" title="Rechercher"><span class="material-symbols-outlined">search</span></div>
+        <div class="icon-btn-container" title="Plus ancien" onclick="navigateMail(-1)"><span class="material-symbols-outlined">chevron_left</span></div>
+        <div class="icon-btn-container" title="Plus récent" onclick="navigateMail(1)"><span class="material-symbols-outlined">chevron_right</span></div>
+        <div class="h-5 w-[1px] bg-gray-200 mx-1"></div>
+        <div class="icon-btn-container"><span class="material-symbols-outlined">more_vert</span></div>
+      </div>
+      <div class="relative mr-1">
+        <button onclick="toggleSettingsPopover(event)" class="text-[10px] text-inherit bg-black/10 border border-current/20 hover:bg-black/20 px-2.5 py-1 rounded-md transition-all duration-200 flex items-center gap-1.5" title="Apparence">
+          <span class="material-symbols-outlined" style="font-size:14px">palette</span>
+          Thème: <span id="theme-indicator" class="font-semibold">Clair</span>
+        </button>
+        <div id="settings-popover" class="hidden absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-2xl border border-gray-100 p-4 z-50">
+          <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Thème</div>
+          <div class="grid grid-cols-3 gap-1 bg-gray-100 p-1 rounded-lg mb-4" id="theme-segmented">
+            <button onclick="setTheme('image')" data-theme="image" class="theme-opt py-1.5 text-xs font-medium rounded-md transition-colors">Image</button>
+            <button onclick="setTheme('white')" data-theme="white" class="theme-opt py-1.5 text-xs font-medium rounded-md transition-colors">Clair</button>
+            <button onclick="setTheme('dark')" data-theme="dark" class="theme-opt py-1.5 text-xs font-medium rounded-md transition-colors">Sombre</button>
+          </div>
+          <div id="bg-gallery-wrap">
+            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Fond (chill)</div>
+            <div class="grid grid-cols-3 gap-2" id="bg-gallery"></div>
+          </div>
+        </div>
+      </div>
+      <div id="account-avatar" class="ml-2 w-8 h-8 rounded-full border border-current/25 bg-[#1a73e8] text-white flex items-center justify-center text-xs font-semibold shrink-0" title="Compte mail">
+        <span id="account-avatar-letter">?</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= CONTENT WRAPPER ================= -->
+  <div class="flex-1 relative overflow-hidden z-10 flex flex-col">
+    
+    <!-- State 1: Inbox Zero View -->
+    <main id="inbox-zero-view" class="absolute inset-0 flex flex-col justify-center items-center p-8 transition-all duration-300">
+      <div id="image-theme-badge-container" class="absolute bottom-8 left-8">
+        <button id="inbox-zero-badge" onclick="loadMessages(true)" class="bg-black/25 text-white/90 border border-white/10 hover:bg-black/35 backdrop-blur-md px-4 py-2.5 rounded-lg text-xs font-normal tracking-wide transition-all select-none">
+          Aucun nouveau message <span class="opacity-60 text-[10px] ml-1.5">Actualiser</span>
+        </button>
+      </div>
+      <div id="white-theme-empty-state" class="flex flex-col items-center justify-center text-center max-w-sm hidden">
+        <div class="w-20 h-20 mb-6 text-gray-200 select-none flex items-center justify-center">
+          <svg viewBox="0 0 24 24" width="72" height="72" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2" />
+            <path d="M22 6l-10 7L2 6" />
+            <circle cx="18" cy="14" r="3" stroke-width="1" class="text-blue-400" />
+            <path d="M16.5 14l1 1 2-2" stroke-width="1" class="text-blue-400" />
+          </svg>
+        </div>
+        <h2 id="empty-title" class="text-base font-medium text-gray-800 mb-2">Votre boîte est propre</h2>
+        <p id="empty-description" class="text-xs text-gray-400 leading-relaxed mb-6">Aucun nouveau message pour le moment.</p>
+        <button onclick="loadMessages(true)" class="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-xs font-medium text-gray-600 transition-colors">
+          Actualiser la boîte de réception
+        </button>
+      </div>
+    </main>
+
+    <!-- State 2: Inbox List View -->
+    <main id="inbox-list-view" class="absolute inset-0 flex flex-col items-center px-6 pb-6 pt-2 overflow-hidden opacity-0 pointer-events-none transition-all duration-300">
+      <div class="glass-container w-full max-w-4xl flex-1 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        <!-- Zone de scroll unique : la section newsletters défile et passe sous le list-header sticky -->
+        <div class="flex-1 overflow-y-auto">
+
+        <!-- SECTION CAROUSEL NEWSLETTERS (défile avec la liste) -->
+        <div class="p-6 border-b border-gray-200/50">
+          <div class="flex items-center justify-between mb-3.5">
+            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-widest select-none">Newsletters récentes</h3>
+            <button id="nl-toggle-btn" onclick="toggleAllNewsletters()" class="nl-toggle-btn" title="Afficher toutes les newsletters">
+              <span class="material-symbols-outlined" style="font-size:14px">grid_view</span> Toutes les newsletters
+            </button>
+          </div>
+          <div id="nl-carousel" class="carousel-container gap-4">
+            <!-- cartes newsletters remplies dynamiquement (expéditeurs récurrents en Promotions) -->
+            <div class="text-xs text-gray-400 italic px-1 py-6 select-none">Chargement des newsletters…</div>
+          </div>
+        </div>
+
+        <!-- List Header (sticky : les cartes newsletters passent dessous au scroll) -->
+        <div class="sticky top-0 z-10 h-14 border-b border-gray-200/80 flex items-center justify-between px-6 select-none list-header-surface" id="list-header-bar">
+          <div class="flex items-center gap-1.5">
+            <div class="icon-btn-container" title="Sélectionner tout"><span class="material-symbols-outlined">check_box_outline_blank</span></div>
+            <div class="icon-btn-container" title="Rafraîchir" onclick="loadMessages(true)"><span class="material-symbols-outlined">refresh</span></div>
+            <div class="icon-btn-container" title="Plus"><span class="material-symbols-outlined">more_vert</span></div>
+          </div>
+          <div class="text-xs text-gray-500 font-medium">
+            Tous les messages &bull; <span id="list-count">0</span> messages
+          </div>
+        </div>
+
+        <!-- Gmail category tabs (sticky sous le list header) -->
+        <div class="category-tabs sticky top-14 z-10 flex border-b border-gray-200/80 cat-tabs-surface select-none">
+          <button onclick="setCategory('primary')" data-cat="primary" class="cat-tab is-active"><span class="material-symbols-outlined cat-tab-icon">inbox</span><span class="cat-tab-label">Principal</span><span class="cat-count"></span></button>
+          <button onclick="setCategory('promotions')" data-cat="promotions" class="cat-tab"><span class="material-symbols-outlined cat-tab-icon">local_offer</span><span class="cat-tab-label">Promotions</span><span class="cat-count"></span></button>
+          <button onclick="setCategory('social')" data-cat="social" class="cat-tab"><span class="material-symbols-outlined cat-tab-icon">group</span><span class="cat-tab-label">Réseaux</span><span class="cat-count"></span></button>
+          <button onclick="setCategory('updates')" data-cat="updates" class="cat-tab"><span class="material-symbols-outlined cat-tab-icon">info</span><span class="cat-tab-label">Mises à jour</span><span class="cat-count"></span></button>
+          <button onclick="setCategory('forums')" data-cat="forums" class="cat-tab"><span class="material-symbols-outlined cat-tab-icon">forum</span><span class="cat-tab-label">Forums</span><span class="cat-count"></span></button>
+        </div>
+
+        <!-- Messages list (flux naturel, le scroll est géré par le conteneur parent) -->
+        <div id="messages-container" class="divide-y divide-gray-100"></div>
+
+        </div><!-- /scroll area -->
+      </div>
+    </main>
+
+    <!-- State 3: Conversation View -->
+    <main id="conversation-view" class="absolute inset-0 flex flex-col items-center px-6 pb-6 pt-2 overflow-hidden opacity-0 pointer-events-none transition-all duration-300">
+      <div class="w-full max-w-4xl bg-white flex-1 rounded-2xl p-6 lg:p-10 flex flex-col overflow-y-auto" id="conversation-card">
+        <div id="thread-content" class="w-full flex flex-col"></div>
+      </div>
+    </main>
+
+  </div>
+  <!-- newsletter-detail-view is a sibling of the header (body level) so its
+       fixed z-40 covers the z-30 header instead of being trapped in the z-10 wrapper -->
+
+  <!-- State 4: Newsletter Detail View (V22 - Netflix-style Full-Screen Hero) -->
+    <main id="newsletter-detail-view" class="fixed inset-0 z-40 overflow-y-auto overflow-x-hidden opacity-0 pointer-events-none transition-opacity duration-300">
+      
+      <!-- ============ FULL-SCREEN HERO ============ -->
+      <section class="relative w-full min-h-screen flex flex-col justify-end">
+        <!-- Background image (Ken Burns) -->
+        <div id="nl-hero-bg" class="nl-hero-bg"></div>
+
+        <!-- Gradient overlays -->
+        <div class="absolute inset-0 bg-gradient-to-t from-[#141414] via-black/45 to-black/30 pointer-events-none"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent pointer-events-none"></div>
+
+        <!-- Top overlay bar -->
+        <div class="absolute top-0 inset-x-0 z-30 flex items-center justify-between px-6 py-5">
+          <div class="nl-top-btn" title="Retour" onclick="handleBack()">
+            <span class="material-symbols-outlined !text-white" style="font-size:22px">arrow_back</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="nl-top-btn" title="Partager"><span class="material-symbols-outlined !text-white" style="font-size:20px">share</span></div>
+            <div class="nl-top-btn" title="Plus"><span class="material-symbols-outlined !text-white" style="font-size:20px">more_vert</span></div>
+          </div>
+        </div>
+
+        <!-- Hero content -->
+        <div class="relative z-10 px-6 pb-14 w-full max-w-4xl mx-auto">
+          <div id="nl-hero-logo" class="nl-fade-in w-16 h-16 rounded-2xl bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center shadow-2xl mb-6">
+            <span id="nl-hero-logo-icon" class="material-symbols-outlined !text-white" style="font-size:34px">article</span>
+          </div>
+
+          <h1 id="nl-hero-title" class="nl-fade-in delay-1 text-5xl md:text-6xl font-black text-white tracking-tight drop-shadow-2xl mb-4 leading-[1.05]">Newsletter</h1>
+
+          <div class="nl-fade-in delay-2 flex flex-wrap items-center gap-3 mb-5 text-sm">
+            <span class="nl-match" id="nl-hero-match">98% Match</span>
+            <span id="nl-hero-year" class="text-white/75">2019</span>
+            <span class="nl-chip" id="nl-hero-rating">Tout public</span>
+            <span id="nl-hero-editions-count" class="text-white/85 font-semibold">0 éditions</span>
+            <span class="nl-chip" id="nl-hero-frequency"><span class="material-symbols-outlined !text-white" style="font-size:14px">schedule</span>Hebdo</span>
+          </div>
+
+          <p id="nl-hero-desc" class="nl-fade-in delay-3 text-white/90 text-base md:text-lg leading-relaxed mb-7 max-w-xl drop-shadow-md"></p>
+
+          <div id="nl-hero-email-row" class="nl-fade-in delay-3 flex items-center gap-2 mb-7 text-xs text-white/65">
+            <span class="material-symbols-outlined !text-white/70" style="font-size:16px">alternate_email</span>
+            <span id="nl-hero-email">email@example.com</span>
+          </div>
+
+          <div class="nl-fade-in delay-4 flex flex-wrap items-center gap-3">
+            <button onclick="readLatestNewsletter()" class="nl-btn-primary px-7 py-2.5 rounded-md font-semibold flex items-center gap-2">
+              <span class="material-symbols-outlined !text-black" style="font-size:24px">play_arrow</span>
+              Lire la dernière édition
+            </button>
+            <button onclick="markNewsletterRead()" class="nl-btn-ghost px-5 py-2.5 rounded-md font-semibold flex items-center gap-2">
+              <span class="material-symbols-outlined !text-white" style="font-size:22px">drafts</span>
+              Tout marquer comme lu
+            </button>
+            <button class="nl-icon-btn" title="Ajouter aux favoris"><span class="material-symbols-outlined !text-white">add</span></button>
+            <button class="nl-icon-btn" title="Se désabonner"><span class="material-symbols-outlined !text-white">unsubscribe</span></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ EDITIONS LIST (revealed on scroll) ============ -->
+      <section class="bg-[#141414] text-white px-6 py-10">
+        <div class="max-w-4xl mx-auto">
+          <div class="flex items-baseline justify-between mb-6">
+            <h2 class="text-2xl font-bold tracking-tight">Éditions</h2>
+            <span id="nl-editions-count-2" class="text-sm text-white/60">0 e-mails</span>
+          </div>
+          <div id="nl-editions-grid" class="flex flex-col gap-2"></div>
+        </div>
+      </section>
+
+    </main>
+
+  <!-- ================= IMMERSIVE READER (full-screen, serif, à la v4) ================= -->
+  <div id="immersive-reader" class="immersive-surface fixed inset-0 z-50 flex flex-col opacity-0 pointer-events-none transition-opacity duration-300">
+    <!-- Top bar -->
+    <div class="flex items-center justify-between border-b immersive-border px-8 py-4 shrink-0">
+      <button onclick="closeImmersive()" class="immersive-top-btn flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] font-bold">
+        <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span>
+        Retour
+      </button>
+      <div class="flex items-center gap-1">
+        <button onclick="immersiveToggleStar()" id="im-star-btn" class="immersive-icon-btn" title="Suivi"><span class="material-symbols-outlined">star</span></button>
+        <button onclick="immersiveArchive()" class="immersive-icon-btn" title="Archiver"><span class="material-symbols-outlined">archive</span></button>
+        <button onclick="immersiveDelete()" class="immersive-icon-btn" title="Supprimer"><span class="material-symbols-outlined">delete</span></button>
+        <button onclick="immersiveToggleUnread()" class="immersive-icon-btn" title="Marquer non lu"><span class="material-symbols-outlined">mail</span></button>
+      </div>
+    </div>
+
+    <!-- Slide viewport -->
+    <div class="flex-1 relative overflow-hidden">
+      <div id="immersive-viewport" class="absolute inset-0"></div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="border-t immersive-border px-8 py-4 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.18em] immersive-muted">
+        <button onclick="immersiveNext(-1)" class="immersive-nav-btn" title="Précédent (←)"><span class="material-symbols-outlined">chevron_left</span></button>
+        <span id="immersive-counter" class="tabular-nums min-w-[68px] text-center">01 / 00</span>
+        <button onclick="immersiveNext(1)" class="immersive-nav-btn" title="Suivant (→)"><span class="material-symbols-outlined">chevron_right</span></button>
+        <div class="w-24 h-[3px] rounded-full overflow-hidden" style="background:currentColor;opacity:0.18">
+          <div id="immersive-progress" class="h-full transition-all duration-300" style="width:0;background:currentColor;opacity:1"></div>
+        </div>
+      </div>
+      <div class="flex-1 max-w-lg flex items-center immersive-reply-box rounded-xl p-1.5">
+        <input type="text" id="immersive-reply" placeholder="Répondre rapidement..." class="immersive-input flex-1 bg-transparent px-3 py-1.5 text-sm outline-none">
+        <button onclick="immersiveSendReply()" class="immersive-send-btn p-2 rounded-lg transition-transform hover:scale-105 active:scale-95 shrink-0 flex items-center justify-center">
+          <span class="material-symbols-outlined" style="font-size:18px;color:inherit">send</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= FLOATING ACTION BUTTON (frosted glass, matches inbox-zero badge) ================= -->
+  <div class="fixed bottom-6 right-6 select-none z-30">
+    <button onclick="openCompose()" class="compose-fab rounded-full pl-4 pr-5 py-2.5 flex items-center gap-2 text-xs font-medium tracking-wide transition-all duration-200 focus:outline-none">
+      <span class="material-symbols-outlined" style="font-size:20px;color:inherit">edit</span>
+      Composer
+    </button>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-6 left-6 px-4 py-3 bg-[#323232] text-white text-xs font-normal rounded-lg shadow-xl translate-y-20 opacity-0 transition-all duration-300 z-50 pointer-events-none">
+    Toast message
+  </div>
+
+  <!-- ================= APP LOGIC ================= -->
+  <script>
+    // ============================================================
+    //  V22 — App branchée sur l'API IMAP (mail-client main.py)
+    //  Conserve toute l'UI v22 ; la donnée vient du serveur.
+    // ============================================================
+    let emails = [];
+    let currentSelectedId = null;
+    let searchText = '';
+    let currentTheme = 'white';
+    let currentActiveView = 'zero';
+    let currentNewsletterFilter = '';
+    let accounts = [];
+    let folders = [];
+    let currentAccount = '';
+    let currentFolder = 'INBOX';
+    let _detailCache = {};
+    let _evtSource = null;
+    let loadError = '';
+    let drawerLessOpen = false;
+    let searchTimer = null;
+
+    // ---- Thèmes & fonds (identique v22) ----
+    const backgrounds = [
+      { name: 'Brouillard', url: 'bg.jpg' },
+      { name: 'Forêt',      url: 'https://images.unsplash.com/photo-1488972685288-c3fd157d7c7a?auto=format&fit=crop&w=1920&q=80' },
+      { name: 'Océan',      url: 'https://images.unsplash.com/photo-1505228395891-9a51e7e86bf6?auto=format&fit=crop&w=1920&q=80' },
+      { name: 'Montagne',   url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1920&q=80' },
+      { name: 'Aurore',     url: 'https://images.unsplash.com/photo-1483347756197-71ef80e95f73?auto=format&fit=crop&w=1920&q=80' },
+      { name: 'Dunes',      url: 'https://images.unsplash.com/photo-1473580044384-7ba9967e16a0?auto=format&fit=crop&w=1920&q=80' },
+    ];
+    let currentBgUrl = backgrounds[0].url;
+    const THEME_CFG = {
+      image: { headerSurface: 'bg-white/70 backdrop-blur-md border-b border-white/20', headerIcons: 'header-style-light', searchStyle: 'solid-search', zeroHeaderTransparent: true },
+      white: { headerSurface: 'bg-white', headerIcons: 'header-style-light', searchStyle: 'solid-search', zeroHeaderTransparent: false },
+      dark:  { headerSurface: 'bg-[#141414]', headerIcons: 'header-style-dark', searchStyle: 'dark-search',  zeroHeaderTransparent: false },
+    };
+
+    const CATEGORIES = [
+      { id: 'primary',    label: 'Principal',       icon: 'inbox' },
+      { id: 'purchases',  label: 'Achats',          icon: 'shopping_bag' },
+      { id: 'promotions', label: 'Promotions',      icon: 'local_offer' },
+      { id: 'social',     label: 'Réseaux sociaux', icon: 'group' },
+      { id: 'updates',    label: 'Notifications',   icon: 'notifications' },
+      { id: 'forums',     label: 'Forums',          icon: 'forum' },
+    ];
+    let currentCategory = 'primary';
+
+    // ====================== API ======================
+    async function api(path, opts) {
+      const res = await fetch(path, opts);
+      if (!res.ok) {
+        let detail = res.status + ' ' + res.statusText;
+        try { const j = await res.json(); detail = j.detail || detail; } catch (e) {}
+        throw new Error(detail);
+      }
+      const ct = res.headers.get('content-type') || '';
+      return ct.includes('application/json') ? res.json() : res.text();
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (isNaN(d)) return '';
+      const now = new Date();
+      const sameDay = d.toDateString() === now.toDateString();
+      const opts = sameDay ? {} : { day: 'numeric', month: 'short' };
+      return d.toLocaleDateString('fr-FR', opts);
+    }
+    function fmtTime(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (isNaN(d)) return '';
+      return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }
+    function fmtLong(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (isNaN(d)) return '';
+      try { return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+      catch (e) { return iso; }
+    }
+
+    function mapMessage(m) {
+      return {
+        id: m.account + ':' + m.uid,
+        uid: String(m.uid), account: m.account,
+        sender: m.from_name || m.from_addr || '(inconnu)',
+        email: m.from_addr || '',
+        subject: m.subject || '(sans objet)',
+        date: fmtDate(m.date), time: fmtTime(m.date), rawDate: m.date, longDate: fmtLong(m.date),
+        starred: !!m.flagged, unread: !m.seen,
+        category: m.category || 'primary',
+        threadId: m.thread_id ? (m.account + ':' + m.thread_id) : (m.account + ':' + m.uid),
+        snippet: m.snippet || '',
+        hasAttachments: !!m.has_attachments,
+        html: null, text: null, attachments: null, _detail: false,
+      };
+    }
+
+    function domainOf(addr) { return (addr || '').split('@').pop().toLowerCase(); }
+    function nameOf(sender) { return (sender || '').split(' ')[0] || sender; }
+
+    // ====================== Accounts / folders ======================
+    async function loadAccounts() {
+      loadError = '';
+      try { accounts = await api('/api/accounts'); }
+      catch (e) { accounts = []; loadError = e.message; showToast('Connexion : ' + e.message); }
+      const sel = document.getElementById('account-select');
+      sel.innerHTML = accounts.map(a => `<option value="${a.id}">${escapeHtml(a.name || a.id)}</option>`).join('');
+      sel.classList.toggle('hidden', !accounts.length);
+      const mondary = accounts.find(a => (a.email || '').toLowerCase() === 'clement@mondary.design');
+      if (mondary && !currentAccount) currentAccount = mondary.id;
+      if (accounts.length && !accounts.some(a => a.id === currentAccount)) currentAccount = (mondary || accounts[0]).id;
+      sel.value = currentAccount;
+      updateAccountIdentity();
+    }
+    function updateAccountIdentity(){
+      const account=accounts.find(a=>a.id===currentAccount);
+      const avatar=document.getElementById('account-avatar');
+      const letter=document.getElementById('account-avatar-letter');
+      if(avatar) avatar.title=account?account.email:'Aucun compte connecté';
+      if(letter) letter.textContent=account?(account.email||account.name||'?').charAt(0).toUpperCase():'?';
+    }
+    function onAccountChange(id) { currentAccount = id; currentSelectedId = null; updateAccountIdentity(); loadFolders(id).then(() => loadMessages()); }
+    async function loadFolders(account) {
+      try { folders = await api(`/api/accounts/${account}/folders`); }
+      catch (e) { folders = []; }
+      if (folders.length && !folders.some(f => f.name === currentFolder)) currentFolder = 'INBOX';
+      if (!folders.some(f => f.name === currentFolder)) currentFolder = (folders[0] && folders[0].name) || 'INBOX';
+      renderDrawer();
+    }
+    function onFolderChange(name) { currentFolder = name; currentSelectedId = null; toggleDrawer(false); loadMessages(); }
+
+    // ====================== Drawer (sidebar) ======================
+    const FOLDER_META = {
+      'INBOX':       { label: 'Boîte de réception', icon: 'inbox' },
+      'SENT':        { label: 'Messages envoyés',  icon: 'send' },
+      'DRAFTS':      { label: 'Brouillons',         icon: 'drafts' },
+      'JUNK':        { label: 'Spam',               icon: 'report' },
+      'SPAM':        { label: 'Spam',               icon: 'report' },
+      'TRASH':       { label: 'Corbeille',          icon: 'delete' },
+      'ARCHIVE':     { label: 'Archives',           icon: 'archive' },
+    };
+    function folderKey(name){ return (name||'').toUpperCase().split(/[/.]/).pop(); }
+    function folderLabel(name){ const k=folderKey(name); return (FOLDER_META[k] && FOLDER_META[k].label) || name; }
+    function folderIcon(name){ const k=folderKey(name); return (FOLDER_META[k] && FOLDER_META[k].icon) || 'label'; }
+    function findServerFolder(...keys){ return folders.find(f => keys.includes(folderKey(f.name))); }
+    function folderNavItem(folder, fallbackLabel, fallbackIcon, action){
+      if (folder) {
+        const active = folder.name===currentFolder && !currentSpecial;
+        return `<div class="nav-item ${active?'is-active':''}" onclick="onFolderChange('${escapeAttr(folder.name)}')"><span class="material-symbols-outlined">${folderIcon(folder.name)}</span><span class="nav-label">${fallbackLabel || folderLabel(folder.name)}</span>${folder.unseen?`<span class="nav-count">${folder.unseen}</span>`:''}</div>`;
+      }
+      return `<div class="nav-item" onclick="${action || `showToast('${escapeAttr(fallbackLabel)} : dossier absent du serveur')`}"><span class="material-symbols-outlined">${fallbackIcon}</span><span class="nav-label">${fallbackLabel}</span></div>`;
+    }
+
+    function toggleDrawer(force){
+      const d=document.getElementById('nav-drawer'), o=document.getElementById('drawer-overlay');
+      const open = force!==undefined ? force : !d.classList.contains('open');
+      d.classList.toggle('open', open);
+      o.classList.toggle('opacity-0', !open); o.classList.toggle('pointer-events-none', !open);
+      if(open) renderDrawer();
+    }
+    function renderDrawer(){
+      const fc=document.getElementById('drawer-folders'); if(!fc) return;
+      const starredCount = emails.filter(e=>e.starred).length;
+      const totalUnread = emails.filter(e=>e.unread).length;
+      const inbox=findServerFolder('INBOX');
+      const sent=findServerFolder('SENT');
+      const drafts=findServerFolder('DRAFTS');
+      const spam=findServerFolder('SPAM','JUNK');
+      const trash=findServerFolder('TRASH');
+      const snoozed=findServerFolder('SNOOZED','WAITING');
+      const scheduled=findServerFolder('SCHEDULED');
+      let html = folderNavItem(inbox, 'Boîte de réception', 'inbox');
+      html += `<div class="nav-item" onclick="filterStarred()"><span class="material-symbols-outlined">star</span><span class="nav-label">Messages suivis</span>${starredCount?`<span class="nav-count">${starredCount}</span>`:''}</div>`;
+      html += folderNavItem(sent, 'Messages envoyés', 'send');
+      html += folderNavItem(drafts, 'Brouillons', 'drafts');
+      html += folderNavItem(spam, 'Spam', 'report');
+      html += folderNavItem(trash, 'Corbeille', 'delete');
+      fc.innerHTML = html;
+
+      // Catégories (avec compteurs non lus)
+      const cc=document.getElementById('drawer-categories');
+      cc.innerHTML = CATEGORIES.map(c => {
+        const ce = emails.filter(e => (e.category||'primary')===c.id);
+        const unread = ce.filter(e=>e.unread).length;
+        const active = (c.id===currentCategory && currentFolder==='INBOX' && !currentSpecial);
+        return `<div class="nav-item ${active?'is-active':''}" onclick="selectCategory('${c.id}')">
+          <span class="material-symbols-outlined">${c.icon}</span>
+          <span class="nav-label">${c.label}</span>
+          ${unread?`<span class="nav-count">${unread}</span>`:''}
+        </div>`;
+      }).join('') + `<div class="nav-item" onclick="toggleDrawerLess()"><span class="material-symbols-outlined">${drawerLessOpen?'expand_less':'expand_more'}</span><span class="nav-label">${drawerLessOpen?'Moins':'Plus'}</span></div>` + (drawerLessOpen ? `
+        ${folderNavItem(snoozed, 'En attente', 'schedule')}
+        <div class="nav-item" onclick="filterStarred()"><span class="material-symbols-outlined">label_important</span><span class="nav-label">Important</span>${starredCount?`<span class="nav-count">${starredCount}</span>`:''}</div>
+        ${folderNavItem(scheduled, 'Planifié', 'send_and_archive')}
+        <div class="nav-item" onclick="showAllMessages()"><span class="material-symbols-outlined">mail</span><span class="nav-label">Tous les messages</span>${totalUnread?`<span class="nav-count">${totalUnread}</span>`:''}</div>
+        <div class="nav-item" onclick="selectCategory('promotions')"><span class="material-symbols-outlined">unsubscribe</span><span class="nav-label">Gérer les abonnements</span></div>` : '');
+
+      // Libellés (dossiers supplémentaires comme libellés colorés)
+      const lc=document.getElementById('drawer-labels');
+      const extraFolders = folders.filter(f => !Object.keys(FOLDER_META).includes(folderKey(f.name)) && folderKey(f.name)!=='INBOX' && !['SNOOZED','WAITING','SCHEDULED'].includes(folderKey(f.name)));
+      const labelColors=['#e23b3b','#1a7f37','#1a73e8','#a259ff','#f59e0b','#0a66c2','#e11d48','#0d9488'];
+      let lhtml = extraFolders.map((f,i)=>`<div class="nav-item" onclick="onFolderChange('${escapeAttr(f.name)}')"><span class="nav-label-dot" style="background:${labelColors[i%labelColors.length]}"></span><span class="nav-label">${escapeHtml(f.name)}</span></div>`).join('');
+      lhtml += `<div class="nav-item" onclick="showToast('Les libellés affichés sont les dossiers réels du serveur')"><span class="material-symbols-outlined">settings</span><span class="nav-label">Gérer les libellés</span></div>`;
+      lhtml += `<div class="nav-item" onclick="createLabel()"><span class="material-symbols-outlined">add</span><span class="nav-label">Créer un libellé</span></div>`;
+      lc.innerHTML = lhtml;
+
+      const foot=document.getElementById('drawer-foot');
+      const acc = accounts.find(a=>a.id===currentAccount);
+      if(foot && acc) foot.textContent = `${acc.email} · ${accounts.length} compte(s)`;
+    }
+    function toggleDrawerLess(){ drawerLessOpen=!drawerLessOpen; renderDrawer(); }
+    async function createLabel(){
+      const name=prompt('Nom du nouveau libellé');
+      if(!name || !name.trim()) return;
+      try{
+        await api(`/api/accounts/${encodeURIComponent(currentAccount)}/folders`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name.trim()})});
+        await loadFolders(currentAccount); showToast(`Libellé « ${name.trim()} » créé`);
+      }catch(e){ showToast('Création impossible : '+e.message); }
+    }
+    let currentSpecial = ''; // 'starred' | '' 
+    function selectCategory(cat){ currentCategory=cat; currentSpecial=''; currentFolder='INBOX'; toggleDrawer(false); if(currentActiveView!=='list'&&currentActiveView!=='zero'){currentActiveView='list';} renderInboxList(); updateUIState(); }
+    function filterStarred(){ currentSpecial='starred'; toggleDrawer(false); renderStarredList(); }
+    function showAllMessages(){ currentSpecial='all'; toggleDrawer(false); renderAllList(); }
+    function renderStarredList(){
+      const container=document.getElementById('messages-container');
+      const starred=emails.filter(e=>e.starred);
+      document.getElementById('list-count').innerText=starred.length;
+      container.innerHTML='';
+      updateCategoryTabs();
+      if(!starred.length){ container.innerHTML='<div class="p-12 text-center text-gray-500 text-sm">Aucun message suivi.</div>'; return; }
+      starred.forEach((e,i)=>container.appendChild(buildRow(e, i===starred.length-1)));
+      currentActiveView='list'; updateUIState();
+    }
+    function renderAllList(){
+      const container=document.getElementById('messages-container');
+      document.getElementById('list-count').innerText=emails.length;
+      container.innerHTML='';
+      updateCategoryTabs();
+      if(!emails.length){ container.innerHTML='<div class="p-12 text-center text-gray-500 text-sm">Aucun message.</div>'; return; }
+      emails.forEach((e,i)=>container.appendChild(buildRow(e, i===emails.length-1)));
+      currentActiveView='list'; updateUIState();
+    }
+    function buildRow(email, last){
+      const borderClass=(currentTheme!=='image'&&last)?'border-transparent':'border-b border-gray-100';
+      const item=document.createElement('div');
+      item.className=`flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50/80 transition-colors select-none ${borderClass} ${email.unread?'bg-white font-semibold':'bg-gray-50/30 text-gray-700'}`;
+      item.onclick=()=>openConversation(email.id);
+      item.innerHTML=`<div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
+          <span class="material-symbols-outlined hover:text-[#f2a600] shrink-0" onclick="toggleStarItem(event, '${email.id}')">${email.starred?'star':'star_border'}</span>
+          <div class="w-48 truncate shrink-0 text-sm ${email.unread?'text-gray-900 font-bold':'text-gray-800'}">${escapeHtml(email.sender)}</div>
+          <div class="truncate text-sm flex items-center gap-2 min-w-0">
+            <span class="${email.unread?'text-gray-900 font-bold':'text-gray-800'} truncate">${escapeHtml(email.subject)}</span>
+            <span class="text-gray-400 text-xs font-normal opacity-80 truncate hidden lg:inline">- ${escapeHtml(email.snippet||'').slice(0,60)}</span>
+          </div>
+        </div>
+        <div class="text-xs text-gray-400 shrink-0 font-normal flex items-center gap-2">${email.hasAttachments?'<span class="material-symbols-outlined" style="font-size:16px">attach_file</span>':''}${email.date||''}</div>`;
+      return item;
+    }
+
+
+    // ====================== Messages ======================
+    async function loadMessages(alertFlag) {
+      if (!currentAccount) { await loadAccounts(); if (currentAccount) await loadFolders(currentAccount); }
+      if (!currentAccount) { emails=[]; currentActiveView='zero'; updateUIState(); return; }
+      try {
+        const qs = new URLSearchParams({ account: currentAccount, folder: currentFolder, page: 1, page_size: 60 });
+        if (searchText.trim()) qs.set('q', searchText.trim());
+        const data = await api('/api/messages?' + qs.toString());
+        emails = (data.messages || []).map(mapMessage);
+        loadError = '';
+        currentSelectedId = null;
+        currentActiveView = emails.length ? 'list' : 'zero';
+        updateUIState();
+        if (alertFlag) showToast(`${emails.length} message(s) — ${currentFolder}`);
+        buildNewsletterCarousel();
+      } catch (e) {
+        loadError = e.message; emails = []; currentActiveView = 'zero'; updateUIState();
+        showToast('Erreur chargement : ' + e.message);
+      }
+    }
+
+    async function fetchDetail(email) {
+      if (email._detail) return email;
+      try {
+        const d = await api(`/api/messages/${email.account}/${email.uid}?folder=${encodeURIComponent(currentFolder)}`);
+        email.html = d.html || null;
+        email.text = d.text || '';
+        email.attachments = (d.attachments || []).map(a => ({
+          name: a.filename || 'fichier', size: humanSize(a.size), type: guessType(a),
+          index: a.index, url: `/api/messages/${email.account}/${email.uid}/attachment/${a.index}?folder=${encodeURIComponent(currentFolder)}`
+        }));
+        email.longDate = fmtLong(d.date);
+        email._detail = true;
+      } catch (e) { email.text = email.snippet; email._detail = true; }
+      return email;
+    }
+    function humanSize(n) { if (!n) return ''; if (n < 1024) return n + ' o'; if (n < 1048576) return (n/1024).toFixed(1) + ' Ko'; return (n/1048576).toFixed(1) + ' Mo'; }
+    const ATT_META = {
+      pdf:{bg:'#e23b3b',label:'PDF'}, sheet:{bg:'#1a7f37',label:'XLS'}, doc:{bg:'#2b7cd3',label:'DOC'},
+      image:{bg:'#0a66c2',label:'IMG'}, zip:{bg:'#8a6d3b',label:'ZIP'}, text:{bg:'#5f6368',label:'TXT'},
+    };
+    function guessType(a) {
+      const ct = (a.content_type || '').toLowerCase(), fn = (a.filename || '').toLowerCase();
+      if (ct.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/.test(fn)) return 'image';
+      if (ct.includes('pdf') || fn.endsWith('.pdf')) return 'pdf';
+      if (ct.includes('sheet') || ct.includes('excel') || /\.(xlsx?|csv|numbers)$/.test(fn)) return 'sheet';
+      if (ct.includes('word') || /\.(docx?|odt)$/.test(fn)) return 'doc';
+      if (ct.includes('zip') || /\.(zip|rar|7z|gz|tar)$/.test(fn)) return 'zip';
+      if (ct.startsWith('text/') || /\.(txt|md|json|log)$/.test(fn)) return 'text';
+      return 'text';
+    }
+
+    // ====================== Helpers UI ======================
+    function escapeHtml(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+    function escapeAttr(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
+    function avatarBg(name){
+      const colors = ['bg-indigo-500','bg-purple-500','bg-pink-500','bg-emerald-600','bg-blue-600','bg-orange-500','bg-teal-600','bg-gray-700','bg-blue-700','bg-rose-500'];
+      let h=0; for(const c of (name||'?')) h=(h*31+c.charCodeAt(0))>>>0;
+      return colors[h % colors.length];
+    }
+    function messageSnippet(e){ return e.snippet || e.text || ''; }
+    function messageProse(e){
+      if (e.text) return e.text.split(/\n{2,}/).map(p => `<p>${escapeHtml(p).replace(/\n/g,'<br>')}</p>`).join('');
+      return `<p>${escapeHtml(e.snippet||'')}</p>`;
+    }
+    function attachmentsHtml(e){
+      if(!e.attachments || !e.attachments.length) return '';
+      const chips = e.attachments.map(a => {
+        const m = ATT_META[a.type] || {bg:'#5f6368',label:'FILE'};
+        return `<a class="att-chip" href="${a.url}" target="_blank" rel="noopener" title="Télécharger ${escapeHtml(a.name)}">
+          <div class="att-icon" style="background:${m.bg}">${m.label}</div>
+          <div class="att-meta"><div class="att-name">${escapeHtml(a.name)}</div><div class="att-size">${a.size||''}</div></div>
+          <span class="material-symbols-outlined att-dl">download</span>
+        </a>`;
+      }).join('');
+      return `<div class="mt-5"><div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">${e.attachments.length} pièce${e.attachments.length>1?'s':''} jointe${e.attachments.length>1?'s':''}</div><div class="flex flex-wrap gap-2">${chips}</div></div>`;
+    }
+    function htmlMailBlock(e){
+      if(!e.html) return '';
+      const fid = 'htmlframe-' + e.uid + '-' + Math.random().toString(36).slice(2,7);
+      // réécrire les images inline cid: → endpoint serveur
+      let doc = e.html.replace(/src=["']cid:([^"']+)["']/gi, (m, cid) =>
+        `src="/api/messages/${e.account}/${e.uid}/cid/${cid}?folder=${encodeURIComponent(currentFolder)}"`);
+      return `<div class="mt-5">
+        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:14px">code</span>Email HTML · rendu isolé</div>
+        <iframe id="${fid}" class="html-mail-frame" sandbox="allow-same-origin allow-popups" srcdoc="${escapeAttr(doc)}" onload="resizeHtmlFrame('${fid}')"></iframe>
+      </div>`;
+    }
+    function resizeHtmlFrame(id){
+      const f = document.getElementById(id); if(!f) return;
+      try {
+        const retry = () => { const d=f.contentDocument; if(!d||!d.body) return false; const h=Math.max(d.body.scrollHeight,d.documentElement.scrollHeight); if(h){f.style.height=(h+4)+'px'; return true;} return false; };
+        if(!retry()) setTimeout(retry, 200);
+      } catch(e) {}
+    }
+
+    // ====================== Threading (côté client sur la page chargée) ======================
+    function getFilteredEmails() {
+      if (!searchText.trim()) return emails;
+      const q = searchText.toLowerCase();
+      return emails.filter(e => (e.sender||'').toLowerCase().includes(q) || (e.subject||'').toLowerCase().includes(q));
+    }
+    function getCategoryEmails(list) { const src = list || getFilteredEmails(); return src.filter(e => (e.category||'primary') === currentCategory); }
+    function setCategory(cat){ currentCategory = cat; renderInboxList(); }
+    function updateCategoryTabs(){
+      const filtered = getFilteredEmails();
+      CATEGORIES.forEach(c => {
+        const ce = filtered.filter(e => (e.category||'primary') === c.id);
+        const unread = ce.filter(e => e.unread).length;
+        const tab = document.querySelector('.cat-tab[data-cat="'+c.id+'"]');
+        if(!tab) return;
+        tab.classList.toggle('is-active', c.id === currentCategory);
+        const el = tab.querySelector('.cat-count'); if(el) el.textContent = unread>0?unread:'';
+      });
+    }
+    function getThreads(list){
+      const src = list || getCategoryEmails();
+      const map = new Map();
+      src.forEach(e => { const k = e.threadId || ('s-'+e.id); if(!map.has(k)) map.set(k,[]); map.get(k).push(e); });
+      const out = [];
+      map.forEach(msgs => { msgs.sort((a,b)=> (a.rawDate||'').localeCompare(b.rawDate||'')); out.push({id:msgs[0].threadId, messages:msgs}); });
+      out.sort((a,b)=>{ const la=a.messages[a.messages.length-1], lb=b.messages[b.messages.length-1]; return (lb.rawDate||'').localeCompare(la.rawDate||''); });
+      return out;
+    }
+
+    // ====================== Thème / fond / popover (identique v22) ======================
+    function setTheme(theme){
+      currentTheme = theme;
+      const body = document.body;
+      body.classList.remove('theme-image','theme-white','theme-dark'); body.classList.add('theme-'+theme);
+      document.getElementById('theme-indicator').innerText = theme==='image'?'Image':(theme==='white'?'Clair':'Sombre');
+      const convCard = document.getElementById('conversation-card');
+      const listHeaderBar = document.getElementById('list-header-bar');
+      if(theme==='image'){ convCard.classList.add('border','border-gray-100','shadow-xl'); convCard.classList.remove('shadow-none'); }
+      else { convCard.classList.remove('border','border-gray-100','shadow-xl'); convCard.classList.add('shadow-none'); }
+      listHeaderBar.classList.remove('border-transparent'); listHeaderBar.classList.add('border-b','border-gray-200/80');
+      body.style.setProperty('--bg-image', theme==='image' ? `url('${currentBgUrl}')` : 'none');
+      document.getElementById('bg-gallery-wrap').style.display = (theme==='image')?'':'none';
+      updateThemeSegmented(); updateUIState();
+    }
+    function setBackground(url){ currentBgUrl = url; if(currentTheme==='image') document.body.style.setProperty('--bg-image', `url('${url}')`); renderBgGallery(); }
+    function renderBgGallery(){
+      const g = document.getElementById('bg-gallery'); g.innerHTML = '';
+      backgrounds.forEach(bg => { const t=document.createElement('div'); t.className='bg-thumb'+(bg.url===currentBgUrl?' is-active':''); t.style.backgroundImage=`url('${bg.url}')`; t.title=bg.name; t.onclick=()=>setBackground(bg.url); g.appendChild(t); });
+    }
+    function updateThemeSegmented(){ document.querySelectorAll('.theme-opt').forEach(b=>b.classList.toggle('is-active', b.dataset.theme===currentTheme)); }
+    function toggleSettingsPopover(e){ if(e) e.stopPropagation(); document.getElementById('settings-popover').classList.toggle('hidden'); }
+    document.addEventListener('click', (e) => {
+      const pop = document.getElementById('settings-popover');
+      if(pop && !pop.classList.contains('hidden') && !pop.contains(e.target) && !e.target.closest('[onclick*="toggleSettingsPopover"]')) pop.classList.add('hidden');
+    });
+    function toggleTheme(){ const o=['image','white','dark']; setTheme(o[(o.indexOf(currentTheme)+1)%o.length]); }
+
+    function toggleInboxState(){ loadMessages(true); }
+
+    function handleSearch(val){
+      searchText = val;
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => loadMessages(), 350);
+    }
+    function handleBack(){
+      if(currentActiveView==='conversation'){ if(currentNewsletterFilter){ currentSelectedId=null; currentActiveView='newsletter'; } else { currentSelectedId=null; currentActiveView='list'; } }
+      else if(currentActiveView==='newsletter'){ currentNewsletterFilter=''; currentActiveView='list'; }
+      updateUIState();
+    }
+    function setHeaderState(state){
+      const header=document.getElementById('main-header');
+      const sb=document.getElementById('header-search-bar');
+      const ab=document.getElementById('header-actions');
+      const na=document.getElementById('header-nav-arrows');
+      const cfg=THEME_CFG[currentTheme]; const base="h-16 flex items-center justify-between px-6 shrink-0 select-none z-30 transition-all duration-300";
+      const showSearch = (state==='list'||state==='zero');
+      const showActions = (state==='conversation');
+      const showNav = (state==='conversation');
+      if(state==='zero' && cfg.zeroHeaderTransparent){
+        header.className=base+" header-style-dark";
+        sb.className="w-full glass-search rounded-lg px-4 py-2 flex items-center gap-3 transition-all duration-300 absolute inset-y-0 flex items-center";
+      } else {
+        header.className=`${base} ${cfg.headerSurface} ${cfg.headerIcons}`;
+        sb.className=`w-full ${cfg.searchStyle} rounded-lg px-4 py-2 flex items-center gap-3 transition-all duration-300 absolute inset-y-0 flex items-center`;
+      }
+      sb.classList.toggle('opacity-0', !showSearch); sb.classList.toggle('pointer-events-none', !showSearch);
+      ab.classList.toggle('opacity-0', !showActions); ab.classList.toggle('pointer-events-none', !showActions);
+      na.classList.toggle('opacity-0', !showNav); na.classList.toggle('pointer-events-none', !showNav);
+    }
+    function updateUIState(){
+      const isZero = emails.length===0;
+      const zero=document.getElementById('inbox-zero-view'), list=document.getElementById('inbox-list-view'),
+            conv=document.getElementById('conversation-view'), nl=document.getElementById('newsletter-detail-view');
+      const imageBadge=document.getElementById('image-theme-badge-container'), whiteState=document.getElementById('white-theme-empty-state');
+      const show=(el,b)=>{ el.classList.toggle('opacity-0',!b); el.classList.toggle('pointer-events-none',!b); };
+      show(zero, currentActiveView==='zero'); show(list, currentActiveView==='list');
+      show(conv, currentActiveView==='conversation'); show(nl, currentActiveView==='newsletter');
+      if(currentActiveView==='zero'){
+        const title=document.getElementById('empty-title'), description=document.getElementById('empty-description');
+        if(title) title.textContent=loadError?'Connexion au compte impossible':'Votre boîte est propre';
+        if(description) description.textContent=loadError?loadError:'Aucun nouveau message pour le moment.';
+        if(currentTheme==='image'){ imageBadge.classList.remove('hidden'); whiteState.classList.add('hidden'); }
+        else { imageBadge.classList.add('hidden'); whiteState.classList.remove('hidden'); }
+        setHeaderState('zero');
+      } else if(currentActiveView==='list'){ setHeaderState('list'); renderInboxList(); }
+      else if(currentActiveView==='conversation'){ setHeaderState('conversation'); }
+      else if(currentActiveView==='newsletter'){ setHeaderState('newsletter'); renderNewsletterDetail(); }
+    }
+
+    // ====================== Liste (threads + catégories) ======================
+    function renderInboxList(){
+      const container=document.getElementById('messages-container');
+      const countLabel=document.getElementById('list-count');
+      const threads=getThreads();
+      countLabel.innerText=threads.length;
+      container.innerHTML='';
+      updateCategoryTabs();
+      if(!threads.length){ const cl=(CATEGORIES.find(c=>c.id===currentCategory)||{}).label||''; container.innerHTML=`<div class="p-12 text-center text-gray-500 text-sm">Aucun message dans « ${cl} ».</div>`; return; }
+      threads.forEach((thread, index) => {
+        const msgs=thread.messages, latest=msgs[msgs.length-1];
+        const hasUnread=msgs.some(m=>m.unread), starred=msgs.some(m=>m.starred), isMulti=msgs.length>1;
+        const participants=[...new Set(msgs.map(m=>m.sender))].length;
+        const item=document.createElement('div');
+        const borderClass = (currentTheme!=='image' && index===threads.length-1) ? 'border-transparent' : 'border-b border-gray-100';
+        item.className=`flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50/80 transition-colors select-none ${borderClass} ${hasUnread?'bg-white font-semibold':'bg-gray-50/30 text-gray-700'}`;
+        item.onclick=()=>openConversation(latest.id);
+        const senderLabel = isMulti&&participants>1 ? `${latest.sender} (+${participants-1})` : latest.sender;
+        item.innerHTML=`
+          <div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
+            <span class="material-symbols-outlined hover:text-[#f2a600] shrink-0" onclick="toggleStarItem(event, '${latest.id}')">${starred?'star':'star_border'}</span>
+            <div class="w-48 truncate shrink-0 text-sm ${hasUnread?'text-gray-900 font-bold':'text-gray-800'}">${escapeHtml(senderLabel)}</div>
+            <div class="truncate text-sm flex items-center gap-2 min-w-0">
+              <span class="${hasUnread?'text-gray-900 font-bold':'text-gray-800'} truncate">${escapeHtml(latest.subject)}</span>
+              ${isMulti?`<span class="thread-badge shrink-0">${msgs.length}</span>`:''}
+              <span class="text-gray-400 text-xs font-normal opacity-80 truncate hidden lg:inline">- ${escapeHtml(latest.snippet||'').slice(0,60)}</span>
+            </div>
+          </div>
+          <div class="text-xs text-gray-400 shrink-0 font-normal flex items-center gap-2">
+            ${latest.hasAttachments?'<span class="material-symbols-outlined" style="font-size:16px">attach_file</span>':''}
+            ${latest.date}
+          </div>`;
+        container.appendChild(item);
+      });
+    }
+
+    // ====================== Newsletter (expéditeurs récurrents en Promotions) ======================
+    function buildNewsletterCarousel(){
+      const c = document.getElementById('nl-carousel'); if(!c) return;
+      const promo = emails.filter(e => (e.category||'primary')==='promotions');
+      const byDomain = {};
+      promo.forEach(e => { const d = domainOf(e.email) || e.sender; if(!byDomain[d]) byDomain[d]={sender:e.sender, email:e.email, items:[], icon:'article'}; byDomain[d].items.push(e); });
+      const top = Object.entries(byDomain).sort((a,b)=>b[1].items.length-a[1].items.length).slice(0,6);
+      if(!top.length){ c.innerHTML='<div class="text-xs text-gray-400 italic px-1 py-6 select-none">Aucune newsletter dans ce dossier.</div>'; return; }
+      const palettes = [
+        ['from-orange-950 via-orange-900/50 to-orange-800','text-orange-200','text-orange-200/70'],
+        ['from-slate-900 via-slate-800/50 to-slate-600','text-slate-200','text-slate-300/70'],
+        ['from-teal-950 via-teal-900/50 to-teal-700','text-teal-200','text-teal-300/80'],
+        ['from-blue-950 via-blue-900/50 to-blue-700','text-blue-200','text-blue-300/80'],
+        ['from-rose-950 via-rose-900/50 to-rose-700','text-rose-200','text-rose-300/80'],
+        ['from-emerald-950 via-emerald-900/50 to-emerald-700','text-emerald-200','text-emerald-300/80'],
+      ];
+      c.innerHTML = top.map(([dom, info], i) => {
+        const [grad, sub, sub2] = palettes[i % palettes.length];
+        const unread = info.items.filter(e=>e.unread).length;
+        const cnt = unread>0 ? `${unread} non lu${unread>1?'s':''}` : `${info.items.length} message${info.items.length>1?'s':''}`;
+        return `<div onclick="openNewsletter('${escapeAttr(dom)}')" class="carousel-item w-44 h-52 rounded-xl overflow-hidden cursor-pointer relative group shadow-md transition-transform hover:-translate-y-1 duration-200">
+          <div class="absolute inset-0 bg-gradient-to-t ${grad} flex flex-col justify-between p-4">
+            <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center border border-white/20 select-none"><span class="material-symbols-outlined !text-white text-lg">${info.icon}</span></div>
+            <div class="flex flex-col">
+              <span class="text-[10px] ${sub} uppercase font-semibold tracking-wider truncate">${escapeHtml(nameOf(info.sender))}</span>
+              <h4 class="text-xs font-bold text-white leading-snug mt-1 truncate group-hover:underline">${escapeHtml(info.sender)}</h4>
+              <span class="text-[9px] ${sub2} mt-1">${cnt}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function openNewsletter(domainKey){
+      currentNewsletterFilter = domainKey;
+      currentActiveView = 'newsletter';
+      updateUIState();
+    }
+    function toggleAllNewsletters(){
+      const c=document.querySelector('#inbox-list-view .carousel-container'); const btn=document.getElementById('nl-toggle-btn');
+      if(!c||!btn) return; c.classList.toggle('nl-expanded');
+      const ex=c.classList.contains('nl-expanded');
+      btn.innerHTML = ex ? '<span class="material-symbols-outlined" style="font-size:14px">unfold_less</span> Réduire' : '<span class="material-symbols-outlined" style="font-size:14px">grid_view</span> Toutes les newsletters';
+    }
+    function renderNewsletterDetail(){
+      const list = emails.filter(e => domainOf(e.email) === currentNewsletterFilter || (domainOf(e.email)==='' && e.sender===currentNewsletterFilter));
+      const hero=document.getElementById('nl-hero-bg');
+      const sample = list[0];
+      const title = sample ? sample.sender : currentNewsletterFilter;
+      const email = sample ? sample.email : '';
+      const total = list.length, unread = list.filter(e=>e.unread).length;
+      const heroUrl = `https://images.unsplash.com/photo-${(['1526374965328-7f61d4dc18c5','1610945415295-d9bbf067e59c','1516035069371-29a1b244cc32','1559526324-4b87b5e36e44'][Math.abs(hashCode(title))%4])}?auto=format&fit=crop&w=1600&q=80`;
+      const view=document.getElementById('newsletter-detail-view'); view.scrollTop=0;
+      hero.style.backgroundImage=`url('${heroUrl}')`; hero.style.animation='none'; void hero.offsetWidth; hero.style.animation='';
+      view.querySelectorAll('.nl-fade-in').forEach(el=>{ el.style.animation='none'; void el.offsetWidth; el.style.animation=''; });
+      document.getElementById('nl-hero-logo-icon').textContent='article';
+      document.getElementById('nl-hero-title').textContent=title;
+      document.getElementById('nl-hero-desc').textContent = `${unread} non lu${unread>1?'s':''} sur ${total} édition${total>1?'s':''} ${email?('· '+email):''}`;
+      document.getElementById('nl-hero-email').textContent=email||'';
+      document.getElementById('nl-hero-editions-count').textContent = `${total} édition${total>1?'s':''}`;
+      document.getElementById('nl-editions-count-2').textContent = `${total} e-mail${total>1?'s':''}`;
+      const grid=document.getElementById('nl-editions-grid'); grid.innerHTML='';
+      list.slice().sort((a,b)=>(b.rawDate||'').localeCompare(a.rawDate||'')).forEach((e,i)=>{
+        const card=document.createElement('div'); card.className='nl-edition-card'; card.onclick=()=>openConversation(e.id);
+        card.innerHTML=`
+          <div class="nl-edition-num">${String(list.length-i).padStart(2,'0')}</div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-3 mb-1">
+              <h3 class="text-sm font-semibold text-white truncate ${e.unread?'':'text-white/75'}">${escapeHtml(e.subject)}</h3>
+              <div class="flex items-center gap-2 shrink-0 text-xs text-white/45">${e.starred?'<span class="material-symbols-outlined !text-yellow-400" style="font-size:16px">star</span>':''}${e.unread?'<span class="w-2 h-2 rounded-full bg-blue-500"></span>':''}<span>${e.date||''}</span></div>
+            </div>
+            <p class="text-xs text-white/55 truncate">${escapeHtml(e.snippet||'')}</p>
+          </div>
+          <span class="material-symbols-outlined !text-white/80 hover:!text-white self-center" style="font-size:28px">play_circle</span>`;
+        grid.appendChild(card);
+      });
+    }
+    function hashCode(s){let h=0;for(let i=0;i<(s||'').length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h;}
+    function readLatestNewsletter(){ const list=emails.filter(e=>domainOf(e.email)===currentNewsletterFilter).sort((a,b)=>(b.rawDate||'').localeCompare(a.rawDate||'')); if(list[0]) openConversation(list[0].id); }
+    function markNewsletterRead(){ let n=0; emails.forEach(e=>{ if(domainOf(e.email)===currentNewsletterFilter && e.unread){ e.unread=false; n++; apiCallFlag(e,true,null); } }); renderNewsletterDetail(); showToast(n?(`${n} marqué(s) comme lu(s)`):'Rien à marquer'); }
+
+    // ====================== Conversation (thread repliable + détail API) ======================
+    function toggleThreadMsg(headEl){ const m=headEl.closest('.thread-msg'); if(m) m.classList.toggle('collapsed'); }
+    function toggleAllThreadMsgs(){ const ms=document.querySelectorAll('#thread-chain .thread-msg'); if(!ms.length) return; const any=[...ms].some(m=>m.classList.contains('collapsed')); ms.forEach(m=>any?m.classList.remove('collapsed'):m.classList.add('collapsed')); }
+
+    async function openConversation(id){
+      currentSelectedId=id;
+      const all=getThreads(emails);
+      let thread=all.find(t=>t.messages.some(m=>m.id===id));
+      if(!thread){ const m=emails.find(e=>e.id===id); thread={id:'s-'+id, messages:m?[m]:[]}; }
+      const msgs=thread.messages;
+      const subject=(msgs[0].subject||'').replace(/^(re|fwd|fw|sv|tr)\s*:\s*/i,'');
+      const threadEl=document.getElementById('thread-content');
+      threadEl.innerHTML=`
+        <div class="flex items-center justify-between mb-6 select-none gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <h1 class="text-xl font-normal text-[#202124] tracking-tight truncate">${escapeHtml(subject)}</h1>
+            ${msgs.length>1?`<span class="thread-badge shrink-0" title="${msgs.length} messages">${msgs.length}</span>`:''}
+            <span class="badge-inbox flex items-center gap-1 cursor-pointer shrink-0">${escapeHtml(currentFolder)} <span class="text-[10px] font-bold">×</span></span>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <div class="icon-btn-container w-8 h-8" title="Mode immersif" onclick="openImmersive('${id}')" style="cursor:pointer"><span class="material-symbols-outlined">menu_book</span></div>
+            <div class="icon-btn-container w-8 h-8" title="Tout déplier/replier" onclick="toggleAllThreadMsgs()" style="cursor:pointer"><span class="material-symbols-outlined">unfold_more</span></div>
+            <div class="icon-btn-container w-8 h-8" title="Supprimer" onclick="deleteCurrent()" style="cursor:pointer"><span class="material-symbols-outlined">delete</span></div>
+          </div>
+        </div>
+        <div id="thread-chain"><div class="text-sm text-gray-400 py-8 text-center">Chargement…</div></div>`;
+      currentActiveView='conversation'; updateUIState();
+
+      // Marquer comme lu + charger les détails
+      const chain=document.getElementById('thread-chain'); chain.innerHTML='';
+      const detailed = await Promise.all(msgs.map(m => fetchDetail(m)));
+      detailed.forEach(e => { if(e.unread){ e.unread=false; apiCallFlag(e,true,null); } });
+      detailed.forEach((m,i)=>{
+        const expanded = (i===detailed.length-1);
+        const div=document.createElement('div'); div.className='thread-msg'+(expanded?'':' collapsed');
+        div.innerHTML=`
+          <div class="thread-msg-head" onclick="toggleThreadMsg(this)">
+            <span class="material-symbols-outlined thread-msg-chevron">expand_more</span>
+            <div class="w-8 h-8 rounded-full ${avatarBg(m.sender)} flex items-center justify-center font-bold text-white text-xs shrink-0">${escapeHtml((m.sender||'?')[0])}</div>
+            <div class="flex flex-col min-w-0 flex-1">
+              <span class="thread-msg-subject">${escapeHtml(m.sender)} <span class="font-normal text-gray-400">· ${escapeHtml(m.email)}</span></span>
+              <span class="thread-msg-preview truncate">${escapeHtml((m.snippet||'').slice(0,90))}</span>
+            </div>
+            <div class="text-xs text-gray-400 shrink-0 pl-3 whitespace-nowrap">${escapeHtml(m.longDate||((m.date||'')+' · '+(m.time||'')))}</div>
+          </div>
+          <div class="thread-msg-body">
+            <div class="text-sm leading-relaxed">${m.html?'':messageProse(m)}</div>
+            ${htmlMailBlock(m)}
+            ${attachmentsHtml(m)}
+          </div>`;
+        chain.appendChild(div);
+      });
+      buildNewsletterCarousel();
+    }
+
+    // ====================== Drapeaux / suppression (API) ======================
+    function apiCallFlag(email, seen, flagged){
+      const body={}; if(seen!==null) body.seen=seen; if(flagged!==null) body.flagged=flagged;
+      return api(`/api/messages/${email.account}/${email.uid}?folder=${encodeURIComponent(currentFolder)}`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}).catch(()=>{});
+    }
+    function toggleStarItem(event, id){
+      event.stopPropagation();
+      const m=emails.find(e=>e.id===id); if(!m) return;
+      m.starred=!m.starred; apiCallFlag(m,null,m.starred);
+      renderInboxList();
+    }
+    function navigateMail(direction){
+      let threads=getThreads();
+      const idx=threads.findIndex(t=>t.messages.some(m=>m.id===currentSelectedId));
+      const n=idx+direction;
+      if(n>=0 && n<threads.length){ const latest=threads[n].messages[threads[n].messages.length-1]; openConversation(latest.id); }
+      else showToast("Pas d'autre message dans cette direction");
+    }
+    function deleteCurrent(){
+      const m=emails.find(e=>e.id===currentSelectedId); if(!m) return;
+      api(`/api/messages/${m.account}/${m.uid}?folder=${encodeURIComponent(currentFolder)}`, {method:'DELETE'}).then(()=>{
+        emails=emails.filter(e=>e.id!==currentSelectedId); handleBack(); showToast('Message supprimé'); buildNewsletterCarousel();
+      }).catch(e=>showToast('Suppression impossible : '+e.message));
+    }
+    function archiveCurrent(){ showToast('Archive non disponible via IMAP standard'); }
+    function toggleUnreadCurrent(){ const m=emails.find(e=>e.id===currentSelectedId); if(m){ m.unread=true; apiCallFlag(m,false,null); closeConversation(); showToast('Marqué comme non lu'); } }
+    function closeConversation(){ handleBack(); }
+    function replyCurrent(){ const m=emails.find(e=>e.id===currentSelectedId); openCompose(m?{to:m.email, subject:'Re: '+(m.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,'')}:null); }
+    function labelCurrent(){ showToast('Libellés non gérés en IMAP standard'); }
+
+    // ====================== Immersive reader ======================
+    let immersiveOpen=false, immersiveList=[], immersiveIndex=0;
+    function getImmersiveList(){ if(currentNewsletterFilter) return emails.filter(e=>domainOf(e.email)===currentNewsletterFilter); return getCategoryEmails(); }
+    async function openImmersive(id){
+      immersiveList=getImmersiveList(); immersiveIndex=Math.max(0,immersiveList.findIndex(e=>e.id===id));
+      if(immersiveIndex<0&&immersiveList.length) immersiveIndex=0;
+      document.getElementById('immersive-reader').classList.remove('opacity-0','pointer-events-none'); immersiveOpen=true;
+      await renderImmersiveSlides(); document.getElementById('immersive-reply').value='';
+    }
+    function closeImmersive(){ document.getElementById('immersive-reader').classList.add('opacity-0','pointer-events-none'); immersiveOpen=false; }
+    async function immersiveNext(dir){ const n=immersiveIndex+dir; if(n<0||n>=immersiveList.length){ showToast(dir>0?'Dernier message':'Premier message'); return; } immersiveIndex=n; await renderImmersiveSlides(); }
+    async function renderImmersiveSlides(){
+      const vp=document.getElementById('immersive-viewport'); const e=immersiveList[immersiveIndex]; if(!e){ vp.innerHTML=''; updateImmersiveChrome(); return; }
+      await fetchDetail(e); if(e.unread){ e.unread=false; apiCallFlag(e,true,null); }
+      const slide=document.createElement('div'); slide.className='im-slide active';
+      slide.innerHTML=`<div class="h-full overflow-y-auto flex justify-center"><div class="w-full max-w-2xl px-8 py-10">
+        <h1 class="immersive-serif im-title">${escapeHtml(e.subject)}</h1>
+        <div class="flex items-baseline justify-between gap-4 border-b immersive-border pb-5 mt-5 mb-9">
+          <div class="flex flex-col gap-0.5 min-w-0"><span class="font-semibold text-sm">${escapeHtml(e.sender)}</span><span class="text-xs immersive-muted truncate">${escapeHtml(e.email)}</span></div>
+          <span class="text-xs immersive-muted whitespace-nowrap">${escapeHtml(e.longDate||(e.date+' · '+e.time))}</span>
+        </div>
+        <article class="immersive-serif im-article im-drop-cap">${e.html?`<div class="text-sm mb-4 text-gray-400">Email HTML — voir la version complète dans la conversation.</div>`:''}${messageProse(e)}</article>
+        ${attachmentsHtml(e)}
+        <div class="h-24"></div></div></div>`;
+      vp.innerHTML=''; vp.appendChild(slide); slide.querySelector('.overflow-y-auto').scrollTop=0; updateImmersiveChrome();
+    }
+    function updateImmersiveChrome(){
+      const total=immersiveList.length, n=immersiveIndex+1;
+      document.getElementById('immersive-counter').textContent=String(n).padStart(2,'0')+' / '+String(total).padStart(2,'0');
+      document.getElementById('immersive-progress').style.width=(total?(n/total*100):0)+'%';
+      const sb=document.getElementById('im-star-btn'), e=immersiveList[immersiveIndex];
+      sb.classList.toggle('immersive-star-on', !!(e&&e.starred));
+    }
+    function immersiveToggleStar(){ const e=immersiveList[immersiveIndex]; if(!e) return; e.starred=!e.starred; apiCallFlag(e,null,e.starred); updateImmersiveChrome(); showToast(e.starred?'Ajouté aux suivis':'Retiré des suivis'); }
+    function immersiveArchive(){ immersiveDelete(); }
+    function immersiveDelete(){ const e=immersiveList[immersiveIndex]; if(!e) return;
+      api(`/api/messages/${e.account}/${e.uid}?folder=${encodeURIComponent(currentFolder)}`,{method:'DELETE'}).then(()=>{
+        emails=emails.filter(x=>x.id!==e.id); immersiveList=getImmersiveList();
+        if(immersiveIndex>=immersiveList.length) immersiveIndex=immersiveList.length-1;
+        if(!immersiveList.length){ closeImmersive(); showToast('Supprimé — liste vide'); return; }
+        renderImmersiveSlides(); showToast('Message supprimé');
+      }).catch(err=>showToast('Suppression impossible : '+err.message));
+    }
+    function immersiveToggleUnread(){ const e=immersiveList[immersiveIndex]; if(!e) return; e.unread=!e.unread; apiCallFlag(e,!e.unread,null); showToast(e.unread?'Marqué non lu':'Marqué lu'); }
+    function immersiveSendReply(){ const i=document.getElementById('immersive-reply'); if(i.value.trim()){ const e=immersiveList[immersiveIndex]; openCompose({to:e?e.email:'', text:i.value}); i.value=''; } }
+
+    // ====================== Compose PLEIN ÉCRAN (envoi réel, zéro distraction) ======================
+    function openCompose(prefill){
+      if(document.getElementById('compose-overlay')) return;
+      const acc = accounts.find(a=>a.id===currentAccount);
+      const overlay=document.createElement('div');
+      overlay.id='compose-overlay';
+      overlay.className='compose-surface fixed inset-0 z-[70] flex flex-col opacity-0 transition-opacity duration-200';
+      overlay.innerHTML=`
+        <div class="flex items-center justify-between px-6 h-14 border-b compose-border shrink-0">
+          <div class="flex items-center gap-3">
+            <button onclick="closeCompose()" class="compose-icon-btn" title="Fermer (Échap)"><span class="material-symbols-outlined">arrow_back</span></button>
+            <span class="text-xs font-semibold uppercase tracking-widest compose-muted">Rédaction — sans distraction</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="closeCompose()" class="text-xs font-medium px-3 py-1.5 rounded-md border compose-border hover:bg-black/5 dark:hover:bg-white/10">Fermer</button>
+            <button id="cmp-send" onclick="sendCompose()" class="compose-send-btn"><span class="material-symbols-outlined !text-inherit" style="font-size:18px">send</span> Envoyer</button>
+          </div>
+        </div>
+        <div class="flex-1 overflow-y-auto">
+          <div class="max-w-3xl mx-auto px-6 py-10">
+            <div class="compose-field">
+              <span class="compose-field-label">De</span>
+              <select id="cmp-account" class="compose-input">
+                ${accounts.map(a=>`<option value="${a.id}" ${a.id===currentAccount?'selected':''}>${escapeHtml(a.name||a.id)} — ${escapeHtml(a.email)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="compose-field">
+              <span class="compose-field-label">À</span>
+              <input id="cmp-to" type="email" placeholder="destinataire@example.com" class="compose-input">
+            </div>
+            <div class="compose-field">
+              <span class="compose-field-label">Cc</span>
+              <input id="cmp-cc" type="text" placeholder="(optionnel)" class="compose-input">
+            </div>
+            <div class="compose-field">
+              <span class="compose-field-label">Objet</span>
+              <input id="cmp-subject" type="text" placeholder="Objet du message" class="compose-input text-lg font-medium">
+            </div>
+            <textarea id="cmp-body" placeholder="Écrivez votre message…" class="compose-editor"></textarea>
+            <div id="cmp-status" class="text-xs compose-muted mt-4 min-h-[16px]"></div>
+            <div class="h-16"></div>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+      requestAnimationFrame(()=>overlay.classList.remove('opacity-0'));
+      // CSS complémentaire injecté à la volée (une fois)
+      if(!document.getElementById('compose-style')){
+        const s=document.createElement('style'); s.id='compose-style';
+        s.textContent=`
+          .compose-surface{background:#ffffff;color:#202124;}
+          body.theme-dark .compose-surface{background:#141414;color:#e8e8e8;}
+          body.theme-image .compose-surface{background:rgba(255,255,255,0.98);backdrop-filter:blur(24px);}
+          .compose-border{border-color:rgba(0,0,0,0.08);}
+          body.theme-dark .compose-border{border-color:rgba(255,255,255,0.08);}
+          .compose-muted{color:#5f6368;}
+          body.theme-dark .compose-muted{color:#9aa0a6;}
+          .compose-icon-btn{width:36px;height:36px;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;color:inherit;cursor:pointer;}
+          .compose-icon-btn:hover{background:rgba(0,0,0,0.06);}
+          body.theme-dark .compose-icon-btn:hover{background:rgba(255,255,255,0.08);}
+          .compose-icon-btn .material-symbols-outlined{font-size:22px;color:inherit;}
+          .compose-send-btn{background:#1a73e8;color:#fff;font-size:13px;font-weight:600;padding:8px 16px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;}
+          .compose-send-btn:hover{background:#1765cc;}
+          .compose-send-btn:disabled{opacity:0.6;cursor:wait;}
+          body.theme-dark .compose-send-btn{background:#8ab4f8;color:#141414;}
+          .compose-field{display:flex;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid rgba(0,0,0,0.06);}
+          body.theme-dark .compose-field{border-color:rgba(255,255,255,0.06);}
+          .compose-field-label{font-size:12px;color:#5f6368;width:44px;flex-shrink:0;text-transform:uppercase;letter-spacing:0.04em;font-weight:600;}
+          body.theme-dark .compose-field-label{color:#9aa0a6;}
+          .compose-input{flex:1;border:none;background:none;outline:none;font-size:14px;color:inherit;padding:4px 0;width:100%;}
+          .compose-editor{width:100%;min-height:50vh;border:none;outline:none;background:none;color:inherit;font-size:16px;line-height:1.8;font-family:inherit;resize:none;margin-top:8px;}
+          .compose-editor::placeholder,.compose-input::placeholder{color:#9aa0a6;}
+        `;
+        document.head.appendChild(s);
+      }
+      if(prefill){ if(prefill.to) document.getElementById('cmp-to').value=prefill.to; if(prefill.subject) document.getElementById('cmp-subject').value=prefill.subject; if(prefill.text) document.getElementById('cmp-body').value=prefill.text; }
+      setTimeout(()=>document.getElementById('cmp-to').focus(),80);
+    }
+    function closeCompose(){ const o=document.getElementById('compose-overlay'); if(!o) return; o.classList.add('opacity-0'); setTimeout(()=>o.remove(),200); }
+    async function sendCompose(){
+      const to=document.getElementById('cmp-to').value.trim();
+      const cc=document.getElementById('cmp-cc').value.trim();
+      const subject=document.getElementById('cmp-subject').value;
+      const text=document.getElementById('cmp-body').value;
+      const acc=document.getElementById('cmp-account').value||currentAccount;
+      const st=document.getElementById('cmp-status');
+      if(!to){ st.textContent='⚠ Destinataire requis'; document.getElementById('cmp-to').focus(); return; }
+      st.textContent='Envoi en cours…'; document.getElementById('cmp-send').disabled=true;
+      try{
+        const r=await api('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({account:acc,to,cc,subject,text})});
+        st.textContent='✓ Envoyé' + (r.sent_folder?` (copié dans ${r.sent_folder})`:'');
+        showToast('Message envoyé');
+        setTimeout(closeCompose, 800);
+        loadMessages();
+      }catch(e){ st.textContent='✗ Erreur : '+e.message; document.getElementById('cmp-send').disabled=false; }
+    }
+
+    // ====================== Toast + clavier ======================
+    function showToast(msg){ const t=document.getElementById('toast'); t.innerText=msg; t.classList.remove('translate-y-20','opacity-0'); setTimeout(()=>t.classList.add('translate-y-20','opacity-0'),2500); }
+
+    document.addEventListener('keydown',(e)=>{
+      if(immersiveOpen){
+        const tag=(e.target.tagName||'').toLowerCase(); if(tag==='input'||tag==='textarea') return;
+        if(e.key==='ArrowRight'||e.key==='j'){ e.preventDefault(); immersiveNext(1); }
+        else if(e.key==='ArrowLeft'||e.key==='k'){ e.preventDefault(); immersiveNext(-1); }
+        else if(e.key==='Escape'){ e.preventDefault(); closeImmersive(); }
+        return;
+      }
+      const tag=(e.target.tagName||'').toLowerCase(); if(tag==='input'||tag==='textarea') return;
+      if(e.metaKey||e.ctrlKey||e.altKey) return;
+      if(e.key==='Escape'){ if(currentActiveView==='conversation'||currentActiveView==='newsletter'){ e.preventDefault(); handleBack(); } }
+      else if(e.key==='c'){ if(currentActiveView==='list'||currentActiveView==='zero'){ e.preventDefault(); openCompose(); } }
+      else if(currentActiveView==='conversation'){
+        if(e.key==='j'){ e.preventDefault(); navigateMail(1); }
+        else if(e.key==='k'){ e.preventDefault(); navigateMail(-1); }
+        else if(e.key==='r'){ e.preventDefault(); replyCurrent(); }
+        else if(e.key==='l'){ e.preventDefault(); labelCurrent(); }
+      }
+    });
+
+    // ====================== Realtime (SSE) ======================
+    function startEvents(){
+      try{
+        _evtSource = new EventSource('/api/events');
+        _evtSource.addEventListener('refresh', () => { if(currentActiveView==='list'||currentActiveView==='zero') loadMessages(); });
+      }catch(e){}
+    }
+
+    // ====================== Boot ======================
+    renderBgGallery();
+    setTheme('white');
+    (async () => {
+      await loadAccounts();
+      if(currentAccount) await loadFolders(currentAccount);
+      await loadMessages();
+      startEvents();
+    })();
+
+  </script>
+</body>
+</html>
