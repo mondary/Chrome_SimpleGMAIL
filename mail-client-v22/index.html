@@ -333,6 +333,7 @@
     .carousel-container {
       display: grid;
       width: 100%;
+      grid-auto-rows: auto;
     }
     .newsletter-recent-card { width: 100%; min-width: 0; }
 
@@ -411,7 +412,7 @@
       background: rgba(255,255,255,0.55);
       backdrop-filter: blur(24px) saturate(180%);
       -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border: 1px solid rgba(255,255,255,0.35);
+      border: none;
       border-radius: 20px;
       box-shadow: 0 10px 40px rgba(0,0,0,0.18), 0 2px 10px rgba(0,0,0,0.08), inset 0 1px 1px rgba(255,255,255,0.4);
       z-index: 35;
@@ -424,7 +425,7 @@
     }
     body.theme-dark .nl-dock {
       background: rgba(40,40,40,0.65);
-      border-color: rgba(255,255,255,0.12);
+      border: none;
       box-shadow: 0 10px 40px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.08);
     }
     .nl-dock-item {
@@ -452,10 +453,10 @@
       font-size: 10px; font-weight: 700;
       display: flex; align-items: center; justify-content: center;
       padding: 0 5px;
-      border: 2px solid rgba(255,255,255,0.85);
+      border: none;
       box-shadow: 0 1px 4px rgba(0,0,0,0.15);
     }
-    body.theme-dark .nl-dock-badge { border-color: rgba(40,40,40,0.85); }
+    body.theme-dark .nl-dock-badge { border: none; }
     .nl-dock-tooltip {
       position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
       margin-bottom: 12px; padding: 4px 10px;
@@ -2342,8 +2343,10 @@
           dock.innerHTML = top.map(([dom, info]) => {
             const unread = info.items.filter(e=>e.unread).length;
             const initial = (info.sender||'?')[0].toUpperCase();
-            const iconHtml = info.image
-              ? `<img src="${escapeAttr(info.image)}" class="nl-dock-icon" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="nl-dock-fallback hidden" style="background:#5f6368">${escapeHtml(initial)}</div>`
+            const favDom = domainOf(info.email);
+            const favUrl = favDom && favDom.includes('.') ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(favDom)}&sz=64` : '';
+            const iconHtml = favUrl
+              ? `<img src="${favUrl}" class="nl-dock-icon" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="nl-dock-fallback hidden" style="background:#5f6368">${escapeHtml(initial)}</div>`
               : `<div class="nl-dock-fallback" style="background:#5f6368">${escapeHtml(initial)}</div>`;
             const badge = unread > 0 ? `<span class="nl-dock-badge">${unread}</span>` : '';
             return `<div class="nl-dock-item" onclick="openNewsletter('${escapeAttr(dom)}')">
