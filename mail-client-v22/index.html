@@ -37,7 +37,7 @@
     /* Account popover */
     #account-popover { transform-origin: top right; animation: popIn 160ms cubic-bezier(0.22, 1, 0.36, 1); }
     body.theme-dark #account-popover {
-      background: #1f1f1f !important;
+      background: #1a1a1a !important;
       border-color: rgba(255,255,255,0.08) !important;
       color: #e5e5e5;
     }
@@ -66,6 +66,7 @@
       display: inline-flex; align-items: center; gap: 3px;
       font-size: 10px; font-weight: 500; white-space: nowrap;
     }
+    .account-popover-status .material-symbols-outlined { color: inherit; font-size: 12px; }
     .account-popover-add {
       display: flex; align-items: center; gap: 12px;
       padding: 12px 16px; margin-top: 4px;
@@ -78,7 +79,7 @@
 
     /* Settings & Add Account modals */
     .settings-panel { background: #fff; color: #202124; }
-    body.theme-dark .settings-panel { background: #1e1e1e; color: #e8e8e8; border-color: rgba(255,255,255,0.08); }
+    body.theme-dark .settings-panel { background: #1a1a1a; color: #e8e8e8; border-color: rgba(255,255,255,0.08); }
     body.theme-image .settings-panel { background: rgba(255,255,255,0.97); backdrop-filter: blur(24px); }
     .kbd {
       display: inline-block; padding: 2px 8px; border-radius: 5px; font-family: var(--font-mono, 'JetBrains Mono', 'Space Mono', 'Iosevka', monospace); font-size: 11px;
@@ -928,7 +929,7 @@
       </div>
     </div>
 
-    <div class="absolute left-1/2 -translate-x-1/2 w-full px-6 h-10 flex items-center justify-center pointer-events-none" style="max-width:var(--list-max-w, 56rem)">
+    <div id="header-center" class="absolute left-1/2 -translate-x-1/2 w-full px-6 h-10 flex items-center justify-center pointer-events-none" style="max-width:var(--list-max-w, 56rem)">
       
       <!-- Search Bar -->
       <div id="header-search-bar" class="pointer-events-auto w-full glass-search rounded-lg px-4 py-2 flex items-center gap-3 transition-all duration-300 absolute inset-y-0 cursor-text" onclick="focusSearchFromBar(event)">
@@ -978,7 +979,7 @@
         <div id="account-avatar" onclick="toggleAccountPopover(event)" class="ml-2 w-8 h-8 rounded-full border border-current/25 bg-[#1a73e8] text-white flex items-center justify-center text-xs font-semibold shrink-0 cursor-pointer" title="Changer de compte">
           <span id="account-avatar-letter">?</span>
         </div>
-        <div id="account-popover" class="hidden absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50" style="transform-origin:top right;animation:popIn 160ms cubic-bezier(0.22,1,0.36,1)">
+        <div id="account-popover" class="hidden absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50" style="transform-origin:top right;animation:popIn 160ms cubic-bezier(0.22,1,0.36,1)">
           <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 pb-2">Comptes</div>
           <div id="account-popover-list"></div>
         </div>
@@ -1071,7 +1072,8 @@
 
     <!-- State 3: Conversation View -->
     <main id="conversation-view" class="absolute inset-0 flex flex-col items-center px-6 pb-6 pt-2 overflow-hidden opacity-0 pointer-events-none transition-all duration-300">
-      <div class="w-full bg-white flex-1 rounded-2xl p-6 lg:p-10 flex flex-col overflow-y-auto" id="conversation-card" style="max-width:var(--list-max-w, 56rem)">
+      <div class="w-full bg-white flex-1 rounded-2xl p-6 lg:p-10 flex flex-col overflow-y-auto relative" id="conversation-card" style="max-width:var(--conv-max-w, 56rem)">
+        <div class="resize-handle resize-handle-list" onmousedown="startResizeConversation(event)"></div>
         <div id="thread-content" class="w-full flex flex-col"></div>
       </div>
     </main>
@@ -1258,7 +1260,7 @@
     const THEME_CFG = {
       image: { headerSurface: 'bg-white/70 backdrop-blur-md border-b border-white/20', headerIcons: 'header-style-light', searchStyle: 'solid-search', zeroHeaderTransparent: true },
       white: { headerSurface: 'bg-white', headerIcons: 'header-style-light', searchStyle: 'solid-search', zeroHeaderTransparent: false },
-      dark:  { headerSurface: 'bg-[#141414]', headerIcons: 'header-style-dark', searchStyle: 'dark-search',  zeroHeaderTransparent: false },
+      dark:  { headerSurface: 'bg-[#1a1a1a]', headerIcons: 'header-style-dark', searchStyle: 'dark-search',  zeroHeaderTransparent: false },
     };
 
     const CATEGORIES = [
@@ -1395,11 +1397,11 @@
       const colors=['#1a73e8','#e23b3b','#0a66c2','#f59e0b','#a259ff','#1a7f37','#e11d48','#0d9488'];
       list.innerHTML=allAccounts.map((a,i)=>{
         const active=a.id===currentAccount;
-        const connected=a.connected!==false;
+        const connected=a.id==='demo' ? true : a.connected!==false;
         const letter=(a.email||a.name||'?').charAt(0).toUpperCase();
         const c=colors[i%colors.length];
         const dotColor=connected?'#22c55e':'#ef4444';
-        const statusText=connected?'Connecté':'Hors-ligne';
+        const statusText=connected?'En ligne':'Hors ligne';
         return `<div class="account-popover-item ${active?'is-active':''}" onclick="switchAccount('${escapeAttr(a.id)}')">
           <div class="account-popover-avatar" style="background:${c}">${letter}</div>
           <div class="account-popover-info">
@@ -1973,6 +1975,8 @@
       ab.style.zIndex = showActions ? '2' : '1';
       sb.setAttribute('aria-hidden', showSearch ? 'false' : 'true');
       ab.setAttribute('aria-hidden', showActions ? 'false' : 'true');
+      const center=document.getElementById('header-center');
+      if(center) center.style.maxWidth = showActions ? 'var(--conv-max-w, 56rem)' : 'var(--list-max-w, 56rem)';
       const burger=document.getElementById('burger-btn'), backBtn=document.getElementById('burger-back-btn');
       if(burger && backBtn){
         const showBack = (state==='conversation');
@@ -2790,6 +2794,7 @@
         const p = JSON.parse(localStorage.getItem('simplemail_prefs') || '{}');
         if(p.drawerWidth) document.documentElement.style.setProperty('--drawer-width', p.drawerWidth + 'px');
         if(p.listMaxW) document.documentElement.style.setProperty('--list-max-w', p.listMaxW + 'px');
+        if(p.convMaxW) document.documentElement.style.setProperty('--conv-max-w', p.convMaxW + 'px');
       } catch(e){}
       loadFontSettings();
       try { 
@@ -2843,7 +2848,7 @@
       document.body.style.cursor='col-resize';
       document.body.style.userSelect='none';
       function onMove(ev){
-        const w=Math.min(Math.max(startW - ev.clientX + startX, 400), Math.min(window.innerWidth - 80, 1200));
+        const w=Math.min(Math.max(startW + ev.clientX - startX, 400), Math.min(window.innerWidth - 80, 1200));
         container.style.setProperty('--list-max-w', w + 'px');
         document.documentElement.style.setProperty('--list-max-w', w + 'px');
       }
@@ -2854,6 +2859,31 @@
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('mouseup', onUp);
         _savePrefs('listMaxW', container.offsetWidth);
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    }
+    function startResizeConversation(e){
+      e.preventDefault();
+      const card=document.getElementById('conversation-card');
+      const handle=card.querySelector('.resize-handle');
+      const startX=e.clientX;
+      const startW=card.offsetWidth;
+      handle.classList.add('active');
+      document.body.style.cursor='col-resize';
+      document.body.style.userSelect='none';
+      function onMove(ev){
+        const w=Math.min(Math.max(startW + ev.clientX - startX, 400), Math.min(window.innerWidth - 80, 1200));
+        card.style.setProperty('--conv-max-w', w + 'px');
+        document.documentElement.style.setProperty('--conv-max-w', w + 'px');
+      }
+      function onUp(){
+        handle.classList.remove('active');
+        document.body.style.cursor='';
+        document.body.style.userSelect='';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        _savePrefs('convMaxW', card.offsetWidth);
       }
       document.addEventListener('mousemove', onMove);
       document.addEventListener('mouseup', onUp);
@@ -2892,6 +2922,10 @@
                 <button onclick="gotoSettingsSection('conversations')" data-nav="conversations" class="settings-nav-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors">
                   <span class="material-symbols-outlined" style="font-size:18px">forum</span>
                   <span>Conversations</span>
+                </button>
+                <button onclick="gotoSettingsSection('newsletters')" data-nav="newsletters" class="settings-nav-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors">
+                  <span class="material-symbols-outlined" style="font-size:18px">newspaper</span>
+                  <span>Newsletters</span>
                 </button>
                 <button onclick="gotoSettingsSection('language')" data-nav="language" class="settings-nav-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors">
                   <span class="material-symbols-outlined" style="font-size:18px">translate</span>
@@ -2987,10 +3021,22 @@
                 </select>
               </div>
 
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <div class="settings-row-title">Format des dates</div>
+                  <div class="settings-row-desc">Affichage des dates dans la liste des messages.</div>
+                </div>
+                <select onchange="setDateFormat(this.value)" class="settings-select">
+                  <option value="relative" ${getDateFormat()==='relative'?'selected':''}>Relatif (aujourd'hui = heure)</option>
+                  <option value="dd/mm/yyyy" ${getDateFormat()==='dd/mm/yyyy'?'selected':''}>JJ/MM/AAAA</option>
+                  <option value="yyyy/mm/dd" ${getDateFormat()==='yyyy/mm/dd'?'selected':''}>AAAA/MM/JJ</option>
+                </select>
+              </div>
+
               <div class="pt-6">
-                <div class="flex items-start justify-between gap-4">
-                  <div>
-                    <div class="settings-row-title">Couleurs des catégories</div>
+                  <div class="flex items-start justify-between gap-4">
+                    <div>
+                      <div class="settings-row-title">Couleurs des catégories</div>
                     <div class="settings-row-desc">Couleur du survol et de la catégorie active dans le menu latéral.</div>
                   </div>
                   <button onclick="resetCategoryColors()" class="preset-btn shrink-0">Réinitialiser</button>
