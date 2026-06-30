@@ -3,16 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Monolith Mail - v22 Newsletters (Netflix Hero)</title>
+  <title>SimpleMail</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Material Symbols (Outlined) -->
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Iosevka:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: 'Inter', Roboto, RobotoDraft, Helvetica, Arial, sans-serif;
+      font-family: var(--font-primary, 'Poppins', 'Futura', 'Century Gothic', 'Tw Cen MT', 'Inter', system-ui, -apple-system, sans-serif);
       color: #202124;
       background-size: cover;
       background-position: center;
@@ -28,59 +30,116 @@
     }
 
     /* ===== Settings popover (theme + background picker) ===== */
-    #settings-popover {
-      transform-origin: top right;
-      animation: popIn 160ms cubic-bezier(0.22, 1, 0.36, 1);
-    }
     @keyframes popIn {
       from { opacity: 0; transform: translateY(-6px) scale(0.97); }
       to   { opacity: 1; transform: translateY(0) scale(1); }
     }
-    .theme-opt {
-      color: #5f6368;
-    }
-    .theme-opt.is-active {
-      background: #ffffff;
-      color: #202124;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-    }
-    .bg-thumb {
-      aspect-ratio: 16 / 10;
-      border-radius: 8px;
-      background-size: cover;
-      background-position: center;
-      cursor: pointer;
-      border: 2px solid transparent;
-      transition: border-color 150ms, transform 150ms;
-      position: relative;
-      overflow: hidden;
-    }
-    .bg-thumb:hover { transform: translateY(-2px); }
-    .bg-thumb.is-active { border-color: #1a73e8; box-shadow: 0 0 0 2px rgba(26,115,232,0.25); }
-    .bg-thumb.is-active::after {
-      content: 'check';
-      font-family: 'Material Symbols Outlined';
-      position: absolute;
-      top: 4px; right: 4px;
-      width: 20px; height: 20px;
-      background: #1a73e8;
-      color: #fff;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px;
-      font-variation-settings: 'FILL' 1, 'wght' 700;
-    }
-    body.theme-dark #settings-popover {
+    /* Account popover */
+    #account-popover { transform-origin: top right; animation: popIn 160ms cubic-bezier(0.22, 1, 0.36, 1); }
+    body.theme-dark #account-popover {
       background: #1f1f1f !important;
       border-color: rgba(255,255,255,0.08) !important;
       color: #e5e5e5;
     }
-    body.theme-dark #settings-popover .text-gray-400 { color: #8d8d8d !important; }
-    body.theme-dark #settings-popover .bg-gray-100 { background: #141414 !important; }
-    body.theme-dark .theme-opt { color: #b3b3b3; }
-    body.theme-dark .theme-opt.is-active {
-      background: #2a2a2a; color: #fff; box-shadow: none;
+    .account-popover-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 16px; cursor: pointer; transition: background 120ms;
+      font-size: 13px; color: #202124;
     }
+    .account-popover-item:hover { background: rgba(0,0,0,0.04); }
+    body.theme-dark .account-popover-item { color: #e5e5e5; }
+    body.theme-dark .account-popover-item:hover { background: rgba(255,255,255,0.07); }
+    .account-popover-item.is-active { font-weight: 600; }
+    .account-popover-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .account-popover-info { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+    .account-popover-name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .account-popover-email { font-size: 11px; color: #5f6368; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    body.theme-dark .account-popover-email { color: #9aa0a6; }
+    .account-popover-check { color: #1a73e8; font-size: 18px; flex-shrink: 0; }
+    body.theme-dark .account-popover-check { color: #8ab4f8; }
+    .account-popover-status {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 10px; font-weight: 500; white-space: nowrap;
+    }
+    .account-popover-add {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; margin-top: 4px;
+      border-top: 1px solid rgba(0,0,0,0.06); cursor: pointer;
+      transition: background 120ms;
+    }
+    .account-popover-add:hover { background: rgba(0,0,0,0.04); }
+    body.theme-dark .account-popover-add { border-color: rgba(255,255,255,0.08); }
+    body.theme-dark .account-popover-add:hover { background: rgba(255,255,255,0.07); }
+
+    /* Settings & Add Account modals */
+    .settings-panel { background: #fff; color: #202124; }
+    body.theme-dark .settings-panel { background: #1e1e1e; color: #e8e8e8; border-color: rgba(255,255,255,0.08); }
+    body.theme-image .settings-panel { background: rgba(255,255,255,0.97); backdrop-filter: blur(24px); }
+    .kbd {
+      display: inline-block; padding: 2px 8px; border-radius: 5px; font-family: var(--font-mono, 'JetBrains Mono', 'Space Mono', 'Iosevka', monospace); font-size: 11px;
+      background: #f1f3f4; border: 1px solid #dadce0; color: #333; white-space: nowrap; min-width: 24px; text-align: center;
+    }
+    body.theme-dark .kbd { background: #333; border-color: #555; color: #ddd; }
+    .theme-btn {
+      display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px;
+      border: 2px solid rgba(0,0,0,0.08); background: transparent; cursor: pointer; font-size: 13px; font-weight: 500;
+      transition: all 120ms; color: inherit;
+    }
+    .theme-btn:hover { background: rgba(0,0,0,0.03); }
+    .theme-btn.active { border-color: #1a73e8; background: rgba(26,115,232,0.06); color: #1a73e8; }
+    body.theme-dark .theme-btn { border-color: rgba(255,255,255,0.1); }
+    body.theme-dark .theme-btn:hover { background: rgba(255,255,255,0.05); }
+    body.theme-dark .theme-btn.active { border-color: #8ab4f8; background: rgba(138,180,248,0.1); color: #8ab4f8; }
+    .settings-nav-item { color: #3c4043; background: transparent; cursor: pointer; border: none; }
+    .settings-nav-item:hover { background: rgba(0,0,0,0.05); }
+    .settings-nav-item.is-active { background: #fff; color: #1a73e8; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    body.theme-dark .settings-nav-item { color: #e8e8e8; }
+    body.theme-dark .settings-nav-item:hover { background: rgba(255,255,255,0.06); }
+    body.theme-dark .settings-nav-item.is-active { background: rgba(255,255,255,0.08); color: #8ab4f8; }
+    body.theme-dark #settings-screen { background: #1a1a1a !important; color: #e8e8e8; }
+    body.theme-dark #settings-screen .border-gray-200 { border-color: rgba(255,255,255,0.08) !important; }
+    body.theme-dark #settings-screen .bg-gray-50 { background: #141414 !important; }
+    body.theme-dark #settings-screen select { background: #2a2a2a !important; color: #e8e8e8; border-color: rgba(255,255,255,0.1) !important; }
+    body.theme-dark #settings-screen .kbd { background: #333 !important; color: #ccc; border-color: rgba(255,255,255,0.1) !important; }
+    .settings-page { max-width: 640px; }
+    .settings-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+      padding: 14px 0; border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-row-label { flex: 1; min-width: 0; }
+    .settings-row-title { font-size: 14px; font-weight: 500; color: #202124; }
+    .settings-row-desc { font-size: 12px; color: #5f6368; margin-top: 2px; }
+    .settings-select {
+      min-width: 220px; padding: 8px 12px; border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.12); background: rgba(255,255,255,0.6);
+      font-size: 13px; color: inherit; cursor: pointer; outline: none; transition: border-color 150ms;
+    }
+    .settings-select:focus { border-color: #1a73e8; }
+    .preset-btn {
+      padding: 7px 16px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.12);
+      background: transparent; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 120ms; color: inherit;
+    }
+    .preset-btn:hover { background: rgba(0,0,0,0.04); }
+    .preset-btn.active { border-color: #1a73e8; background: rgba(26,115,232,0.06); color: #1a73e8; }
+    body.theme-dark .settings-row { border-color: rgba(255,255,255,0.06); }
+    body.theme-dark .settings-row-title { color: #e8e8e8; }
+    body.theme-dark .settings-select { background: #2a2a2a; border-color: rgba(255,255,255,0.1); color: #e8e8e8; }
+    body.theme-dark .preset-btn { border-color: rgba(255,255,255,0.1); }
+    body.theme-dark .preset-btn.active { border-color: #8ab4f8; background: rgba(138,180,248,0.1); color: #8ab4f8; }
+    .field-label { display: block; font-size: 12px; font-weight: 600; color: #5f6368; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.03em; }
+    body.theme-dark .field-label { color: #9aa0a6; }
+    .field-input {
+      width: 100%; padding: 9px 12px; border: 1px solid rgba(0,0,0,0.12); border-radius: 8px;
+      font-size: 14px; background: transparent; color: inherit; outline: none; transition: border-color 150ms;
+    }
+    .field-input:focus { border-color: #1a73e8; }
+    body.theme-dark .field-input { border-color: rgba(255,255,255,0.12); }
+    body.theme-dark .field-input:focus { border-color: #8ab4f8; }
 
     .material-symbols-outlined {
       font-size: 20px;
@@ -402,6 +461,13 @@
     body.theme-dark #conversation-card .text-\[\#5f6368\] {
       color: #a8a8a8 !important;
     }
+    body.theme-dark #thread-content button.border {
+      border-color: rgba(255,255,255,0.12) !important;
+      color: #b3b3b3 !important;
+    }
+    body.theme-dark #thread-content button.border:hover {
+      background: rgba(255,255,255,0.08) !important;
+    }
     body.theme-dark .badge-inbox {
       background-color: #2a2a2a;
       color: #b3b3b3;
@@ -503,16 +569,20 @@
     .thread-msg-preview { font-size: 12px; color: #5f6368; flex: 1; min-width: 0; }
     body.theme-dark .thread-msg-preview { color: #9aa0a6; }
     .thread-msg-body { padding: 4px 0 18px 52px; }
+    .mail-body-copy {
+      font-family: var(--mail-body-font, var(--font-mono, 'JetBrains Mono', 'Space Mono', 'Iosevka', monospace));
+      font-size: 15px;
+      line-height: 1.8;
+      letter-spacing: 0;
+    }
+    .mail-body-copy p { margin-bottom: 1.05em; }
 
     /* HTML email iframe */
     .html-mail-frame {
-      width: 100%; min-height: 120px;
-      border: 1px solid rgba(0,0,0,0.08);
-      border-radius: 10px;
-      background: #ffffff;
-      overflow: hidden;
+      width: calc(100% + 52px); margin-left: -52px;
+      min-height: 120px; border: none; border-radius: 0;
+      background: transparent; overflow: hidden;
     }
-    body.theme-dark .html-mail-frame { border-color: rgba(255,255,255,0.08); }
 
     /* Attachment chips */
     .att-chip {
@@ -543,40 +613,29 @@
     body.theme-dark .att-dl { color: #9aa0a6; }
 
     /* ============================================================
-       V22 — IMMERSIVE READER (à la v4 : full-screen, serif, slides)
+        V22 — IMMERSIVE READER (à la v4 : full-screen, slides)
        ============================================================ */
     .immersive-surface {
-      background: rgba(250, 248, 244, 0.97);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      color: #202124;
-    }
-    body.theme-dark .immersive-surface {
-      background: rgba(16, 16, 16, 0.985);
-      color: #e8e8e8;
-    }
-    body.theme-white .immersive-surface {
       background: #ffffff;
       backdrop-filter: none;
       -webkit-backdrop-filter: none;
+      color: #111111;
+    }
+    body.theme-dark .immersive-surface {
+      background: #ffffff;
+      color: #111111;
     }
     .immersive-border { border-color: rgba(0,0,0,0.08); }
-    body.theme-dark .immersive-border { border-color: rgba(255,255,255,0.08); }
-    .immersive-muted { color: #5f6368; }
-    body.theme-dark .immersive-muted { color: #9a9a9a; }
-    .immersive-serif { font-family: 'Newsreader', Georgia, 'Times New Roman', serif; }
-    .immersive-top-btn { color: #5f6368; transition: color 150ms; }
-    .immersive-top-btn:hover { color: #202124; }
-    body.theme-dark .immersive-top-btn { color: #b3b3b3; }
-    body.theme-dark .immersive-top-btn:hover { color: #fff; }
+    .immersive-muted { color: #7a7a7a; }
+    .immersive-serif { font-family: var(--font-primary, 'Inter', 'Avenir Next', 'SF Pro Display', system-ui, sans-serif); }
+    .immersive-top-btn { color: #6b7280; transition: color 150ms, background 150ms; }
+    .immersive-top-btn:hover { color: #111111; }
     .immersive-icon-btn {
       width: 36px; height: 36px; border-radius: 9999px;
       display: inline-flex; align-items: center; justify-content: center;
-      color: #5f6368; transition: background 150ms, color 150ms; cursor: pointer;
+      color: #6b7280; transition: background 150ms, color 150ms; cursor: pointer;
     }
-    .immersive-icon-btn:hover { background: rgba(0,0,0,0.06); color: #202124; }
-    body.theme-dark .immersive-icon-btn { color: #b3b3b3; }
-    body.theme-dark .immersive-icon-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .immersive-icon-btn:hover { background: rgba(0,0,0,0.05); color: #111111; }
     .immersive-icon-btn .material-symbols-outlined { font-size: 20px; color: inherit; }
     .immersive-nav-btn {
       width: 32px; height: 32px; border-radius: 9999px;
@@ -612,79 +671,163 @@
     .im-slide.active { transform: translateX(0); opacity: 1; z-index: 2; }
     .im-slide.next    { transform: translateX(6%); opacity: 0; z-index: 1; pointer-events: none; }
     .im-slide.prev    { transform: translateX(-6%); opacity: 0; z-index: 1; pointer-events: none; }
-    .im-title { font-size: clamp(1.9rem, 4vw, 2.6rem); line-height: 1.15; letter-spacing: -0.02em; font-weight: 500; }
-    .im-article { font-size: 1.125rem; line-height: 1.85; color: inherit; opacity: 0.92; }
+    .im-title { font-size: clamp(2.1rem, 4.8vw, 3.35rem); line-height: 1.1; letter-spacing: -0.04em; font-weight: 500; }
+    .im-article { font-size: 1.06rem; line-height: 2; color: inherit; opacity: 0.95; }
     .im-article p { margin-bottom: 1.15em; }
     .im-drop-cap::first-letter {
       font-size: 3.2em; font-weight: 500; float: left;
       line-height: 0.85; padding: 0.08em 0.12em 0 0; color: inherit;
     }
-    /* ============ NAVIGATION DRAWER (burger → sidebar Gmail-like) ============ */
-    #drawer-overlay { background: rgba(0,0,0,0.45); transition: opacity 250ms; }
+    /* ============ NAVIGATION DRAWER — Clean & Sober ============ */
+    #drawer-overlay { background: rgba(0,0,0,0.3); transition: opacity 250ms; }
     #nav-drawer {
-      width: 288px; max-width: 86vw;
+      width: var(--drawer-width, 280px); max-width: 86vw;
       transform: translateX(-100%); transition: transform 280ms cubic-bezier(0.22,1,0.36,1);
-      box-shadow: 2px 0 24px rgba(0,0,0,0.18);
+      box-shadow: 1px 0 0 rgba(0,0,0,0.08);
     }
     #nav-drawer.open { transform: translateX(0); }
-    .drawer-surface { background: #ffffff; color: #202124; }
-    body.theme-image .drawer-surface { background: rgba(255,255,255,0.96); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-    body.theme-dark .drawer-surface { background: #1c1c1c; color: #e8e8e8; }
+    .drawer-surface { background: #fafafa; color: #202124; }
+    body.theme-image .drawer-surface { background: rgba(250,250,250,0.97); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+    body.theme-dark .drawer-surface { background: #181818; color: #e8e8e8; }
+
+    .drawer-brand {
+      display: flex; align-items: center; gap: 10px;
+      padding: 24px 20px 20px; border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+    body.theme-dark .drawer-brand { border-color: rgba(255,255,255,0.06); }
+    .drawer-brand-icon {
+      width: 34px; height: 34px; border-radius: 10px;
+      object-fit: cover; flex-shrink: 0;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    }
+    .drawer-brand-name { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+
+    .drawer-compose {
+      margin: 16px 16px 8px; padding: 0; border: none;
+      background: none; color: #1a73e8; border-radius: 12px; font-weight: 600; font-size: 13px;
+      display: flex; align-items: center; gap: 10px; cursor: pointer;
+      padding: 12px 16px; transition: background 120ms;
+    }
+    .drawer-compose:hover { background: rgba(26,115,232,0.08); }
+    .drawer-compose .material-symbols-outlined { font-size: 20px; }
+    body.theme-dark .drawer-compose { color: #8ab4f8; }
+    body.theme-dark .drawer-compose:hover { background: rgba(138,196,248,0.1); }
+
+    .drawer-section {
+      padding: 8px 0;
+    }
+    .drawer-section + .drawer-section {
+      border-top: 1px solid rgba(0,0,0,0.05);
+    }
+    body.theme-dark .drawer-section + .drawer-section {
+      border-color: rgba(255,255,255,0.05);
+    }
+
     .nav-item {
       display: flex; align-items: center; gap: 12px;
-      padding: 8px 10px; margin: 1px 8px; border-radius: 0 14px 14px 0;
-      cursor: pointer; font-size: 13px; color: inherit; transition: background 120ms;
-      user-select: none;
+      padding: 9px 20px; margin: 0;
+      cursor: pointer; font-size: 13px; color: #444;
+      transition: background 120ms; user-select: none;
+      border-radius: 0;
+      position: relative;
     }
-    .nav-item:hover { background: rgba(0,0,0,0.05); }
-    body.theme-dark .nav-item:hover { background: rgba(255,255,255,0.07); }
-    .nav-item.is-active { background: #fef0c7; color: #202124; font-weight: 600; }
-    body.theme-dark .nav-item.is-active { background: rgba(250,204,21,0.16); color: #fff; }
-    .nav-item .material-symbols-outlined { font-size: 18px; color: #5f6368; flex-shrink: 0; }
-    body.theme-dark .nav-item .material-symbols-outlined { color: #9aa0a6; }
+    .nav-item:hover { background: rgba(0,0,0,0.04); }
+    body.theme-dark .nav-item { color: #b3b3b3; }
+    body.theme-dark .nav-item:hover { background: rgba(255,255,255,0.06); }
+    .nav-item.is-active {
+      color: #1a73e8; font-weight: 600;
+      background: rgba(26,115,232,0.06);
+    }
+    body.theme-dark .nav-item.is-active { color: #8ab4f8; background: rgba(138,196,248,0.08); }
+    .nav-item .material-symbols-outlined {
+      font-size: 19px; color: #5f6368; flex-shrink: 0;
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    body.theme-dark .nav-item .material-symbols-outlined { color: #8d8d8d; }
     .nav-item.is-active .material-symbols-outlined { color: inherit; }
     .nav-item .nav-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .nav-item .nav-count { font-size: 11px; color: #5f6368; font-weight: 500; }
-    body.theme-dark .nav-item .nav-count { color: #9aa0a6; }
+    .nav-item .nav-count {
+      font-size: 11px; color: #999; font-weight: 500;
+      background: rgba(0,0,0,0.06); padding: 1px 7px; border-radius: 10px;
+    }
+    body.theme-dark .nav-item .nav-count { background: rgba(255,255,255,0.08); color: #8d8d8d; }
+    .nav-item.is-active .nav-count { background: rgba(26,115,232,0.12); color: #1a73e8; }
+    body.theme-dark .nav-item.is-active .nav-count { background: rgba(138,196,248,0.15); color: #8ab4f8; }
+
     .nav-section-title {
-      font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-      color: #5f6368; padding: 14px 22px 6px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+      color: #999; padding: 16px 20px 6px;
     }
-    body.theme-dark .nav-section-title { color: #8a8a8a; }
-    .nav-compose {
-      margin: 12px 16px 4px; background: #1a73e8; color: #fff; border: none;
-      padding: 12px 18px; border-radius: 8px; font-weight: 600; font-size: 13px;
-      display: flex; align-items: center; gap: 10px; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-      transition: background 120ms, transform 120ms;
+    body.theme-dark .nav-section-title { color: #666; }
+
+    .nav-divider { height: 1px; background: rgba(0,0,0,0.06); margin: 4px 16px; }
+    body.theme-dark .nav-divider { background: rgba(255,255,255,0.06); }
+
+    .nav-toggle {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 20px; margin: 0; cursor: pointer;
+      font-size: 12px; color: #999; font-weight: 500;
+      transition: background 120ms; user-select: none;
+      border: none; background: none; width: 100%;
     }
-    .nav-compose:hover { background: #1765cc; }
-    .nav-compose:active { transform: scale(0.98); }
-    body.theme-dark .nav-compose { background: #8ab4f8; color: #141414; }
-    .nav-label-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .nav-toggle:hover { background: rgba(0,0,0,0.04); color: #666; }
+    body.theme-dark .nav-toggle { color: #666; }
+    body.theme-dark .nav-toggle:hover { background: rgba(255,255,255,0.06); color: #999; }
+    .nav-toggle .material-symbols-outlined { font-size: 16px; transition: transform 200ms; }
+    .nav-toggle.is-open .material-symbols-outlined { transform: rotate(180deg); }
+
+    .nav-sub-section { overflow: hidden; transition: max-height 250ms ease, opacity 200ms ease; }
+    .nav-sub-section.collapsed { max-height: 0 !important; opacity: 0; pointer-events: none; }
+
+    .nav-label-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    .drawer-footer {
+      padding: 14px 20px; font-size: 11px; color: #999;
+      border-top: 1px solid rgba(0,0,0,0.06);
+      display: flex; align-items: center; gap: 6px;
+    }
+    body.theme-dark .drawer-footer { border-color: rgba(255,255,255,0.06); color: #666; }
+
+    /* Resize handles */
+    .resize-handle {
+      position: absolute; top: 0; bottom: 0; width: 5px;
+      cursor: col-resize; z-index: 60; transition: background 150ms;
+    }
+    .resize-handle:hover, .resize-handle.active { background: rgba(26,115,232,0.4); }
+    .resize-handle-drawer { right: -3px; }
+    .resize-handle-list { right: -3px; top: 0; bottom: 0; }
   </style>
 </head>
 <body class="h-screen w-screen flex flex-col overflow-hidden relative theme-white">
 
-  <!-- ================= NAVIGATION DRAWER (burger) ================= -->
+  <!-- ================= NAVIGATION DRAWER ================= -->
   <div id="drawer-overlay" class="fixed inset-0 z-[55] opacity-0 pointer-events-none transition-opacity duration-300" onclick="toggleDrawer(false)"></div>
   <aside id="nav-drawer" class="drawer-surface fixed top-0 left-0 bottom-0 z-[56] flex flex-col">
-    <div class="px-5 pt-5 pb-2 flex items-center gap-2">
-      <span class="material-symbols-outlined text-[#1a73e8]" style="font-size:24px">mail</span>
-      <span class="font-bold text-base tracking-tight">Monolith Mail</span>
+    <div class="resize-handle resize-handle-drawer" onmousedown="startResizeDrawer(event)"></div>
+    <div class="drawer-brand">
+      <img src="/icon.png" alt="SimpleMail" class="drawer-brand-icon">
+      <span class="drawer-brand-name">SimpleMail</span>
     </div>
-    <button class="nav-compose" onclick="toggleDrawer(false); openCompose()"><span class="material-symbols-outlined !text-inherit" style="font-size:20px">edit</span> Composer</button>
-    <nav class="flex-1 overflow-y-auto py-2">
-      <div id="drawer-folders"></div>
-      <div class="nav-section-title">Catégories</div>
-      <div id="drawer-categories"></div>
-      <div class="nav-section-title">Libellés</div>
-      <div id="drawer-labels">
-        <div class="nav-item" onclick="showToast('Gérer les libellés — IMAP : via dossiers serveur')"><span class="material-symbols-outlined">settings</span><span class="nav-label">Gérer les libellés</span></div>
-        <div class="nav-item" onclick="showToast('Créer un libellé — créé un dossier IMAP')"><span class="material-symbols-outlined">add</span><span class="nav-label">Créer un libellé</span></div>
+    <nav class="flex-1 overflow-y-auto">
+      <div class="drawer-section">
+        <div id="drawer-folders"></div>
+      </div>
+      <div class="drawer-section">
+        <div class="nav-section-title">Catégories</div>
+        <div id="drawer-categories"></div>
+        <div id="drawer-categories-extra"></div>
+      </div>
+      <div class="drawer-section">
+        <div class="nav-section-title">Libellés</div>
+        <div id="drawer-labels"></div>
       </div>
     </nav>
-    <div class="px-5 py-3 text-[11px] text-gray-400 border-t border-current/10" id="drawer-foot">Aucun compte connecté</div>
+    <div class="drawer-footer" id="drawer-foot">Aucun compte connecté</div>
   </aside>
+
+  <!-- ================= MAIN CONTENT (header + views) ================= -->
+  <div id="main-content" class="flex-1 flex flex-col overflow-hidden">
 
   <!-- ================= UNIFIED HEADER (CONTINUITY) ================= -->
   <header id="main-header" class="h-16 flex items-center justify-between px-6 shrink-0 select-none z-30 transition-all duration-300 header-style-dark">
@@ -693,15 +836,14 @@
       <div class="icon-btn-container" id="burger-btn" title="Menu (dossiers, libellés)" onclick="toggleDrawer()">
         <span class="material-symbols-outlined">menu</span>
       </div>
-      <select id="account-select" onchange="onAccountChange(this.value)" class="text-xs bg-transparent border border-current/20 rounded-md px-2 py-1 outline-none cursor-pointer max-w-[140px]" title="Compte"></select>
     </div>
 
-    <div class="absolute left-1/2 -translate-x-1/2 w-full max-w-[944px] px-6 h-10 flex items-center justify-center pointer-events-none">
+    <div class="absolute left-1/2 -translate-x-1/2 w-full px-6 h-10 flex items-center justify-center pointer-events-none" style="max-width:var(--list-max-w, 56rem)">
       
       <!-- Search Bar -->
       <div id="header-search-bar" class="pointer-events-auto w-full glass-search rounded-lg px-4 py-2 flex items-center gap-3 transition-all duration-300 absolute inset-y-0">
         <span class="material-symbols-outlined text-inherit opacity-70" id="search-bar-icon">search</span>
-        <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="Rechercher des e-mails" class="w-full bg-transparent text-inherit text-sm focus:outline-none">
+        <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="Rechercher des e-mails" class="w-full bg-transparent text-inherit text-sm focus:outline-none caret-inherit">
       </div>
 
       <!-- Action Buttons -->
@@ -710,48 +852,45 @@
           <span class="material-symbols-outlined">arrow_back</span>
         </div>
         <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
+        <div class="icon-btn-container" title="Répondre" onclick="replyCurrent()"><span class="material-symbols-outlined">reply</span></div>
+        <div class="icon-btn-container" title="Tout répondre" onclick="replyAllCurrent()"><span class="material-symbols-outlined">reply_all</span></div>
+        <div class="icon-btn-container" title="Transférer" onclick="forwardCurrent()"><span class="material-symbols-outlined">forward</span></div>
+        <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
         <div class="icon-btn-container" title="Archiver" onclick="archiveCurrent()"><span class="material-symbols-outlined">archive</span></div>
-        <div class="icon-btn-container" title="Signaler comme spam"><span class="material-symbols-outlined">report</span></div>
+        <div class="icon-btn-container" title="Signaler comme spam" onclick="reportSpamCurrent()"><span class="material-symbols-outlined">report</span></div>
         <div class="icon-btn-container" title="Supprimer" onclick="deleteCurrent()"><span class="material-symbols-outlined">delete</span></div>
         <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
         <div class="icon-btn-container" title="Marquer comme non lu" onclick="toggleUnreadCurrent()"><span class="material-symbols-outlined">mail</span></div>
-        <div class="icon-btn-container" title="Mettre en attente"><span class="material-symbols-outlined">schedule</span></div>
-        <div class="icon-btn-container" title="Ajouter aux tâches"><span class="material-symbols-outlined">add_task</span></div>
+        <div class="icon-btn-container" title="Mettre en attente" onclick="snoozeCurrent()"><span class="material-symbols-outlined">schedule</span></div>
+        <div class="icon-btn-container" title="Ajouter aux tâches" onclick="addToTasksCurrent()"><span class="material-symbols-outlined">add_task</span></div>
         <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
-        <div class="icon-btn-container" title="Déplacer vers"><span class="material-symbols-outlined">drive_file_move</span></div>
-        <div class="icon-btn-container" title="Libellés"><span class="material-symbols-outlined">label</span></div>
-        <div class="icon-btn-container" title="Plus"><span class="material-symbols-outlined">more_vert</span></div>
+        <div class="icon-btn-container" title="Déplacer vers" onclick="moveCurrent()"><span class="material-symbols-outlined">drive_file_move</span></div>
+        <div class="icon-btn-container" title="Libellés" onclick="labelCurrent()"><span class="material-symbols-outlined">label</span></div>
+        <div class="icon-btn-container" title="Plus" onclick="moreMessageActions()"><span class="material-symbols-outlined">more_vert</span></div>
       </div>
     </div>
 
     <div class="flex items-center gap-2">
       <div id="header-nav-arrows" class="flex items-center gap-1 opacity-0 pointer-events-none transition-all duration-300">
-        <div class="icon-btn-container" title="Rechercher"><span class="material-symbols-outlined">search</span></div>
+        <div class="icon-btn-container" title="Rechercher" onclick="focusSearch()"><span class="material-symbols-outlined">search</span></div>
         <div class="icon-btn-container" title="Plus ancien" onclick="navigateMail(-1)"><span class="material-symbols-outlined">chevron_left</span></div>
         <div class="icon-btn-container" title="Plus récent" onclick="navigateMail(1)"><span class="material-symbols-outlined">chevron_right</span></div>
         <div class="h-5 w-[1px] bg-gray-200 mx-1"></div>
-        <div class="icon-btn-container"><span class="material-symbols-outlined">more_vert</span></div>
+        <div class="icon-btn-container" title="Plus" onclick="showMoreConversationActions()"><span class="material-symbols-outlined">more_vert</span></div>
       </div>
       <div class="relative mr-1">
-        <button onclick="toggleSettingsPopover(event)" class="text-[10px] text-inherit bg-black/10 border border-current/20 hover:bg-black/20 px-2.5 py-1 rounded-md transition-all duration-200 flex items-center gap-1.5" title="Apparence">
-          <span class="material-symbols-outlined" style="font-size:14px">palette</span>
-          Thème: <span id="theme-indicator" class="font-semibold">Clair</span>
-        </button>
-        <div id="settings-popover" class="hidden absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-2xl border border-gray-100 p-4 z-50">
-          <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Thème</div>
-          <div class="grid grid-cols-3 gap-1 bg-gray-100 p-1 rounded-lg mb-4" id="theme-segmented">
-            <button onclick="setTheme('image')" data-theme="image" class="theme-opt py-1.5 text-xs font-medium rounded-md transition-colors">Image</button>
-            <button onclick="setTheme('white')" data-theme="white" class="theme-opt py-1.5 text-xs font-medium rounded-md transition-colors">Clair</button>
-            <button onclick="setTheme('dark')" data-theme="dark" class="theme-opt py-1.5 text-xs font-medium rounded-md transition-colors">Sombre</button>
-          </div>
-          <div id="bg-gallery-wrap">
-            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Fond (chill)</div>
-            <div class="grid grid-cols-3 gap-2" id="bg-gallery"></div>
-          </div>
+        <div class="icon-btn-container" onclick="openSettings()" title="Paramètres">
+          <span class="material-symbols-outlined">settings</span>
         </div>
       </div>
-      <div id="account-avatar" class="ml-2 w-8 h-8 rounded-full border border-current/25 bg-[#1a73e8] text-white flex items-center justify-center text-xs font-semibold shrink-0" title="Compte mail">
-        <span id="account-avatar-letter">?</span>
+      <div class="relative">
+        <div id="account-avatar" onclick="toggleAccountPopover(event)" class="ml-2 w-8 h-8 rounded-full border border-current/25 bg-[#1a73e8] text-white flex items-center justify-center text-xs font-semibold shrink-0 cursor-pointer" title="Changer de compte">
+          <span id="account-avatar-letter">?</span>
+        </div>
+        <div id="account-popover" class="hidden absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50" style="transform-origin:top right;animation:popIn 160ms cubic-bezier(0.22,1,0.36,1)">
+          <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 pb-2">Comptes</div>
+          <div id="account-popover-list"></div>
+        </div>
       </div>
     </div>
   </header>
@@ -785,38 +924,46 @@
 
     <!-- State 2: Inbox List View -->
     <main id="inbox-list-view" class="absolute inset-0 flex flex-col items-center px-6 pb-6 pt-2 overflow-hidden opacity-0 pointer-events-none transition-all duration-300">
-      <div class="glass-container w-full max-w-4xl flex-1 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+      <div id="mail-list-container" class="glass-container w-full flex-1 rounded-2xl shadow-2xl flex flex-col overflow-hidden relative" style="max-width:var(--list-max-w, 56rem)">
+        <div class="resize-handle resize-handle-list" onmousedown="startResizeList(event)"></div>
         <!-- Zone de scroll unique : la section newsletters défile et passe sous le list-header sticky -->
         <div class="flex-1 overflow-y-auto">
 
-        <!-- SECTION CAROUSEL NEWSLETTERS (défile avec la liste) -->
-        <div class="p-6 border-b border-gray-200/50">
+        <!-- SECTION CAROUSEL NEWSLETTERS (défile avec la liste) - uniquement dans INBOX -->
+        <div id="nl-section" class="p-6 border-b border-gray-200/50">
           <div class="flex items-center justify-between mb-3.5">
             <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-widest select-none">Newsletters récentes</h3>
             <button id="nl-toggle-btn" onclick="toggleAllNewsletters()" class="nl-toggle-btn" title="Afficher toutes les newsletters">
               <span class="material-symbols-outlined" style="font-size:14px">grid_view</span> Toutes les newsletters
             </button>
           </div>
+          <!-- Mode carousel (horizontal) -->
           <div id="nl-carousel" class="carousel-container gap-4">
             <!-- cartes newsletters remplies dynamiquement (expéditeurs récurrents en Promotions) -->
             <div class="text-xs text-gray-400 italic px-1 py-6 select-none">Chargement des newsletters…</div>
+          </div>
+          <!-- Mode mosaïque (grille) - caché par défaut -->
+          <div id="nl-mosaic" class="hidden">
+            <div id="nl-mosaic-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <!-- cartes newsletters en grille -->
+            </div>
           </div>
         </div>
 
         <!-- List Header (sticky : les cartes newsletters passent dessous au scroll) -->
         <div class="sticky top-0 z-10 h-14 border-b border-gray-200/80 flex items-center justify-between px-6 select-none list-header-surface" id="list-header-bar">
           <div class="flex items-center gap-1.5">
-            <div class="icon-btn-container" title="Sélectionner tout"><span class="material-symbols-outlined">check_box_outline_blank</span></div>
+            <div class="icon-btn-container" title="Sélectionner tout" onclick="toggleSelectAll()"><span class="material-symbols-outlined">check_box_outline_blank</span></div>
             <div class="icon-btn-container" title="Rafraîchir" onclick="loadMessages(true)"><span class="material-symbols-outlined">refresh</span></div>
-            <div class="icon-btn-container" title="Plus"><span class="material-symbols-outlined">more_vert</span></div>
+            <div class="icon-btn-container" title="Plus" onclick="showMoreListActions()"><span class="material-symbols-outlined">more_vert</span></div>
           </div>
           <div class="text-xs text-gray-500 font-medium">
             Tous les messages &bull; <span id="list-count">0</span> messages
           </div>
         </div>
 
-        <!-- Gmail category tabs (sticky sous le list header) -->
-        <div class="category-tabs sticky top-14 z-10 flex border-b border-gray-200/80 cat-tabs-surface select-none">
+        <!-- Gmail category tabs (sticky sous le list header) - uniquement dans INBOX -->
+        <div id="cat-tabs-container" class="category-tabs sticky top-14 z-10 flex border-b border-gray-200/80 cat-tabs-surface select-none">
           <button onclick="setCategory('primary')" data-cat="primary" class="cat-tab is-active"><span class="material-symbols-outlined cat-tab-icon">inbox</span><span class="cat-tab-label">Principal</span><span class="cat-count"></span></button>
           <button onclick="setCategory('promotions')" data-cat="promotions" class="cat-tab"><span class="material-symbols-outlined cat-tab-icon">local_offer</span><span class="cat-tab-label">Promotions</span><span class="cat-count"></span></button>
           <button onclick="setCategory('social')" data-cat="social" class="cat-tab"><span class="material-symbols-outlined cat-tab-icon">group</span><span class="cat-tab-label">Réseaux</span><span class="cat-count"></span></button>
@@ -916,7 +1063,9 @@
 
     </main>
 
-  <!-- ================= IMMERSIVE READER (full-screen, serif, à la v4) ================= -->
+  </div> <!-- end #main-content -->
+
+  <!-- ================= IMMERSIVE READER (full-screen, à la v4) ================= -->
   <div id="immersive-reader" class="immersive-surface fixed inset-0 z-50 flex flex-col opacity-0 pointer-events-none transition-opacity duration-300">
     <!-- Top bar -->
     <div class="flex items-center justify-between border-b immersive-border px-8 py-4 shrink-0">
@@ -925,6 +1074,10 @@
         Retour
       </button>
       <div class="flex items-center gap-1">
+        <button onclick="immersiveReply()" class="immersive-icon-btn" title="Répondre"><span class="material-symbols-outlined">reply</span></button>
+        <button onclick="immersiveReplyAll()" class="immersive-icon-btn" title="Répondre à tous"><span class="material-symbols-outlined">reply_all</span></button>
+        <button onclick="immersiveForward()" class="immersive-icon-btn" title="Transférer"><span class="material-symbols-outlined">forward</span></button>
+        <div class="w-5 h-[1px] bg-current/10 mx-1"></div>
         <button onclick="immersiveToggleStar()" id="im-star-btn" class="immersive-icon-btn" title="Suivi"><span class="material-symbols-outlined">star</span></button>
         <button onclick="immersiveArchive()" class="immersive-icon-btn" title="Archiver"><span class="material-symbols-outlined">archive</span></button>
         <button onclick="immersiveDelete()" class="immersive-icon-btn" title="Supprimer"><span class="material-symbols-outlined">delete</span></button>
@@ -977,6 +1130,7 @@
     // ============================================================
     let emails = [];
     let currentSelectedId = null;
+    let currentListIndex = -1;
     let searchText = '';
     let currentTheme = 'white';
     let currentActiveView = 'zero';
@@ -987,8 +1141,12 @@
     let currentFolder = 'INBOX';
     let _detailCache = {};
     let _evtSource = null;
+    let currentFont = 'futura';
+    let currentFontMono = 'jetbrains';
+    let mosaicMode = false;
+    let currentLanguage = 'fr';
+    let shortcutPreset = 'gmail';
     let loadError = '';
-    let drawerLessOpen = false;
     let searchTimer = null;
 
     // ---- Thèmes & fonds (identique v22) ----
@@ -1073,17 +1231,15 @@
     function nameOf(sender) { return (sender || '').split(' ')[0] || sender; }
 
     // ====================== Accounts / folders ======================
+    let allAccounts = [];
     async function loadAccounts() {
       loadError = '';
       try { accounts = await api('/api/accounts'); }
       catch (e) { accounts = []; loadError = e.message; showToast('Connexion : ' + e.message); }
-      const sel = document.getElementById('account-select');
-      sel.innerHTML = accounts.map(a => `<option value="${a.id}">${escapeHtml(a.name || a.id)}</option>`).join('');
-      sel.classList.toggle('hidden', !accounts.length);
+      try { allAccounts = await api('/api/accounts/all'); } catch (e) { allAccounts = [...accounts]; }
       const mondary = accounts.find(a => (a.email || '').toLowerCase() === 'clement@mondary.design');
       if (mondary && !currentAccount) currentAccount = mondary.id;
       if (accounts.length && !accounts.some(a => a.id === currentAccount)) currentAccount = (mondary || accounts[0]).id;
-      sel.value = currentAccount;
       updateAccountIdentity();
     }
     function updateAccountIdentity(){
@@ -1093,7 +1249,46 @@
       if(avatar) avatar.title=account?account.email:'Aucun compte connecté';
       if(letter) letter.textContent=account?(account.email||account.name||'?').charAt(0).toUpperCase():'?';
     }
-    function onAccountChange(id) { currentAccount = id; currentSelectedId = null; updateAccountIdentity(); loadFolders(id).then(() => loadMessages()); }
+    function toggleAccountPopover(e){
+      if(e) e.stopPropagation();
+      const pop=document.getElementById('account-popover');
+      pop.classList.toggle('hidden');
+      if(!pop.classList.contains('hidden')) renderAccountPopover();
+    }
+    function renderAccountPopover(){
+      const list=document.getElementById('account-popover-list');
+      if(!list) return;
+      const colors=['#1a73e8','#e23b3b','#0a66c2','#f59e0b','#a259ff','#1a7f37','#e11d48','#0d9488'];
+      list.innerHTML=allAccounts.map((a,i)=>{
+        const active=a.id===currentAccount;
+        const connected=a.connected!==false;
+        const letter=(a.email||a.name||'?').charAt(0).toUpperCase();
+        const c=colors[i%colors.length];
+        const dotColor=connected?'#22c55e':'#ef4444';
+        const statusText=connected?'Connecté':'Hors-ligne';
+        return `<div class="account-popover-item ${active?'is-active':''}" onclick="${connected?`switchAccount('${a.id}')`:'showToast(\'Mot de passe manquant — configurez-le dans secrets/mail.env\')'}">
+          <div class="account-popover-avatar" style="background:${c}">${letter}</div>
+          <div class="account-popover-info">
+            <span class="account-popover-name">${escapeHtml(a.name||a.id)}</span>
+            <span class="account-popover-email">${escapeHtml(a.email||'')}</span>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <span class="account-popover-status" style="color:${dotColor}"><span class="material-symbols-outlined" style="font-size:14px">circle</span>${statusText}</span>
+            ${active?'<span class="material-symbols-outlined account-popover-check">check</span>':''}
+          </div>
+        </div>`;
+      }).join('');
+      list.innerHTML+=`<div class="account-popover-add" onclick="openAddAccountModal()">
+        <span class="material-symbols-outlined" style="font-size:18px;color:#1a73e8">add</span>
+        <span class="account-popover-name" style="color:#1a73e8">Ajouter un compte</span>
+      </div>`;
+    }
+    function switchAccount(id){
+      if(id===currentAccount){ document.getElementById('account-popover').classList.add('hidden'); return; }
+      document.getElementById('account-popover').classList.add('hidden');
+      onAccountChange(id);
+    }
+    function onAccountChange(id) { currentAccount = id; currentSelectedId = null; currentListIndex = -1; updateAccountIdentity(); loadFolders(id).then(() => loadMessages()); }
     async function loadFolders(account) {
       try { folders = await api(`/api/accounts/${account}/folders`); }
       catch (e) { folders = []; }
@@ -1101,7 +1296,7 @@
       if (!folders.some(f => f.name === currentFolder)) currentFolder = (folders[0] && folders[0].name) || 'INBOX';
       renderDrawer();
     }
-    function onFolderChange(name) { currentFolder = name; currentSelectedId = null; toggleDrawer(false); loadMessages(); }
+    function onFolderChange(name) { currentFolder = name; currentSelectedId = null; currentListIndex = -1; toggleDrawer(false); loadMessages(); }
 
     // ====================== Drawer (sidebar) ======================
     const FOLDER_META = {
@@ -1117,13 +1312,24 @@
     function folderLabel(name){ const k=folderKey(name); return (FOLDER_META[k] && FOLDER_META[k].label) || name; }
     function folderIcon(name){ const k=folderKey(name); return (FOLDER_META[k] && FOLDER_META[k].icon) || 'label'; }
     function findServerFolder(...keys){ return folders.find(f => keys.includes(folderKey(f.name))); }
-    function folderNavItem(folder, fallbackLabel, fallbackIcon, action){
+    function folderNavItem(folder, fallbackLabel, fallbackIcon){
       if (folder) {
         const active = folder.name===currentFolder && !currentSpecial;
-        return `<div class="nav-item ${active?'is-active':''}" onclick="onFolderChange('${escapeAttr(folder.name)}')"><span class="material-symbols-outlined">${folderIcon(folder.name)}</span><span class="nav-label">${fallbackLabel || folderLabel(folder.name)}</span>${folder.unseen?`<span class="nav-count">${folder.unseen}</span>`:''}</div>`;
+        const count = folder.unseen ? `<span class="nav-count">${folder.unseen}</span>` : '';
+        return `<div class="nav-item ${active?'is-active':''}" onclick="onFolderChange('${escapeAttr(folder.name)}')">
+          <span class="material-symbols-outlined">${folderIcon(folder.name)}</span>
+          <span class="nav-label">${fallbackLabel || folderLabel(folder.name)}</span>
+          ${count}
+        </div>`;
       }
-      return `<div class="nav-item" onclick="${action || `showToast('${escapeAttr(fallbackLabel)} : dossier absent du serveur')`}"><span class="material-symbols-outlined">${fallbackIcon}</span><span class="nav-label">${fallbackLabel}</span></div>`;
+      return `<div class="nav-item" onclick="showToast('${escapeAttr(fallbackLabel)} : dossier absent du serveur')">
+        <span class="material-symbols-outlined">${fallbackIcon}</span>
+        <span class="nav-label">${fallbackLabel}</span>
+      </div>`;
     }
+
+    let drawerExtraOpen = false;
+    function toggleDrawerExtra(){ drawerExtraOpen=!drawerExtraOpen; renderDrawer(); }
 
     function toggleDrawer(force){
       const d=document.getElementById('nav-drawer'), o=document.getElementById('drawer-overlay');
@@ -1140,20 +1346,26 @@
       const sent=findServerFolder('SENT');
       const drafts=findServerFolder('DRAFTS');
       const spam=findServerFolder('SPAM','JUNK');
+      const archive=findServerFolder('ARCHIVE');
       const trash=findServerFolder('TRASH');
-      const snoozed=findServerFolder('SNOOZED','WAITING');
-      const scheduled=findServerFolder('SCHEDULED');
+
+      // --- Dossiers principaux ---
       let html = folderNavItem(inbox, 'Boîte de réception', 'inbox');
-      html += `<div class="nav-item" onclick="filterStarred()"><span class="material-symbols-outlined">star</span><span class="nav-label">Messages suivis</span>${starredCount?`<span class="nav-count">${starredCount}</span>`:''}</div>`;
       html += folderNavItem(sent, 'Messages envoyés', 'send');
       html += folderNavItem(drafts, 'Brouillons', 'drafts');
       html += folderNavItem(spam, 'Spam', 'report');
+      html += folderNavItem(archive, 'Archives', 'archive');
       html += folderNavItem(trash, 'Corbeille', 'delete');
       fc.innerHTML = html;
 
-      // Catégories (avec compteurs non lus)
+      // --- Catégories principales (toujours visibles) ---
+      const mainCats = CATEGORIES.filter(c => ['primary','promotions','social','updates'].includes(c.id));
+      const extraCats = CATEGORIES.filter(c => !['primary','promotions','social','updates'].includes(c.id));
+      const snoozed=findServerFolder('SNOOZED','WAITING');
+      const scheduled=findServerFolder('SCHEDULED');
+
       const cc=document.getElementById('drawer-categories');
-      cc.innerHTML = CATEGORIES.map(c => {
+      cc.innerHTML = mainCats.map(c => {
         const ce = emails.filter(e => (e.category||'primary')===c.id);
         const unread = ce.filter(e=>e.unread).length;
         const active = (c.id===currentCategory && currentFolder==='INBOX' && !currentSpecial);
@@ -1162,27 +1374,73 @@
           <span class="nav-label">${c.label}</span>
           ${unread?`<span class="nav-count">${unread}</span>`:''}
         </div>`;
-      }).join('') + `<div class="nav-item" onclick="toggleDrawerLess()"><span class="material-symbols-outlined">${drawerLessOpen?'expand_less':'expand_more'}</span><span class="nav-label">${drawerLessOpen?'Moins':'Plus'}</span></div>` + (drawerLessOpen ? `
-        ${folderNavItem(snoozed, 'En attente', 'schedule')}
-        <div class="nav-item" onclick="filterStarred()"><span class="material-symbols-outlined">label_important</span><span class="nav-label">Important</span>${starredCount?`<span class="nav-count">${starredCount}</span>`:''}</div>
-        ${folderNavItem(scheduled, 'Planifié', 'send_and_archive')}
-        <div class="nav-item" onclick="showAllMessages()"><span class="material-symbols-outlined">mail</span><span class="nav-label">Tous les messages</span>${totalUnread?`<span class="nav-count">${totalUnread}</span>`:''}</div>
-        <div class="nav-item" onclick="selectCategory('promotions')"><span class="material-symbols-outlined">unsubscribe</span><span class="nav-label">Gérer les abonnements</span></div>` : '');
+      }).join('');
 
-      // Libellés (dossiers supplémentaires comme libellés colorés)
+      // --- Catégories expandables ---
+      const ce=document.getElementById('drawer-categories-extra');
+      const extraHtml = extraCats.map(c => {
+        const ce2 = emails.filter(e => (e.category||'primary')===c.id);
+        const unread = ce2.filter(e=>e.unread).length;
+        const active = (c.id===currentCategory && currentFolder==='INBOX' && !currentSpecial);
+        return `<div class="nav-item ${active?'is-active':''}" onclick="selectCategory('${c.id}')">
+          <span class="material-symbols-outlined">${c.icon}</span>
+          <span class="nav-label">${c.label}</span>
+          ${unread?`<span class="nav-count">${unread}</span>`:''}
+        </div>`;
+      }).join('')
+      + `<div class="nav-item" onclick="filterStarred()">
+        <span class="material-symbols-outlined">star</span>
+        <span class="nav-label">Messages suivis</span>
+        ${starredCount?`<span class="nav-count">${starredCount}</span>`:''}
+      </div>`
+      + folderNavItem(spam, 'Indésirables', 'report')
+      + folderNavItem(snoozed, 'En attente', 'schedule')
+      + folderNavItem(scheduled, 'Planifié', 'send_and_archive')
+      + `<div class="nav-item" onclick="filterStarred()">
+        <span class="material-symbols-outlined">label_important</span>
+        <span class="nav-label">Important</span>
+        ${starredCount?`<span class="nav-count">${starredCount}</span>`:''}
+      </div>`
+      + `<div class="nav-item" onclick="showAllMessages()">
+        <span class="material-symbols-outlined">mail</span>
+        <span class="nav-label">Tous les messages</span>
+        ${totalUnread?`<span class="nav-count">${totalUnread}</span>`:''}
+      </div>`
+      + `<div class="nav-item" onclick="selectCategory('promotions')">
+        <span class="material-symbols-outlined">unsubscribe</span>
+        <span class="nav-label">Gérer les abonnements</span>
+      </div>`;
+
+      ce.innerHTML = `<button class="nav-toggle ${drawerExtraOpen?'is-open':''}" onclick="toggleDrawerExtra()">
+        <span class="material-symbols-outlined">expand_more</span>
+        ${drawerExtraOpen?'Moins':'Plus'}
+      </button>
+      <div class="nav-sub-section ${drawerExtraOpen?'':'collapsed'}" style="max-height:${drawerExtraOpen?'600px':'0'}">
+        ${extraHtml}
+      </div>`;
+
+      // --- Libellés ---
       const lc=document.getElementById('drawer-labels');
       const extraFolders = folders.filter(f => !Object.keys(FOLDER_META).includes(folderKey(f.name)) && folderKey(f.name)!=='INBOX' && !['SNOOZED','WAITING','SCHEDULED'].includes(folderKey(f.name)));
-      const labelColors=['#e23b3b','#1a7f37','#1a73e8','#a259ff','#f59e0b','#0a66c2','#e11d48','#0d9488'];
-      let lhtml = extraFolders.map((f,i)=>`<div class="nav-item" onclick="onFolderChange('${escapeAttr(f.name)}')"><span class="nav-label-dot" style="background:${labelColors[i%labelColors.length]}"></span><span class="nav-label">${escapeHtml(f.name)}</span></div>`).join('');
-      lhtml += `<div class="nav-item" onclick="showToast('Les libellés affichés sont les dossiers réels du serveur')"><span class="material-symbols-outlined">settings</span><span class="nav-label">Gérer les libellés</span></div>`;
-      lhtml += `<div class="nav-item" onclick="createLabel()"><span class="material-symbols-outlined">add</span><span class="nav-label">Créer un libellé</span></div>`;
+      const labelColors=['#1a73e8','#e23b3b','#0a66c2','#a259ff','#f59e0b','#1a7f37','#e11d48','#0d9488'];
+      let lhtml = extraFolders.map((f,i)=>`<div class="nav-item" onclick="onFolderChange('${escapeAttr(f.name)}')">
+        <span class="nav-label-dot" style="background:${labelColors[i%labelColors.length]}"></span>
+        <span class="nav-label">${escapeHtml(f.name)}</span>
+      </div>`).join('');
+      lhtml += `<div class="nav-item" onclick="showToast('Les libellés affichés sont les dossiers réels du serveur')">
+        <span class="material-symbols-outlined">settings</span>
+        <span class="nav-label">Gérer les libellés</span>
+      </div>`;
+      lhtml += `<div class="nav-item" onclick="createLabel()">
+        <span class="material-symbols-outlined">add</span>
+        <span class="nav-label">Créer un libellé</span>
+      </div>`;
       lc.innerHTML = lhtml;
 
       const foot=document.getElementById('drawer-foot');
       const acc = accounts.find(a=>a.id===currentAccount);
-      if(foot && acc) foot.textContent = `${acc.email} · ${accounts.length} compte(s)`;
+      if(foot && acc) foot.textContent = `${acc.email}`;
     }
-    function toggleDrawerLess(){ drawerLessOpen=!drawerLessOpen; renderDrawer(); }
     async function createLabel(){
       const name=prompt('Nom du nouveau libellé');
       if(!name || !name.trim()) return;
@@ -1243,6 +1501,7 @@
         emails = (data.messages || []).map(mapMessage);
         loadError = '';
         currentSelectedId = null;
+        currentListIndex = -1;
         currentActiveView = emails.length ? 'list' : 'zero';
         updateUIState();
         if (alertFlag) showToast(`${emails.length} message(s) — ${currentFolder}`);
@@ -1287,6 +1546,11 @@
     // ====================== Helpers UI ======================
     function escapeHtml(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
     function escapeAttr(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
+    function stripHtmlTags(html){
+      const div = document.createElement('div');
+      div.innerHTML = html || '';
+      return (div.textContent || div.innerText || '').replace(/\u00a0/g, ' ').trim();
+    }
     function avatarBg(name){
       const colors = ['bg-indigo-500','bg-purple-500','bg-pink-500','bg-emerald-600','bg-blue-600','bg-orange-500','bg-teal-600','bg-gray-700','bg-blue-700','bg-rose-500'];
       let h=0; for(const c of (name||'?')) h=(h*31+c.charCodeAt(0))>>>0;
@@ -1294,8 +1558,11 @@
     }
     function messageSnippet(e){ return e.snippet || e.text || ''; }
     function messageProse(e){
-      if (e.text) return e.text.split(/\n{2,}/).map(p => `<p>${escapeHtml(p).replace(/\n/g,'<br>')}</p>`).join('');
-      return `<p>${escapeHtml(e.snippet||'')}</p>`;
+      const plain = (e.text && e.text.trim()) ? e.text : (e.html ? stripHtmlTags(e.html) : (e.snippet || ''));
+      const body = plain
+        ? plain.split(/\n{2,}/).map(p => `<p>${escapeHtml(p).replace(/\n/g,'<br>')}</p>`).join('')
+        : `<p></p>`;
+      return `<div class="mail-body-copy">${body}</div>`;
     }
     function attachmentsHtml(e){
       if(!e.attachments || !e.attachments.length) return '';
@@ -1312,13 +1579,18 @@
     function htmlMailBlock(e){
       if(!e.html) return '';
       const fid = 'htmlframe-' + e.uid + '-' + Math.random().toString(36).slice(2,7);
-      // réécrire les images inline cid: → endpoint serveur
       let doc = e.html.replace(/src=["']cid:([^"']+)["']/gi, (m, cid) =>
         `src="/api/messages/${e.account}/${e.uid}/cid/${cid}?folder=${encodeURIComponent(currentFolder)}"`);
-      return `<div class="mt-5">
-        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:14px">code</span>Email HTML · rendu isolé</div>
-        <iframe id="${fid}" class="html-mail-frame" sandbox="allow-same-origin allow-popups" srcdoc="${escapeAttr(doc)}" onload="resizeHtmlFrame('${fid}')"></iframe>
-      </div>`;
+      doc = `<style>
+        html, body, body * {
+          font-family: 'Inter', 'Avenir Next', 'SF Pro Display', system-ui, sans-serif !important;
+          color: #111111 !important;
+          font-synthesis: none;
+          font-variant-ligatures: none;
+        }
+        body { line-height: 1.75; background: #ffffff; }
+      </style>` + doc;
+      return `<iframe id="${fid}" class="html-mail-frame" sandbox="allow-same-origin allow-popups" srcdoc="${escapeAttr(doc)}" onload="resizeHtmlFrame('${fid}')"></iframe>`;
     }
     function resizeHtmlFrame(id){
       const f = document.getElementById(id); if(!f) return;
@@ -1359,29 +1631,75 @@
 
     // ====================== Thème / fond / popover (identique v22) ======================
     function setTheme(theme){
+      if(theme==='light') theme='white';
       currentTheme = theme;
       const body = document.body;
       body.classList.remove('theme-image','theme-white','theme-dark'); body.classList.add('theme-'+theme);
-      document.getElementById('theme-indicator').innerText = theme==='image'?'Image':(theme==='white'?'Clair':'Sombre');
       const convCard = document.getElementById('conversation-card');
       const listHeaderBar = document.getElementById('list-header-bar');
-      if(theme==='image'){ convCard.classList.add('border','border-gray-100','shadow-xl'); convCard.classList.remove('shadow-none'); }
-      else { convCard.classList.remove('border','border-gray-100','shadow-xl'); convCard.classList.add('shadow-none'); }
-      listHeaderBar.classList.remove('border-transparent'); listHeaderBar.classList.add('border-b','border-gray-200/80');
+      if(convCard){
+        if(theme==='image'){ convCard.classList.add('border','border-gray-100','shadow-xl'); convCard.classList.remove('shadow-none'); }
+        else { convCard.classList.remove('border','border-gray-100','shadow-xl'); convCard.classList.add('shadow-none'); }
+      }
+      if(listHeaderBar){
+        listHeaderBar.classList.remove('border-transparent'); listHeaderBar.classList.add('border-b','border-gray-200/80');
+      }
       body.style.setProperty('--bg-image', theme==='image' ? `url('${currentBgUrl}')` : 'none');
-      document.getElementById('bg-gallery-wrap').style.display = (theme==='image')?'':'none';
-      updateThemeSegmented(); updateUIState();
+      try { localStorage.setItem('simplemail_theme', theme); } catch(e){}
+      updateUIState();
     }
-    function setBackground(url){ currentBgUrl = url; if(currentTheme==='image') document.body.style.setProperty('--bg-image', `url('${url}')`); renderBgGallery(); }
-    function renderBgGallery(){
-      const g = document.getElementById('bg-gallery'); g.innerHTML = '';
-      backgrounds.forEach(bg => { const t=document.createElement('div'); t.className='bg-thumb'+(bg.url===currentBgUrl?' is-active':''); t.style.backgroundImage=`url('${bg.url}')`; t.title=bg.name; t.onclick=()=>setBackground(bg.url); g.appendChild(t); });
+    function setBackground(url){ currentBgUrl = url; if(currentTheme==='image') document.body.style.setProperty('--bg-image', `url('${url}')`); }
+    function setFont(font){
+      currentFont = font;
+      const body = document.body;
+      let fontStack = '';
+      switch(font){
+        case 'futura':
+          fontStack = "'Futura', 'Century Gothic', 'Tw Cen MT', 'Inter', system-ui, -apple-system, sans-serif";
+          break;
+        case 'poppins':
+          fontStack = "'Poppins', sans-serif";
+          break;
+        case 'nerd':
+          fontStack = "'JetBrains Mono', 'Space Mono', 'Iosevka', monospace";
+          break;
+        default:
+          fontStack = "'Futura', 'Century Gothic', 'Tw Cen MT', 'Inter', system-ui, -apple-system, sans-serif";
+      }
+      body.style.setProperty('--font-primary', fontStack);
+      try { localStorage.setItem('simplemail_font', font); } catch(e){}
     }
-    function updateThemeSegmented(){ document.querySelectorAll('.theme-opt').forEach(b=>b.classList.toggle('is-active', b.dataset.theme===currentTheme)); }
-    function toggleSettingsPopover(e){ if(e) e.stopPropagation(); document.getElementById('settings-popover').classList.toggle('hidden'); }
+    function setFontMono(font){
+      currentFontMono = font;
+      const body = document.body;
+      let fontStack = '';
+      switch(font){
+        case 'jetbrains':
+          fontStack = "'JetBrains Mono', monospace";
+          break;
+        case 'space':
+          fontStack = "'Space Mono', monospace";
+          break;
+        case 'iosevka':
+          fontStack = "'Iosevka', monospace";
+          break;
+        default:
+          fontStack = "'JetBrains Mono', monospace";
+      }
+      body.style.setProperty('--font-mono', fontStack);
+      try { localStorage.setItem('simplemail_font_mono', font); } catch(e){}
+    }
+    function loadFontSettings(){
+      try {
+        const savedFont = localStorage.getItem('simplemail_font');
+        const savedFontMono = localStorage.getItem('simplemail_font_mono');
+        if(savedFont) setFont(savedFont);
+        if(savedFontMono) setFontMono(savedFontMono);
+      } catch(e){}
+    }
     document.addEventListener('click', (e) => {
-      const pop = document.getElementById('settings-popover');
-      if(pop && !pop.classList.contains('hidden') && !pop.contains(e.target) && !e.target.closest('[onclick*="toggleSettingsPopover"]')) pop.classList.add('hidden');
+      const apop = document.getElementById('account-popover');
+      if(apop && !apop.classList.contains('hidden') && !apop.contains(e.target) && !e.target.closest('#account-avatar')) apop.classList.add('hidden');
     });
     function toggleTheme(){ const o=['image','white','dark']; setTheme(o[(o.indexOf(currentTheme)+1)%o.length]); }
 
@@ -1393,9 +1711,57 @@
       searchTimer = setTimeout(() => loadMessages(), 350);
     }
     function handleBack(){
-      if(currentActiveView==='conversation'){ if(currentNewsletterFilter){ currentSelectedId=null; currentActiveView='newsletter'; } else { currentSelectedId=null; currentActiveView='list'; } }
+      if(currentActiveView==='conversation'){ if(currentNewsletterFilter){ currentActiveView='newsletter'; } else { currentActiveView='list'; } }
       else if(currentActiveView==='newsletter'){ currentNewsletterFilter=''; currentActiveView='list'; }
       updateUIState();
+    }
+
+    function getVisibleThreads(){
+      return getThreads();
+    }
+
+    function getSelectedThreadIndex(){
+      const threads = getVisibleThreads();
+      if (!threads.length) return -1;
+      if (currentSelectedId) {
+        const idx = threads.findIndex(t => t.messages.some(m => m.id === currentSelectedId));
+        if (idx >= 0) return idx;
+      }
+      if (currentListIndex >= 0 && currentListIndex < threads.length) return currentListIndex;
+      return 0;
+    }
+
+    function setSelectedThreadIndex(index){
+      const threads = getVisibleThreads();
+      if (!threads.length) {
+        currentListIndex = -1;
+        currentSelectedId = null;
+        renderInboxList();
+        return;
+      }
+      const nextIndex = Math.max(0, Math.min(index, threads.length - 1));
+      currentListIndex = nextIndex;
+      const latest = threads[nextIndex].messages[threads[nextIndex].messages.length - 1];
+      currentSelectedId = latest ? latest.id : null;
+      renderInboxList();
+      const row = document.querySelector(`[data-thread-id="${CSS.escape(threads[nextIndex].id || latest.id)}"]`);
+      if (row && row.scrollIntoView) row.scrollIntoView({ block: 'nearest' });
+    }
+
+    function moveSelection(delta){
+      const threads = getVisibleThreads();
+      if (!threads.length) return;
+      const idx = getSelectedThreadIndex();
+      setSelectedThreadIndex(idx < 0 ? 0 : idx + delta);
+    }
+
+    function openSelectedThread(){
+      const threads = getVisibleThreads();
+      if (!threads.length) return;
+      const idx = getSelectedThreadIndex();
+      if (idx < 0 || idx >= threads.length) return;
+      const latest = threads[idx].messages[threads[idx].messages.length - 1];
+      if (latest) openConversation(latest.id);
     }
     function setHeaderState(state){
       const header=document.getElementById('main-header');
@@ -1445,15 +1811,34 @@
       countLabel.innerText=threads.length;
       container.innerHTML='';
       updateCategoryTabs();
-      if(!threads.length){ const cl=(CATEGORIES.find(c=>c.id===currentCategory)||{}).label||''; container.innerHTML=`<div class="p-12 text-center text-gray-500 text-sm">Aucun message dans « ${cl} ».</div>`; return; }
+      // Masquer newsletters et catégories hors INBOX
+      const nlSection = document.getElementById('nl-section');
+      const catTabs = document.getElementById('cat-tabs-container');
+      if(nlSection) nlSection.classList.toggle('hidden', currentFolder !== 'INBOX');
+      if(catTabs) catTabs.classList.toggle('hidden', currentFolder !== 'INBOX');
+      if(!threads.length){ 
+        currentListIndex = -1; 
+        currentSelectedId = null; 
+        const cl=(CATEGORIES.find(c=>c.id===currentCategory)||{}).label||''; 
+        const isSearch = searchText.trim().length > 0;
+        const emptyTitle = isSearch ? 'Aucun résultat' : 'Votre boîte est propre';
+        const emptyDesc = isSearch ? `Aucun message ne correspond à "${escapeHtml(searchText)}".` : 'Aucun nouveau message pour le moment.';
+        const emptyBtn = isSearch ? '<button onclick="handleSearch(\'\');document.getElementById(\'search-input\').value=\'\';loadMessages();" class="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-xs font-medium text-gray-600 transition-colors">Effacer la recherche</button>' : '<button onclick="loadMessages(true)" class="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-xs font-medium text-gray-600 transition-colors">Actualiser la boîte de réception</button>';
+        container.innerHTML=`<div class="p-12 text-center"><h2 class="text-base font-medium text-gray-800 mb-2">${emptyTitle}</h2><p class="text-xs text-gray-400 leading-relaxed mb-6">${emptyDesc}</p>${emptyBtn}</div>`; 
+        return; 
+      }
+      const selectedIndex = getSelectedThreadIndex();
+      currentListIndex = selectedIndex < 0 ? 0 : selectedIndex;
       threads.forEach((thread, index) => {
         const msgs=thread.messages, latest=msgs[msgs.length-1];
         const hasUnread=msgs.some(m=>m.unread), starred=msgs.some(m=>m.starred), isMulti=msgs.length>1;
         const participants=[...new Set(msgs.map(m=>m.sender))].length;
         const item=document.createElement('div');
         const borderClass = (currentTheme!=='image' && index===threads.length-1) ? 'border-transparent' : 'border-b border-gray-100';
-        item.className=`flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50/80 transition-colors select-none ${borderClass} ${hasUnread?'bg-white font-semibold':'bg-gray-50/30 text-gray-700'}`;
-        item.onclick=()=>openConversation(latest.id);
+        const isSelected = index === currentListIndex;
+        item.className=`flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50/80 transition-colors select-none ${borderClass} ${hasUnread?'bg-white font-semibold':'bg-gray-50/30 text-gray-700'} ${isSelected?'ring-2 ring-[#1a73e8]/30 bg-[#1a73e8]/8':''}`;
+        item.setAttribute('data-thread-id', thread.id || latest.id);
+        item.onclick=()=>{ currentListIndex = index; currentSelectedId = latest.id; openConversation(latest.id); };
         const senderLabel = isMulti&&participants>1 ? `${latest.sender} (+${participants-1})` : latest.sender;
         item.innerHTML=`
           <div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
@@ -1468,19 +1853,25 @@
           <div class="text-xs text-gray-400 shrink-0 font-normal flex items-center gap-2">
             ${latest.hasAttachments?'<span class="material-symbols-outlined" style="font-size:16px">attach_file</span>':''}
             ${latest.date}
-          </div>`;
+        </div>`;
         container.appendChild(item);
+        if (isSelected) queueMicrotask(() => item.scrollIntoView({ block: 'nearest' }));
       });
     }
 
     // ====================== Newsletter (expéditeurs récurrents en Promotions) ======================
     function buildNewsletterCarousel(){
       const c = document.getElementById('nl-carousel'); if(!c) return;
+      const m = document.getElementById('nl-mosaic-grid'); if(!m) return;
       const promo = emails.filter(e => (e.category||'primary')==='promotions');
       const byDomain = {};
       promo.forEach(e => { const d = domainOf(e.email) || e.sender; if(!byDomain[d]) byDomain[d]={sender:e.sender, email:e.email, items:[], icon:'article'}; byDomain[d].items.push(e); });
-      const top = Object.entries(byDomain).sort((a,b)=>b[1].items.length-a[1].items.length).slice(0,6);
-      if(!top.length){ c.innerHTML='<div class="text-xs text-gray-400 italic px-1 py-6 select-none">Aucune newsletter dans ce dossier.</div>'; return; }
+      const top = Object.entries(byDomain).sort((a,b)=>b[1].items.length-a[1].items.length);
+      if(!top.length){ 
+        c.innerHTML='<div class="text-xs text-gray-400 italic px-1 py-6 select-none">Aucune newsletter dans ce dossier.</div>'; 
+        m.innerHTML='<div class="text-xs text-gray-400 italic px-1 py-6 select-none">Aucune newsletter dans ce dossier.</div>';
+        return; 
+      }
       const palettes = [
         ['from-orange-950 via-orange-900/50 to-orange-800','text-orange-200','text-orange-200/70'],
         ['from-slate-900 via-slate-800/50 to-slate-600','text-slate-200','text-slate-300/70'],
@@ -1489,7 +1880,9 @@
         ['from-rose-950 via-rose-900/50 to-rose-700','text-rose-200','text-rose-300/80'],
         ['from-emerald-950 via-emerald-900/50 to-emerald-700','text-emerald-200','text-emerald-300/80'],
       ];
-      c.innerHTML = top.map(([dom, info], i) => {
+      // Mode carousel (horizontal)
+      const topCarousel = top.slice(0,6);
+      c.innerHTML = topCarousel.map(([dom, info], i) => {
         const [grad, sub, sub2] = palettes[i % palettes.length];
         const unread = info.items.filter(e=>e.unread).length;
         const cnt = unread>0 ? `${unread} non lu${unread>1?'s':''}` : `${info.items.length} message${info.items.length>1?'s':''}`;
@@ -1504,6 +1897,22 @@
           </div>
         </div>`;
       }).join('');
+      // Mode mosaïque (grille complète)
+      m.innerHTML = top.map(([dom, info], i) => {
+        const [grad, sub, sub2] = palettes[i % palettes.length];
+        const unread = info.items.filter(e=>e.unread).length;
+        const cnt = unread>0 ? `${unread} non lu${unread>1?'s':''}` : `${info.items.length} message${info.items.length>1?'s':''}`;
+        return `<div onclick="openNewsletter('${escapeAttr(dom)}')" class="w-full h-48 rounded-xl overflow-hidden cursor-pointer relative group shadow-md transition-transform hover:-translate-y-1 duration-200">
+          <div class="absolute inset-0 bg-gradient-to-t ${grad} flex flex-col justify-between p-4">
+            <div class="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center border border-white/20 select-none"><span class="material-symbols-outlined !text-white text-xl">${info.icon}</span></div>
+            <div class="flex flex-col">
+              <span class="text-[11px] ${sub} uppercase font-semibold tracking-wider truncate">${escapeHtml(nameOf(info.sender))}</span>
+              <h4 class="text-sm font-bold text-white leading-snug mt-1 truncate group-hover:underline">${escapeHtml(info.sender)}</h4>
+              <span class="text-xs ${sub2} mt-1">${cnt}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
     }
 
     function openNewsletter(domainKey){
@@ -1512,10 +1921,16 @@
       updateUIState();
     }
     function toggleAllNewsletters(){
-      const c=document.querySelector('#inbox-list-view .carousel-container'); const btn=document.getElementById('nl-toggle-btn');
-      if(!c||!btn) return; c.classList.toggle('nl-expanded');
-      const ex=c.classList.contains('nl-expanded');
-      btn.innerHTML = ex ? '<span class="material-symbols-outlined" style="font-size:14px">unfold_less</span> Réduire' : '<span class="material-symbols-outlined" style="font-size:14px">grid_view</span> Toutes les newsletters';
+      const carousel = document.getElementById('nl-carousel');
+      const mosaic = document.getElementById('nl-mosaic');
+      const btn = document.getElementById('nl-toggle-btn');
+      if(!carousel||!mosaic||!btn) return;
+      mosaicMode = !mosaicMode;
+      carousel.classList.toggle('hidden', mosaicMode);
+      mosaic.classList.toggle('hidden', !mosaicMode);
+      btn.innerHTML = mosaicMode 
+        ? '<span class="material-symbols-outlined" style="font-size:14px">view_carousel</span> Vue liste' 
+        : '<span class="material-symbols-outlined" style="font-size:14px">grid_view</span> Mosaïque';
     }
     function renderNewsletterDetail(){
       const list = emails.filter(e => domainOf(e.email) === currentNewsletterFilter || (domainOf(e.email)==='' && e.sender===currentNewsletterFilter));
@@ -1558,6 +1973,16 @@
     function toggleThreadMsg(headEl){ const m=headEl.closest('.thread-msg'); if(m) m.classList.toggle('collapsed'); }
     function toggleAllThreadMsgs(){ const ms=document.querySelectorAll('#thread-chain .thread-msg'); if(!ms.length) return; const any=[...ms].some(m=>m.classList.contains('collapsed')); ms.forEach(m=>any?m.classList.remove('collapsed'):m.classList.add('collapsed')); }
 
+    // ===== Settings persistés (localStorage) =====
+    let settings = {};
+    try { settings = JSON.parse(localStorage.getItem('mm_settings') || '{}'); } catch(e) { settings = {}; }
+    if (!settings.convOrder) settings.convOrder = 'newest'; // 'newest' (récent en haut) | 'oldest'
+    if (!settings.lang) settings.lang = 'fr';
+    if (!settings.shortcuts) settings.shortcuts = null;
+    function saveSettings(){ try { localStorage.setItem('mm_settings', JSON.stringify(settings)); } catch(e){} }
+    function getConvOrder(){ return settings.convOrder || 'newest'; }
+    function setConvOrder(o){ settings.convOrder = o; saveSettings(); }
+
     async function openConversation(id){
       currentSelectedId=id;
       const all=getThreads(emails);
@@ -1573,11 +1998,6 @@
             ${msgs.length>1?`<span class="thread-badge shrink-0" title="${msgs.length} messages">${msgs.length}</span>`:''}
             <span class="badge-inbox flex items-center gap-1 cursor-pointer shrink-0">${escapeHtml(currentFolder)} <span class="text-[10px] font-bold">×</span></span>
           </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <div class="icon-btn-container w-8 h-8" title="Mode immersif" onclick="openImmersive('${id}')" style="cursor:pointer"><span class="material-symbols-outlined">menu_book</span></div>
-            <div class="icon-btn-container w-8 h-8" title="Tout déplier/replier" onclick="toggleAllThreadMsgs()" style="cursor:pointer"><span class="material-symbols-outlined">unfold_more</span></div>
-            <div class="icon-btn-container w-8 h-8" title="Supprimer" onclick="deleteCurrent()" style="cursor:pointer"><span class="material-symbols-outlined">delete</span></div>
-          </div>
         </div>
         <div id="thread-chain"><div class="text-sm text-gray-400 py-8 text-center">Chargement…</div></div>`;
       currentActiveView='conversation'; updateUIState();
@@ -1586,8 +2006,12 @@
       const chain=document.getElementById('thread-chain'); chain.innerHTML='';
       const detailed = await Promise.all(msgs.map(m => fetchDetail(m)));
       detailed.forEach(e => { if(e.unread){ e.unread=false; apiCallFlag(e,true,null); } });
-      detailed.forEach((m,i)=>{
-        const expanded = (i===detailed.length-1);
+      // Ordre d'affichage de la conversation (récent en haut par défaut, paramétrable)
+      const newestFirst = (getConvOrder()==='newest');
+      const ordered = newestFirst ? detailed.slice().reverse() : detailed.slice();
+      const expandedIdx = newestFirst ? 0 : ordered.length - 1;
+      ordered.forEach((m,i)=>{
+        const expanded = (i===expandedIdx);
         const div=document.createElement('div'); div.className='thread-msg'+(expanded?'':' collapsed');
         div.innerHTML=`
           <div class="thread-msg-head" onclick="toggleThreadMsg(this)">
@@ -1634,9 +2058,35 @@
       }).catch(e=>showToast('Suppression impossible : '+e.message));
     }
     function archiveCurrent(){ showToast('Archive non disponible via IMAP standard'); }
+    function reportSpamCurrent(){ showToast('Spam non disponible via IMAP standard'); }
+    function snoozeCurrent(){ showToast('Mise en attente non disponible via IMAP standard'); }
+    function addToTasksCurrent(){ showToast('Ajouter aux tâches non disponible via IMAP standard'); }
+    function moveCurrent(){ showToast('Déplacer vers non disponible via IMAP standard'); }
+    function moreMessageActions(){ showToast('Plus d’actions bientôt'); }
+    function showMoreConversationActions(){ showToast('Plus d’actions bientôt'); }
+    function showMoreListActions(){ showToast('Plus d’actions bientôt'); }
+    function toggleSelectAll(){ showToast('Sélection multiple bientôt'); }
+    function focusSearch(){ const si=document.getElementById('search-input'); if(si){ si.focus(); si.select?.(); } }
     function toggleUnreadCurrent(){ const m=emails.find(e=>e.id===currentSelectedId); if(m){ m.unread=true; apiCallFlag(m,false,null); closeConversation(); showToast('Marqué comme non lu'); } }
     function closeConversation(){ handleBack(); }
     function replyCurrent(){ const m=emails.find(e=>e.id===currentSelectedId); openCompose(m?{to:m.email, subject:'Re: '+(m.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,'')}:null); }
+    function replyAllCurrent(){
+      const m=emails.find(e=>e.id===currentSelectedId);
+      if(!m) return;
+      fetchDetail(m).then(()=>{
+        const to=m.email||'';
+        const cc=m.cc||'';
+        openCompose({to, cc, subject:'Re: '+(m.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,'')});
+      });
+    }
+    function forwardCurrent(){
+      const m=emails.find(e=>e.id===currentSelectedId);
+      if(!m) return;
+      fetchDetail(m).then(()=>{
+        const body=(m.text||m.snippet||'').replace(/\n/g,'\n> ');
+        openCompose({subject:'Fwd: '+(m.subject||''), text:'\n\n--- Message transféré ---\nDe: '+m.sender+' <'+m.email+'>\nDate: '+(m.longDate||m.date)+'\n\n'+body});
+      });
+    }
     function labelCurrent(){ showToast('Libellés non gérés en IMAP standard'); }
 
     // ====================== Immersive reader ======================
@@ -1654,15 +2104,25 @@
       const vp=document.getElementById('immersive-viewport'); const e=immersiveList[immersiveIndex]; if(!e){ vp.innerHTML=''; updateImmersiveChrome(); return; }
       await fetchDetail(e); if(e.unread){ e.unread=false; apiCallFlag(e,true,null); }
       const slide=document.createElement('div'); slide.className='im-slide active';
-      slide.innerHTML=`<div class="h-full overflow-y-auto flex justify-center"><div class="w-full max-w-2xl px-8 py-10">
-        <h1 class="immersive-serif im-title">${escapeHtml(e.subject)}</h1>
-        <div class="flex items-baseline justify-between gap-4 border-b immersive-border pb-5 mt-5 mb-9">
-          <div class="flex flex-col gap-0.5 min-w-0"><span class="font-semibold text-sm">${escapeHtml(e.sender)}</span><span class="text-xs immersive-muted truncate">${escapeHtml(e.email)}</span></div>
-          <span class="text-xs immersive-muted whitespace-nowrap">${escapeHtml(e.longDate||(e.date+' · '+e.time))}</span>
+      slide.innerHTML=`<div class="h-full overflow-y-auto bg-white">
+        <div class="mx-auto flex min-h-full w-full max-w-5xl justify-center px-6 py-12 md:px-10 md:py-16">
+          <div class="w-full max-w-3xl">
+            <div class="text-center">
+              <h1 class="immersive-serif im-title max-w-4xl mx-auto">${escapeHtml(e.subject)}</h1>
+              <div class="mt-6 flex flex-col items-center gap-1 text-sm text-[#707070]">
+                <div class="font-medium text-[#303030]">${escapeHtml(e.sender)}</div>
+                <div class="truncate max-w-full">${escapeHtml(e.email)}</div>
+                <div>${escapeHtml(e.longDate||(e.date+' · '+e.time))}</div>
+              </div>
+            </div>
+            <div class="mx-auto mt-14 max-w-2xl" style="--mail-body-font:'Inter', 'Avenir Next', 'SF Pro Display', system-ui, sans-serif;">
+              <article class="immersive-serif im-article">${messageProse(e)}</article>
+              <div class="mt-8">${attachmentsHtml(e)}</div>
+            </div>
+            <div class="h-24"></div>
+          </div>
         </div>
-        <article class="immersive-serif im-article im-drop-cap">${e.html?`<div class="text-sm mb-4 text-gray-400">Email HTML — voir la version complète dans la conversation.</div>`:''}${messageProse(e)}</article>
-        ${attachmentsHtml(e)}
-        <div class="h-24"></div></div></div>`;
+      </div>`;
       vp.innerHTML=''; vp.appendChild(slide); slide.querySelector('.overflow-y-auto').scrollTop=0; updateImmersiveChrome();
     }
     function updateImmersiveChrome(){
@@ -1684,6 +2144,18 @@
     }
     function immersiveToggleUnread(){ const e=immersiveList[immersiveIndex]; if(!e) return; e.unread=!e.unread; apiCallFlag(e,!e.unread,null); showToast(e.unread?'Marqué non lu':'Marqué lu'); }
     function immersiveSendReply(){ const i=document.getElementById('immersive-reply'); if(i.value.trim()){ const e=immersiveList[immersiveIndex]; openCompose({to:e?e.email:'', text:i.value}); i.value=''; } }
+    function immersiveReply(){ const e=immersiveList[immersiveIndex]; if(!e) return; openCompose({to:e.email, subject:'Re: '+(e.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,'')}); }
+    function immersiveReplyAll(){
+      const e=immersiveList[immersiveIndex]; if(!e) return;
+      fetchDetail(e).then(()=>{ openCompose({to:e.email, cc:e.cc||'', subject:'Re: '+(e.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,'')}); });
+    }
+    function immersiveForward(){
+      const e=immersiveList[immersiveIndex]; if(!e) return;
+      fetchDetail(e).then(()=>{
+        const body=(e.text||e.snippet||'').replace(/\n/g,'\n> ');
+        openCompose({subject:'Fwd: '+(e.subject||''), text:'\n\n--- Message transféré ---\nDe: '+e.sender+' <'+e.email+'>\nDate: '+(e.longDate||e.date)+'\n\n'+body});
+      });
+    }
 
     // ====================== Compose PLEIN ÉCRAN (envoi réel, zéro distraction) ======================
     function openCompose(prefill){
@@ -1700,7 +2172,7 @@
           </div>
           <div class="flex items-center gap-2">
             <button onclick="closeCompose()" class="text-xs font-medium px-3 py-1.5 rounded-md border compose-border hover:bg-black/5 dark:hover:bg-white/10">Fermer</button>
-            <button id="cmp-send" onclick="sendCompose()" class="compose-send-btn"><span class="material-symbols-outlined !text-inherit" style="font-size:18px">send</span> Envoyer</button>
+            <button id="cmp-send" onclick="sendCompose()" class="compose-send-btn"><span class="material-symbols-outlined !text-inherit" style="font-size:18px">send</span> Envoyer <span class="text-[10px] opacity-60 ml-1">⌘↵</span></button>
           </div>
         </div>
         <div class="flex-1 overflow-y-auto">
@@ -1730,6 +2202,11 @@
         </div>`;
       document.body.appendChild(overlay);
       requestAnimationFrame(()=>overlay.classList.remove('opacity-0'));
+      // Cmd+Enter pour envoyer
+      overlay.addEventListener('keydown',(ev)=>{
+        if((ev.metaKey||ev.ctrlKey) && ev.key==='Enter'){ ev.preventDefault(); sendCompose(); }
+        if(ev.key==='Escape'){ ev.preventDefault(); closeCompose(); }
+      });
       // CSS complémentaire injecté à la volée (une fois)
       if(!document.getElementById('compose-style')){
         const s=document.createElement('style'); s.id='compose-style';
@@ -1784,23 +2261,82 @@
     // ====================== Toast + clavier ======================
     function showToast(msg){ const t=document.getElementById('toast'); t.innerText=msg; t.classList.remove('translate-y-20','opacity-0'); setTimeout(()=>t.classList.add('translate-y-20','opacity-0'),2500); }
 
+    // ====================== Keyboard Shortcuts (Gmail-like) ======================
+    let _pendingKey = null;
+    let _pendingTimer = null;
     document.addEventListener('keydown',(e)=>{
+      // --- Immersive reader ---
       if(immersiveOpen){
         const tag=(e.target.tagName||'').toLowerCase(); if(tag==='input'||tag==='textarea') return;
         if(e.key==='ArrowRight'||e.key==='j'){ e.preventDefault(); immersiveNext(1); }
         else if(e.key==='ArrowLeft'||e.key==='k'){ e.preventDefault(); immersiveNext(-1); }
         else if(e.key==='Escape'){ e.preventDefault(); closeImmersive(); }
+        else if(e.key==='r'){ e.preventDefault(); immersiveReply(); }
+        else if(e.key==='a'){ e.preventDefault(); immersiveReplyAll(); }
+        else if(e.key==='f'){ e.preventDefault(); immersiveForward(); }
+        else if(e.key==='s'){ e.preventDefault(); immersiveToggleStar(); }
+        else if(e.key==='u'){ e.preventDefault(); immersiveToggleUnread(); }
+        else if(e.key==='e'){ e.preventDefault(); immersiveArchive(); }
+        else if(e.key==='#'){ e.preventDefault(); immersiveDelete(); }
         return;
       }
-      const tag=(e.target.tagName||'').toLowerCase(); if(tag==='input'||tag==='textarea') return;
-      if(e.metaKey||e.ctrlKey||e.altKey) return;
-      if(e.key==='Escape'){ if(currentActiveView==='conversation'||currentActiveView==='newsletter'){ e.preventDefault(); handleBack(); } }
-      else if(e.key==='c'){ if(currentActiveView==='list'||currentActiveView==='zero'){ e.preventDefault(); openCompose(); } }
-      else if(currentActiveView==='conversation'){
-        if(e.key==='j'){ e.preventDefault(); navigateMail(1); }
+      // --- Compose overlay ---
+      if(document.getElementById('compose-overlay')) return;
+      // --- Ignore si dans un input ---
+      const tag=(e.target.tagName||'').toLowerCase();
+      if(tag==='input'||tag==='textarea'||tag==='select') return;
+      // --- ESC : toujours retour ---
+      if(e.key==='Escape'){
+        e.preventDefault();
+        if(currentActiveView==='conversation'||currentActiveView==='newsletter') handleBack();
+        else if(currentActiveView==='list'||currentActiveView==='zero'){
+          const si=document.getElementById('search-input');
+          if(si && si.value){ si.value=''; handleSearch(''); si.blur(); }
+        }
+        return;
+      }
+      // --- Two-key sequences (G+I, G+S, etc.) ---
+      if(_pendingKey){
+        clearTimeout(_pendingTimer); _pendingKey=null;
+        const combo=_pendingKey+'+'+e.key;
+        if(combo==='g+i'){ e.preventDefault(); onFolderChange(findServerFolder('INBOX')?.name||'INBOX'); }
+        else if(combo==='g+s'){ e.preventDefault(); filterStarred(); }
+        else if(combo==='g+t'){ e.preventDefault(); onFolderChange(findServerFolder('TRASH')?.name||'TRASH'); }
+        else if(combo==='g+d'){ e.preventDefault(); onFolderChange(findServerFolder('DRAFTS')?.name||'DRAFTS'); }
+        else if(combo==='g+a'){ e.preventDefault(); onFolderChange(findServerFolder('ARCHIVE')?.name||'ARCHIVE'); }
+        else if(combo==='g+n'){ e.preventDefault(); onFolderChange(findServerFolder('SENT')?.name||'SENT'); }
+        return;
+      }
+      if(e.key==='g' && !e.metaKey && !e.ctrlKey){
+        _pendingKey='g'; _pendingTimer=setTimeout(()=>{_pendingKey=null;},1000); return;
+      }
+      // --- Single-key shortcuts ---
+      const isList = currentActiveView==='list'||currentActiveView==='zero';
+      const isConv = currentActiveView==='conversation';
+      if(isList){
+        if(e.key==='c'){ e.preventDefault(); openCompose(); }
+        else if(e.key==='/'){ e.preventDefault(); const si=document.getElementById('search-input'); if(si) si.focus(); }
+        else if(e.key==='ArrowDown' || e.key==='j'){ e.preventDefault(); moveSelection(1); }
+        else if(e.key==='ArrowUp' || e.key==='k'){ e.preventDefault(); moveSelection(-1); }
+        else if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openSelectedThread(); }
+        else if(e.key.length===1 && !e.ctrlKey && !e.metaKey && !e.altKey){
+          const si=document.getElementById('search-input');
+          if(si){ si.focus(); si.value+=e.key; handleSearch(si.value); e.preventDefault(); }
+        }
+      }
+      if(isConv){
+        if(e.key==='c'){ e.preventDefault(); openCompose(); }
+        else if(e.key==='j'){ e.preventDefault(); navigateMail(1); }
         else if(e.key==='k'){ e.preventDefault(); navigateMail(-1); }
         else if(e.key==='r'){ e.preventDefault(); replyCurrent(); }
-        else if(e.key==='l'){ e.preventDefault(); labelCurrent(); }
+        else if(e.key==='a'){ e.preventDefault(); replyAllCurrent(); }
+        else if(e.key==='f'){ e.preventDefault(); forwardCurrent(); }
+        else if(e.key==='e'){ e.preventDefault(); archiveCurrent(); }
+        else if(e.key==='#'){ e.preventDefault(); deleteCurrent(); }
+        else if(e.key==='u'){ e.preventDefault(); toggleUnreadCurrent(); }
+        else if(e.key==='s'){ e.preventDefault(); const m=emails.find(e=>e.id===currentSelectedId); if(m){ m.starred=!m.starred; apiCallFlag(m,null,m.starred); showToast(m.starred?'Ajouté aux suivis':'Retiré des suivis'); } }
+        else if(e.key==='o' || e.key==='Enter'){ e.preventDefault(); }
+        else if(e.key==='/'){ e.preventDefault(); handleBack(); }
       }
     });
 
@@ -1812,9 +2348,426 @@
       }catch(e){}
     }
 
+    // ====================== Resize (drawer + mail list) ======================
+    function _loadPrefs(){
+      try {
+        const p = JSON.parse(localStorage.getItem('simplemail_prefs') || '{}');
+        if(p.drawerWidth) document.documentElement.style.setProperty('--drawer-width', p.drawerWidth + 'px');
+        if(p.listMaxW) document.documentElement.style.setProperty('--list-max-w', p.listMaxW + 'px');
+      } catch(e){}
+      loadFontSettings();
+      try { 
+        const savedLang = localStorage.getItem('simplemail_language'); 
+        if(savedLang) currentLanguage = savedLang; 
+      } catch(e){}
+      try { 
+        const savedPreset = localStorage.getItem('simplemail_shortcut_preset'); 
+        if(savedPreset) shortcutPreset = savedPreset; 
+      } catch(e){}
+    }
+    function _savePrefs(key, val){
+      try {
+        const p = JSON.parse(localStorage.getItem('simplemail_prefs') || '{}');
+        p[key] = val;
+        localStorage.setItem('simplemail_prefs', JSON.stringify(p));
+      } catch(e){}
+    }
+    function startResizeDrawer(e){
+      e.preventDefault();
+      const drawer=document.getElementById('nav-drawer');
+      const handle=drawer.querySelector('.resize-handle');
+      const startX=e.clientX;
+      const startW=drawer.offsetWidth;
+      handle.classList.add('active');
+      document.body.style.cursor='col-resize';
+      document.body.style.userSelect='none';
+      function onMove(ev){
+        const w=Math.min(Math.max(startW + ev.clientX - startX, 200), Math.min(window.innerWidth * 0.86, 500));
+        drawer.style.setProperty('--drawer-width', w + 'px');
+        document.documentElement.style.setProperty('--drawer-width', w + 'px');
+      }
+      function onUp(){
+        handle.classList.remove('active');
+        document.body.style.cursor='';
+        document.body.style.userSelect='';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        _savePrefs('drawerWidth', drawer.offsetWidth);
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    }
+    function startResizeList(e){
+      e.preventDefault();
+      const container=document.getElementById('mail-list-container');
+      const handle=container.querySelector('.resize-handle');
+      const startX=e.clientX;
+      const startW=container.offsetWidth;
+      handle.classList.add('active');
+      document.body.style.cursor='col-resize';
+      document.body.style.userSelect='none';
+      function onMove(ev){
+        const w=Math.min(Math.max(startW - ev.clientX + startX, 400), Math.min(window.innerWidth - 80, 1200));
+        container.style.setProperty('--list-max-w', w + 'px');
+        document.documentElement.style.setProperty('--list-max-w', w + 'px');
+      }
+      function onUp(){
+        handle.classList.remove('active');
+        document.body.style.cursor='';
+        document.body.style.userSelect='';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        _savePrefs('listMaxW', container.offsetWidth);
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    }
+
+    // ====================== Settings Modal ======================
+    function openSettings(){
+      if(document.getElementById('settings-screen')) return;
+      const mainContent = document.getElementById('main-content');
+      if(mainContent) mainContent.classList.add('hidden');
+      const screen=document.createElement('div');
+      screen.id='settings-screen';
+      screen.className='fixed inset-0 z-[60] flex flex-col overflow-hidden bg-white opacity-0 transition-opacity duration-200';
+      screen.innerHTML=`
+        <div class="flex items-center gap-3 px-6 h-16 shrink-0 border-b border-gray-200">
+          <button onclick="closeSettings()" class="w-9 h-9 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors">
+            <span class="material-symbols-outlined" style="font-size:22px">arrow_back</span>
+          </button>
+          <h1 class="text-xl font-semibold">Paramètres</h1>
+        </div>
+        <div class="flex-1 flex overflow-hidden">
+          
+          <!-- SIDEBAR GAUCHE : Navigation entre les sections de réglages -->
+          <div class="w-60 border-r border-gray-200 overflow-y-auto bg-gray-50 shrink-0">
+            <div class="p-4">
+              <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Réglages</h3>
+              <nav id="settings-nav" class="space-y-0.5">
+                <button onclick="gotoSettingsSection('shortcuts')" data-nav="shortcuts" class="settings-nav-item is-active w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors">
+                  <span class="material-symbols-outlined" style="font-size:18px">keyboard</span>
+                  <span>Raccourcis</span>
+                </button>
+                <button onclick="gotoSettingsSection('appearance')" data-nav="appearance" class="settings-nav-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors">
+                  <span class="material-symbols-outlined" style="font-size:18px">palette</span>
+                  <span>Apparence</span>
+                </button>
+                <button onclick="gotoSettingsSection('language')" data-nav="language" class="settings-nav-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors">
+                  <span class="material-symbols-outlined" style="font-size:18px">translate</span>
+                  <span>Langue</span>
+                </button>
+                <button onclick="gotoSettingsSection('accounts')" data-nav="accounts" class="settings-nav-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors">
+                  <span class="material-symbols-outlined" style="font-size:18px">manage_accounts</span>
+                  <span>Comptes</span>
+                </button>
+                <button onclick="gotoSettingsSection('about')" data-nav="about" class="settings-nav-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors">
+                  <span class="material-symbols-outlined" style="font-size:18px">info</span>
+                  <span>À propos</span>
+                </button>
+              </nav>
+            </div>
+          </div>
+
+          <div class="flex-1 overflow-y-auto">
+
+            <!-- PAGE: RACCOURCIS -->
+            <div id="set-page-shortcuts" class="settings-page px-10 py-8">
+              <h2 class="text-2xl font-semibold mb-1">Raccourcis clavier</h2>
+              <p class="text-sm mb-8" style="color:#5f6368">Choisissez un preset et consultez tous les raccourcis disponibles.</p>
+              <div class="mb-8">
+                <label class="text-xs font-semibold uppercase tracking-wider mb-2 block" style="color:#5f6368">Preset</label>
+                <div class="flex gap-2">
+                  <button onclick="setShortcutPreset('gmail')" class="preset-btn ${shortcutPreset==='gmail'?'active':''}">Gmail</button>
+                  <button onclick="setShortcutPreset('outlook')" class="preset-btn ${shortcutPreset==='outlook'?'active':''}">Outlook</button>
+                  <button onclick="setShortcutPreset('custom')" class="preset-btn ${shortcutPreset==='custom'?'active':''}">Personnalisé</button>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-x-10 gap-y-0 text-sm" id="shortcuts-list">
+                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Composer</span><kbd class="kbd">C</kbd></div>
+                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Rechercher</span><kbd class="kbd">/</kbd></div>
+                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Message suivant</span><kbd class="kbd">J</kbd></div>
+                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Message précédent</span><kbd class="kbd">K</kbd></div>
+                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Ouvrir</span><kbd class="kbd">Enter</kbd></div>
+                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Retour</span><kbd class="kbd">ESC</kbd></div>
+                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Répondre</span><kbd class="kbd">R</kbd></div>
+                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Répondre à tous</span><kbd class="kbd">A</kbd></div>
+                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Transférer</span><kbd class="kbd">F</kbd></div>
+                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Archiver</span><kbd class="kbd">E</kbd></div>
+                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Supprimer</span><kbd class="kbd">#</kbd></div>
+                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Suivre / Ne plus suivre</span><kbd class="kbd">S</kbd></div>
+                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Marquer non lu</span><kbd class="kbd">U</kbd></div>
+                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Envoyer</span><kbd class="kbd">⌘/Ctrl + Enter</kbd></div>
+                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Boîte de réception</span><kbd class="kbd">G I</kbd></div>
+                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Messages suivis</span><kbd class="kbd">G S</kbd></div>
+                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Corbeille</span><kbd class="kbd">G T</kbd></div>
+                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Brouillons</span><kbd class="kbd">G D</kbd></div>
+                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Envoyés</span><kbd class="kbd">G N</kbd></div>
+              </div>
+            </div>
+
+            <!-- PAGE: APPARENCE -->
+            <div id="set-page-appearance" class="settings-page hidden px-10 py-8">
+              <h2 class="text-2xl font-semibold mb-1">Apparence</h2>
+              <p class="text-sm mb-8" style="color:#5f6368">Personnalisez le thème, les polices et l'arrière-plan.</p>
+              
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <div class="settings-row-title">Thème</div>
+                  <div class="settings-row-desc">Choisissez un mode d'affichage.</div>
+                </div>
+                <div class="flex gap-2">
+                  <button onclick="setTheme('white')" class="theme-btn ${currentTheme==='white'?'active':''}"><span class="material-symbols-outlined" style="font-size:18px">light_mode</span> Clair</button>
+                  <button onclick="setTheme('dark')" class="theme-btn ${currentTheme==='dark'?'active':''}"><span class="material-symbols-outlined" style="font-size:18px">dark_mode</span> Sombre</button>
+                  <button onclick="setTheme('image')" class="theme-btn ${currentTheme==='image'?'active':''}"><span class="material-symbols-outlined" style="font-size:18px">image</span> Photo</button>
+                </div>
+              </div>
+
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <div class="settings-row-title">Police principale</div>
+                  <div class="settings-row-desc">Police utilisée pour toute l'interface.</div>
+                </div>
+                <select onchange="setFont(this.value)" class="settings-select">
+                  <option value="futura" ${currentFont==='futura'?'selected':''}>Futura (système)</option>
+                  <option value="poppins" ${currentFont==='poppins'?'selected':''}>Poppins</option>
+                  <option value="nerd" ${currentFont==='nerd'?'selected':''}>Nerd Fonts (JetBrains/Space/Iosevka)</option>
+                </select>
+              </div>
+
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <div class="settings-row-title">Police monospace</div>
+                  <div class="settings-row-desc">Police à chasse fixe (code, métadonnées).</div>
+                </div>
+                <select onchange="setFontMono(this.value)" class="settings-select">
+                  <option value="jetbrains" ${currentFontMono==='jetbrains'?'selected':''}>JetBrains Mono</option>
+                  <option value="space" ${currentFontMono==='space'?'selected':''}>Space Mono</option>
+                  <option value="iosevka" ${currentFontMono==='iosevka'?'selected':''}>Iosevka</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- PAGE: LANGUE -->
+            <div id="set-page-language" class="settings-page hidden px-10 py-8">
+              <h2 class="text-2xl font-semibold mb-1">Langue</h2>
+              <p class="text-sm mb-8" style="color:#5f6368">Choisissez la langue de l'interface.</p>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <div class="settings-row-title">Langue de l'interface</div>
+                  <div class="settings-row-desc">Le changement sera appliqué progressivement.</div>
+                </div>
+                <select onchange="setLanguage(this.value)" class="settings-select">
+                  <option value="fr" ${currentLanguage==='fr'?'selected':''}>Français</option>
+                  <option value="en" ${currentLanguage==='en'?'selected':''}>English</option>
+                  <option value="es" ${currentLanguage==='es'?'selected':''}>Español</option>
+                  <option value="de" ${currentLanguage==='de'?'selected':''}>Deutsch</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- PAGE: COMPTES -->
+            <div id="set-page-accounts" class="settings-page hidden px-10 py-8">
+              <div class="flex items-center justify-between mb-1">
+                <h2 class="text-2xl font-semibold">Comptes</h2>
+                <button onclick="closeSettings(); setTimeout(openAddAccountModal,250);" class="text-sm font-medium px-4 py-2 rounded-lg border transition-colors hover:bg-black/5" style="border-color:rgba(0,0,0,0.1); color:#1a73e8">+ Ajouter</button>
+              </div>
+              <p class="text-sm mb-8" style="color:#5f6368">Gérez vos comptes de messagerie IMAP/SMTP.</p>
+              <div id="settings-accounts-list" class="space-y-2"></div>
+            </div>
+
+            <!-- PAGE: À PROPOS -->
+            <div id="set-page-about" class="settings-page hidden px-10 py-8">
+              <h2 class="text-2xl font-semibold mb-1">À propos</h2>
+              <p class="text-sm mb-8" style="color:#5f6368">Informations sur l'application.</p>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <div class="settings-row-title">SimpleMail</div>
+                  <div class="settings-row-desc">Client mail IMAP/SMTP pour Chrome.</div>
+                </div>
+                <span class="text-sm font-medium" style="color:#5f6368">v22</span>
+              </div>
+            </div>
+
+          </div>
+        </div>`;
+      document.body.appendChild(screen);
+      requestAnimationFrame(()=>screen.classList.remove('opacity-0'));
+      document.addEventListener('keydown',function _escSettings(ev){
+        if(ev.key==='Escape'){ closeSettings(); document.removeEventListener('keydown',_escSettings); }
+      });
+      // Populate accounts list
+      const alist=document.getElementById('settings-accounts-list');
+      if(alist){
+        alist.innerHTML=accounts.map(a=>{
+          const conn=a.id==='pouark'||a.id==='mondary'||a.id==='gmail';
+          const cur=a.id===currentAccount;
+          const colors=['#1a73e8','#e8710a','#0d904f'];
+          const ci=accounts.indexOf(a)%3;
+          return `<div class="flex items-center gap-3 p-3 rounded-lg border" style="border-color:rgba(0,0,0,0.06)">
+            <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-semibold" style="background:${colors[ci]}">${(a.name||a.email||'?')[0].toUpperCase()}</div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium truncate">${escapeHtml(a.name||a.id)}</div>
+              <div class="text-xs truncate" style="color:#5f6368">${escapeHtml(a.email||'')}</div>
+            </div>
+            <span class="text-xs px-2 py-0.5 rounded-full font-medium" style="background:${conn?'rgba(13,144,79,0.1)':'rgba(0,0,0,0.04)'};color:${conn?'#0d904f':'#5f6368'}">${conn?'Connecté':'Hors-ligne'}</span>
+            ${cur?'<span class="material-symbols-outlined" style="font-size:18px;color:#1a73e8">check_circle</span>':''}
+          </div>`;
+        }).join('');
+      }
+    }
+    function closeSettings(){
+      const s=document.getElementById('settings-screen');
+      if(s){ s.classList.add('opacity-0'); setTimeout(()=>s.remove(),200); }
+      const mc=document.getElementById('main-content');
+      if(mc) mc.classList.remove('hidden');
+      updateUIState();
+    }
+    function gotoSettingsSection(key){
+      document.querySelectorAll('.settings-page').forEach(p => p.classList.add('hidden'));
+      const page = document.getElementById('set-page-' + key);
+      if(page) page.classList.remove('hidden');
+      document.querySelectorAll('.settings-nav-item').forEach(b => {
+        b.classList.toggle('is-active', b.getAttribute('data-nav') === key);
+      });
+      const panel = page ? page.closest('.overflow-y-auto') : null;
+      if(panel) panel.scrollTop = 0;
+    }
+    function setLanguage(lang){
+      currentLanguage = lang;
+      try { localStorage.setItem('simplemail_language', lang); } catch(e){}
+      showToast(`Langue : ${lang==='fr'?'Français':lang==='en'?'English':lang==='es'?'Español':'Deutsch'}`);
+    }
+    function setShortcutPreset(preset){
+      shortcutPreset = preset;
+      try { localStorage.setItem('simplemail_shortcut_preset', preset); } catch(e){}
+      showToast(`Raccourcis : ${preset==='gmail'?'Gmail':preset==='outlook'?'Outlook':'Personnalisé'}`);
+      // Mettre à jour la liste des raccourcis selon le preset
+      const shortcutsList = document.getElementById('shortcuts-list');
+      if(!shortcutsList) return;
+      if(preset === 'outlook'){
+        shortcutsList.innerHTML = `
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Composer</span><kbd class="kbd">Ctrl+N</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Rechercher</span><kbd class="kbd">Ctrl+E</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Message suivant</span><kbd class="kbd">↓</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Message précédent</span><kbd class="kbd">↑</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Ouvrir</span><kbd class="kbd">Enter</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Retour</span><kbd class="kbd">ESC</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Répondre</span><kbd class="kbd">Ctrl+R</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Répondre à tous</span><kbd class="kbd">Ctrl+Shift+R</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Transférer</span><kbd class="kbd">Ctrl+F</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Archiver</span><kbd class="kbd">Ctrl+E</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Supprimer</span><kbd class="kbd">Delete</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Suivre / Ne plus suivre</span><kbd class="kbd">Ctrl+U</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Marquer non lu</span><kbd class="kbd">Ctrl+U</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Envoyer</span><kbd class="kbd">Alt+S</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Boîte de réception</span><kbd class="kbd">Ctrl+Shift+I</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Messages suivis</span><kbd class="kbd">Ctrl+Shift+F</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Corbeille</span><kbd class="kbd">Ctrl+Shift+D</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Brouillons</span><kbd class="kbd">Ctrl+Shift+D</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Envoyés</span><kbd class="kbd">Ctrl+Shift+O</kbd></div>
+        `;
+      } else {
+        shortcutsList.innerHTML = `
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Composer</span><kbd class="kbd">C</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Rechercher</span><kbd class="kbd">/</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Message suivant</span><kbd class="kbd">J</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Message précédent</span><kbd class="kbd">K</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Ouvrir</span><kbd class="kbd">Enter</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Retour</span><kbd class="kbd">ESC</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Répondre</span><kbd class="kbd">R</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Répondre à tous</span><kbd class="kbd">A</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Transférer</span><kbd class="kbd">F</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Archiver</span><kbd class="kbd">E</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Supprimer</span><kbd class="kbd">#</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Suivre / Ne plus suivre</span><kbd class="kbd">S</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Marquer non lu</span><kbd class="kbd">U</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Envoyer</span><kbd class="kbd">⌘/Ctrl + Enter</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Boîte de réception</span><kbd class="kbd">G I</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Messages suivis</span><kbd class="kbd">G S</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Corbeille</span><kbd class="kbd">G T</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Brouillons</span><kbd class="kbd">G D</kbd></div>
+          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Envoyés</span><kbd class="kbd">G N</kbd></div>
+        `;
+      }
+    }
+
+    // ====================== Add Account Modal (IMAP) ======================
+    function openAddAccountModal(){
+      if(document.getElementById('addaccount-overlay')) return;
+      const overlay=document.createElement('div');
+      overlay.id='addaccount-overlay';
+      overlay.className='fixed inset-0 z-[80] flex items-center justify-center opacity-0 transition-opacity duration-200';
+      overlay.style.background='rgba(0,0,0,0.45)';
+      overlay.innerHTML=`
+        <div class="settings-panel w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col bg-white" style="border:1px solid rgba(0,0,0,0.06)">
+          <div class="flex items-center justify-between px-6 py-4 border-b" style="border-color:rgba(0,0,0,0.06)">
+            <h2 class="text-lg font-semibold">Ajouter un compte IMAP</h2>
+            <button onclick="closeAddAccountModal()" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors">
+              <span class="material-symbols-outlined" style="font-size:20px">close</span>
+            </button>
+          </div>
+          <form id="addaccount-form" class="flex-1 overflow-y-auto px-6 py-5 space-y-4 text-sm" onsubmit="submitAddAccount(event)">
+            <div class="grid grid-cols-2 gap-4">
+              <div><label class="field-label">Nom</label><input id="aa-name" type="text" required class="field-input" placeholder="Clement"></div>
+              <div><label class="field-label">Email</label><input id="aa-email" type="email" required class="field-input" placeholder="c@pouark.com"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div><label class="field-label">IMAP Host</label><input id="aa-imap-host" type="text" required class="field-input" placeholder="imap.gmail.com"></div>
+              <div><label class="field-label">IMAP Port</label><input id="aa-imap-port" type="number" value="993" class="field-input"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div><label class="field-label">SMTP Host</label><input id="aa-smtp-host" type="text" required class="field-input" placeholder="smtp.gmail.com"></div>
+              <div><label class="field-label">SMTP Port</label><input id="aa-smtp-port" type="number" value="465" class="field-input"></div>
+            </div>
+            <div><label class="field-label">Mot de passe</label><input id="aa-password" type="password" required class="field-input" placeholder="••••••••"></div>
+            <div id="aa-error" class="text-xs" style="color:#d93025;display:none"></div>
+            <div id="aa-success" class="text-xs" style="color:#0d904f;display:none"></div>
+            <div class="flex justify-end gap-2 pt-2">
+              <button type="button" onclick="closeAddAccountModal()" class="px-4 py-2 rounded-lg border text-sm font-medium" style="border-color:rgba(0,0,0,0.08)">Annuler</button>
+              <button type="submit" id="aa-submit" class="px-4 py-2 rounded-lg text-sm font-semibold text-white" style="background:#1a73e8">Ajouter</button>
+            </div>
+          </form>
+        </div>`;
+      document.body.appendChild(overlay);
+      requestAnimationFrame(()=>overlay.classList.remove('opacity-0'));
+      overlay.addEventListener('click',(ev)=>{ if(ev.target===overlay) closeAddAccountModal(); });
+      document.addEventListener('keydown',function _escAA(ev){
+        if(ev.key==='Escape'){ closeAddAccountModal(); document.removeEventListener('keydown',_escAA); }
+      });
+      setTimeout(()=>document.getElementById('aa-name').focus(),100);
+    }
+    function closeAddAccountModal(){ const o=document.getElementById('addaccount-overlay'); if(!o) return; o.classList.add('opacity-0'); setTimeout(()=>o.remove(),200); }
+    async function submitAddAccount(e){
+      e.preventDefault();
+      const errEl=document.getElementById('aa-error');
+      const okEl=document.getElementById('aa-success');
+      errEl.style.display='none'; okEl.style.display='none';
+      const submitBtn=document.getElementById('aa-submit');
+      submitBtn.disabled=true; submitBtn.textContent='Ajout en cours…';
+      const body={
+        name:document.getElementById('aa-name').value.trim(),
+        email:document.getElementById('aa-email').value.trim(),
+        imapHost:document.getElementById('aa-imap-host').value.trim(),
+        imapPort:parseInt(document.getElementById('aa-imap-port').value)||993,
+        smtpHost:document.getElementById('aa-smtp-host').value.trim(),
+        smtpPort:parseInt(document.getElementById('aa-smtp-port').value)||465,
+        password:document.getElementById('aa-password').value
+      };
+      try{
+        const r=await fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        const d=await r.json();
+        if(!r.ok){ errEl.textContent=d.detail||'Erreur lors de l\'ajout'; errEl.style.display='block'; submitBtn.disabled=false; submitBtn.textContent='Ajouter'; return; }
+        okEl.textContent='Compte ajouté avec succès ! Rechargement…'; okEl.style.display='block';
+        submitBtn.textContent='✓ Fait';
+        setTimeout(()=>{ closeAddAccountModal(); location.reload(); },1200);
+      }catch(ex){ errEl.textContent='Erreur réseau'; errEl.style.display='block'; submitBtn.disabled=false; submitBtn.textContent='Ajouter'; }
+    }
+
     // ====================== Boot ======================
-    renderBgGallery();
-    setTheme('white');
+    _loadPrefs();
+    try { const saved = localStorage.getItem('simplemail_theme'); if(saved) currentTheme = saved==='light'?'white':saved; } catch(e){}
+    setTheme(currentTheme);
     (async () => {
       await loadAccounts();
       if(currentAccount) await loadFolders(currentAccount);

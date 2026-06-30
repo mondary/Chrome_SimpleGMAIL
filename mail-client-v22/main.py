@@ -152,7 +152,7 @@ async def lifespan(app):
     yield
 
 
-app = FastAPI(title="Sombre Mail", lifespan=lifespan)
+app = FastAPI(title="SimpleMail", lifespan=lifespan)
 
 
 @app.get("/api/events")
@@ -392,6 +392,16 @@ def index():
     return FileResponse(BASE_DIR / "index.html")
 
 
+@app.get("/icon.png")
+def serve_icon():
+    return FileResponse(BASE_DIR / "icon.png", media_type="image/png")
+
+
+@app.get("/bg.jpg")
+def serve_bg():
+    return FileResponse(BASE_DIR / "bg.jpg", media_type="image/jpeg")
+
+
 @app.get("/api/accounts")
 def accounts():
     if _is_demo():
@@ -405,6 +415,94 @@ def accounts():
             "email": a["imap"]["user"],
         })
     return out
+
+
+@app.get("/api/accounts/all")
+def accounts_all():
+    cfg = load_config(configured_only=False)
+    out = []
+    for a in cfg.get("accounts", []):
+        connected = _account_is_configured(a)
+        out.append({
+            "id": a["id"],
+            "name": a.get("name", a["id"]),
+            "email": a["imap"]["user"],
+            "connected": connected,
+        })
+    return out
+
+
+class CreateAccountRequest(BaseModel):
+    name: str
+    email: str
+    imap_host: str
+    imap_port: int = 993
+    imap_ssl: bool = True
+    imap_password: str
+    smtp_host: str
+    smtp_port: int = 465
+    smtp_ssl: bool = True
+    smtp_password: str
+
+
+SECRETS_PATH = BASE_DIR / "secrets" / "mail.env"
+
+
+@app.post("/api/accounts")
+def create_account(body: CreateAccountRequest):
+    aid = re.sub(r"[^a-z0-9]+", "", body.name.lower().replace(" ", "")) or re.sub(r"[^a-z0-9]+", "", body.email.split("@")[0].lower())
+    cfg = load_config(configured_only=False)
+    if any(a["id"] == aid for a in cfg.get("accounts", [])):
+        raise HTTPException(status_code=409, detail=f"Le compte '{aid}' existe déjà")
+
+    pw_var_imap = f"{aid.upper()}_IMAP_PASSWORD"
+    pw_var_smtp = f"{aid.upper()}_SMTP_PASSWORD"
+
+    SECRETS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    env_lines = []
+    if SECRETS_PATH.exists():
+        env_lines = [l for l in SECRETS_PATH.read_text(encoding="utf-8").splitlines()
+                     if not l.startswith(f"{pw_var_imap}=") and not l.startswith(f"{pw_var_smtp}=")]
+    env_lines.append(f"{pw_var_imap}={body.imap_password}")
+    env_lines.append(f"{pw_var_smtp}={body.smtp_password}")
+    SECRETS_PATH.write_text("\n".join(env_lines) + "\n", encoding="utf-8")
+
+    new_account = {
+        "id": aid,
+        "name": body.name,
+        "imap": {
+            "host": body.imap_host,
+            "port": body.imap_port,
+            "ssl": body.imap_ssl,
+            "user": body.email,
+            "password": f"${{{pw_var_imap}}}",
+        },
+        "smtp": {
+            "host": body.smtp_host,
+            "port": body.smtp_port,
+            "ssl": body.smtp_ssl,
+            "user": body.email,
+            "password": f"${{{pw_var_smtp}}}",
+        },
+    }
+    cfg["accounts"].append(new_account)
+    CONFIG_PATH.write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    _reload_env(SECRETS_PATH)
+    threading.Thread(
+        target=idle_worker, args=(new_account,), daemon=True, name=f"idle-{aid}"
+    ).start()
+
+    return {"ok": True, "id": aid, "connected": True}
+
+
+def _reload_env(env_path):
+    if env_path.exists():
+        for line in env_path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                os.environ[k.strip()] = v.strip()
 
 
 @app.get("/api/accounts/{account_id}/folders")
@@ -836,6 +934,22 @@ def _compute_threads(account: str, mailbox, folder: str, messages: list) -> dict
 
     _THREAD_CACHE[ck] = (time.time(), mapping)
     return mapping
+
+
+_STATIC_BLOCKLIST = {"config.json", "config.example.json", "main.py", "requirements.txt", "start.sh", ".gitignore"}
+
+
+@app.get("/{filename:path}")
+def static_root(filename: str):
+    target = (BASE_DIR / filename).resolve()
+    if (
+        target.is_file()
+        and target.parent == BASE_DIR.resolve()
+        and filename not in _STATIC_BLOCKLIST
+        and not filename.startswith(".")
+    ):
+        return FileResponse(target)
+    raise HTTPException(status_code=404, detail="Fichier introuvable")
 
 
 if __name__ == "__main__":
