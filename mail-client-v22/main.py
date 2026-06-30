@@ -608,6 +608,7 @@ def list_messages(
                 "seen": "\\Seen" in [str(f) for f in msg.flags],
                 "flagged": "\\Flagged" in [str(f) for f in msg.flags],
                 "has_attachments": len(msg.attachments) > 0,
+                "attachment_count": len(msg.attachments),
                 "snippet": snippet,
                 "message_id": header_value(msg.headers, "message-id"),
             })

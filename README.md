@@ -16,11 +16,16 @@
 - **Sélecteur de fond "chill"** : 6 options d'arrière-plan
 - **Bouton compose** (FAB) glass comme "no new mail"
 - **Recherche centrée** sur la colonne avec curseur visible (`caret-color`)
+- **Compteur de mails dans la recherche** : "Rechercher un email · 42 mails"
+- **Sélection clavier visible** : barre latérale bleue sur le mail actif (j/k)
+- **Bouton retour contextuel** : le burger devient ← en lecture, plus de burger inutile
 
 ### Email Features
 - **Threading conversation** avec `THREAD=REFERENCES`
 - **Emails HTML** (iframe sandbox)
-- **Pièces jointes** (icônes et liens)
+- **Pièces jointes** (icônes, liens + **nombre** à côté du trombone)
+- **Favicon de l'expéditeur** dans la liste (via Google s2/favicons, fallback initiale)
+- **Bouton lecture immersive** dans le header des conversations
 - **Ordre conversation** : plus récent en haut (paramétrable)
 
 ### Categories & Navigation
@@ -77,6 +82,7 @@ MONDARY_MAIL_PASSWORD=votre_mdp npm run dev
 
 ## 🧾 Changelog
 
+- **v22.2** : Favicon expéditeur, nombre pièces jointes, bouton immersive en header, burger→retour contextuel, compteur mails dans recherche, sélection clavier visible
 - **v22.1** : Polices sans-serif + sélecteur, page Paramètres plein écran (pages dédiées + sidebar gauche), mosaïque newsletters, masquer catégories hors INBOX, message recherche sans résultat, caret-color
 - **v22** : Hero Netflix, threading, HTML emails, catégories, shortcuts, compose plein écran
 - **v20** : Base newsletter client immersif
