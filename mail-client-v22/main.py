@@ -321,7 +321,7 @@ def _is_demo():
     return _demo_enabled()
 
 
-DEMO_ACCOUNT_IDS = {"perso"}
+DEMO_ACCOUNT_IDS = {"demo"}
 
 def _is_demo_account(account_id):
     return account_id in DEMO_ACCOUNT_IDS
@@ -344,7 +344,7 @@ def _account_is_configured(account: dict):
 
 
 DEMO_ACCOUNTS = [
-    {"id": "perso", "name": "Compte test", "email": "test@example.com", "test": True},
+    {"id": "demo", "name": "Demo", "email": "demo@test.fr", "connected": True, "test": True},
 ]
 
 DEMO_FOLDERS = {
@@ -359,6 +359,14 @@ DEMO_FOLDERS = {
         {"name": "INBOX", "unseen": 5, "total": 20},
         {"name": "Sent", "unseen": 0, "total": 18},
         {"name": "Drafts", "unseen": 0, "total": 2},
+        {"name": "Archive", "unseen": 0, "total": 35},
+    ],
+    "demo": [
+        {"name": "INBOX", "unseen": 14, "total": 69},
+        {"name": "Sent", "unseen": 0, "total": 30},
+        {"name": "Drafts", "unseen": 0, "total": 5},
+        {"name": "Trash", "unseen": 0, "total": 5},
+        {"name": "Junk", "unseen": 0, "total": 4},
         {"name": "Archive", "unseen": 0, "total": 35},
     ],
 }
@@ -404,7 +412,7 @@ def _demo_messages(account, folder):
             full["category"] = _categorize(full["from_addr"], full["from_name"], full["subject"])
             full["thread_id"] = str(full["uid"])
             msgs.append(full)
-        return msgs[:1]
+        return msgs
 
     now = datetime.now(timezone.utc)
     _uid = [0]
@@ -439,7 +447,7 @@ def _demo_messages(account, folder):
             "thread_id": thread_id,
         }
 
-    if account == "perso":
+    if account in ("perso", "demo"):
         entries = [
             # ─── CONV 1 : Projet Sombre Mail (4 msgs, PRIMARY) ───
             m("Alice Martin <alice.martin@gmail.com>",
@@ -834,7 +842,7 @@ def _demo_messages(account, folder):
     for e in entries:
         msgs.append(e)
 
-    return msgs[:1]
+    return msgs
 
 
 # ---------- Routes ----------
@@ -903,7 +911,7 @@ def accounts_all():
             "smtp": public_server("smtp"),
         })
     for d in DEMO_ACCOUNTS:
-        out.append({**d, "connected": False})
+        out.append({**d, "connected": d.get("connected", False)})
     return out
 
 

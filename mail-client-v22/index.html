@@ -49,7 +49,8 @@
     .account-popover-item:hover { background: rgba(0,0,0,0.04); }
     body.theme-dark .account-popover-item { color: #e5e5e5; }
     body.theme-dark .account-popover-item:hover { background: rgba(255,255,255,0.07); }
-    .account-popover-item.is-active { font-weight: 600; }
+    body.theme-dark .account-popover-item.is-active { background: rgba(138,180,248,0.12); }
+    .account-popover-item.is-active { background: rgba(26,115,232,0.08); font-weight: 600; }
     .account-popover-avatar {
       width: 32px; height: 32px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
@@ -153,22 +154,36 @@
     }
     .sender-favicon {
       width: 20px; height: 20px; border-radius: 4px; object-fit: contain;
-      background: rgba(0,0,0,0.03); flex-shrink: 0;
+      background: rgba(0,0,0,0.03); flex-shrink: 0; transition: opacity 0.15s;
     }
     body.theme-dark .sender-favicon { background: rgba(255,255,255,0.06); }
     .sender-fallback {
       width: 20px; height: 20px; border-radius: 4px;
       display: flex; align-items: center; justify-content: center;
       font-size: 10px; font-weight: 700; color: #fff;
-      background: #5f6368; flex-shrink: 0;
+      background: #5f6368; flex-shrink: 0; transition: opacity 0.15s;
     }
-    .mail-checkbox { display: none; cursor: pointer; color: #5f6368; }
-    .mail-checkbox.is-visible { display: inline-flex; }
-    .mail-star { display: inline-flex; cursor: pointer; }
-    .mail-item:hover .mail-checkbox { display: inline-flex; }
-    .mail-item:hover .mail-star { display: none; }
-    .mail-item:has(.mail-checkbox.is-visible) .mail-checkbox { display: inline-flex; }
-    .mail-item:has(.mail-checkbox.is-visible) .mail-star { display: none; }
+    .hover-actions {
+      position: absolute; left: 24px; top: 0; bottom: 0;
+      display: none; align-items: center;
+      padding: 0 24px 0 0; gap: 1px; z-index: 3;
+      background: #fff;
+    }
+    .mail-item:hover .hover-actions { display: flex; }
+    .mail-item:hover .sender-favicon,
+    .mail-item:hover .sender-fallback { opacity: 0; }
+    body.theme-dark .hover-actions {
+      background: #1c1c1c;
+    }
+    .hover-action-btn {
+      width: 28px; height: 28px; border-radius: 6px;
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #5f6368; transition: background 0.12s, color 0.12s; flex-shrink: 0;
+    }
+    .hover-action-btn:hover { background: rgba(0,0,0,0.06); color: #202124; }
+    body.theme-dark .hover-action-btn { color: #9aa0a6; }
+    body.theme-dark .hover-action-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .hover-action-btn .material-symbols-outlined { font-size: 18px; }
     .field-label { display: block; font-size: 12px; font-weight: 600; color: #5f6368; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.03em; }
     body.theme-dark .field-label { color: #9aa0a6; }
     .field-input {
@@ -292,9 +307,7 @@
       width: 100%;
     }
     .newsletter-recent-card { width: 100%; min-width: 0; }
-    .newsletter-library-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
-    @media (max-width: 900px) { .newsletter-library-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
-    @media (max-width: 600px) { .newsletter-library-grid { grid-template-columns: 1fr; } }
+
     /* Surface du header de liste (sticky) — colle au fond du glass-container */
     .list-header-surface { background: #ffffff; }
     body.theme-image .list-header-surface {
@@ -311,6 +324,8 @@
     .nl-toggle-btn:hover { background: rgba(0,0,0,0.05); color: #202124; }
     body.theme-dark .nl-toggle-btn { color: #9aa0a6; }
     body.theme-dark .nl-toggle-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .nl-card-enter { animation: nlFadeIn 0.4s ease-out both; }
+    @keyframes nlFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
     /* Gmail category tabs */
     .cat-tabs-surface { background: #ffffff; }
@@ -921,6 +936,7 @@
         <input type="text" id="search-input" autocomplete="off" spellcheck="false" oninput="handleSearch(this.value)" onkeydown="handleSearchKeydown(event)" placeholder="Rechercher des e-mails" class="flex-1 bg-transparent text-inherit text-sm focus:outline-none min-w-0">
         <span id="search-clear" class="material-symbols-outlined" style="font-size:18px" onclick="clearSearch(event)" title="Vider la recherche" role="button" aria-label="Vider la recherche">close</span>
         <span id="search-count" class="text-xs opacity-50 whitespace-nowrap shrink-0"></span>
+        <span id="search-context" class="text-xs opacity-40 whitespace-nowrap shrink-0 ml-2 hidden"></span>
       </div>
 
       <!-- Action Buttons -->
@@ -944,18 +960,15 @@
           <div class="icon-btn-container" title="Déplacer vers" onclick="moveCurrent()"><span class="material-symbols-outlined">drive_file_move</span></div>
           <div class="icon-btn-container" title="Libellés" onclick="labelCurrent()"><span class="material-symbols-outlined">label</span></div>
           <div class="icon-btn-container" title="Plus" onclick="moreMessageActions()"><span class="material-symbols-outlined">more_vert</span></div>
+          <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
+          <div class="icon-btn-container" title="Plus ancien" onclick="navigateMail(-1)"><span class="material-symbols-outlined">chevron_left</span></div>
+          <div class="icon-btn-container" title="Plus récent" onclick="navigateMail(1)"><span class="material-symbols-outlined">chevron_right</span></div>
+          <div class="icon-btn-container" title="Plus" onclick="showMoreConversationActions()"><span class="material-symbols-outlined">more_vert</span></div>
         </div>
       </div>
     </div>
 
     <div class="flex items-center gap-2">
-      <div id="header-nav-arrows" class="flex items-center gap-1 opacity-0 pointer-events-none transition-all duration-300">
-        <div class="icon-btn-container" title="Rechercher" onclick="focusSearch()"><span class="material-symbols-outlined">search</span></div>
-        <div class="icon-btn-container" title="Plus ancien" onclick="navigateMail(-1)"><span class="material-symbols-outlined">chevron_left</span></div>
-        <div class="icon-btn-container" title="Plus récent" onclick="navigateMail(1)"><span class="material-symbols-outlined">chevron_right</span></div>
-        <div class="h-5 w-[1px] bg-gray-200 mx-1"></div>
-        <div class="icon-btn-container" title="Plus" onclick="showMoreConversationActions()"><span class="material-symbols-outlined">more_vert</span></div>
-      </div>
       <div class="relative mr-1">
         <div class="icon-btn-container" onclick="openSettings()" title="Paramètres">
           <span class="material-symbols-outlined">settings</span>
@@ -1011,7 +1024,7 @@
         <div id="nl-section" class="p-6 border-b border-gray-200/50">
           <div class="flex items-center justify-between mb-3.5">
             <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-widest select-none">Newsletters récentes</h3>
-            <button id="nl-toggle-btn" onclick="openNewsletterLibrary()" class="nl-toggle-btn" title="Voir toutes les newsletters">
+            <button id="nl-toggle-btn" onclick="toggleNewsletterCarousel()" class="nl-toggle-btn" title="Voir toutes les newsletters">
               <span class="material-symbols-outlined" style="font-size:14px">grid_view</span> Voir toutes les newsletters
             </button>
           </div>
@@ -1058,21 +1071,12 @@
 
     <!-- State 3: Conversation View -->
     <main id="conversation-view" class="absolute inset-0 flex flex-col items-center px-6 pb-6 pt-2 overflow-hidden opacity-0 pointer-events-none transition-all duration-300">
-      <div class="w-full max-w-4xl bg-white flex-1 rounded-2xl p-6 lg:p-10 flex flex-col overflow-y-auto" id="conversation-card">
+      <div class="w-full bg-white flex-1 rounded-2xl p-6 lg:p-10 flex flex-col overflow-y-auto" id="conversation-card" style="max-width:var(--list-max-w, 56rem)">
         <div id="thread-content" class="w-full flex flex-col"></div>
       </div>
     </main>
 
-    <!-- State 4: bibliothèque complète des newsletters -->
-    <main id="newsletter-library-view" class="absolute inset-0 flex flex-col items-center px-6 pb-6 pt-2 overflow-hidden opacity-0 pointer-events-none transition-all duration-300">
-      <div class="glass-container w-full flex-1 rounded-2xl shadow-2xl overflow-y-auto" style="max-width:var(--list-max-w, 56rem)">
-        <div class="sticky top-0 z-10 list-header-surface border-b border-gray-200/80 px-6 py-5 flex items-center justify-between">
-          <div><h2 class="text-lg font-semibold">Toutes les newsletters</h2><p class="text-xs mt-1" style="color:#80868b">Tous les expéditeurs, sans la liste des e-mails.</p></div>
-          <span id="newsletter-library-count" class="text-xs" style="color:#80868b"></span>
-        </div>
-        <div id="newsletter-library-grid" class="newsletter-library-grid p-6"></div>
-      </div>
-    </main>
+
 
   </div>
   <!-- newsletter-detail-view is a sibling of the header (body level) so its
@@ -1234,6 +1238,7 @@
     let currentFontMono = 'jetbrains';
     let newsletterDisplay = 'cards';
     let newsletterReturnView = 'list';
+    let newsletterCarouselExpanded = false;
     let selectedMailIds = new Set();
     let currentLanguage = 'fr';
     let shortcutPreset = 'gmail';
@@ -1395,7 +1400,7 @@
         const c=colors[i%colors.length];
         const dotColor=connected?'#22c55e':'#ef4444';
         const statusText=connected?'Connecté':'Hors-ligne';
-        return `<div class="account-popover-item ${active?'is-active':''}" onclick="openAccountDetails('${escapeAttr(a.id)}')">
+        return `<div class="account-popover-item ${active?'is-active':''}" onclick="switchAccount('${escapeAttr(a.id)}')">
           <div class="account-popover-avatar" style="background:${c}">${letter}</div>
           <div class="account-popover-info">
             <span class="account-popover-name">${escapeHtml(a.name||a.id)}</span>
@@ -1403,7 +1408,7 @@
           </div>
           <div class="flex items-center gap-2 shrink-0">
             <span class="account-popover-status" style="color:${dotColor}"><span class="material-symbols-outlined" style="font-size:14px">circle</span>${statusText}</span>
-            ${active?'<span class="material-symbols-outlined account-popover-check">check</span>':''}
+            <span class="material-symbols-outlined account-popover-settings" onclick="event.stopPropagation();openAccountDetails('${escapeAttr(a.id)}')" style="font-size:16px;cursor:pointer;color:#9aa0a6;padding:2px;border-radius:4px;" onmouseover="this.style.background='rgba(0,0,0,0.06)'" onmouseout="this.style.background=''">settings</span>
           </div>
         </div>`;
       }).join('');
@@ -1582,11 +1587,26 @@
     function selectCategory(cat){ currentCategory=cat; currentSpecial=''; currentFolder='INBOX'; toggleDrawer(false); if(currentActiveView!=='list'&&currentActiveView!=='zero'){currentActiveView='list';} renderInboxList(); updateUIState(); }
     function filterStarred(){ currentSpecial='starred'; toggleDrawer(false); renderStarredList(); }
     function showAllMessages(){ currentSpecial='all'; toggleDrawer(false); renderAllList(); }
+    function getSearchContext(){
+      const cat=(CATEGORIES.find(c=>c.id===currentCategory)||{}).label||'';
+      if(currentSpecial==='starred') return 'Suivis';
+      if(currentFolder==='INBOX' && cat) return cat;
+      if(currentFolder==='INBOX') return 'Primary';
+      const f=allFolders.find(f=>f.name===currentFolder);
+      return f ? f.name : currentFolder;
+    }
+    function updateSearchContext(context){
+      const el=document.getElementById('search-context');
+      if(!el) return;
+      if(context){ el.textContent=context; el.classList.remove('hidden'); }
+      else{ el.classList.add('hidden'); el.textContent=''; }
+    }
     function renderStarredList(){
       const container=document.getElementById('messages-container');
       const starred=emails.filter(e=>e.starred);
       const sc=document.getElementById('search-count');
       if(sc){ const n=starred.length; sc.textContent=`${n} suivi${n>1?'s':''}`; }
+      updateSearchContext('Suivis');
       container.innerHTML='';
       updateCategoryTabs();
       if(!starred.length){ container.innerHTML='<div class="p-12 text-center text-gray-500 text-sm">Aucun message suivi.</div>'; return; }
@@ -1597,6 +1617,7 @@
       const container=document.getElementById('messages-container');
       const sc=document.getElementById('search-count');
       if(sc){ const n=emails.length; sc.textContent=`${n} mail${n>1?'s':''}`; }
+      updateSearchContext('Tous les messages');
       container.innerHTML='';
       updateCategoryTabs();
       if(!emails.length){ container.innerHTML='<div class="p-12 text-center text-gray-500 text-sm">Aucun message.</div>'; return; }
@@ -1878,8 +1899,8 @@
     }
     function handleBack(){
       if(currentActiveView==='conversation'){ if(currentNewsletterFilter){ currentActiveView='newsletter'; } else { currentActiveView='list'; } }
-      else if(currentActiveView==='newsletter'){ currentNewsletterFilter=''; currentActiveView=newsletterReturnView||'list'; }
-      else if(currentActiveView==='newsletter-library'){ currentActiveView='list'; }
+      else if(currentActiveView==='newsletter'){ currentNewsletterFilter=''; currentActiveView='list'; }
+      else if(newsletterCarouselExpanded){ newsletterCarouselExpanded=false; buildNewsletterCarousel(); }
       updateUIState();
     }
 
@@ -1934,32 +1955,27 @@
       const header=document.getElementById('main-header');
       const sb=document.getElementById('header-search-bar');
       const ab=document.getElementById('header-actions');
-      const na=document.getElementById('header-nav-arrows');
       const cfg=THEME_CFG[currentTheme]; const base="h-16 flex items-center justify-between px-6 shrink-0 select-none z-30 transition-all duration-300";
       const showSearch = (state==='list'||state==='zero');
       const showActions = (state==='conversation');
-      const showNav = (state==='conversation');
       if(state==='zero' && cfg.zeroHeaderTransparent){
         header.className=base+" header-style-dark";
-        sb.className="w-full glass-search rounded-lg px-4 py-2 flex items-center gap-3 transition-all duration-300 absolute inset-y-0 cursor-text";
+        sb.className="pointer-events-auto w-full glass-search rounded-lg px-4 py-2 flex items-center gap-3 transition-all duration-300 absolute inset-y-0 cursor-text";
       } else {
         header.className=`${base} ${cfg.headerSurface} ${cfg.headerIcons}`;
-        sb.className=`w-full ${cfg.searchStyle} rounded-lg px-4 py-2 flex items-center gap-3 transition-all duration-300 absolute inset-y-0 cursor-text`;
+        sb.className=`pointer-events-auto w-full ${cfg.searchStyle} rounded-lg px-4 py-2 flex items-center gap-3 transition-all duration-300 absolute inset-y-0 cursor-text`;
       }
       sb.classList.toggle('opacity-0', !showSearch); sb.classList.toggle('pointer-events-none', !showSearch);
       ab.classList.toggle('opacity-0', !showActions); ab.classList.toggle('pointer-events-none', !showActions);
-      na.classList.toggle('opacity-0', !showNav); na.classList.toggle('pointer-events-none', !showNav);
-      // Les deux surfaces sont superposées : verrouiller explicitement laquelle reçoit les clics.
       sb.style.pointerEvents = showSearch ? 'auto' : 'none';
       ab.style.pointerEvents = showActions ? 'auto' : 'none';
-      na.style.pointerEvents = showNav ? 'auto' : 'none';
       sb.style.zIndex = showSearch ? '2' : '1';
       ab.style.zIndex = showActions ? '2' : '1';
       sb.setAttribute('aria-hidden', showSearch ? 'false' : 'true');
       ab.setAttribute('aria-hidden', showActions ? 'false' : 'true');
       const burger=document.getElementById('burger-btn'), backBtn=document.getElementById('burger-back-btn');
       if(burger && backBtn){
-        const showBack = (state==='conversation'||state==='newsletter-library');
+        const showBack = (state==='conversation');
         burger.classList.toggle('hidden', showBack);
         backBtn.classList.toggle('hidden', !showBack);
       }
@@ -1967,13 +1983,11 @@
     function updateUIState(){
       const isZero = emails.length===0;
       const zero=document.getElementById('inbox-zero-view'), list=document.getElementById('inbox-list-view'),
-            conv=document.getElementById('conversation-view'), nl=document.getElementById('newsletter-detail-view'),
-            nlLibrary=document.getElementById('newsletter-library-view');
+            conv=document.getElementById('conversation-view'), nl=document.getElementById('newsletter-detail-view');
       const imageBadge=document.getElementById('image-theme-badge-container'), whiteState=document.getElementById('white-theme-empty-state');
       const show=(el,b)=>{ el.classList.toggle('opacity-0',!b); el.classList.toggle('pointer-events-none',!b); };
       show(zero, currentActiveView==='zero'); show(list, currentActiveView==='list');
       show(conv, currentActiveView==='conversation'); show(nl, currentActiveView==='newsletter');
-      show(nlLibrary, currentActiveView==='newsletter-library');
       if(currentActiveView==='zero'){
         const title=document.getElementById('empty-title'), description=document.getElementById('empty-description');
         if(title) title.textContent=loadError?'Connexion au compte impossible':'Votre boîte est propre';
@@ -1981,10 +1995,9 @@
         if(currentTheme==='image'){ imageBadge.classList.remove('hidden'); whiteState.classList.add('hidden'); }
         else { imageBadge.classList.add('hidden'); whiteState.classList.remove('hidden'); }
         setHeaderState('zero');
-      } else if(currentActiveView==='list'){ setHeaderState('list'); renderInboxList(); }
+      } else if(currentActiveView==='list'){ setHeaderState('list'); renderInboxList(); buildNewsletterCarousel(); }
       else if(currentActiveView==='conversation'){ setHeaderState('conversation'); }
       else if(currentActiveView==='newsletter'){ setHeaderState('newsletter'); renderNewsletterDetail(); }
-      else if(currentActiveView==='newsletter-library'){ setHeaderState('newsletter-library'); buildNewsletterCarousel(); }
     }
 
     // ====================== Liste (threads + catégories) ======================
@@ -1993,6 +2006,7 @@
       const threads=getThreads();
       const sc=document.getElementById('search-count');
       if(sc){ const n=threads.length; sc.textContent=`${n} mail${n>1?'s':''}`; }
+      updateSearchContext(getSearchContext());
       container.innerHTML='';
       updateCategoryTabs();
       // Masquer newsletters et catégories hors INBOX
@@ -2039,11 +2053,21 @@
           ? `<img src="${faviconUrl}" alt="" class="sender-favicon shrink-0" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="sender-fallback shrink-0" style="display:none">${escapeHtml(senderInitial)}</div>`
           : `<div class="sender-fallback shrink-0">${escapeHtml(senderInitial)}</div>`;
         item.innerHTML=`
-          <div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
-            <span class="mail-checkbox shrink-0 ${isRowSelected?'is-visible':''}" onclick="event.stopPropagation(); toggleMailSelection('${escapeAttr(rowId)}')">
-              <span class="material-symbols-outlined" style="font-size:20px">${isRowSelected?'check_box':'check_box_outline_blank'}</span>
-            </span>
-            <span class="mail-star shrink-0 hover:text-[#f2a600]" onclick="event.stopPropagation(); toggleStarItem(event, '${latest.id}')">${starred?'<span class="material-symbols-outlined" style="font-size:20px;color:#f59e0b">star</span>':'<span class="material-symbols-outlined" style="font-size:20px">star_border</span>'}</span>
+          <div class="flex items-center gap-4 min-w-0 flex-1 pr-6 relative">
+            <div class="hover-actions">
+              <span class="hover-action-btn" onclick="event.stopPropagation(); toggleMailSelection('${escapeAttr(rowId)}')" title="Sélectionner">
+                <span class="material-symbols-outlined">${isRowSelected?'check_box':'check_box_outline_blank'}</span>
+              </span>
+              <span class="hover-action-btn" onclick="event.stopPropagation(); toggleStarItem(event, '${latest.id}')" title="Suivre">
+                <span class="material-symbols-outlined" style="${starred?'color:#f59e0b':''}">${starred?'star':'star_border'}</span>
+              </span>
+              <span class="hover-action-btn" onclick="event.stopPropagation(); archiveItem('${latest.id}')" title="Archiver">
+                <span class="material-symbols-outlined">archive</span>
+              </span>
+              <span class="hover-action-btn" onclick="event.stopPropagation(); deleteItem('${latest.id}')" title="Supprimer">
+                <span class="material-symbols-outlined">delete</span>
+              </span>
+            </div>
             ${senderIconHtml}
             <div class="w-44 truncate shrink-0 text-sm ${hasUnread?'text-gray-900 font-bold':'text-gray-800'}">${escapeHtml(senderLabel)}</div>
             <div class="truncate text-sm flex items-center gap-2 min-w-0">
@@ -2064,18 +2088,17 @@
     // ====================== Newsletter (expéditeurs récurrents en Promotions) ======================
     function buildNewsletterCarousel(){
       const c = document.getElementById('nl-carousel'); if(!c) return;
-      const m = document.getElementById('newsletter-library-grid'); if(!m) return;
       const promo = emails.filter(e => (e.category||'primary')==='promotions');
       const byDomain = {};
       promo.forEach(e => { const d = domainOf(e.email) || e.sender; if(!byDomain[d]) byDomain[d]={sender:e.sender, email:e.email, items:[], icon:'article'}; byDomain[d].items.push(e); });
       const top = Object.entries(byDomain).sort((a,b)=>b[1].items.length-a[1].items.length);
+      const btn = document.getElementById('nl-toggle-btn');
       if(!top.length){ 
-        c.innerHTML='<div class="text-xs text-gray-400 italic px-1 py-6 select-none">Aucune newsletter dans ce dossier.</div>'; 
-        m.innerHTML='<div class="text-xs text-gray-400 italic px-1 py-6 select-none">Aucune newsletter dans ce dossier.</div>';
-        const count=document.getElementById('newsletter-library-count');
-        if(count) count.textContent='0 newsletter';
+        c.innerHTML='<div class="text-xs text-gray-400 italic px-1 py-6 select-none">Aucune newsletter dans ce dossier.</div>';
+        if(btn) btn.classList.add('hidden');
         return; 
       }
+      if(btn) btn.classList.remove('hidden');
       const palettes = [
         ['from-orange-950 via-orange-900/50 to-orange-800','text-orange-200','text-orange-200/70'],
         ['from-slate-900 via-slate-800/50 to-slate-600','text-slate-200','text-slate-300/70'],
@@ -2084,14 +2107,15 @@
         ['from-rose-950 via-rose-900/50 to-rose-700','text-rose-200','text-rose-300/80'],
         ['from-emerald-950 via-emerald-900/50 to-emerald-700','text-emerald-200','text-emerald-300/80'],
       ];
-      // Mode carousel (horizontal)
-      const topCarousel = top.slice(0,4);
-      c.style.gridTemplateColumns=`repeat(${Math.max(1,topCarousel.length)},minmax(0,1fr))`;
-      c.innerHTML = topCarousel.map(([dom, info], i) => {
+      const showItems = newsletterCarouselExpanded ? top : top.slice(0, 4);
+      const maxCols = Math.min(showItems.length, 4);
+      c.style.gridTemplateColumns = `repeat(${Math.max(1, maxCols)}, minmax(0, 1fr))`;
+      c.innerHTML = showItems.map(([dom, info], i) => {
         const [grad, sub, sub2] = palettes[i % palettes.length];
         const unread = info.items.filter(e=>e.unread).length;
         const cnt = unread>0 ? `${unread} non lu${unread>1?'s':''}` : `${info.items.length} message${info.items.length>1?'s':''}`;
-        return `<div onclick="openNewsletter('${escapeAttr(dom)}')" class="newsletter-recent-card h-52 rounded-xl overflow-hidden cursor-pointer relative group shadow-md transition-transform hover:-translate-y-1 duration-200">
+        const isExtra = i >= 4;
+        return `<div onclick="openNewsletter('${escapeAttr(dom)}')" class="newsletter-recent-card h-52 rounded-xl overflow-hidden cursor-pointer relative group shadow-md transition-transform hover:-translate-y-1 duration-200${isExtra ? ' nl-card-enter' : ''}"${isExtra ? ` style="animation-delay:${(i-4)*0.07}s"` : ''}>
           <div class="absolute inset-0 bg-gradient-to-t ${grad} flex flex-col justify-between p-4">
             <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center border border-white/20 select-none"><span class="material-symbols-outlined !text-white text-lg">${info.icon}</span></div>
             <div class="flex flex-col">
@@ -2102,36 +2126,23 @@
           </div>
         </div>`;
       }).join('');
-      // Mode mosaïque (grille complète)
-      m.innerHTML = top.map(([dom, info], i) => {
-        const [grad, sub, sub2] = palettes[i % palettes.length];
-        const unread = info.items.filter(e=>e.unread).length;
-        const cnt = unread>0 ? `${unread} non lu${unread>1?'s':''}` : `${info.items.length} message${info.items.length>1?'s':''}`;
-        return `<div onclick="openNewsletter('${escapeAttr(dom)}')" class="w-full h-48 rounded-xl overflow-hidden cursor-pointer relative group shadow-md transition-transform hover:-translate-y-1 duration-200">
-          <div class="absolute inset-0 bg-gradient-to-t ${grad} flex flex-col justify-between p-4">
-            <div class="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center border border-white/20 select-none"><span class="material-symbols-outlined !text-white text-xl">${info.icon}</span></div>
-            <div class="flex flex-col">
-              <span class="text-[11px] ${sub} uppercase font-semibold tracking-wider truncate">${escapeHtml(nameOf(info.sender))}</span>
-              <h4 class="text-sm font-bold text-white leading-snug mt-1 truncate group-hover:underline">${escapeHtml(info.sender)}</h4>
-              <span class="text-xs ${sub2} mt-1">${cnt}</span>
-            </div>
-          </div>
-        </div>`;
-      }).join('');
-      const count=document.getElementById('newsletter-library-count');
-      if(count) count.textContent=`${top.length} newsletter${top.length>1?'s':''}`;
+      if(btn){
+        if(newsletterCarouselExpanded){
+          btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">collapse_content</span> Voir moins';
+        } else {
+          btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">grid_view</span> Voir toutes les newsletters';
+        }
+      }
     }
 
     function openNewsletter(domainKey){
-      newsletterReturnView = currentActiveView==='newsletter-library' ? 'newsletter-library' : 'list';
       currentNewsletterFilter = domainKey;
       currentActiveView = 'newsletter';
       updateUIState();
     }
-    function openNewsletterLibrary(){
-      currentNewsletterFilter='';
-      currentActiveView='newsletter-library';
-      updateUIState();
+    function toggleNewsletterCarousel(){
+      newsletterCarouselExpanded = !newsletterCarouselExpanded;
+      buildNewsletterCarousel();
     }
     function renderNewsletterDetail(){
       const list = emails.filter(e => domainOf(e.email) === currentNewsletterFilter || (domainOf(e.email)==='' && e.sender===currentNewsletterFilter));
@@ -2318,6 +2329,24 @@
       api(`/api/messages/${m.account}/${m.uid}?folder=${encodeURIComponent(currentFolder)}`, {method:'DELETE'}).then(()=>{
         emails=emails.filter(e=>e.id!==currentSelectedId); handleBack(); showToast('Message supprimé'); buildNewsletterCarousel();
       }).catch(e=>showToast('Suppression impossible : '+e.message));
+    }
+    function deleteItem(id){
+      const m=emails.find(e=>e.id===id); if(!m) return;
+      api(`/api/messages/${m.account}/${m.uid}?folder=${encodeURIComponent(currentFolder)}`, {method:'DELETE'}).then(()=>{
+        emails=emails.filter(e=>e.id!==id); handleBack(); showToast('Message supprimé'); buildNewsletterCarousel();
+      }).catch(e=>showToast('Suppression impossible : '+e.message));
+    }
+    async function archiveItem(id){
+      const m=emails.find(e=>e.id===id); if(!m) return;
+      const archive = findServerFolder('ARCHIVE');
+      const dest = archive?.name || 'Archive';
+      try{
+        await moveMailToFolder(m, dest, false);
+        emails=emails.filter(e=>e.id!==id);
+        showToast(`Archivé dans ${dest}`);
+        if(emails.length===0){ handleBack(); return; }
+        renderInboxList(); buildNewsletterCarousel();
+      }catch(e){ showToast('Archivage impossible : '+e.message); }
     }
     async function archiveCurrent(){
       await specialFolderAction(findServerFolder('ARCHIVE')?.name || 'Archive', 'Archiver', false);
@@ -2694,6 +2723,7 @@
       // --- ESC : toujours retour ---
       if(e.key==='Escape'){
         e.preventDefault();
+        if(selectedMailIds.size > 0){ clearSelection(); return; }
         if(currentActiveView==='conversation'||currentActiveView==='newsletter') handleBack();
         else if(currentActiveView==='list'||currentActiveView==='zero'){
           const si=document.getElementById('search-input');
