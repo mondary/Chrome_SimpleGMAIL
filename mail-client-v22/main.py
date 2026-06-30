@@ -1271,6 +1271,39 @@ def get_cid(account: str, uid: str, cid: str, folder: str = Query("INBOX")):
         raise HTTPException(status_code=404, detail="Image introuvable")
 
 
+@app.get("/api/og-image")
+def get_og_image(domain: str = Query(...)):
+    """Récupère l'og:image d'un domaine pour les newsletters."""
+    import urllib.request, urllib.error
+    domain = domain.strip().lower()
+    if not domain or not "." in domain:
+        raise HTTPException(status_code=400, detail="Domaine invalide")
+    # Nettoyer le domaine
+    clean = domain.replace("http://", "").replace("https://", "").split("/")[0]
+    urls_to_try = [f"https://{clean}/", f"https://www.{clean}/"]
+    for url in urls_to_try:
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (compatible; MailClient/1.0)"})
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                html = resp.read(50000).decode("utf-8", errors="ignore")
+            # Chercher og:image
+            m = re.search(r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']', html, re.I)
+            if not m:
+                m = re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']', html, re.I)
+            if not m:
+                m = re.search(r'<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)["\']', html, re.I)
+            if m:
+                img = m.group(1).strip()
+                if img.startswith("//"):
+                    img = "https:" + img
+                elif img.startswith("/"):
+                    img = "https://" + clean + img
+                return {"image": img}
+        except Exception:
+            continue
+    return {"image": ""}
+
+
 @app.patch("/api/messages/{account}/{uid}")
 def update_flags(account: str, uid: str, body: FlagUpdate, folder: str = Query("INBOX")):
     if _is_demo() or _is_demo_account(account):

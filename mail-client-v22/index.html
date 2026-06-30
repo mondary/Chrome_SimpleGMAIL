@@ -428,8 +428,7 @@
       box-shadow: 0 10px 40px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.08);
     }
     .nl-dock-item {
-      position: relative; width: 72px; height: 52px;
-      border-radius: 13px;
+      position: relative; width: 52px; height: 52px;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer;
       transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -438,18 +437,16 @@
     .nl-dock-item:has(+ .nl-dock-item:hover),
     .nl-dock-item:hover + .nl-dock-item { transform: translateY(-4px) scale(1.08); }
     .nl-dock-icon {
-      width: 66px; height: 46px; border-radius: 11px; object-fit: cover;
-      background: rgba(255,255,255,0.6); box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+      width: 44px; height: 44px; border-radius: 12px; object-fit: contain;
+      background: transparent;
     }
-    body.theme-dark .nl-dock-icon { background: rgba(255,255,255,0.08); }
     .nl-dock-fallback {
-      width: 66px; height: 46px; border-radius: 11px;
+      width: 44px; height: 44px; border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
       font-size: 18px; font-weight: 700; color: #fff;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.18);
     }
     .nl-dock-badge {
-      position: absolute; top: -3px; right: -3px;
+      position: absolute; top: -3px; right: 0px;
       min-width: 18px; height: 18px; border-radius: 10px;
       background: #ef4444; color: #fff;
       font-size: 10px; font-weight: 700;
@@ -483,15 +480,14 @@
       background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.6) 100%);
     }
 
-    /* ========== V22: Netflix-style Full-Screen Newsletter Hero ========== */
-    #newsletter-detail-view {
-      background: #141414;
-    }
+    /* ========== V22: Newsletter Hero ========== */
+    #newsletter-detail-view { background: #fff; }
+    body.theme-dark #newsletter-detail-view { background: #1a1a1a; }
     .nl-hero-bg {
       position: absolute;
       inset: 0;
       background-size: cover;
-      background-position: center top;
+      background-position: center;
       transform: scale(1.08);
       animation: nlKenBurns 18s ease-out forwards;
       will-change: transform;
@@ -637,34 +633,44 @@
     }
     /* Messages list items — flip every hardcoded light surface */
     body.theme-dark #messages-container > div,
-    body.theme-dark #newsletter-messages-container > div {
-      background-color: #141414 !important;
+    body.theme-dark #newsletter-messages-container > div,
+    body.theme-dark #nl-editions-grid > div {
+      background-color: #1a1a1a !important;
       border-color: rgba(255, 255, 255, 0.06) !important;
     }
     body.theme-dark #messages-container > div:hover,
-    body.theme-dark #newsletter-messages-container > div:hover {
+    body.theme-dark #newsletter-messages-container > div:hover,
+    body.theme-dark #nl-editions-grid > div:hover {
       background-color: #222 !important;
     }
     body.theme-dark #messages-container > div .text-gray-900,
-    body.theme-dark #messages-container > div .text-gray-800 {
+    body.theme-dark #messages-container > div .text-gray-800,
+    body.theme-dark #nl-editions-grid > div .text-gray-900,
+    body.theme-dark #nl-editions-grid > div .text-gray-800 {
       color: #f5f5f5 !important;
     }
-    body.theme-dark #messages-container > div .text-gray-700 {
+    body.theme-dark #messages-container > div .text-gray-700,
+    body.theme-dark #nl-editions-grid > div .text-gray-700 {
       color: #b3b3b3 !important;
     }
     body.theme-dark #messages-container > div .text-gray-400,
-    body.theme-dark #messages-container > div .text-gray-500 {
+    body.theme-dark #messages-container > div .text-gray-500,
+    body.theme-dark #nl-editions-grid > div .text-gray-400,
+    body.theme-dark #nl-editions-grid > div .text-gray-500 {
       color: #7d7d7d !important;
     }
     /* Section headers + list-header bar in dark */
     body.theme-dark #list-header-bar,
-    body.theme-dark .border-gray-200\/80 {
+    body.theme-dark .border-gray-200\/80,
+    body.theme-dark #nl-editions-grid {
       border-color: rgba(255, 255, 255, 0.06) !important;
     }
     body.theme-dark #list-header-bar .text-gray-500,
     body.theme-dark #inbox-list-view .text-gray-400,
-    body.theme-dark #inbox-list-view .uppercase.tracking-widest {
-      color: #8d8d8d !important;
+    body.theme-dark #inbox-list-view .uppercase.tracking-widest,
+    body.theme-dark #newsletter-detail-view .text-gray-700,
+    body.theme-dark #newsletter-detail-view .text-gray-400 {
+      color: #9aa0a6 !important;
     }
     /* Header icon colour in dark surfaces */
     body.theme-dark.header-style-light .material-symbols-outlined,
@@ -1178,16 +1184,15 @@
        fixed z-40 covers the z-30 header instead of being trapped in the z-10 wrapper -->
 
   <!-- State 4: Newsletter Detail View (V22 - Netflix-style Full-Screen Hero) -->
-    <main id="newsletter-detail-view" class="fixed inset-0 z-40 overflow-y-auto overflow-x-hidden opacity-0 pointer-events-none transition-opacity duration-300">
+    <main id="newsletter-detail-view" class="fixed inset-0 z-40 overflow-hidden flex flex-col opacity-0 pointer-events-none transition-opacity duration-300">
       
-      <!-- ============ FULL-SCREEN HERO ============ -->
-      <section class="relative w-full min-h-screen flex flex-col justify-end">
+      <!-- ============ HERO (33vh) ============ -->
+      <section class="relative w-full flex flex-col justify-end" style="height:33vh;min-height:240px;max-height:380px">
         <!-- Background image (Ken Burns) -->
         <div id="nl-hero-bg" class="nl-hero-bg"></div>
 
-        <!-- Gradient overlays -->
-        <div class="absolute inset-0 bg-gradient-to-t from-[#141414] via-black/45 to-black/30 pointer-events-none"></div>
-        <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent pointer-events-none"></div>
+        <!-- Gradient overlay (bottom only, for text legibility) -->
+        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none"></div>
 
         <!-- Top overlay bar -->
         <div class="absolute top-0 inset-x-0 z-30 flex items-center justify-between px-6 py-5">
@@ -1201,51 +1206,43 @@
         </div>
 
         <!-- Hero content -->
-        <div class="relative z-10 px-6 pb-14 w-full max-w-4xl mx-auto">
-          <div id="nl-hero-logo" class="nl-fade-in w-16 h-16 rounded-2xl bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center shadow-2xl mb-6">
-            <span id="nl-hero-logo-icon" class="material-symbols-outlined !text-white" style="font-size:34px">article</span>
+        <div class="relative z-10 px-6 pb-6 w-full max-w-4xl mx-auto flex items-end justify-between gap-6">
+          <div class="min-w-0">
+            <div class="flex items-center gap-4 mb-3">
+              <div id="nl-hero-logo" class="nl-fade-in w-12 h-12 rounded-xl bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center shadow-xl shrink-0">
+                <span id="nl-hero-logo-icon" class="material-symbols-outlined !text-white" style="font-size:26px">article</span>
+              </div>
+              <h1 id="nl-hero-title" class="nl-fade-in delay-1 text-3xl md:text-4xl font-black text-white tracking-tight drop-shadow-2xl leading-tight">Newsletter</h1>
+            </div>
+            <p id="nl-hero-desc" class="nl-fade-in delay-2 text-white/85 text-sm leading-relaxed max-w-xl drop-shadow-md mb-2"></p>
+            <div id="nl-hero-email-row" class="nl-fade-in delay-2 flex items-center gap-2 text-xs text-white/55">
+              <span class="material-symbols-outlined !text-white/70" style="font-size:14px">alternate_email</span>
+              <span id="nl-hero-email">email@example.com</span>
+            </div>
           </div>
-
-          <h1 id="nl-hero-title" class="nl-fade-in delay-1 text-5xl md:text-6xl font-black text-white tracking-tight drop-shadow-2xl mb-4 leading-[1.05]">Newsletter</h1>
-
-          <div class="nl-fade-in delay-2 flex flex-wrap items-center gap-3 mb-5 text-sm">
-            <span class="nl-match" id="nl-hero-match">98% Match</span>
-            <span id="nl-hero-year" class="text-white/75">2019</span>
-            <span class="nl-chip" id="nl-hero-rating">Tout public</span>
-            <span id="nl-hero-editions-count" class="text-white/85 font-semibold">0 éditions</span>
-            <span class="nl-chip" id="nl-hero-frequency"><span class="material-symbols-outlined !text-white" style="font-size:14px">schedule</span>Hebdo</span>
-          </div>
-
-          <p id="nl-hero-desc" class="nl-fade-in delay-3 text-white/90 text-base md:text-lg leading-relaxed mb-7 max-w-xl drop-shadow-md"></p>
-
-          <div id="nl-hero-email-row" class="nl-fade-in delay-3 flex items-center gap-2 mb-7 text-xs text-white/65">
-            <span class="material-symbols-outlined !text-white/70" style="font-size:16px">alternate_email</span>
-            <span id="nl-hero-email">email@example.com</span>
-          </div>
-
-          <div class="nl-fade-in delay-4 flex flex-wrap items-center gap-3">
-            <button onclick="readLatestNewsletter()" class="nl-btn-primary px-7 py-2.5 rounded-md font-semibold flex items-center gap-2">
-              <span class="material-symbols-outlined !text-black" style="font-size:24px">play_arrow</span>
-              Lire la dernière édition
+          <div class="nl-fade-in delay-3 flex items-center gap-2 shrink-0">
+            <button onclick="readLatestNewsletter()" class="nl-btn-primary px-5 py-2 rounded-md font-semibold flex items-center gap-2 text-sm">
+              <span class="material-symbols-outlined !text-black" style="font-size:20px">play_arrow</span>
+              Lire
             </button>
-            <button onclick="markNewsletterRead()" class="nl-btn-ghost px-5 py-2.5 rounded-md font-semibold flex items-center gap-2">
-              <span class="material-symbols-outlined !text-white" style="font-size:22px">drafts</span>
-              Tout marquer comme lu
+            <button onclick="markNewsletterRead()" class="nl-btn-ghost px-4 py-2 rounded-md font-semibold flex items-center gap-2 text-sm">
+              <span class="material-symbols-outlined !text-white" style="font-size:18px">drafts</span>
+              Lu
             </button>
-            <button class="nl-icon-btn" title="Ajouter aux favoris"><span class="material-symbols-outlined !text-white">add</span></button>
-            <button class="nl-icon-btn" title="Se désabonner"><span class="material-symbols-outlined !text-white">unsubscribe</span></button>
           </div>
         </div>
       </section>
 
-      <!-- ============ EDITIONS LIST (revealed on scroll) ============ -->
-      <section class="bg-[#141414] text-white px-6 py-10">
-        <div class="max-w-4xl mx-auto">
-          <div class="flex items-baseline justify-between mb-6">
-            <h2 class="text-2xl font-bold tracking-tight">Éditions</h2>
-            <span id="nl-editions-count-2" class="text-sm text-white/60">0 e-mails</span>
+      <!-- ============ MAIL LIST (same style as inbox) ============ -->
+      <section class="flex-1 min-h-0 pt-4 px-6 pb-6">
+        <div class="glass-container w-full h-full rounded-2xl shadow-2xl flex flex-col overflow-hidden mx-auto" style="max-width:var(--list-max-w, 56rem)">
+          <div class="flex items-center justify-between px-6 h-14 border-b border-gray-200/80 shrink-0 list-header-surface">
+            <h2 class="text-sm font-semibold text-gray-700">Éditions</h2>
+            <span id="nl-editions-count-2" class="text-xs text-gray-400">0 e-mails</span>
           </div>
-          <div id="nl-editions-grid" class="flex flex-col gap-2"></div>
+          <div class="flex-1 overflow-y-auto">
+            <div id="nl-editions-grid" class="divide-y divide-gray-100"></div>
+          </div>
         </div>
       </section>
 
@@ -1897,8 +1894,17 @@
         if(src) candidates.push({src,score:250000-index});
       });
       candidates.sort((a,b)=>b.score-a.score);
-      email.newsletterImage=candidates[0]?.src||'';
-      return email.newsletterImage;
+      const emailImg = candidates[0]?.src||'';
+      if(emailImg){ email.newsletterImage = emailImg; return emailImg; }
+      // Fallback: OG image du domaine
+      const d = domainOf(email.email);
+      if(d && d.includes('.')){
+        try {
+          const r = await api(`/api/og-image?domain=${encodeURIComponent(d)}`);
+          if(r && r.image){ email.newsletterImage = r.image; return r.image; }
+        } catch(e){}
+      }
+      email.newsletterImage=''; return '';
     }
     async function hydrateMissingAttachmentCounts() {
       const folderAtStart = currentFolder;
@@ -2120,7 +2126,7 @@
     function handleBack(){
       if(currentActiveView==='conversation'){ if(currentNewsletterFilter){ currentActiveView='newsletter'; } else { currentActiveView='list'; } }
       else if(currentActiveView==='newsletter'){ currentNewsletterFilter=''; currentActiveView='list'; }
-      else if(newsletterCarouselExpanded){ newsletterCarouselExpanded=false; buildNewsletterCarousel(); }
+      else if(newsletterCarouselExpanded){ newsletterCarouselExpanded=false; const lh=document.getElementById('list-header-bar'); const mc=document.getElementById('messages-container'); if(lh) lh.style.display=''; if(mc) mc.style.display=''; buildNewsletterCarousel(); }
       updateUIState();
     }
 
@@ -2224,6 +2230,11 @@
 
     // ====================== Liste (threads + catégories) ======================
     function renderInboxList(){
+      if(newsletterCarouselExpanded){
+        newsletterCarouselExpanded = false;
+        const lh=document.getElementById('list-header-bar'); const mc=document.getElementById('messages-container');
+        if(lh) lh.style.display=''; if(mc) mc.style.display='';
+      }
       const container=document.getElementById('messages-container');
       const threads=getThreads();
       const sc=document.getElementById('search-count');
@@ -2378,10 +2389,16 @@
         const unread = info.items.filter(e=>e.unread).length;
         const cnt = unread>0 ? `${unread} non lu${unread>1?'s':''}` : `${info.items.length} message${info.items.length>1?'s':''}`;
         const isExtra = i >= 4;
+        const favDom = domainOf(info.email);
+        const favUrl = favDom && favDom.includes('.') ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(favDom)}&sz=64` : '';
+        const favInitial = (info.sender||'?')[0].toUpperCase();
+        const iconHtml = favUrl
+          ? `<img src="${favUrl}" alt="" style="width:22px;height:22px;border-radius:5px;object-fit:contain" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="material-symbols-outlined !text-white text-lg" style="display:none">${info.icon}</span>`
+          : `<span class="material-symbols-outlined !text-white text-lg">${info.icon}</span>`;
         return `<div onclick="openNewsletter('${escapeAttr(dom)}')" class="newsletter-recent-card h-52 rounded-xl overflow-hidden cursor-pointer relative group shadow-md transition-transform hover:-translate-y-1 duration-200${isExtra ? ' nl-card-enter' : ''}"${isExtra ? ` style="animation-delay:${(i-4)*0.07}s"` : ''}>
           ${info.image?`<img src="${escapeAttr(info.image)}" alt="" class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy">`:''}
           <div class="absolute inset-0 ${info.image?'':`bg-gradient-to-t ${grad}`} flex flex-col justify-between p-4"${info.image?' style="background:linear-gradient(180deg,rgba(0,0,0,0.08),rgba(0,0,0,0.82))"':''}>
-            <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center border border-white/20 select-none"><span class="material-symbols-outlined !text-white text-lg">${info.icon}</span></div>
+            <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center border border-white/20 select-none">${iconHtml}</div>
             <div class="flex flex-col">
               <span class="text-[10px] ${sub} uppercase font-semibold tracking-wider truncate">${escapeHtml(nameOf(info.sender))}</span>
               <h4 class="text-xs font-bold text-white leading-snug mt-1 truncate group-hover:underline">${escapeHtml(info.sender)}</h4>
@@ -2404,6 +2421,15 @@
     }
     function toggleNewsletterCarousel(){
       newsletterCarouselExpanded = !newsletterCarouselExpanded;
+      const listHeader = document.getElementById('list-header-bar');
+      const messages = document.getElementById('messages-container');
+      if(newsletterCarouselExpanded){
+        if(listHeader) listHeader.style.display = 'none';
+        if(messages) messages.style.display = 'none';
+      } else {
+        if(listHeader) listHeader.style.display = '';
+        if(messages) messages.style.display = '';
+      }
       buildNewsletterCarousel();
     }
     async function renderNewsletterDetail(){
@@ -2413,32 +2439,66 @@
       const title = sample ? sample.sender : currentNewsletterFilter;
       const email = sample ? sample.email : '';
       const total = list.length, unread = list.filter(e=>e.unread).length;
-      const fallbackHero = `https://images.unsplash.com/photo-${(['1526374965328-7f61d4dc18c5','1610945415295-d9bbf067e59c','1516035069371-29a1b244cc32','1559526324-4b87b5e36e44'][Math.abs(hashCode(title))%4])}?auto=format&fit=crop&w=1600&q=80`;
-      const heroUrl = await getNewsletterImage(sample) || fallbackHero;
+      const d = domainOf(email);
+      const faviconLarge = d && d.includes('.') ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(d)}&sz=256` : '';
+      // Gradient de marque basé sur le hash du domaine
+      const gradients = [
+        ['#1a73e8','#0d47a1'], ['#e23b3b','#b71c1c'], ['#f59e0b','#b45309'],
+        ['#0a66c2','#073b4c'], ['#a259ff','#581c87'], ['#1a7f37','#0d3320'],
+        ['#e11d48','#881337'], ['#0d9488','#134e4a'], ['#6366f1','#1e1b4b'],
+      ];
+      const [c1,c2] = gradients[Math.abs(hashCode(d||title)) % gradients.length];
+      const fallbackHero = faviconLarge
+        ? `linear-gradient(135deg, ${c1}cc, ${c2}cc), url("${faviconLarge}") center/30% no-repeat, linear-gradient(135deg, ${c1}, ${c2})`
+        : `linear-gradient(135deg, ${c1}, ${c2})`;
+      const heroUrl = await getNewsletterImage(sample);
+      if(heroUrl){
+        hero.style.background = `url('${heroUrl}') center/cover`;
+      } else {
+        hero.style.background = fallbackHero;
+      }
       if(currentActiveView!=='newsletter') return;
       const view=document.getElementById('newsletter-detail-view'); view.scrollTop=0;
-      hero.style.backgroundImage=`url('${heroUrl}')`; hero.style.animation='none'; void hero.offsetWidth; hero.style.animation='';
+      hero.style.animation='none'; void hero.offsetWidth; hero.style.animation='';
       view.querySelectorAll('.nl-fade-in').forEach(el=>{ el.style.animation='none'; void el.offsetWidth; el.style.animation=''; });
-      document.getElementById('nl-hero-logo-icon').textContent='article';
+      const logoWrap = document.getElementById('nl-hero-logo');
+      const logoIcon = document.getElementById('nl-hero-logo-icon');
+      const favSmall = d && d.includes('.') ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(d)}&sz=64` : '';
+      if(favSmall && logoWrap){
+        logoWrap.innerHTML = `<img src="${favSmall}" style="width:28px;height:28px;border-radius:6px;object-fit:contain" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="material-symbols-outlined !text-white" style="font-size:26px;display:none">article</span>`;
+      } else if(logoIcon){
+        logoIcon.textContent='article';
+      }
       document.getElementById('nl-hero-title').textContent=title;
       document.getElementById('nl-hero-desc').textContent = `${unread} non lu${unread>1?'s':''} sur ${total} édition${total>1?'s':''} ${email?('· '+email):''}`;
       document.getElementById('nl-hero-email').textContent=email||'';
-      document.getElementById('nl-hero-editions-count').textContent = `${total} édition${total>1?'s':''}`;
       document.getElementById('nl-editions-count-2').textContent = `${total} e-mail${total>1?'s':''}`;
       const grid=document.getElementById('nl-editions-grid'); grid.innerHTML='';
       list.slice().sort((a,b)=>(b.rawDate||'').localeCompare(a.rawDate||'')).forEach((e,i)=>{
-        const card=document.createElement('div'); card.className='nl-edition-card'; card.onclick=()=>openConversation(e.id);
-        card.innerHTML=`
-          <div class="nl-edition-num">${String(list.length-i).padStart(2,'0')}</div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between gap-3 mb-1">
-              <h3 class="text-sm font-semibold text-white truncate ${e.unread?'':'text-white/75'}">${escapeHtml(e.subject)}</h3>
-              <div class="flex items-center gap-2 shrink-0 text-xs text-white/45">${e.starred?'<span class="material-symbols-outlined !text-yellow-400" style="font-size:16px">star</span>':''}${e.unread?'<span class="w-2 h-2 rounded-full bg-blue-500"></span>':''}<span>${e.date||''}</span></div>
+        const row=document.createElement('div');
+        row.className=`mail-item relative flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50/80 transition-colors select-none border-b border-gray-100 ${e.unread?'bg-white font-semibold':'bg-gray-50/30 text-gray-700'}`;
+        row.onclick=()=>openConversation(e.id);
+        const senderDomain = domainOf(e.email);
+        const faviconUrl = senderDomain && senderDomain.includes('.') ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(senderDomain)}&sz=32` : '';
+        const senderInitial = (e.sender||'?')[0].toUpperCase();
+        const iconHtml = faviconUrl
+          ? `<img src="${faviconUrl}" alt="" class="sender-favicon shrink-0" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="sender-fallback shrink-0" style="display:none">${escapeHtml(senderInitial)}</div>`
+          : `<div class="sender-fallback shrink-0">${escapeHtml(senderInitial)}</div>`;
+        row.innerHTML=`
+          <div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
+            ${iconHtml}
+            <div class="w-44 truncate shrink-0 text-sm ${e.unread?'text-gray-900 font-bold':'text-gray-800'}">${escapeHtml(e.sender)}</div>
+            <div class="truncate text-sm flex items-center gap-2 min-w-0">
+              <span class="${e.unread?'text-gray-900 font-bold':'text-gray-800'} truncate">${escapeHtml(e.subject)}</span>
+              <span class="text-gray-400 text-xs font-normal opacity-80 truncate hidden lg:inline">- ${escapeHtml(e.snippet||'').slice(0,60)}</span>
             </div>
-            <p class="text-xs text-white/55 truncate">${escapeHtml(e.snippet||'')}</p>
           </div>
-          <span class="material-symbols-outlined !text-white/80 hover:!text-white self-center" style="font-size:28px">play_circle</span>`;
-        grid.appendChild(card);
+          <div class="text-xs text-gray-400 shrink-0 font-normal flex items-center gap-1.5">
+            ${e.starred?'<span class="material-symbols-outlined" style="font-size:16px;color:#f59e0b">star</span>':''}
+            ${e.unread?'<span class="w-2 h-2 rounded-full bg-blue-500"></span>':''}
+            ${e.date||''}
+          </div>`;
+        grid.appendChild(row);
       });
     }
     function hashCode(s){let h=0;for(let i=0;i<(s||'').length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h;}
@@ -3011,6 +3071,7 @@
       if(e.key==='Escape'){
         e.preventDefault();
         if(selectedMailIds.size > 0){ clearSelection(); return; }
+        if(newsletterCarouselExpanded){ toggleNewsletterCarousel(); return; }
         if(currentActiveView==='conversation'||currentActiveView==='newsletter') handleBack();
         else if(currentActiveView==='list'||currentActiveView==='zero'){
           const si=document.getElementById('search-input');
