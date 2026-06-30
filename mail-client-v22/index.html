@@ -120,6 +120,7 @@
       font-size: 13px; color: inherit; cursor: pointer; outline: none; transition: border-color 150ms;
     }
     .settings-select:focus { border-color: #1a73e8; }
+    .account-edit-input { min-width: 0; width: 100%; }
     .category-color-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
     .category-color-control {
       display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -287,19 +288,13 @@
     .avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
 
     .carousel-container {
-      display: flex;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      scrollbar-width: none;
-    }
-    .carousel-container::-webkit-scrollbar { display: none; }
-    .carousel-item { scroll-snap-align: start; flex: 0 0 auto; }
-    /* "Toutes les newsletters" : grille repliée au lieu du carousel horizontal */
-    .carousel-container.nl-expanded {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      overflow-x: visible;
+      width: 100%;
     }
+    .newsletter-recent-card { width: 100%; min-width: 0; }
+    .newsletter-library-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
+    @media (max-width: 900px) { .newsletter-library-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+    @media (max-width: 600px) { .newsletter-library-grid { grid-template-columns: 1fr; } }
     /* Surface du header de liste (sticky) — colle au fond du glass-container */
     .list-header-surface { background: #ffffff; }
     body.theme-image .list-header-surface {
@@ -929,24 +924,27 @@
       </div>
 
       <!-- Action Buttons -->
-      <div id="header-actions" class="w-full flex items-center justify-center gap-1.5 opacity-0 pointer-events-none transition-all duration-300 absolute inset-y-0">
-        <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
-        <div class="icon-btn-container" title="Répondre" onclick="replyCurrent()"><span class="material-symbols-outlined">reply</span></div>
-        <div class="icon-btn-container" title="Tout répondre" onclick="replyAllCurrent()"><span class="material-symbols-outlined">reply_all</span></div>
-        <div class="icon-btn-container" title="Transférer" onclick="forwardCurrent()"><span class="material-symbols-outlined">forward</span></div>
-        <div class="icon-btn-container" title="Lecture immersive" onclick="openImmersive(currentSelectedId)"><span class="material-symbols-outlined">auto_stories</span></div>
-        <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
-        <div class="icon-btn-container" title="Archiver" onclick="archiveCurrent()"><span class="material-symbols-outlined">archive</span></div>
-        <div class="icon-btn-container" title="Signaler comme spam" onclick="reportSpamCurrent()"><span class="material-symbols-outlined">report</span></div>
-        <div class="icon-btn-container" title="Supprimer" onclick="deleteCurrent()"><span class="material-symbols-outlined">delete</span></div>
-        <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
-        <div class="icon-btn-container" title="Marquer comme non lu" onclick="toggleUnreadCurrent()"><span class="material-symbols-outlined">mail</span></div>
-        <div class="icon-btn-container" title="Mettre en attente" onclick="snoozeCurrent()"><span class="material-symbols-outlined">schedule</span></div>
-        <div class="icon-btn-container" title="Ajouter aux tâches" onclick="addToTasksCurrent()"><span class="material-symbols-outlined">add_task</span></div>
-        <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
-        <div class="icon-btn-container" title="Déplacer vers" onclick="moveCurrent()"><span class="material-symbols-outlined">drive_file_move</span></div>
-        <div class="icon-btn-container" title="Libellés" onclick="labelCurrent()"><span class="material-symbols-outlined">label</span></div>
-        <div class="icon-btn-container" title="Plus" onclick="moreMessageActions()"><span class="material-symbols-outlined">more_vert</span></div>
+      <div id="header-actions" class="w-full flex items-center justify-between opacity-0 pointer-events-none transition-all duration-300 absolute inset-y-0">
+        <div class="flex items-center gap-1.5 shrink-0">
+          <div class="icon-btn-container" title="Répondre" onclick="replyCurrent()"><span class="material-symbols-outlined">reply</span></div>
+          <div class="icon-btn-container" title="Tout répondre" onclick="replyAllCurrent()"><span class="material-symbols-outlined">reply_all</span></div>
+          <div class="icon-btn-container" title="Transférer" onclick="forwardCurrent()"><span class="material-symbols-outlined">forward</span></div>
+          <div class="icon-btn-container" title="Lecture immersive" onclick="openImmersive(currentSelectedId)"><span class="material-symbols-outlined">auto_stories</span></div>
+          <div id="thread-toggle-all" class="icon-btn-container" title="Replier toute la conversation" onclick="toggleAllThreadMsgs()"><span id="thread-toggle-icon" class="material-symbols-outlined">unfold_less</span></div>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <div class="icon-btn-container" title="Archiver" onclick="archiveCurrent()"><span class="material-symbols-outlined">archive</span></div>
+          <div class="icon-btn-container" title="Signaler comme spam" onclick="reportSpamCurrent()"><span class="material-symbols-outlined">report</span></div>
+          <div class="icon-btn-container" title="Supprimer" onclick="deleteCurrent()"><span class="material-symbols-outlined">delete</span></div>
+          <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
+          <div class="icon-btn-container" title="Marquer comme non lu" onclick="toggleUnreadCurrent()"><span class="material-symbols-outlined">mail</span></div>
+          <div class="icon-btn-container" title="Mettre en attente" onclick="snoozeCurrent()"><span class="material-symbols-outlined">schedule</span></div>
+          <div class="icon-btn-container" title="Ajouter aux tâches" onclick="addToTasksCurrent()"><span class="material-symbols-outlined">add_task</span></div>
+          <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
+          <div class="icon-btn-container" title="Déplacer vers" onclick="moveCurrent()"><span class="material-symbols-outlined">drive_file_move</span></div>
+          <div class="icon-btn-container" title="Libellés" onclick="labelCurrent()"><span class="material-symbols-outlined">label</span></div>
+          <div class="icon-btn-container" title="Plus" onclick="moreMessageActions()"><span class="material-symbols-outlined">more_vert</span></div>
+        </div>
       </div>
     </div>
 
@@ -1013,20 +1011,14 @@
         <div id="nl-section" class="p-6 border-b border-gray-200/50">
           <div class="flex items-center justify-between mb-3.5">
             <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-widest select-none">Newsletters récentes</h3>
-            <button id="nl-toggle-btn" onclick="toggleAllNewsletters()" class="nl-toggle-btn" title="Afficher toutes les newsletters">
-              <span class="material-symbols-outlined" style="font-size:14px">grid_view</span> Toutes les newsletters
+            <button id="nl-toggle-btn" onclick="openNewsletterLibrary()" class="nl-toggle-btn" title="Voir toutes les newsletters">
+              <span class="material-symbols-outlined" style="font-size:14px">grid_view</span> Voir toutes les newsletters
             </button>
           </div>
-          <!-- Mode carousel (horizontal) -->
+          <!-- Cartes récentes réparties sur toute la largeur -->
           <div id="nl-carousel" class="carousel-container gap-4">
             <!-- cartes newsletters remplies dynamiquement (expéditeurs récurrents en Promotions) -->
             <div class="text-xs text-gray-400 italic px-1 py-6 select-none">Chargement des newsletters…</div>
-          </div>
-          <!-- Mode mosaïque (grille) - caché par défaut -->
-          <div id="nl-mosaic" class="hidden">
-            <div id="nl-mosaic-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <!-- cartes newsletters en grille -->
-            </div>
           </div>
         </div>
 
@@ -1068,6 +1060,17 @@
     <main id="conversation-view" class="absolute inset-0 flex flex-col items-center px-6 pb-6 pt-2 overflow-hidden opacity-0 pointer-events-none transition-all duration-300">
       <div class="w-full max-w-4xl bg-white flex-1 rounded-2xl p-6 lg:p-10 flex flex-col overflow-y-auto" id="conversation-card">
         <div id="thread-content" class="w-full flex flex-col"></div>
+      </div>
+    </main>
+
+    <!-- State 4: bibliothèque complète des newsletters -->
+    <main id="newsletter-library-view" class="absolute inset-0 flex flex-col items-center px-6 pb-6 pt-2 overflow-hidden opacity-0 pointer-events-none transition-all duration-300">
+      <div class="glass-container w-full flex-1 rounded-2xl shadow-2xl overflow-y-auto" style="max-width:var(--list-max-w, 56rem)">
+        <div class="sticky top-0 z-10 list-header-surface border-b border-gray-200/80 px-6 py-5 flex items-center justify-between">
+          <div><h2 class="text-lg font-semibold">Toutes les newsletters</h2><p class="text-xs mt-1" style="color:#80868b">Tous les expéditeurs, sans la liste des e-mails.</p></div>
+          <span id="newsletter-library-count" class="text-xs" style="color:#80868b"></span>
+        </div>
+        <div id="newsletter-library-grid" class="newsletter-library-grid p-6"></div>
       </div>
     </main>
 
@@ -1229,8 +1232,8 @@
     let _evtSource = null;
     let currentFont = 'futura';
     let currentFontMono = 'jetbrains';
-    let mosaicMode = false;
     let newsletterDisplay = 'cards';
+    let newsletterReturnView = 'list';
     let selectedMailIds = new Set();
     let currentLanguage = 'fr';
     let shortcutPreset = 'gmail';
@@ -1392,7 +1395,7 @@
         const c=colors[i%colors.length];
         const dotColor=connected?'#22c55e':'#ef4444';
         const statusText=connected?'Connecté':'Hors-ligne';
-        return `<div class="account-popover-item ${active?'is-active':''}" onclick="${connected?`switchAccount('${a.id}')`:'showToast(\'Mot de passe manquant — configurez-le dans secrets/mail.env\')'}">
+        return `<div class="account-popover-item ${active?'is-active':''}" onclick="openAccountDetails('${escapeAttr(a.id)}')">
           <div class="account-popover-avatar" style="background:${c}">${letter}</div>
           <div class="account-popover-info">
             <span class="account-popover-name">${escapeHtml(a.name||a.id)}</span>
@@ -1875,7 +1878,8 @@
     }
     function handleBack(){
       if(currentActiveView==='conversation'){ if(currentNewsletterFilter){ currentActiveView='newsletter'; } else { currentActiveView='list'; } }
-      else if(currentActiveView==='newsletter'){ currentNewsletterFilter=''; currentActiveView='list'; }
+      else if(currentActiveView==='newsletter'){ currentNewsletterFilter=''; currentActiveView=newsletterReturnView||'list'; }
+      else if(currentActiveView==='newsletter-library'){ currentActiveView='list'; }
       updateUIState();
     }
 
@@ -1955,19 +1959,21 @@
       ab.setAttribute('aria-hidden', showActions ? 'false' : 'true');
       const burger=document.getElementById('burger-btn'), backBtn=document.getElementById('burger-back-btn');
       if(burger && backBtn){
-        const isConv = (state==='conversation');
-        burger.classList.toggle('hidden', isConv);
-        backBtn.classList.toggle('hidden', !isConv);
+        const showBack = (state==='conversation'||state==='newsletter-library');
+        burger.classList.toggle('hidden', showBack);
+        backBtn.classList.toggle('hidden', !showBack);
       }
     }
     function updateUIState(){
       const isZero = emails.length===0;
       const zero=document.getElementById('inbox-zero-view'), list=document.getElementById('inbox-list-view'),
-            conv=document.getElementById('conversation-view'), nl=document.getElementById('newsletter-detail-view');
+            conv=document.getElementById('conversation-view'), nl=document.getElementById('newsletter-detail-view'),
+            nlLibrary=document.getElementById('newsletter-library-view');
       const imageBadge=document.getElementById('image-theme-badge-container'), whiteState=document.getElementById('white-theme-empty-state');
       const show=(el,b)=>{ el.classList.toggle('opacity-0',!b); el.classList.toggle('pointer-events-none',!b); };
       show(zero, currentActiveView==='zero'); show(list, currentActiveView==='list');
       show(conv, currentActiveView==='conversation'); show(nl, currentActiveView==='newsletter');
+      show(nlLibrary, currentActiveView==='newsletter-library');
       if(currentActiveView==='zero'){
         const title=document.getElementById('empty-title'), description=document.getElementById('empty-description');
         if(title) title.textContent=loadError?'Connexion au compte impossible':'Votre boîte est propre';
@@ -1978,6 +1984,7 @@
       } else if(currentActiveView==='list'){ setHeaderState('list'); renderInboxList(); }
       else if(currentActiveView==='conversation'){ setHeaderState('conversation'); }
       else if(currentActiveView==='newsletter'){ setHeaderState('newsletter'); renderNewsletterDetail(); }
+      else if(currentActiveView==='newsletter-library'){ setHeaderState('newsletter-library'); buildNewsletterCarousel(); }
     }
 
     // ====================== Liste (threads + catégories) ======================
@@ -2057,7 +2064,7 @@
     // ====================== Newsletter (expéditeurs récurrents en Promotions) ======================
     function buildNewsletterCarousel(){
       const c = document.getElementById('nl-carousel'); if(!c) return;
-      const m = document.getElementById('nl-mosaic-grid'); if(!m) return;
+      const m = document.getElementById('newsletter-library-grid'); if(!m) return;
       const promo = emails.filter(e => (e.category||'primary')==='promotions');
       const byDomain = {};
       promo.forEach(e => { const d = domainOf(e.email) || e.sender; if(!byDomain[d]) byDomain[d]={sender:e.sender, email:e.email, items:[], icon:'article'}; byDomain[d].items.push(e); });
@@ -2065,6 +2072,8 @@
       if(!top.length){ 
         c.innerHTML='<div class="text-xs text-gray-400 italic px-1 py-6 select-none">Aucune newsletter dans ce dossier.</div>'; 
         m.innerHTML='<div class="text-xs text-gray-400 italic px-1 py-6 select-none">Aucune newsletter dans ce dossier.</div>';
+        const count=document.getElementById('newsletter-library-count');
+        if(count) count.textContent='0 newsletter';
         return; 
       }
       const palettes = [
@@ -2076,12 +2085,13 @@
         ['from-emerald-950 via-emerald-900/50 to-emerald-700','text-emerald-200','text-emerald-300/80'],
       ];
       // Mode carousel (horizontal)
-      const topCarousel = top.slice(0,6);
+      const topCarousel = top.slice(0,4);
+      c.style.gridTemplateColumns=`repeat(${Math.max(1,topCarousel.length)},minmax(0,1fr))`;
       c.innerHTML = topCarousel.map(([dom, info], i) => {
         const [grad, sub, sub2] = palettes[i % palettes.length];
         const unread = info.items.filter(e=>e.unread).length;
         const cnt = unread>0 ? `${unread} non lu${unread>1?'s':''}` : `${info.items.length} message${info.items.length>1?'s':''}`;
-        return `<div onclick="openNewsletter('${escapeAttr(dom)}')" class="carousel-item w-44 h-52 rounded-xl overflow-hidden cursor-pointer relative group shadow-md transition-transform hover:-translate-y-1 duration-200">
+        return `<div onclick="openNewsletter('${escapeAttr(dom)}')" class="newsletter-recent-card h-52 rounded-xl overflow-hidden cursor-pointer relative group shadow-md transition-transform hover:-translate-y-1 duration-200">
           <div class="absolute inset-0 bg-gradient-to-t ${grad} flex flex-col justify-between p-4">
             <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center border border-white/20 select-none"><span class="material-symbols-outlined !text-white text-lg">${info.icon}</span></div>
             <div class="flex flex-col">
@@ -2108,24 +2118,20 @@
           </div>
         </div>`;
       }).join('');
+      const count=document.getElementById('newsletter-library-count');
+      if(count) count.textContent=`${top.length} newsletter${top.length>1?'s':''}`;
     }
 
     function openNewsletter(domainKey){
+      newsletterReturnView = currentActiveView==='newsletter-library' ? 'newsletter-library' : 'list';
       currentNewsletterFilter = domainKey;
       currentActiveView = 'newsletter';
       updateUIState();
     }
-    function toggleAllNewsletters(){
-      const carousel = document.getElementById('nl-carousel');
-      const mosaic = document.getElementById('nl-mosaic');
-      const btn = document.getElementById('nl-toggle-btn');
-      if(!carousel||!mosaic||!btn) return;
-      mosaicMode = !mosaicMode;
-      carousel.classList.toggle('hidden', mosaicMode);
-      mosaic.classList.toggle('hidden', !mosaicMode);
-      btn.innerHTML = mosaicMode 
-        ? '<span class="material-symbols-outlined" style="font-size:14px">view_carousel</span> Vue liste' 
-        : '<span class="material-symbols-outlined" style="font-size:14px">grid_view</span> Mosaïque';
+    function openNewsletterLibrary(){
+      currentNewsletterFilter='';
+      currentActiveView='newsletter-library';
+      updateUIState();
     }
     function renderNewsletterDetail(){
       const list = emails.filter(e => domainOf(e.email) === currentNewsletterFilter || (domainOf(e.email)==='' && e.sender===currentNewsletterFilter));
@@ -2165,18 +2171,53 @@
     function markNewsletterRead(){ let n=0; emails.forEach(e=>{ if(domainOf(e.email)===currentNewsletterFilter && e.unread){ e.unread=false; n++; apiCallFlag(e,true,null); } }); renderNewsletterDetail(); showToast(n?(`${n} marqué(s) comme lu(s)`):'Rien à marquer'); }
 
     // ====================== Conversation (thread repliable + détail API) ======================
-    function toggleThreadMsg(headEl){ const m=headEl.closest('.thread-msg'); if(m) m.classList.toggle('collapsed'); }
-    function toggleAllThreadMsgs(){ const ms=document.querySelectorAll('#thread-chain .thread-msg'); if(!ms.length) return; const any=[...ms].some(m=>m.classList.contains('collapsed')); ms.forEach(m=>any?m.classList.remove('collapsed'):m.classList.add('collapsed')); }
+    function toggleThreadMsg(headEl){
+      const message=headEl.closest('.thread-msg');
+      if(message) message.classList.toggle('collapsed');
+      updateThreadToggleButton();
+    }
+    function updateThreadToggleButton(){
+      const messages=[...document.querySelectorAll('#thread-chain .thread-msg')];
+      const button=document.getElementById('thread-toggle-all');
+      const icon=document.getElementById('thread-toggle-icon');
+      if(!button||!icon) return;
+      const allExpanded=messages.length>0&&messages.every(message=>!message.classList.contains('collapsed'));
+      icon.textContent=allExpanded?'unfold_less':'unfold_more';
+      button.title=allExpanded?'Replier toute la conversation':'Déplier toute la conversation';
+      button.setAttribute('aria-label',button.title);
+    }
+    function toggleAllThreadMsgs(){
+      const messages=[...document.querySelectorAll('#thread-chain .thread-msg')];
+      if(!messages.length) return;
+      const shouldExpand=messages.some(message=>message.classList.contains('collapsed'));
+      messages.forEach(message=>message.classList.toggle('collapsed',!shouldExpand));
+      updateThreadToggleButton();
+    }
 
     // ===== Settings persistés (localStorage) =====
     let settings = {};
     try { settings = JSON.parse(localStorage.getItem('mm_settings') || '{}'); } catch(e) { settings = {}; }
-    if (!settings.convOrder) settings.convOrder = 'newest'; // 'newest' (récent en haut) | 'oldest'
+    const migrateConversationDefaults = settings.conversationDefaultsVersion !== 2;
+    if (migrateConversationDefaults) {
+      settings.convOrder = 'oldest';
+      settings.threadExpansion = 'all';
+      settings.conversationDefaultsVersion = 2;
+    }
+    if (!settings.convOrder) settings.convOrder = 'oldest';
+    if (!settings.threadExpansion) settings.threadExpansion = 'all';
     if (!settings.lang) settings.lang = 'fr';
     if (!settings.shortcuts) settings.shortcuts = null;
     function saveSettings(){ try { localStorage.setItem('mm_settings', JSON.stringify(settings)); } catch(e){} }
-    function getConvOrder(){ return settings.convOrder || 'newest'; }
+    if (migrateConversationDefaults) saveSettings();
+    function getConvOrder(){ return settings.convOrder || 'oldest'; }
     function setConvOrder(o){ settings.convOrder = o; saveSettings(); }
+    function getThreadExpansion(){ return settings.threadExpansion || 'all'; }
+    function setConversationPreference(key,value){
+      if(key==='order'&&['oldest','newest'].includes(value)) settings.convOrder=value;
+      if(key==='expansion'&&['all','latest'].includes(value)) settings.threadExpansion=value;
+      saveSettings();
+      if(currentActiveView==='conversation'&&currentSelectedId) openConversation(currentSelectedId);
+    }
 
     async function openConversation(id){
       currentSelectedId=id;
@@ -2201,12 +2242,13 @@
       const chain=document.getElementById('thread-chain'); chain.innerHTML='';
       const detailed = await Promise.all(msgs.map(m => fetchDetail(m)));
       detailed.forEach(e => { if(e.unread){ e.unread=false; apiCallFlag(e,true,null); } });
-      // Ordre d'affichage de la conversation (récent en haut par défaut, paramétrable)
+      // Ordre d'affichage et dépliage par défaut, paramétrables.
       const newestFirst = (getConvOrder()==='newest');
       const ordered = newestFirst ? detailed.slice().reverse() : detailed.slice();
-      const expandedIdx = newestFirst ? 0 : ordered.length - 1;
+      const latestIndex = newestFirst ? 0 : ordered.length - 1;
+      const expandAll = getThreadExpansion()==='all';
       ordered.forEach((m,i)=>{
-        const expanded = (i===expandedIdx);
+        const expanded = expandAll || i===latestIndex;
         const div=document.createElement('div'); div.className='thread-msg'+(expanded?'':' collapsed');
         div.innerHTML=`
           <div class="thread-msg-head" onclick="toggleThreadMsg(this)">
@@ -2225,6 +2267,7 @@
           </div>`;
         chain.appendChild(div);
       });
+      updateThreadToggleButton();
       buildNewsletterCarousel();
     }
 
@@ -2402,14 +2445,14 @@
     }
     function toggleUnreadCurrent(){ const m=emails.find(e=>e.id===currentSelectedId); if(m){ m.unread=true; apiCallFlag(m,false,null); closeConversation(); showToast('Marqué comme non lu'); } }
     function closeConversation(){ handleBack(); }
-    function replyCurrent(){ const m=emails.find(e=>e.id===currentSelectedId); openCompose(m?{to:m.email, subject:'Re: '+(m.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,'')}:null); }
+    function replyCurrent(){ const m=emails.find(e=>e.id===currentSelectedId); openCompose(m?{to:m.email, subject:'Re: '+(m.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,''), focusBody:true}:null); }
     function replyAllCurrent(){
       const m=emails.find(e=>e.id===currentSelectedId);
       if(!m) return;
       fetchDetail(m).then(()=>{
         const to=m.email||'';
         const cc=m.cc||'';
-        openCompose({to, cc, subject:'Re: '+(m.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,'')});
+        openCompose({to, cc, subject:'Re: '+(m.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,''), focusBody:true});
       });
     }
     function forwardCurrent(){
@@ -2474,11 +2517,11 @@
       }).catch(err=>showToast('Suppression impossible : '+err.message));
     }
     function immersiveToggleUnread(){ const e=immersiveList[immersiveIndex]; if(!e) return; e.unread=!e.unread; apiCallFlag(e,!e.unread,null); showToast(e.unread?'Marqué non lu':'Marqué lu'); }
-    function immersiveSendReply(){ const i=document.getElementById('immersive-reply'); if(i.value.trim()){ const e=immersiveList[immersiveIndex]; openCompose({to:e?e.email:'', text:i.value}); i.value=''; } }
-    function immersiveReply(){ const e=immersiveList[immersiveIndex]; if(!e) return; openCompose({to:e.email, subject:'Re: '+(e.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,'')}); }
+    function immersiveSendReply(){ const i=document.getElementById('immersive-reply'); if(i.value.trim()){ const e=immersiveList[immersiveIndex]; openCompose({to:e?e.email:'', text:i.value, focusBody:true}); i.value=''; } }
+    function immersiveReply(){ const e=immersiveList[immersiveIndex]; if(!e) return; openCompose({to:e.email, subject:'Re: '+(e.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,''), focusBody:true}); }
     function immersiveReplyAll(){
       const e=immersiveList[immersiveIndex]; if(!e) return;
-      fetchDetail(e).then(()=>{ openCompose({to:e.email, cc:e.cc||'', subject:'Re: '+(e.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,'')}); });
+      fetchDetail(e).then(()=>{ openCompose({to:e.email, cc:e.cc||'', subject:'Re: '+(e.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,''), focusBody:true}); });
     }
     function immersiveForward(){
       const e=immersiveList[immersiveIndex]; if(!e) return;
@@ -2502,7 +2545,6 @@
             <span class="text-xs font-semibold uppercase tracking-widest compose-muted">Rédaction — sans distraction</span>
           </div>
           <div class="flex items-center gap-2">
-            <button onclick="closeCompose()" class="text-xs font-medium px-3 py-1.5 rounded-md border compose-border hover:bg-black/5 dark:hover:bg-white/10">Fermer</button>
             <button id="cmp-send" onclick="sendCompose()" class="compose-send-btn"><span class="material-symbols-outlined !text-inherit" style="font-size:18px">send</span> Envoyer <span class="text-[10px] opacity-60 ml-1">⌘↵</span></button>
           </div>
         </div>
@@ -2517,10 +2559,18 @@
             <div class="compose-field">
               <span class="compose-field-label">À</span>
               <input id="cmp-to" type="email" placeholder="destinataire@example.com" class="compose-input">
+              <div class="compose-recipient-actions">
+                <button id="cmp-show-cc" type="button" onclick="toggleComposeRecipient('cc')">Cc</button>
+                <button id="cmp-show-bcc" type="button" onclick="toggleComposeRecipient('bcc')">Cci</button>
+              </div>
             </div>
-            <div class="compose-field">
+            <div id="cmp-cc-row" class="compose-field hidden">
               <span class="compose-field-label">Cc</span>
-              <input id="cmp-cc" type="text" placeholder="(optionnel)" class="compose-input">
+              <input id="cmp-cc" type="email" multiple placeholder="destinataires en copie" class="compose-input">
+            </div>
+            <div id="cmp-bcc-row" class="compose-field hidden">
+              <span class="compose-field-label">Cci</span>
+              <input id="cmp-bcc" type="email" multiple placeholder="destinataires en copie cachée" class="compose-input">
             </div>
             <div class="compose-field">
               <span class="compose-field-label">Objet</span>
@@ -2558,22 +2608,44 @@
           .compose-send-btn:disabled{opacity:0.6;cursor:wait;}
           body.theme-dark .compose-send-btn{background:#8ab4f8;color:#141414;}
           .compose-field{display:flex;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid rgba(0,0,0,0.06);}
+          .compose-field.hidden{display:none;}
           body.theme-dark .compose-field{border-color:rgba(255,255,255,0.06);}
           .compose-field-label{font-size:12px;color:#5f6368;width:44px;flex-shrink:0;text-transform:uppercase;letter-spacing:0.04em;font-weight:600;}
           body.theme-dark .compose-field-label{color:#9aa0a6;}
           .compose-input{flex:1;border:none;background:none;outline:none;font-size:14px;color:inherit;padding:4px 0;width:100%;}
+          .compose-recipient-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+          .compose-recipient-actions button{border:0;background:none;padding:3px 0;color:#5f6368;font-size:12px;font-weight:500;cursor:pointer;}
+          .compose-recipient-actions button:hover{color:#1a73e8;}
+          body.theme-dark .compose-recipient-actions button{color:#9aa0a6;}
+          body.theme-dark .compose-recipient-actions button:hover{color:#8ab4f8;}
           .compose-editor{width:100%;min-height:50vh;border:none;outline:none;background:none;color:inherit;font-size:16px;line-height:1.8;font-family:inherit;resize:none;margin-top:8px;}
           .compose-editor::placeholder,.compose-input::placeholder{color:#9aa0a6;}
         `;
         document.head.appendChild(s);
       }
-      if(prefill){ if(prefill.to) document.getElementById('cmp-to').value=prefill.to; if(prefill.subject) document.getElementById('cmp-subject').value=prefill.subject; if(prefill.text) document.getElementById('cmp-body').value=prefill.text; }
-      setTimeout(()=>document.getElementById('cmp-to').focus(),80);
+      if(prefill){
+        if(prefill.to) document.getElementById('cmp-to').value=prefill.to;
+        if(prefill.cc){ toggleComposeRecipient('cc'); document.getElementById('cmp-cc').value=prefill.cc; }
+        if(prefill.bcc){ toggleComposeRecipient('bcc'); document.getElementById('cmp-bcc').value=prefill.bcc; }
+        if(prefill.subject) document.getElementById('cmp-subject').value=prefill.subject;
+        if(prefill.text) document.getElementById('cmp-body').value=prefill.text;
+      }
+      setTimeout(()=>document.getElementById(prefill?.focusBody?'cmp-body':'cmp-to').focus(),80);
+    }
+    function toggleComposeRecipient(kind){
+      const row=document.getElementById(`cmp-${kind}-row`);
+      const button=document.getElementById(`cmp-show-${kind}`);
+      const input=document.getElementById(`cmp-${kind}`);
+      if(!row||!input) return;
+      row.classList.remove('hidden');
+      if(button) button.classList.add('hidden');
+      input.focus();
     }
     function closeCompose(){ const o=document.getElementById('compose-overlay'); if(!o) return; o.classList.add('opacity-0'); setTimeout(()=>o.remove(),200); }
     async function sendCompose(){
       const to=document.getElementById('cmp-to').value.trim();
       const cc=document.getElementById('cmp-cc').value.trim();
+      const bcc=document.getElementById('cmp-bcc').value.trim();
       const subject=document.getElementById('cmp-subject').value;
       const text=document.getElementById('cmp-body').value;
       const acc=document.getElementById('cmp-account').value||currentAccount;
@@ -2581,7 +2653,7 @@
       if(!to){ st.textContent='⚠ Destinataire requis'; document.getElementById('cmp-to').focus(); return; }
       st.textContent='Envoi en cours…'; document.getElementById('cmp-send').disabled=true;
       try{
-        const r=await api('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({account:acc,to,cc,subject,text})});
+        const r=await api('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({account:acc,to,cc,bcc,subject,text})});
         st.textContent='✓ Envoyé' + (r.sent_folder?` (copié dans ${r.sent_folder})`:'');
         showToast('Message envoyé');
         setTimeout(closeCompose, 800);
@@ -2596,6 +2668,9 @@
     let _pendingKey = null;
     let _pendingTimer = null;
     document.addEventListener('keydown',(e)=>{
+      // Laisser au navigateur et au système tous les raccourcis Ctrl/⌘/Alt
+      // (copier, coller, rechercher, actualiser, etc.).
+      if(e.ctrlKey || e.metaKey || e.altKey) return;
       // --- Immersive reader ---
       if(immersiveOpen){
         const tag=(e.target.tagName||'').toLowerCase(); if(tag==='input'||tag==='textarea') return;
@@ -2784,6 +2859,10 @@
                   <span class="material-symbols-outlined" style="font-size:18px">palette</span>
                   <span>Apparence</span>
                 </button>
+                <button onclick="gotoSettingsSection('conversations')" data-nav="conversations" class="settings-nav-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors">
+                  <span class="material-symbols-outlined" style="font-size:18px">forum</span>
+                  <span>Conversations</span>
+                </button>
                 <button onclick="gotoSettingsSection('language')" data-nav="language" class="settings-nav-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors">
                   <span class="material-symbols-outlined" style="font-size:18px">translate</span>
                   <span>Langue</span>
@@ -2895,6 +2974,34 @@
               </div>
             </div>
 
+            <!-- PAGE: CONVERSATIONS -->
+            <div id="set-page-conversations" class="settings-page hidden px-10 py-8">
+              <h2 class="text-2xl font-semibold mb-1">Conversations</h2>
+              <p class="text-sm mb-8" style="color:#5f6368">Choisissez l’ordre des messages et leur état d’ouverture initial.</p>
+
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <div class="settings-row-title">Ordre des messages</div>
+                  <div class="settings-row-desc">Le dernier message apparaît en bas par défaut.</div>
+                </div>
+                <select onchange="setConversationPreference('order',this.value)" class="settings-select">
+                  <option value="oldest" ${getConvOrder()==='oldest'?'selected':''}>Plus ancien en haut</option>
+                  <option value="newest" ${getConvOrder()==='newest'?'selected':''}>Plus récent en haut</option>
+                </select>
+              </div>
+
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <div class="settings-row-title">Ouverture par défaut</div>
+                  <div class="settings-row-desc">Déplier toute la conversation ou uniquement le dernier message.</div>
+                </div>
+                <select onchange="setConversationPreference('expansion',this.value)" class="settings-select">
+                  <option value="all" ${getThreadExpansion()==='all'?'selected':''}>Tout déplier</option>
+                  <option value="latest" ${getThreadExpansion()==='latest'?'selected':''}>Dernier message uniquement</option>
+                </select>
+              </div>
+            </div>
+
             <!-- PAGE: LANGUE -->
             <div id="set-page-language" class="settings-page hidden px-10 py-8">
               <h2 class="text-2xl font-semibold mb-1">Langue</h2>
@@ -2921,6 +3028,7 @@
               </div>
               <p class="text-sm mb-8" style="color:#5f6368">Gérez vos comptes de messagerie IMAP/SMTP.</p>
               <div id="settings-accounts-list" class="space-y-2"></div>
+              <div id="settings-account-details" class="mt-6"></div>
             </div>
 
             <!-- PAGE: À PROPOS -->
@@ -2943,24 +3051,86 @@
       document.addEventListener('keydown',function _escSettings(ev){
         if(ev.key==='Escape'){ closeSettings(); document.removeEventListener('keydown',_escSettings); }
       });
-      // Populate accounts list
+      renderSettingsAccounts(settingsAccountId);
+    }
+    let settingsAccountId = '';
+    function openAccountDetails(id){
+      const popover=document.getElementById('account-popover');
+      if(popover) popover.classList.add('hidden');
+      settingsAccountId=id;
+      openSettings();
+      gotoSettingsSection('accounts');
+      renderSettingsAccounts(id);
+    }
+    function accountConnectionFormHtml(label, prefix, config){
+      const c=config||{};
+      const passwordState=c.password_configured?'Configuré':'Manquant';
+      const passwordColor=c.password_configured?'#188038':'#d93025';
+      return `<div class="rounded-xl border p-4" style="border-color:rgba(0,0,0,0.08)">
+        <div class="text-xs font-bold uppercase tracking-wider mb-3" style="color:#5f6368">${label}</div>
+        <div class="grid grid-cols-2 gap-x-5 gap-y-3 text-xs">
+          <label><span style="color:#80868b">Serveur</span><input id="account-${prefix}-host" class="settings-select account-edit-input mt-1" value="${escapeAttr(c.host||'')}" required></label>
+          <label><span style="color:#80868b">Port</span><input id="account-${prefix}-port" type="number" min="1" max="65535" class="settings-select account-edit-input mt-1" value="${escapeAttr(c.port??'')}" required></label>
+          <label class="col-span-2 flex items-center gap-2 py-1"><input id="account-${prefix}-ssl" type="checkbox" ${c.ssl?'checked':''}><span>Utiliser SSL/TLS</span></label>
+          <label class="col-span-2"><span style="color:#80868b">Nouveau mot de passe</span><input id="account-${prefix}-password" type="password" autocomplete="new-password" class="settings-select account-edit-input mt-1" placeholder="Laisser vide pour conserver le mot de passe actuel"></label>
+          <div class="col-span-2 flex items-center justify-between gap-3"><span>Variable : <code>${escapeHtml(c.password_env||'automatique')}</code></span><span class="font-semibold" style="color:${passwordColor}">${passwordState}</span></div>
+        </div>
+      </div>`;
+    }
+    function renderSettingsAccounts(selectedId=''){
       const alist=document.getElementById('settings-accounts-list');
-      if(alist){
-        alist.innerHTML=accounts.map(a=>{
-          const conn=a.id==='pouark'||a.id==='mondary'||a.id==='gmail';
-          const cur=a.id===currentAccount;
-          const colors=['#1a73e8','#e8710a','#0d904f'];
-          const ci=accounts.indexOf(a)%3;
-          return `<div class="flex items-center gap-3 p-3 rounded-lg border" style="border-color:rgba(0,0,0,0.06)">
-            <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-semibold" style="background:${colors[ci]}">${(a.name||a.email||'?')[0].toUpperCase()}</div>
-            <div class="flex-1 min-w-0">
-              <div class="text-sm font-medium truncate">${escapeHtml(a.name||a.id)}</div>
-              <div class="text-xs truncate" style="color:#5f6368">${escapeHtml(a.email||'')}</div>
-            </div>
-            <span class="text-xs px-2 py-0.5 rounded-full font-medium" style="background:${conn?'rgba(13,144,79,0.1)':'rgba(0,0,0,0.04)'};color:${conn?'#0d904f':'#5f6368'}">${conn?'Connecté':'Hors-ligne'}</span>
-            ${cur?'<span class="material-symbols-outlined" style="font-size:18px;color:#1a73e8">check_circle</span>':''}
-          </div>`;
-        }).join('');
+      const details=document.getElementById('settings-account-details');
+      if(!alist) return;
+      const source=allAccounts.length?allAccounts:accounts;
+      const colors=['#1a73e8','#e8710a','#0d904f','#7b4bb7'];
+      alist.innerHTML=source.map((a,index)=>{
+        const connected=a.connected!==false;
+        const current=a.id===currentAccount;
+        const selected=a.id===selectedId;
+        return `<button type="button" onclick="settingsAccountId='${escapeAttr(a.id)}';renderSettingsAccounts('${escapeAttr(a.id)}')" class="w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-colors" style="border-color:${selected?'#1a73e8':'rgba(0,0,0,0.06)'};background:${selected?'rgba(26,115,232,0.05)':'transparent'}">
+          <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0" style="background:${colors[index%colors.length]}">${escapeHtml((a.name||a.email||'?')[0].toUpperCase())}</div>
+          <div class="flex-1 min-w-0"><div class="text-sm font-medium truncate">${escapeHtml(a.name||a.id)}</div><div class="text-xs truncate" style="color:#5f6368">${escapeHtml(a.email||'')}</div></div>
+          <span class="text-xs px-2 py-0.5 rounded-full font-medium" style="background:${connected?'rgba(24,128,56,0.1)':'rgba(217,48,37,0.1)'};color:${connected?'#188038':'#d93025'}">${connected?'Connecté':'À configurer'}</span>
+          ${current?'<span class="material-symbols-outlined" style="font-size:18px;color:#1a73e8" title="Compte actif">check_circle</span>':''}
+        </button>`;
+      }).join('');
+      if(!details) return;
+      const account=source.find(a=>a.id===selectedId);
+      if(!account){ details.innerHTML='<div class="text-sm text-center py-6" style="color:#80868b">Cliquez sur un compte pour afficher toute sa configuration.</div>'; return; }
+      if(account.test){ details.innerHTML='<div class="text-sm text-center py-6" style="color:#80868b">Le compte test utilise des données locales et ne nécessite aucune configuration.</div>'; return; }
+      const connected=account.connected!==false;
+      details.innerHTML=`<form onsubmit="saveAccountSettings(event,'${escapeAttr(account.id)}')" class="rounded-2xl border p-5" style="border-color:rgba(0,0,0,0.1)">
+        <div class="flex items-start justify-between gap-4 mb-5">
+          <div class="flex-1"><input id="account-name" class="settings-select account-edit-input text-base font-semibold" value="${escapeAttr(account.name||account.id)}" required><div class="text-xs mt-1" style="color:#5f6368">Configuration enregistrée dans <code>config.json</code> et <code>secrets/mail.env</code></div></div>
+          ${connected&&account.id!==currentAccount?`<button type="button" onclick="closeSettings();onAccountChange('${escapeAttr(account.id)}')" class="preset-btn">Utiliser ce compte</button>`:''}
+        </div>
+        <label class="block text-xs mb-3"><span style="color:#80868b">Adresse e-mail / identifiant</span><input id="account-email" type="email" class="settings-select account-edit-input mt-1" value="${escapeAttr(account.email||'')}" required></label>
+        <div class="grid gap-3">${accountConnectionFormHtml('Réception IMAP','imap',account.imap)}${accountConnectionFormHtml('Envoi SMTP','smtp',account.smtp)}</div>
+        <div id="account-save-status" class="text-xs min-h-[18px] mt-4" style="color:#5f6368"></div>
+        <div class="flex justify-end mt-2"><button id="account-save-button" type="submit" class="preset-btn active">Enregistrer</button></div>
+      </form>`;
+    }
+    async function saveAccountSettings(event,id){
+      event.preventDefault();
+      const status=document.getElementById('account-save-status');
+      const button=document.getElementById('account-save-button');
+      const value=fieldId=>document.getElementById(fieldId)?.value.trim()||'';
+      const payload={
+        name:value('account-name'), email:value('account-email'),
+        imap_host:value('account-imap-host'), imap_port:Number(value('account-imap-port')), imap_ssl:document.getElementById('account-imap-ssl').checked, imap_password:value('account-imap-password'),
+        smtp_host:value('account-smtp-host'), smtp_port:Number(value('account-smtp-port')), smtp_ssl:document.getElementById('account-smtp-ssl').checked, smtp_password:value('account-smtp-password'),
+      };
+      status.textContent='Enregistrement…'; button.disabled=true;
+      try{
+        await api(`/api/accounts/${encodeURIComponent(id)}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        await loadAccounts();
+        settingsAccountId=id;
+        renderSettingsAccounts(id);
+        showToast('Configuration du compte enregistrée');
+      }catch(error){
+        status.textContent='Erreur : '+error.message;
+        status.style.color='#d93025';
+        button.disabled=false;
       }
     }
     function closeSettings(){

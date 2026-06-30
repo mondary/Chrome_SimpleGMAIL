@@ -23,6 +23,22 @@ from pydantic import BaseModel
 
 BASE_DIR = Path(__file__).resolve().parent
 CONFIG_PATH = BASE_DIR / "config.json"
+SECRETS_PATH = BASE_DIR / "secrets" / "mail.env"
+
+
+def _reload_env(env_path: Path):
+    """Charge les secrets locaux sans écraser les variables déjà exportées."""
+    if not env_path.exists():
+        return
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            key, value = line.split("=", 1)
+            os.environ.setdefault(key.strip(), value.strip())
+
+
+# Le backend reste fonctionnel même s'il est lancé directement avec `python3 main.py`.
+_reload_env(SECRETS_PATH)
 
 # ---------- Message cache (in-memory, TTL) ----------
 _MSG_CACHE = {}
@@ -277,6 +293,7 @@ class SendRequest(BaseModel):
     in_reply_to: Optional[str] = None
     references: Optional[str] = None
     cc: str = ""
+    bcc: str = ""
     attachments: Optional[list[dict]] = None  # [{filename, content_type, data_b64}]
 
 
@@ -296,13 +313,18 @@ class FolderCreateRequest(BaseModel):
 
 # ---------- Demo mode ----------
 def _demo_enabled():
-    # V22 is intentionally real-account only. Never leak sample messages into
-    # the same interface used for clement@mondary.design.
-    return False
+    import os
+    return os.environ.get("DEMO", "0") == "1"
 
 
 def _is_demo():
     return _demo_enabled()
+
+
+DEMO_ACCOUNT_IDS = {"perso"}
+
+def _is_demo_account(account_id):
+    return account_id in DEMO_ACCOUNT_IDS
 
 
 def active_config():
@@ -322,8 +344,7 @@ def _account_is_configured(account: dict):
 
 
 DEMO_ACCOUNTS = [
-    {"id": "perso", "name": "Perso", "email": "contact@mondomaine.fr"},
-    {"id": "pro", "name": "Pro", "email": "moi@entreprise.com"},
+    {"id": "perso", "name": "Compte test", "email": "test@example.com", "test": True},
 ]
 
 DEMO_FOLDERS = {
@@ -383,7 +404,7 @@ def _demo_messages(account, folder):
             full["category"] = _categorize(full["from_addr"], full["from_name"], full["subject"])
             full["thread_id"] = str(full["uid"])
             msgs.append(full)
-        return msgs
+        return msgs[:1]
 
     now = datetime.now(timezone.utc)
     _uid = [0]
@@ -813,7 +834,7 @@ def _demo_messages(account, folder):
     for e in entries:
         msgs.append(e)
 
-    return msgs
+    return msgs[:1]
 
 
 # ---------- Routes ----------
@@ -835,31 +856,54 @@ def serve_bg():
 
 @app.get("/api/accounts")
 def accounts():
-    if _is_demo():
-        return DEMO_ACCOUNTS
-    cfg = active_config()
     out = []
-    for a in cfg.get("accounts", []):
-        out.append({
-            "id": a["id"],
-            "name": a.get("name", a["id"]),
-            "email": a["imap"]["user"],
-        })
+    try:
+        cfg = load_config(configured_only=True)
+        for a in cfg.get("accounts", []):
+            out.append({
+                "id": a["id"],
+                "name": a.get("name", a["id"]),
+                "email": a["imap"]["user"],
+            })
+    except Exception:
+        pass
+    out.extend(DEMO_ACCOUNTS)
     return out
 
 
 @app.get("/api/accounts/all")
 def accounts_all():
+    raw_cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
     cfg = load_config(configured_only=False)
+    raw_by_id = {a.get("id"): a for a in raw_cfg.get("accounts", [])}
     out = []
     for a in cfg.get("accounts", []):
         connected = _account_is_configured(a)
+        raw = raw_by_id.get(a.get("id"), {})
+
+        def public_server(section: str):
+            values = a.get(section, {})
+            raw_password = raw.get(section, {}).get("password", "")
+            match = re.fullmatch(r"\$\{([^}]+)\}", raw_password) if isinstance(raw_password, str) else None
+            return {
+                "host": values.get("host", ""),
+                "port": values.get("port"),
+                "ssl": bool(values.get("ssl", True)),
+                "user": values.get("user", ""),
+                "password_env": match.group(1) if match else "",
+                "password_configured": bool(values.get("password")),
+            }
+
         out.append({
             "id": a["id"],
             "name": a.get("name", a["id"]),
             "email": a["imap"]["user"],
             "connected": connected,
+            "imap": public_server("imap"),
+            "smtp": public_server("smtp"),
         })
+    for d in DEMO_ACCOUNTS:
+        out.append({**d, "connected": False})
     return out
 
 
@@ -876,27 +920,55 @@ class CreateAccountRequest(BaseModel):
     smtp_password: str
 
 
-SECRETS_PATH = BASE_DIR / "secrets" / "mail.env"
+class UpdateAccountRequest(BaseModel):
+    name: str
+    email: str
+    imap_host: str
+    imap_port: int = 993
+    imap_ssl: bool = True
+    imap_password: str = ""
+    smtp_host: str
+    smtp_port: int = 465
+    smtp_ssl: bool = True
+    smtp_password: str = ""
+
+
+def _raw_config():
+    return json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+
+
+def _secret_variable(raw_password, fallback):
+    match = re.fullmatch(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}", raw_password or "")
+    return match.group(1) if match else fallback
+
+
+def _write_secret(variable: str, value: str):
+    if not value:
+        return
+    if any(char in value for char in ("\r", "\n", "\0")):
+        raise HTTPException(status_code=400, detail="Mot de passe invalide")
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", variable):
+        raise HTTPException(status_code=400, detail="Nom de variable secret invalide")
+    SECRETS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    lines = SECRETS_PATH.read_text(encoding="utf-8").splitlines() if SECRETS_PATH.exists() else []
+    lines = [line for line in lines if not line.startswith(f"{variable}=")]
+    lines.append(f"{variable}={value}")
+    SECRETS_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    os.environ[variable] = value
 
 
 @app.post("/api/accounts")
 def create_account(body: CreateAccountRequest):
     aid = re.sub(r"[^a-z0-9]+", "", body.name.lower().replace(" ", "")) or re.sub(r"[^a-z0-9]+", "", body.email.split("@")[0].lower())
-    cfg = load_config(configured_only=False)
+    cfg = _raw_config()
     if any(a["id"] == aid for a in cfg.get("accounts", [])):
         raise HTTPException(status_code=409, detail=f"Le compte '{aid}' existe déjà")
 
     pw_var_imap = f"{aid.upper()}_IMAP_PASSWORD"
     pw_var_smtp = f"{aid.upper()}_SMTP_PASSWORD"
 
-    SECRETS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    env_lines = []
-    if SECRETS_PATH.exists():
-        env_lines = [l for l in SECRETS_PATH.read_text(encoding="utf-8").splitlines()
-                     if not l.startswith(f"{pw_var_imap}=") and not l.startswith(f"{pw_var_smtp}=")]
-    env_lines.append(f"{pw_var_imap}={body.imap_password}")
-    env_lines.append(f"{pw_var_smtp}={body.smtp_password}")
-    SECRETS_PATH.write_text("\n".join(env_lines) + "\n", encoding="utf-8")
+    _write_secret(pw_var_imap, body.imap_password)
+    _write_secret(pw_var_smtp, body.smtp_password)
 
     new_account = {
         "id": aid,
@@ -919,26 +991,45 @@ def create_account(body: CreateAccountRequest):
     cfg["accounts"].append(new_account)
     CONFIG_PATH.write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
-    _reload_env(SECRETS_PATH)
     threading.Thread(
-        target=idle_worker, args=(new_account,), daemon=True, name=f"idle-{aid}"
+        target=idle_worker, args=(get_account(aid),), daemon=True, name=f"idle-{aid}"
     ).start()
 
     return {"ok": True, "id": aid, "connected": True}
 
 
-def _reload_env(env_path):
-    if env_path.exists():
-        for line in env_path.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if line and not line.startswith("#") and "=" in line:
-                k, v = line.split("=", 1)
-                os.environ[k.strip()] = v.strip()
+@app.patch("/api/accounts/{account_id}")
+def update_account(account_id: str, body: UpdateAccountRequest):
+    cfg = _raw_config()
+    account = next((item for item in cfg.get("accounts", []) if item.get("id") == account_id), None)
+    if account is None:
+        raise HTTPException(status_code=404, detail=f"Compte '{account_id}' inconnu")
 
+    imap_variable = _secret_variable(
+        account.get("imap", {}).get("password", ""), f"{account_id.upper()}_IMAP_PASSWORD"
+    )
+    smtp_variable = _secret_variable(
+        account.get("smtp", {}).get("password", ""), f"{account_id.upper()}_SMTP_PASSWORD"
+    )
+    _write_secret(imap_variable, body.imap_password)
+    _write_secret(smtp_variable, body.smtp_password)
+
+    account["name"] = body.name.strip() or account_id
+    account["imap"] = {
+        "host": body.imap_host.strip(), "port": body.imap_port, "ssl": body.imap_ssl,
+        "user": body.email.strip(), "password": f"${{{imap_variable}}}",
+    }
+    account["smtp"] = {
+        "host": body.smtp_host.strip(), "port": body.smtp_port, "ssl": body.smtp_ssl,
+        "user": body.email.strip(), "password": f"${{{smtp_variable}}}",
+    }
+    CONFIG_PATH.write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    expanded = next(item for item in load_config(False)["accounts"] if item.get("id") == account_id)
+    return {"ok": True, "id": account_id, "connected": _account_is_configured(expanded)}
 
 @app.get("/api/accounts/{account_id}/folders")
 def folders(account_id: str):
-    if _is_demo():
+    if _is_demo() or _is_demo_account(account_id):
         return DEMO_FOLDERS.get(account_id, [])
     account = get_account(account_id)
     with open_mailbox(account) as mailbox:
@@ -1030,7 +1121,7 @@ def list_messages(
     page_size: int = Query(40, ge=1, le=120),
     unseen: bool = Query(False),
 ):
-    if _is_demo():
+    if _is_demo() or _is_demo_account(account):
         msgs = _demo_messages(account, folder)
         if unseen:
             msgs = [m for m in msgs if not m["seen"]]
@@ -1091,7 +1182,7 @@ def list_messages(
 
 @app.get("/api/messages/{account}/{uid}")
 def get_message(account: str, uid: str, folder: str = Query("INBOX")):
-    if _is_demo():
+    if _is_demo() or _is_demo_account(account):
         msgs = _demo_messages(account, folder)
         for m in msgs:
             if m["uid"] == uid:
@@ -1174,7 +1265,7 @@ def get_cid(account: str, uid: str, cid: str, folder: str = Query("INBOX")):
 
 @app.patch("/api/messages/{account}/{uid}")
 def update_flags(account: str, uid: str, body: FlagUpdate, folder: str = Query("INBOX")):
-    if _is_demo():
+    if _is_demo() or _is_demo_account(account):
         return {"ok": True}
     acc = get_account(account)
     with open_mailbox(acc) as mailbox:
@@ -1195,7 +1286,7 @@ def update_flags(account: str, uid: str, body: FlagUpdate, folder: str = Query("
 
 @app.delete("/api/messages/{account}/{uid}")
 def delete_message(account: str, uid: str, folder: str = Query("INBOX")):
-    if _is_demo():
+    if _is_demo() or _is_demo_account(account):
         return {"ok": True}
     acc = get_account(account)
     with open_mailbox(acc) as mailbox:
@@ -1207,14 +1298,14 @@ def delete_message(account: str, uid: str, folder: str = Query("INBOX")):
 
 @app.post("/api/messages/{account}/{uid}/move")
 def move_message(account: str, uid: str, body: MoveMessageRequest, folder: str = Query("INBOX")):
-    if _is_demo():
+    if _is_demo() or _is_demo_account(account):
         return {"ok": True}
     return _relocate_message(account, uid, folder, body.folder, copy_only=False, create_if_missing=body.create_if_missing)
 
 
 @app.post("/api/messages/{account}/{uid}/copy")
 def copy_message(account: str, uid: str, body: MoveMessageRequest, folder: str = Query("INBOX")):
-    if _is_demo():
+    if _is_demo() or _is_demo_account(account):
         return {"ok": True}
     return _relocate_message(account, uid, folder, body.folder, copy_only=True, create_if_missing=body.create_if_missing)
 
@@ -1229,7 +1320,7 @@ def _folder_candidates(mailbox, preferred: str, aliases: list[str]):
 
 @app.post("/api/messages/{account}/{uid}/archive")
 def archive_message(account: str, uid: str, folder: str = Query("INBOX")):
-    if _is_demo():
+    if _is_demo() or _is_demo_account(account):
         return {"ok": True}
     acc = get_account(account)
     with open_mailbox(acc) as mailbox:
@@ -1242,7 +1333,7 @@ def archive_message(account: str, uid: str, folder: str = Query("INBOX")):
 
 @app.post("/api/messages/{account}/{uid}/spam")
 def spam_message(account: str, uid: str, folder: str = Query("INBOX")):
-    if _is_demo():
+    if _is_demo() or _is_demo_account(account):
         return {"ok": True}
     acc = get_account(account)
     with open_mailbox(acc) as mailbox:
@@ -1255,7 +1346,7 @@ def spam_message(account: str, uid: str, folder: str = Query("INBOX")):
 
 @app.post("/api/messages/{account}/{uid}/snooze")
 def snooze_message(account: str, uid: str, folder: str = Query("INBOX")):
-    if _is_demo():
+    if _is_demo() or _is_demo_account(account):
         return {"ok": True}
     acc = get_account(account)
     with open_mailbox(acc) as mailbox:
@@ -1268,13 +1359,13 @@ def snooze_message(account: str, uid: str, folder: str = Query("INBOX")):
 
 @app.post("/api/messages/{account}/{uid}/label")
 def label_message(account: str, uid: str, body: MoveMessageRequest, folder: str = Query("INBOX")):
-    if _is_demo():
+    if _is_demo() or _is_demo_account(account):
         return {"ok": True}
     return _relocate_message(account, uid, folder, body.folder, copy_only=True, create_if_missing=body.create_if_missing)
 
 @app.post("/api/send")
 def send_message(body: SendRequest):
-    if _is_demo():
+    if _is_demo() or _is_demo_account(body.account):
         return {"ok": True}
     acc = get_account(body.account)
     msg = EmailMessage()
@@ -1282,6 +1373,8 @@ def send_message(body: SendRequest):
     msg["To"] = body.to
     if body.cc:
         msg["Cc"] = body.cc
+    if body.bcc:
+        msg["Bcc"] = body.bcc
     msg["Subject"] = body.subject
     msg["Date"] = formatdate(localtime=True)
     msg["Message-ID"] = make_msgid(domain=acc["imap"]["user"].split("@")[-1])
