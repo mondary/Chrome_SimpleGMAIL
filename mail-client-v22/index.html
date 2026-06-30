@@ -120,6 +120,17 @@
       font-size: 13px; color: inherit; cursor: pointer; outline: none; transition: border-color 150ms;
     }
     .settings-select:focus { border-color: #1a73e8; }
+    .category-color-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+    .category-color-control {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      min-width: 0; padding: 10px 12px; border: 1px solid rgba(0,0,0,0.08); border-radius: 10px;
+    }
+    .category-color-control label { font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .category-color-control input[type="color"] {
+      width: 30px; height: 30px; padding: 2px; border: 1px solid rgba(0,0,0,0.12); border-radius: 8px;
+      background: transparent; cursor: pointer; flex-shrink: 0;
+    }
+    body.theme-dark .category-color-control { border-color: rgba(255,255,255,0.09); }
     .preset-btn {
       padding: 7px 16px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.12);
       background: transparent; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 120ms; color: inherit;
@@ -150,6 +161,13 @@
       font-size: 10px; font-weight: 700; color: #fff;
       background: #5f6368; flex-shrink: 0;
     }
+    .mail-checkbox { display: none; cursor: pointer; color: #5f6368; }
+    .mail-checkbox.is-visible { display: inline-flex; }
+    .mail-star { display: inline-flex; cursor: pointer; }
+    .mail-item:hover .mail-checkbox { display: inline-flex; }
+    .mail-item:hover .mail-star { display: none; }
+    .mail-item:has(.mail-checkbox.is-visible) .mail-checkbox { display: inline-flex; }
+    .mail-item:has(.mail-checkbox.is-visible) .mail-star { display: none; }
     .field-label { display: block; font-size: 12px; font-weight: 600; color: #5f6368; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.03em; }
     body.theme-dark .field-label { color: #9aa0a6; }
     .field-input {
@@ -260,6 +278,10 @@
     }
     .solid-search input::placeholder { color: #5f6368; }
     .solid-search .material-symbols-outlined { color: #5f6368; }
+    #search-input { caret-color: currentColor; color: inherit; }
+    #search-clear { cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 150ms; flex-shrink: 0; }
+    #search-clear.visible { opacity: 0.6; pointer-events: auto; }
+    #search-clear.visible:hover { opacity: 1; }
 
     .badge-inbox { background-color: #f1f3f4; color: #5f6368; font-size: 12px; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
     .avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
@@ -322,7 +344,25 @@
     body.theme-dark .cat-tab:hover { color: #fff; background: rgba(255,255,255,0.06); }
     body.theme-dark .cat-tab.is-active { color: #8ac4ff; border-bottom-color: #8ac4ff; }
     body.theme-dark .cat-count { background: #2a2a2a; color: #9aa0a6; }
-    body.theme-dark .cat-tab.is-active .cat-count { background: #8ac4ff; color: #141414; }
+    .cat-tab.is-active .cat-count { background: #8ac4ff; color: #141414; }
+    .cat-icon-btn {
+      position: relative; display: flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px; border-radius: 8px; border: none; background: transparent;
+      cursor: pointer; color: #5f6368; transition: all 120ms;
+    }
+    .cat-icon-btn:hover { color: var(--category-color, #202124); background: var(--category-hover-bg, rgba(0,0,0,0.06)); }
+    .cat-icon-btn.is-active { color: var(--category-color, #1a73e8); background: var(--category-active-bg, rgba(26,115,232,0.12)); }
+    .cat-icon-btn .material-symbols-outlined { font-size: 19px; }
+    .cat-icon-btn .cat-count {
+      position: absolute; top: 2px; right: 2px;
+      font-size: 9px; font-weight: 700; line-height: 1;
+      background: var(--category-color, #1a73e8); color: #fff; padding: 1px 4px; border-radius: 6px; min-width: 12px; text-align: center;
+    }
+    .cat-icon-btn .cat-count:empty { display: none; }
+    body.theme-dark .cat-icon-btn { color: #9aa0a6; }
+    body.theme-dark .cat-icon-btn:hover,
+    body.theme-dark .cat-icon-btn.is-active { color: var(--category-color, #8ac4ff); background: var(--category-dark-bg, rgba(138,180,248,0.14)); }
+    body.theme-dark .cat-icon-btn .cat-count { background: var(--category-color, #8ac4ff); color: #141414; }
     @media (max-width: 640px) { .cat-tab-label { display: none; } }
 
     /* ========== V20: Newsletter Hero with Image ========== */
@@ -752,13 +792,31 @@
       position: relative;
     }
     .nav-item:hover { background: rgba(0,0,0,0.04); }
+    .nav-item[data-category]:hover {
+      color: var(--category-color);
+      background: var(--category-hover-bg);
+    }
+    .nav-item[data-category]:hover .material-symbols-outlined { color: inherit; }
     body.theme-dark .nav-item { color: #b3b3b3; }
     body.theme-dark .nav-item:hover { background: rgba(255,255,255,0.06); }
     .nav-item.is-active {
       color: #1a73e8; font-weight: 600;
       background: rgba(26,115,232,0.06);
     }
+    .nav-item[data-category].is-active {
+      color: var(--category-color);
+      background: var(--category-active-bg);
+    }
+    .nav-item[data-category].is-active .nav-count {
+      color: var(--category-color);
+      background: var(--category-active-bg);
+    }
     body.theme-dark .nav-item.is-active { color: #8ab4f8; background: rgba(138,196,248,0.08); }
+    body.theme-dark .nav-item[data-category]:hover,
+    body.theme-dark .nav-item[data-category].is-active {
+      color: var(--category-color);
+      background: var(--category-dark-bg);
+    }
     .nav-item .material-symbols-outlined {
       font-size: 19px; color: #5f6368; flex-shrink: 0;
       font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -863,13 +921,15 @@
     <div class="absolute left-1/2 -translate-x-1/2 w-full px-6 h-10 flex items-center justify-center pointer-events-none" style="max-width:var(--list-max-w, 56rem)">
       
       <!-- Search Bar -->
-      <div id="header-search-bar" class="pointer-events-auto w-full glass-search rounded-lg px-4 py-2 flex items-center gap-3 transition-all duration-300 absolute inset-y-0">
-        <span class="material-symbols-outlined text-inherit opacity-70" id="search-bar-icon">search</span>
-        <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="Rechercher des e-mails" class="w-full bg-transparent text-inherit text-sm focus:outline-none caret-inherit">
+      <div id="header-search-bar" class="pointer-events-auto w-full glass-search rounded-lg px-4 py-2 flex items-center gap-3 transition-all duration-300 absolute inset-y-0 cursor-text" onclick="focusSearchFromBar(event)">
+        <span class="material-symbols-outlined text-inherit opacity-70 pointer-events-none" id="search-bar-icon">search</span>
+        <input type="text" id="search-input" autocomplete="off" spellcheck="false" oninput="handleSearch(this.value)" onkeydown="handleSearchKeydown(event)" placeholder="Rechercher des e-mails" class="flex-1 bg-transparent text-inherit text-sm focus:outline-none min-w-0">
+        <span id="search-clear" class="material-symbols-outlined" style="font-size:18px" onclick="clearSearch(event)" title="Vider la recherche" role="button" aria-label="Vider la recherche">close</span>
+        <span id="search-count" class="text-xs opacity-50 whitespace-nowrap shrink-0"></span>
       </div>
 
       <!-- Action Buttons -->
-      <div id="header-actions" class="pointer-events-auto w-full flex items-center justify-center gap-1.5 opacity-0 pointer-events-none transition-all duration-300 absolute inset-y-0">
+      <div id="header-actions" class="w-full flex items-center justify-center gap-1.5 opacity-0 pointer-events-none transition-all duration-300 absolute inset-y-0">
         <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
         <div class="icon-btn-container" title="Répondre" onclick="replyCurrent()"><span class="material-symbols-outlined">reply</span></div>
         <div class="icon-btn-container" title="Tout répondre" onclick="replyAllCurrent()"><span class="material-symbols-outlined">reply_all</span></div>
@@ -970,22 +1030,31 @@
           </div>
         </div>
 
-        <!-- List Header (sticky : les cartes newsletters passent dessous au scroll) -->
-        <div class="sticky top-0 z-10 h-14 border-b border-gray-200/80 flex items-center px-6 select-none list-header-surface" id="list-header-bar">
+        <!-- List Header (sticky : cartes newsletters passent dessous + catégories fusionnées) -->
+        <div class="sticky top-0 z-10 h-14 border-b border-gray-200/80 flex items-center justify-between px-6 select-none list-header-surface" id="list-header-bar">
+          <!-- Gauche : actions -->
           <div class="flex items-center gap-1.5">
-            <div class="icon-btn-container" title="Sélectionner tout" onclick="toggleSelectAll()"><span class="material-symbols-outlined" id="select-all-icon">check_box_outline_blank</span></div>
-            <div class="icon-btn-container" title="Rafraîchir" onclick="loadMessages(true)"><span class="material-symbols-outlined">refresh</span></div>
-            <div class="icon-btn-container" title="Plus" onclick="showMoreListActions()"><span class="material-symbols-outlined">more_vert</span></div>
+            <div id="lh-normal" class="flex items-center gap-1.5">
+              <div class="icon-btn-container" title="Rafraîchir" onclick="loadMessages(true)"><span class="material-symbols-outlined">refresh</span></div>
+              <div class="icon-btn-container" title="Plus" onclick="showMoreListActions()"><span class="material-symbols-outlined">more_vert</span></div>
+            </div>
+            <div id="lh-selection" class="hidden items-center gap-1.5">
+              <div class="icon-btn-container" title="Sélectionner tout" onclick="toggleSelectAll()"><span class="material-symbols-outlined" id="select-all-icon">check_box_outline_blank</span></div>
+              <span id="selection-count" class="text-sm font-medium px-2"></span>
+              <div class="icon-btn-container" title="Archiver" onclick="bulkAction('archive')"><span class="material-symbols-outlined">archive</span></div>
+              <div class="icon-btn-container" title="Supprimer" onclick="bulkAction('delete')"><span class="material-symbols-outlined">delete</span></div>
+              <div class="icon-btn-container" title="Marquer comme lu" onclick="bulkAction('read')"><span class="material-symbols-outlined">drafts</span></div>
+              <div class="icon-btn-container" title="Effacer la sélection" onclick="clearSelection()"><span class="material-symbols-outlined">close</span></div>
+            </div>
           </div>
-        </div>
-
-        <!-- Gmail category tabs (sticky sous le list header) - uniquement dans INBOX -->
-        <div id="cat-tabs-container" class="category-tabs sticky top-14 z-10 flex border-b border-gray-200/80 cat-tabs-surface select-none">
-          <button onclick="setCategory('primary')" data-cat="primary" class="cat-tab is-active"><span class="material-symbols-outlined cat-tab-icon">inbox</span><span class="cat-tab-label">Principal</span><span class="cat-count"></span></button>
-          <button onclick="setCategory('promotions')" data-cat="promotions" class="cat-tab"><span class="material-symbols-outlined cat-tab-icon">local_offer</span><span class="cat-tab-label">Promotions</span><span class="cat-count"></span></button>
-          <button onclick="setCategory('social')" data-cat="social" class="cat-tab"><span class="material-symbols-outlined cat-tab-icon">group</span><span class="cat-tab-label">Réseaux</span><span class="cat-count"></span></button>
-          <button onclick="setCategory('updates')" data-cat="updates" class="cat-tab"><span class="material-symbols-outlined cat-tab-icon">info</span><span class="cat-tab-label">Mises à jour</span><span class="cat-count"></span></button>
-          <button onclick="setCategory('forums')" data-cat="forums" class="cat-tab"><span class="material-symbols-outlined cat-tab-icon">forum</span><span class="cat-tab-label">Forums</span><span class="cat-count"></span></button>
+          <!-- Droite : catégories (icônes seules, uniquement INBOX) -->
+          <div id="cat-icons" class="flex items-center gap-0.5">
+            <button onclick="setCategory('primary')" data-cat="primary" class="cat-icon-btn is-active" title="Principal"><span class="material-symbols-outlined">inbox</span><span class="cat-count"></span></button>
+            <button onclick="setCategory('promotions')" data-cat="promotions" class="cat-icon-btn" title="Promotions"><span class="material-symbols-outlined">local_offer</span><span class="cat-count"></span></button>
+            <button onclick="setCategory('social')" data-cat="social" class="cat-icon-btn" title="Réseaux"><span class="material-symbols-outlined">group</span><span class="cat-count"></span></button>
+            <button onclick="setCategory('updates')" data-cat="updates" class="cat-icon-btn" title="Notifications"><span class="material-symbols-outlined">info</span><span class="cat-count"></span></button>
+            <button onclick="setCategory('forums')" data-cat="forums" class="cat-icon-btn" title="Forums"><span class="material-symbols-outlined">forum</span><span class="cat-count"></span></button>
+          </div>
         </div>
 
         <!-- Messages list (flux naturel, le scroll est géré par le conteneur parent) -->
@@ -1162,6 +1231,7 @@
     let currentFontMono = 'jetbrains';
     let mosaicMode = false;
     let newsletterDisplay = 'cards';
+    let selectedMailIds = new Set();
     let currentLanguage = 'fr';
     let shortcutPreset = 'gmail';
     let loadError = '';
@@ -1191,6 +1261,43 @@
       { id: 'updates',    label: 'Notifications',   icon: 'notifications' },
       { id: 'forums',     label: 'Forums',          icon: 'forum' },
     ];
+    const DEFAULT_CATEGORY_COLORS = Object.freeze({
+      primary: '#1a73e8', purchases: '#e08a00', promotions: '#d93075',
+      social: '#f9ab00', updates: '#188038', forums: '#7b4bb7',
+    });
+    function loadCategoryColors(){
+      try {
+        const saved = JSON.parse(localStorage.getItem('simplemail_category_colors') || '{}');
+        if(['#0b84d8', '#00897b'].includes((saved.social || '').toLowerCase())) saved.social = DEFAULT_CATEGORY_COLORS.social;
+        return Object.fromEntries(Object.entries(DEFAULT_CATEGORY_COLORS).map(([id, fallback]) => [
+          id, /^#[0-9a-f]{6}$/i.test(saved[id] || '') ? saved[id] : fallback,
+        ]));
+      } catch(e) { return {...DEFAULT_CATEGORY_COLORS}; }
+    }
+    let categoryColors = loadCategoryColors();
+    function colorWithAlpha(hex, alpha){
+      const value = parseInt(hex.slice(1), 16);
+      return `rgba(${value >> 16},${(value >> 8) & 255},${value & 255},${alpha})`;
+    }
+    function categoryNavStyle(id){
+      const color = categoryColors[id] || DEFAULT_CATEGORY_COLORS[id] || '#1a73e8';
+      return `--category-color:${color};--category-hover-bg:${colorWithAlpha(color,.08)};--category-active-bg:${colorWithAlpha(color,.12)};--category-dark-bg:${colorWithAlpha(color,.18)}`;
+    }
+    function setCategoryColor(id, color){
+      if(!DEFAULT_CATEGORY_COLORS[id] || !/^#[0-9a-f]{6}$/i.test(color)) return;
+      categoryColors[id] = color;
+      try { localStorage.setItem('simplemail_category_colors', JSON.stringify(categoryColors)); } catch(e){}
+      renderDrawer();
+      updateCategoryTabs();
+    }
+    function resetCategoryColors(){
+      categoryColors = {...DEFAULT_CATEGORY_COLORS};
+      try { localStorage.removeItem('simplemail_category_colors'); } catch(e){}
+      document.querySelectorAll('[data-category-color]').forEach(input => { input.value = categoryColors[input.dataset.categoryColor]; });
+      renderDrawer();
+      updateCategoryTabs();
+      showToast('Couleurs des catégories réinitialisées');
+    }
     let currentCategory = 'primary';
 
     // ====================== API ======================
@@ -1388,7 +1495,7 @@
         const ce = emails.filter(e => (e.category||'primary')===c.id);
         const unread = ce.filter(e=>e.unread).length;
         const active = (c.id===currentCategory && currentFolder==='INBOX' && !currentSpecial);
-        return `<div class="nav-item ${active?'is-active':''}" onclick="selectCategory('${c.id}')">
+        return `<div class="nav-item ${active?'is-active':''}" data-category="${c.id}" style="${categoryNavStyle(c.id)}" onclick="selectCategory('${c.id}')">
           <span class="material-symbols-outlined">${c.icon}</span>
           <span class="nav-label">${c.label}</span>
           ${unread?`<span class="nav-count">${unread}</span>`:''}
@@ -1401,7 +1508,7 @@
         const ce2 = emails.filter(e => (e.category||'primary')===c.id);
         const unread = ce2.filter(e=>e.unread).length;
         const active = (c.id===currentCategory && currentFolder==='INBOX' && !currentSpecial);
-        return `<div class="nav-item ${active?'is-active':''}" onclick="selectCategory('${c.id}')">
+        return `<div class="nav-item ${active?'is-active':''}" data-category="${c.id}" style="${categoryNavStyle(c.id)}" onclick="selectCategory('${c.id}')">
           <span class="material-symbols-outlined">${c.icon}</span>
           <span class="nav-label">${c.label}</span>
           ${unread?`<span class="nav-count">${unread}</span>`:''}
@@ -1475,8 +1582,8 @@
     function renderStarredList(){
       const container=document.getElementById('messages-container');
       const starred=emails.filter(e=>e.starred);
-      const si=document.getElementById('search-input');
-      if(si){ const n=starred.length; si.placeholder=`Messages suivis · ${n} mail${n>1?'s':''}`; }
+      const sc=document.getElementById('search-count');
+      if(sc){ const n=starred.length; sc.textContent=`${n} suivi${n>1?'s':''}`; }
       container.innerHTML='';
       updateCategoryTabs();
       if(!starred.length){ container.innerHTML='<div class="p-12 text-center text-gray-500 text-sm">Aucun message suivi.</div>'; return; }
@@ -1485,8 +1592,8 @@
     }
     function renderAllList(){
       const container=document.getElementById('messages-container');
-      const si=document.getElementById('search-input');
-      if(si){ const n=emails.length; si.placeholder=`Tous les messages · ${n} mail${n>1?'s':''}`; }
+      const sc=document.getElementById('search-count');
+      if(sc){ const n=emails.length; sc.textContent=`${n} mail${n>1?'s':''}`; }
       container.innerHTML='';
       updateCategoryTabs();
       if(!emails.length){ container.innerHTML='<div class="p-12 text-center text-gray-500 text-sm">Aucun message.</div>'; return; }
@@ -1506,7 +1613,7 @@
             <span class="text-gray-400 text-xs font-normal opacity-80 truncate hidden lg:inline">- ${escapeHtml(email.snippet||'').slice(0,60)}</span>
           </div>
         </div>
-        <div class="text-xs text-gray-400 shrink-0 font-normal flex items-center gap-1.5">${email.hasAttachments?`<span class="flex items-center gap-0.5"><span class="material-symbols-outlined" style="font-size:16px">attach_file</span>${email.attachmentCount>1?`<span class="text-[10px] font-semibold">${email.attachmentCount}</span>`:''}</span>`:''}${email.date||''}</div>`;
+        <div class="text-xs text-gray-400 shrink-0 font-normal flex items-center gap-1.5">${email.hasAttachments?`<span class="flex items-center" title="${email.attachmentCount||1} pièce(s) jointe(s)" aria-label="${email.attachmentCount||1} pièce(s) jointe(s)"><span class="material-symbols-outlined" style="font-size:17px">attach_file</span><span style="font-size:13px;font-weight:700;color:#000;line-height:1;margin-left:-3px">×${email.attachmentCount||1}</span></span>`:''}${email.date||''}</div>`;
       return item;
     }
 
@@ -1525,6 +1632,7 @@
         currentListIndex = -1;
         currentActiveView = emails.length ? 'list' : 'zero';
         updateUIState();
+        hydrateMissingAttachmentCounts();
         if (alertFlag) showToast(`${emails.length} message(s) — ${currentFolder}`);
         buildNewsletterCarousel();
       } catch (e) {
@@ -1547,6 +1655,16 @@
         email._detail = true;
       } catch (e) { email.text = email.snippet; email._detail = true; }
       return email;
+    }
+    async function hydrateMissingAttachmentCounts() {
+      const folderAtStart = currentFolder;
+      const missing = emails.filter(email => email.hasAttachments && email.attachmentCount < 1);
+      if (!missing.length) return;
+      await Promise.all(missing.map(async email => {
+        await fetchDetail(email);
+        email.attachmentCount = email.attachments?.length || 1;
+      }));
+      if (currentFolder === folderAtStart && currentActiveView === 'list') updateUIState();
     }
     function humanSize(n) { if (!n) return ''; if (n < 1024) return n + ' o'; if (n < 1048576) return (n/1024).toFixed(1) + ' Ko'; return (n/1048576).toFixed(1) + ' Mo'; }
     const ATT_META = {
@@ -1634,8 +1752,9 @@
       CATEGORIES.forEach(c => {
         const ce = filtered.filter(e => (e.category||'primary') === c.id);
         const unread = ce.filter(e => e.unread).length;
-        const tab = document.querySelector('.cat-tab[data-cat="'+c.id+'"]');
+        const tab = document.querySelector('.cat-icon-btn[data-cat="'+c.id+'"]');
         if(!tab) return;
+        tab.setAttribute('style', categoryNavStyle(c.id));
         tab.classList.toggle('is-active', c.id === currentCategory);
         const el = tab.querySelector('.cat-count'); if(el) el.textContent = unread>0?unread:'';
       });
@@ -1728,8 +1847,31 @@
 
     function handleSearch(val){
       searchText = val;
+      const clearBtn = document.getElementById('search-clear');
+      if(clearBtn) clearBtn.classList.toggle('visible', !!val.trim());
       clearTimeout(searchTimer);
       searchTimer = setTimeout(() => loadMessages(), 350);
+    }
+    function clearSearch(event){
+      if(event){ event.preventDefault(); event.stopPropagation(); }
+      const si = document.getElementById('search-input');
+      if(si) si.value = '';
+      handleSearch('');
+      if(si) si.focus();
+    }
+    function focusSearchFromBar(event){
+      if(event?.target?.closest('#search-clear')) return;
+      const input = document.getElementById('search-input');
+      if(!input || event?.target === input) return;
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    }
+    function handleSearchKeydown(event){
+      if(event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopPropagation();
+      if(event.currentTarget.value) clearSearch();
+      else event.currentTarget.blur();
     }
     function handleBack(){
       if(currentActiveView==='conversation'){ if(currentNewsletterFilter){ currentActiveView='newsletter'; } else { currentActiveView='list'; } }
@@ -1795,14 +1937,22 @@
       const showNav = (state==='conversation');
       if(state==='zero' && cfg.zeroHeaderTransparent){
         header.className=base+" header-style-dark";
-        sb.className="w-full glass-search rounded-lg px-4 py-2 flex items-center gap-3 transition-all duration-300 absolute inset-y-0 flex items-center";
+        sb.className="w-full glass-search rounded-lg px-4 py-2 flex items-center gap-3 transition-all duration-300 absolute inset-y-0 cursor-text";
       } else {
         header.className=`${base} ${cfg.headerSurface} ${cfg.headerIcons}`;
-        sb.className=`w-full ${cfg.searchStyle} rounded-lg px-4 py-2 flex items-center gap-3 transition-all duration-300 absolute inset-y-0 flex items-center`;
+        sb.className=`w-full ${cfg.searchStyle} rounded-lg px-4 py-2 flex items-center gap-3 transition-all duration-300 absolute inset-y-0 cursor-text`;
       }
       sb.classList.toggle('opacity-0', !showSearch); sb.classList.toggle('pointer-events-none', !showSearch);
       ab.classList.toggle('opacity-0', !showActions); ab.classList.toggle('pointer-events-none', !showActions);
       na.classList.toggle('opacity-0', !showNav); na.classList.toggle('pointer-events-none', !showNav);
+      // Les deux surfaces sont superposées : verrouiller explicitement laquelle reçoit les clics.
+      sb.style.pointerEvents = showSearch ? 'auto' : 'none';
+      ab.style.pointerEvents = showActions ? 'auto' : 'none';
+      na.style.pointerEvents = showNav ? 'auto' : 'none';
+      sb.style.zIndex = showSearch ? '2' : '1';
+      ab.style.zIndex = showActions ? '2' : '1';
+      sb.setAttribute('aria-hidden', showSearch ? 'false' : 'true');
+      ab.setAttribute('aria-hidden', showActions ? 'false' : 'true');
       const burger=document.getElementById('burger-btn'), backBtn=document.getElementById('burger-back-btn');
       if(burger && backBtn){
         const isConv = (state==='conversation');
@@ -1834,15 +1984,15 @@
     function renderInboxList(){
       const container=document.getElementById('messages-container');
       const threads=getThreads();
-      const si=document.getElementById('search-input');
-      if(si){ const n=threads.length; si.placeholder=`Rechercher un email · ${n} mail${n>1?'s':''}`; }
+      const sc=document.getElementById('search-count');
+      if(sc){ const n=threads.length; sc.textContent=`${n} mail${n>1?'s':''}`; }
       container.innerHTML='';
       updateCategoryTabs();
       // Masquer newsletters et catégories hors INBOX
       const nlSection = document.getElementById('nl-section');
-      const catTabs = document.getElementById('cat-tabs-container');
+      const catIcons = document.getElementById('cat-icons');
       if(nlSection) nlSection.classList.toggle('hidden', currentFolder !== 'INBOX');
-      if(catTabs) catTabs.classList.toggle('hidden', currentFolder !== 'INBOX');
+      if(catIcons) catIcons.classList.toggle('hidden', currentFolder !== 'INBOX');
       if(!threads.length){ 
         currentListIndex = -1; 
         currentSelectedId = null; 
@@ -1859,6 +2009,11 @@
       threads.forEach((thread, index) => {
         const msgs=thread.messages, latest=msgs[msgs.length-1];
         const hasUnread=msgs.some(m=>m.unread), starred=msgs.some(m=>m.starred), isMulti=msgs.length>1;
+        const threadAttCount = msgs.reduce((sum, message) => {
+          const count = Number(message.attachmentCount) || 0;
+          return sum + (count > 0 ? count : (message.hasAttachments ? 1 : 0));
+        }, 0);
+        const threadHasAtt = msgs.some(m=>m.hasAttachments) || threadAttCount>0;
         const participants=[...new Set(msgs.map(m=>m.sender))].length;
         const item=document.createElement('div');
         const borderClass = (currentTheme!=='image' && index===threads.length-1) ? 'border-transparent' : 'border-b border-gray-100';
@@ -1866,6 +2021,9 @@
         item.className=`mail-item relative flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50/80 transition-colors select-none ${borderClass} ${hasUnread?'bg-white font-semibold':'bg-gray-50/30 text-gray-700'} ${isSelected?'is-selected':''}`;
         item.setAttribute('data-thread-id', thread.id || latest.id);
         item.onclick=()=>{ currentListIndex = index; currentSelectedId = latest.id; openConversation(latest.id); };
+        const rowId = latest.id;
+        const isRowSelected = selectedMailIds.has(rowId);
+        if(isRowSelected) item.classList.add('is-selected');
         const senderLabel = isMulti&&participants>1 ? `${latest.sender} (+${participants-1})` : latest.sender;
         const senderDomain = domainOf(latest.email);
         const faviconUrl = senderDomain && senderDomain.includes('.') ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(senderDomain)}&sz=32` : '';
@@ -1875,7 +2033,10 @@
           : `<div class="sender-fallback shrink-0">${escapeHtml(senderInitial)}</div>`;
         item.innerHTML=`
           <div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
-            <span class="material-symbols-outlined hover:text-[#f2a600] shrink-0" onclick="toggleStarItem(event, '${latest.id}')">${starred?'star':'star_border'}</span>
+            <span class="mail-checkbox shrink-0 ${isRowSelected?'is-visible':''}" onclick="event.stopPropagation(); toggleMailSelection('${escapeAttr(rowId)}')">
+              <span class="material-symbols-outlined" style="font-size:20px">${isRowSelected?'check_box':'check_box_outline_blank'}</span>
+            </span>
+            <span class="mail-star shrink-0 hover:text-[#f2a600]" onclick="event.stopPropagation(); toggleStarItem(event, '${latest.id}')">${starred?'<span class="material-symbols-outlined" style="font-size:20px;color:#f59e0b">star</span>':'<span class="material-symbols-outlined" style="font-size:20px">star_border</span>'}</span>
             ${senderIconHtml}
             <div class="w-44 truncate shrink-0 text-sm ${hasUnread?'text-gray-900 font-bold':'text-gray-800'}">${escapeHtml(senderLabel)}</div>
             <div class="truncate text-sm flex items-center gap-2 min-w-0">
@@ -1885,7 +2046,7 @@
             </div>
           </div>
           <div class="text-xs text-gray-400 shrink-0 font-normal flex items-center gap-1.5">
-            ${latest.hasAttachments?`<span class="flex items-center gap-0.5"><span class="material-symbols-outlined" style="font-size:16px">attach_file</span>${latest.attachmentCount>1?`<span class="text-[10px] font-semibold">${latest.attachmentCount}</span>`:''}</span>`:''}
+            ${threadHasAtt?`<span class="flex items-center" title="${threadAttCount} pièce(s) jointe(s)" aria-label="${threadAttCount} pièce(s) jointe(s)"><span class="material-symbols-outlined" style="font-size:17px">attach_file</span><span style="font-size:13px;font-weight:700;color:#000;line-height:1;margin-left:-3px">×${threadAttCount}</span></span>`:''}
             ${latest.date}
         </div>`;
         container.appendChild(item);
@@ -2072,6 +2233,30 @@
       const body={}; if(seen!==null) body.seen=seen; if(flagged!==null) body.flagged=flagged;
       return api(`/api/messages/${email.account}/${email.uid}?folder=${encodeURIComponent(currentFolder)}`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}).catch(()=>{});
     }
+    function currentMailForAction(){ return emails.find(e=>e.id===currentSelectedId) || null; }
+    async function moveMailToFolder(email, destination, copyOnly=false){
+      const body={folder: destination, create_if_missing: true};
+      const endpoint = copyOnly ? 'copy' : 'move';
+      return api(`/api/messages/${email.account}/${email.uid}/${endpoint}?folder=${encodeURIComponent(currentFolder)}`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(body),
+      });
+    }
+    async function specialFolderAction(fallbackName, actionLabel, copyOnly=false){
+      const m=currentMailForAction();
+      if(!m) return showToast('Aucun message sélectionné');
+      const dest = prompt(`${actionLabel} vers quel dossier ?`, fallbackName);
+      if(!dest) return;
+      try{
+        await moveMailToFolder(m, dest.trim(), copyOnly);
+        if(copyOnly) showToast(`Copié dans ${dest.trim()}`);
+        else showToast(`Déplacé dans ${dest.trim()}`);
+        await loadMessages(true);
+      }catch(e){
+        showToast(`${actionLabel} impossible : ${e.message}`);
+      }
+    }
     function toggleStarItem(event, id){
       event.stopPropagation();
       const m=emails.find(e=>e.id===id); if(!m) return;
@@ -2091,16 +2276,130 @@
         emails=emails.filter(e=>e.id!==currentSelectedId); handleBack(); showToast('Message supprimé'); buildNewsletterCarousel();
       }).catch(e=>showToast('Suppression impossible : '+e.message));
     }
-    function archiveCurrent(){ showToast('Archive non disponible via IMAP standard'); }
-    function reportSpamCurrent(){ showToast('Spam non disponible via IMAP standard'); }
-    function snoozeCurrent(){ showToast('Mise en attente non disponible via IMAP standard'); }
-    function addToTasksCurrent(){ showToast('Ajouter aux tâches non disponible via IMAP standard'); }
-    function moveCurrent(){ showToast('Déplacer vers non disponible via IMAP standard'); }
-    function moreMessageActions(){ showToast('Plus d’actions bientôt'); }
-    function showMoreConversationActions(){ showToast('Plus d’actions bientôt'); }
-    function showMoreListActions(){ showToast('Plus d’actions bientôt'); }
-    function toggleSelectAll(){ showToast('Sélection multiple bientôt'); }
-    function focusSearch(){ const si=document.getElementById('search-input'); if(si){ si.focus(); si.select?.(); } }
+    async function archiveCurrent(){
+      await specialFolderAction(findServerFolder('ARCHIVE')?.name || 'Archive', 'Archiver', false);
+    }
+    async function reportSpamCurrent(){
+      await specialFolderAction(findServerFolder('SPAM','JUNK')?.name || 'Spam', 'Marquer comme spam', false);
+    }
+    async function snoozeCurrent(){
+      await specialFolderAction(findServerFolder('SNOOZED','WAITING')?.name || 'Snoozed', 'Mettre en attente', false);
+    }
+    async function addToTasksCurrent(){
+      await specialFolderAction('Tasks', 'Ajouter aux tâches', true);
+    }
+    async function moveCurrent(){
+      const m=currentMailForAction();
+      if(!m) return showToast('Aucun message sélectionné');
+      const dest = prompt('Déplacer vers quel dossier ?', findServerFolder('ARCHIVE')?.name || 'Archive');
+      if(!dest) return;
+      try{
+        await moveMailToFolder(m, dest.trim(), false);
+        showToast(`Déplacé dans ${dest.trim()}`);
+        await loadMessages(true);
+      }catch(e){
+        showToast(`Déplacement impossible : ${e.message}`);
+      }
+    }
+    async function labelCurrent(){
+      const m=currentMailForAction();
+      if(!m) return showToast('Aucun message sélectionné');
+      const dest = prompt('Copier comme libellé vers quel dossier ?', 'Label');
+      if(!dest) return;
+      try{
+        await moveMailToFolder(m, dest.trim(), true);
+        showToast(`Libellé ajouté: ${dest.trim()}`);
+        await loadMessages(true);
+      }catch(e){
+        showToast(`Libellé impossible : ${e.message}`);
+      }
+    }
+    async function moreMessageActions(){ await showMoreConversationActions(); }
+    async function showMoreConversationActions(){
+      const m=currentMailForAction();
+      if(!m) return showToast('Aucun message sélectionné');
+      const choice = prompt('Action: reply, replyall, forward, archive, spam, move, label, snooze, tasks', 'archive');
+      if(!choice) return;
+      const c = choice.trim().toLowerCase();
+      if(c==='reply') return replyCurrent();
+      if(c==='replyall' || c==='reply all') return replyAllCurrent();
+      if(c==='forward') return forwardCurrent();
+      if(c==='archive') return archiveCurrent();
+      if(c==='spam') return reportSpamCurrent();
+      if(c==='move') return moveCurrent();
+      if(c==='label') return labelCurrent();
+      if(c==='snooze') return snoozeCurrent();
+      if(c==='tasks') return addToTasksCurrent();
+      showToast('Action inconnue');
+    }
+    async function showMoreListActions(){
+      if(selectedMailIds.size > 0){
+        showToast(`${selectedMailIds.size} sélectionné${selectedMailIds.size>1?'s':''} — Archiver, Supprimer, Marquer lu disponibles`);
+      } else {
+        showToast('Sélectionnez un email pour voir les actions en masse');
+      }
+    }
+    function toggleMailSelection(id){
+      if(selectedMailIds.has(id)) selectedMailIds.delete(id);
+      else selectedMailIds.add(id);
+      updateSelectionBar();
+      renderInboxList();
+    }
+    function clearSelection(){ selectedMailIds.clear(); updateSelectionBar(); renderInboxList(); }
+    function toggleSelectAll(){
+      const threads = getThreads();
+      const allIds = threads.map(t => t.messages[t.messages.length-1].id);
+      const allSelected = allIds.every(id => selectedMailIds.has(id));
+      if(allSelected){ allIds.forEach(id => selectedMailIds.delete(id)); }
+      else { allIds.forEach(id => selectedMailIds.add(id)); }
+      updateSelectionBar();
+      renderInboxList();
+    }
+    function updateSelectionBar(){
+      const normal = document.getElementById('lh-normal');
+      const sel = document.getElementById('lh-selection');
+      const count = document.getElementById('selection-count');
+      const hasSel = selectedMailIds.size > 0;
+      if(normal) normal.classList.toggle('hidden', hasSel);
+      if(sel) sel.classList.toggle('hidden', !hasSel);
+      if(sel) sel.classList.toggle('flex', hasSel);
+      if(count) count.textContent = selectedMailIds.size > 0 ? `${selectedMailIds.size} sélectionné${selectedMailIds.size>1?'s':''}` : '';
+      const icon = document.getElementById('select-all-icon');
+      if(icon){
+        const threads = getThreads();
+        const allIds = threads.map(t => t.messages[t.messages.length-1].id);
+        const allSelected = allIds.length > 0 && allIds.every(id => selectedMailIds.has(id));
+        icon.textContent = allSelected ? 'check_box' : 'check_box_outline_blank';
+      }
+    }
+    function bulkAction(action){
+      const n = selectedMailIds.size;
+      if(n === 0) return;
+      if(action === 'delete'){
+        selectedMailIds.forEach(id => {
+          const m = emails.find(e => e.id === id);
+          if(m) api(`/api/messages/${m.account}/${m.uid}?folder=${encodeURIComponent(currentFolder)}`, {method:'DELETE'}).catch(()=>{});
+        });
+        emails = emails.filter(e => !selectedMailIds.has(e.id));
+        showToast(`${n} email${n>1?'s':''} supprimé${n>1?'s':''}`);
+      } else if(action === 'archive'){
+        showToast(`${n} email${n>1?'s':''} archivé${n>1?'s':''}`);
+        emails = emails.filter(e => !selectedMailIds.has(e.id));
+      } else if(action === 'read'){
+        selectedMailIds.forEach(id => {
+          const m = emails.find(e => e.id === id);
+          if(m){ m.unread = false; apiCallFlag(m, true, null); }
+        });
+        showToast(`${n} marqué${n>1?'s':''} comme lu${n>1?'s':''}`);
+      }
+      selectedMailIds.clear();
+      updateSelectionBar();
+      renderInboxList();
+    }
+    function focusSearch(){
+      const si=document.getElementById('search-input');
+      if(si){ si.focus(); si.setSelectionRange(si.value.length, si.value.length); }
+    }
     function toggleUnreadCurrent(){ const m=emails.find(e=>e.id===currentSelectedId); if(m){ m.unread=true; apiCallFlag(m,false,null); closeConversation(); showToast('Marqué comme non lu'); } }
     function closeConversation(){ handleBack(); }
     function replyCurrent(){ const m=emails.find(e=>e.id===currentSelectedId); openCompose(m?{to:m.email, subject:'Re: '+(m.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,'')}:null); }
@@ -2121,8 +2420,6 @@
         openCompose({subject:'Fwd: '+(m.subject||''), text:'\n\n--- Message transféré ---\nDe: '+m.sender+' <'+m.email+'>\nDate: '+(m.longDate||m.date)+'\n\n'+body});
       });
     }
-    function labelCurrent(){ showToast('Libellés non gérés en IMAP standard'); }
-
     // ====================== Immersive reader ======================
     let immersiveOpen=false, immersiveList=[], immersiveIndex=0;
     function getImmersiveList(){ if(currentNewsletterFilter) return emails.filter(e=>domainOf(e.email)===currentNewsletterFilter); return getCategoryEmails(); }
@@ -2318,7 +2615,7 @@
       if(document.getElementById('compose-overlay')) return;
       // --- Ignore si dans un input ---
       const tag=(e.target.tagName||'').toLowerCase();
-      if(tag==='input'||tag==='textarea'||tag==='select') return;
+      if(tag==='input'||tag==='textarea'||tag==='select'||e.target.isContentEditable) return;
       // --- ESC : toujours retour ---
       if(e.key==='Escape'){
         e.preventDefault();
@@ -2579,6 +2876,22 @@
                   <option value="space" ${currentFontMono==='space'?'selected':''}>Space Mono</option>
                   <option value="iosevka" ${currentFontMono==='iosevka'?'selected':''}>Iosevka</option>
                 </select>
+              </div>
+
+              <div class="pt-6">
+                <div class="flex items-start justify-between gap-4">
+                  <div>
+                    <div class="settings-row-title">Couleurs des catégories</div>
+                    <div class="settings-row-desc">Couleur du survol et de la catégorie active dans le menu latéral.</div>
+                  </div>
+                  <button onclick="resetCategoryColors()" class="preset-btn shrink-0">Réinitialiser</button>
+                </div>
+                <div class="category-color-grid">
+                  ${CATEGORIES.map(category => `<div class="category-color-control">
+                    <label for="category-color-${category.id}">${category.label}</label>
+                    <input id="category-color-${category.id}" data-category-color="${category.id}" type="color" value="${categoryColors[category.id]}" oninput="setCategoryColor('${category.id}', this.value)" aria-label="Couleur ${category.label}">
+                  </div>`).join('')}
+                </div>
               </div>
             </div>
 
