@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yard swing? - Gmail</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Material Symbols (Outlined) for exact icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+  <style>
+    /* Styling adjustments to match Gmail exactly */
+    body {
+      font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif;
+      color: #202124;
+    }
+    .material-symbols-outlined {
+      font-size: 20px;
+      color: #5f6368;
+      cursor: pointer;
+      user-select: none;
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .material-symbols-outlined:hover {
+      color: #202124;
+      background-color: rgba(60,64,67,0.08);
+      border-radius: 50%;
+    }
+    .icon-btn-container {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      transition: background-color 150ms;
+    }
+    .icon-btn-container:hover {
+      background-color: rgba(60,64,67,0.08);
+    }
+    .icon-btn-container:active {
+      background-color: rgba(60,64,67,0.12);
+    }
+    .badge-inbox {
+      background-color: #f1f3f4;
+      color: #5f6368;
+      font-size: 12px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .badge-inbox:hover {
+      background-color: #e8eaed;
+      color: #202124;
+    }
+    .avatar-img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    /* Google FAB shadow */
+    .fab-shadow {
+      box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
+    }
+    .fab-shadow:hover {
+      box-shadow: 0 2px 3px 0 rgba(60,64,67,0.3), 0 6px 10px 4px rgba(60,64,67,0.15);
+    }
+  </style>
+</head>
+<body class="h-screen w-screen flex flex-col bg-white overflow-hidden">
+
+  <!-- Top Navigation / Action Bar -->
+  <header class="h-14 border-b border-gray-200 flex items-center justify-between px-4 shrink-0 select-none">
+    <!-- Left Section: Hamburger Menu -->
+    <div class="flex items-center">
+      <div class="icon-btn-container">
+        <span class="material-symbols-outlined">menu</span>
+      </div>
+    </div>
+
+    <!-- Middle Section: Conversation Actions -->
+    <div class="flex items-center gap-1.5 flex-1 max-w-4xl px-8">
+      <div class="icon-btn-container" title="Back">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </div>
+      
+      <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
+
+      <div class="icon-btn-container" title="Archive">
+        <span class="material-symbols-outlined">archive</span>
+      </div>
+      <div class="icon-btn-container" title="Report spam">
+        <span class="material-symbols-outlined">report</span>
+      </div>
+      <div class="icon-btn-container" title="Delete">
+        <span class="material-symbols-outlined">delete</span>
+      </div>
+
+      <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
+
+      <div class="icon-btn-container" title="Mark as unread">
+        <span class="material-symbols-outlined">mail</span>
+      </div>
+      <div class="icon-btn-container" title="Snooze">
+        <span class="material-symbols-outlined">schedule</span>
+      </div>
+      <div class="icon-btn-container" title="Add to Tasks">
+        <span class="material-symbols-outlined">add_task</span>
+      </div>
+
+      <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
+
+      <div class="icon-btn-container" title="Move to">
+        <span class="material-symbols-outlined">drive_file_move</span>
+      </div>
+      <div class="icon-btn-container" title="Labels">
+        <span class="material-symbols-outlined">label</span>
+      </div>
+      <div class="icon-btn-container" title="More">
+        <span class="material-symbols-outlined">more_vert</span>
+      </div>
+    </div>
+
+    <!-- Right Section: Navigation Arrows & Search & Avatar -->
+    <div class="flex items-center gap-1">
+      <div class="icon-btn-container" title="Search">
+        <span class="material-symbols-outlined">search</span>
+      </div>
+      
+      <div class="icon-btn-container" title="Older">
+        <span class="material-symbols-outlined">chevron_left</span>
+      </div>
+      <div class="icon-btn-container" title="Newer">
+        <span class="material-symbols-outlined">chevron_right</span>
+      </div>
+
+      <div class="h-5 w-[1px] bg-gray-200 mx-1"></div>
+
+      <div class="icon-btn-container" title="Settings">
+        <span class="material-symbols-outlined font-light">more_vert</span>
+      </div>
+      
+      <div class="ml-2 w-8 h-8 rounded-full overflow-hidden border border-gray-200 cursor-pointer">
+        <img class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="User Profile">
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Scrollable Thread View -->
+  <main class="flex-1 overflow-y-auto px-6 py-6 flex flex-col items-center">
+    <div class="w-full max-w-4xl flex flex-col">
+      
+      <!-- Thread Title & Header Info -->
+      <div class="flex items-center justify-between mb-8 select-none">
+        <div class="flex items-center gap-3">
+          <h1 class="text-xl font-normal text-[#202124] tracking-tight">Yard swing?</h1>
+          <span class="badge-inbox flex items-center gap-1 cursor-pointer">
+            Inbox
+            <span class="text-[10px] font-bold">×</span>
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="icon-btn-container w-8 h-8" title="Expand all">
+            <span class="material-symbols-outlined">unfold_more</span>
+          </div>
+          <div class="icon-btn-container w-8 h-8" title="Print all">
+            <span class="material-symbols-outlined">print</span>
+          </div>
+          <div class="icon-btn-container w-8 h-8" title="In new window">
+            <span class="material-symbols-outlined">open_in_new</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Messages Thread Stack -->
+      <div class="flex flex-col gap-6">
+
+        <!-- Message 1 -->
+        <div class="flex flex-col">
+          <!-- Message Header -->
+          <div class="flex items-start justify-between">
+            <div class="flex items-start gap-4">
+              <!-- Avatar -->
+              <img class="avatar-img shadow-sm" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80" alt="Hart Leggett">
+              <div>
+                <div class="flex items-baseline gap-2">
+                  <span class="font-semibold text-sm text-[#202124]">Hart Leggett</span>
+                  <span class="text-xs text-[#5f6368] font-normal">Jan 11, 2021, 9:40 PM</span>
+                </div>
+                <div class="text-xs text-[#5f6368] mt-0.5 flex items-center gap-1 cursor-pointer select-none">
+                  to Bryan 
+                  <span class="material-symbols-outlined !text-[12px] !p-0 !m-0">arrow_drop_down</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-1.5 select-none">
+              <div class="icon-btn-container w-8 h-8" title="Star">
+                <span class="material-symbols-outlined">star</span>
+              </div>
+              <div class="icon-btn-container w-8 h-8" title="Reply">
+                <span class="material-symbols-outlined">reply</span>
+              </div>
+              <div class="icon-btn-container w-8 h-8" title="More">
+                <span class="material-symbols-outlined">more_vert</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Message Body -->
+          <div class="pl-14 pr-4 mt-4 text-sm text-[#202124] leading-relaxed font-normal space-y-4">
+            <p>Hey Bryan,</p>
+            <p>Welcome home! I think you already closed on the house over the weekend and are now in your new home. Hope it went smoothly.</p>
+            <p>Brynn and I have been going back and forth on Christmas gifts for the girls from us since early December. I offered to send the gifts after y'all got into your new house so you didn't have to fit them in your car for the drive back.</p>
+            <p>I'm about to order them now and wanted to triple check with you on one of the gifts: <a href="#" class="text-blue-600 hover:underline">a big swing</a> that is meant to hang from a tree. Is there a good spot for something like this? I know you have a lot of trees but I wanted to make sure you have one with a big branch that is at a good height and angle out from the main trunk.</p>
+            <p>Thanks,<br>Hart</p>
+          </div>
+        </div>
+
+        <!-- Separator -->
+        <hr class="border-gray-200 my-2">
+
+        <!-- Message 2 -->
+        <div class="flex flex-col">
+          <!-- Message Header -->
+          <div class="flex items-start justify-between">
+            <div class="flex items-start gap-4">
+              <!-- Avatar -->
+              <img class="avatar-img shadow-sm" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80" alt="Bryan">
+              <div>
+                <div class="flex items-baseline gap-2">
+                  <span class="font-semibold text-sm text-[#202124]">Bryan</span>
+                  <span class="text-xs text-[#5f6368] font-normal">Jan 14, 2021, 6:53 PM</span>
+                </div>
+                <div class="text-xs text-[#5f6368] mt-0.5 flex items-center gap-1 cursor-pointer select-none">
+                  to Hart
+                  <span class="material-symbols-outlined !text-[12px] !p-0 !m-0">arrow_drop_down</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-1.5 select-none">
+              <div class="icon-btn-container w-8 h-8" title="Star">
+                <span class="material-symbols-outlined">star</span>
+              </div>
+              <div class="icon-btn-container w-8 h-8" title="Reply">
+                <span class="material-symbols-outlined">reply</span>
+              </div>
+              <div class="icon-btn-container w-8 h-8" title="More">
+                <span class="material-symbols-outlined">more_vert</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Message Body -->
+          <div class="pl-14 pr-4 mt-4 text-sm text-[#202124] leading-relaxed font-normal space-y-4">
+            <p>Hey Hart!</p>
+            <p>Sorry for the delay, I've been going crazy trying to get moved in enough for Brynn and the girls to be comfortable when they get home! It's gonna be tight, I'll feel like I accomplished great things if I can just get the furniture set up in the appropriate rooms. The mover is just got everything delivered today but the painters are still working in three of the bedrooms and the hallway, so I had to have the movers leave all of the furniture in the master bedroom for now because that's the only room that's finished! If the painters do get finished tomorrow as they say they will I'll be able to move everything around.</p>
+            <p>Regarding the swing: we definitely have plenty of space and some big trees. I'll take a look around the yard tomorrow to spot the perfect branch and let you know if we have a winner!</p>
+            <p>Talk soon,<br>Bryan</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Google Floating Action Button (Compose FAB) -->
+  <div class="fixed bottom-6 right-6 select-none">
+    <button class="w-14 h-14 bg-white rounded-full flex items-center justify-center fab-shadow hover:bg-gray-50 focus:outline-none transition-all duration-200">
+      <!-- Colorful Google Plus Icon -->
+      <svg class="w-6 h-6" viewBox="0 0 24 24">
+        <path fill="#EA4335" d="M20 11h-7V4a1 1 0 1 0-2 0v7H4a1 1 0 1 0 0 2h7v7a1 1 0 1 0 2 0v-7h7a1 1 0 1 0 0-2z"/>
+      </svg>
+    </button>
+  </div>
+
+</body>
+</html>
