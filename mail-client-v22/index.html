@@ -145,37 +145,64 @@
     body.theme-dark .settings-select { background: #2a2a2a; border-color: rgba(255,255,255,0.1); color: #e8e8e8; }
     body.theme-dark .preset-btn { border-color: rgba(255,255,255,0.1); }
     body.theme-dark .preset-btn.active { border-color: #8ab4f8; background: rgba(138,180,248,0.1); color: #8ab4f8; }
-    .mail-item.is-selected {
+    .mail-item { --mail-actions-bg: #ffffff; }
+    .mail-item.mail-read { --mail-actions-bg: #fbfbfc; }
+    .mail-item:hover { --mail-actions-bg: #f9fafb; }
+    .mail-item.is-selected,
+    .mail-item.is-row-selected {
       background: rgba(26,115,232,0.08) !important;
       box-shadow: inset 3px 0 0 #1a73e8;
+      --mail-actions-bg: #edf4fd;
     }
-    body.theme-dark .mail-item.is-selected {
+    body.theme-dark .mail-item { --mail-actions-bg: #141414; }
+    body.theme-dark .mail-item.mail-read { --mail-actions-bg: #191919; }
+    body.theme-dark .mail-item:hover { --mail-actions-bg: #222222; }
+    body.theme-dark .mail-item.is-selected,
+    body.theme-dark .mail-item.is-row-selected {
       background: rgba(138,180,248,0.12) !important;
       box-shadow: inset 3px 0 0 #8ab4f8;
+      --mail-actions-bg: #242c38;
     }
     .sender-favicon {
       width: 20px; height: 20px; border-radius: 4px; object-fit: contain;
-      background: rgba(0,0,0,0.03); flex-shrink: 0; transition: opacity 0.15s;
+      background: rgba(0,0,0,0.03); transition: opacity 0.15s;
     }
     body.theme-dark .sender-favicon { background: rgba(255,255,255,0.06); }
     .sender-fallback {
       width: 20px; height: 20px; border-radius: 4px;
       display: flex; align-items: center; justify-content: center;
       font-size: 10px; font-weight: 700; color: #fff;
-      background: #5f6368; flex-shrink: 0; transition: opacity 0.15s;
+      background: #5f6368; transition: opacity 0.15s;
     }
-    .hover-actions {
-      position: absolute; left: 24px; top: 0; bottom: 0;
-      display: none; align-items: center;
-      padding: 0 24px 0 0; gap: 1px; z-index: 3;
-      background: #fff;
+    .sender-icon-slot {
+      position: relative; width: 20px; height: 20px; flex: 0 0 20px;
     }
-    .mail-item:hover .hover-actions { display: flex; }
-    .mail-item:hover .sender-favicon,
-    .mail-item:hover .sender-fallback { opacity: 0; }
-    body.theme-dark .hover-actions {
-      background: #1c1c1c;
+    .sender-icon-slot > .sender-favicon,
+    .sender-icon-slot > .sender-fallback { position: absolute; inset: 0; }
+    .mail-row-checkbox {
+      position: absolute; inset: 0; z-index: 3;
+      display: flex; align-items: center; justify-content: center;
+      color: #5f6368; opacity: 0; pointer-events: none;
+      transform: scale(0.86); transition: opacity 120ms, transform 120ms, color 120ms;
     }
+    .mail-row-checkbox .material-symbols-outlined { font-size: 20px; color: inherit; }
+    .mail-row-checkbox:hover { color: #202124; }
+    .hover-actions-right {
+      position: absolute; right: 24px; top: 0; bottom: 0;
+      display: flex; align-items: center; gap: 2px; z-index: 3;
+      padding-left: 150px;
+      background: linear-gradient(90deg, transparent, var(--mail-actions-bg) 60%);
+      opacity: 0; pointer-events: none; transform: translateX(5px);
+      transition: opacity 140ms, transform 140ms;
+    }
+    .mail-item:hover .hover-actions-right,
+    .mail-item.is-row-selected .hover-actions-right { opacity: 1; pointer-events: auto; transform: translateX(0); }
+    .mail-item:hover .mail-row-checkbox,
+    .mail-item.is-row-selected .mail-row-checkbox { opacity: 1; pointer-events: auto; transform: scale(1); }
+    .mail-item:hover .sender-icon-slot .sender-favicon,
+    .mail-item:hover .sender-icon-slot .sender-fallback,
+    .mail-item.is-row-selected .sender-icon-slot .sender-favicon,
+    .mail-item.is-row-selected .sender-icon-slot .sender-fallback { opacity: 0; }
     .hover-action-btn {
       width: 28px; height: 28px; border-radius: 6px;
       display: inline-flex; align-items: center; justify-content: center;
@@ -375,6 +402,72 @@
     body.theme-dark .cat-icon-btn.is-active { color: var(--category-color, #8ac4ff); background: var(--category-dark-bg, rgba(138,180,248,0.14)); }
     body.theme-dark .cat-icon-btn .cat-count { background: var(--category-color, #8ac4ff); color: #141414; }
     @media (max-width: 640px) { .cat-tab-label { display: none; } }
+
+    /* ========== macOS-style Newsletter Dock ========== */
+    .nl-dock {
+      position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: flex-end; gap: 6px;
+      padding: 6px 10px;
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.18), 0 2px 10px rgba(0,0,0,0.08), inset 0 1px 1px rgba(255,255,255,0.4);
+      z-index: 35;
+      animation: nlDockIn 240ms cubic-bezier(0.22,1,0.36,1) both;
+    }
+    .nl-dock.hidden { display: none; }
+    @keyframes nlDockIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(14px) scale(0.96); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    }
+    body.theme-dark .nl-dock {
+      background: rgba(40,40,40,0.65);
+      border-color: rgba(255,255,255,0.12);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.08);
+    }
+    .nl-dock-item {
+      position: relative; width: 72px; height: 52px;
+      border-radius: 13px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .nl-dock-item:hover { transform: translateY(-10px) scale(1.25); }
+    .nl-dock-item:has(+ .nl-dock-item:hover),
+    .nl-dock-item:hover + .nl-dock-item { transform: translateY(-4px) scale(1.08); }
+    .nl-dock-icon {
+      width: 66px; height: 46px; border-radius: 11px; object-fit: cover;
+      background: rgba(255,255,255,0.6); box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+    }
+    body.theme-dark .nl-dock-icon { background: rgba(255,255,255,0.08); }
+    .nl-dock-fallback {
+      width: 66px; height: 46px; border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700; color: #fff;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+    }
+    .nl-dock-badge {
+      position: absolute; top: -3px; right: -3px;
+      min-width: 18px; height: 18px; border-radius: 10px;
+      background: #ef4444; color: #fff;
+      font-size: 10px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 5px;
+      border: 2px solid rgba(255,255,255,0.85);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    }
+    body.theme-dark .nl-dock-badge { border-color: rgba(40,40,40,0.85); }
+    .nl-dock-tooltip {
+      position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+      margin-bottom: 12px; padding: 4px 10px;
+      background: rgba(50,50,50,0.92); color: #fff;
+      font-size: 11px; font-weight: 500; white-space: nowrap;
+      border-radius: 6px; pointer-events: none;
+      opacity: 0; transition: opacity 150ms;
+    }
+    .nl-dock-item:hover .nl-dock-tooltip { opacity: 1; }
 
     /* ========== V20: Newsletter Hero with Image ========== */
     .newsletter-hero-img {
@@ -1212,6 +1305,9 @@
     </button>
   </div>
 
+  <!-- ================= macOS-STYLE NEWSLETTER DOCK ================= -->
+  <div id="newsletter-dock" class="nl-dock hidden"></div>
+
   <!-- Notification Toast -->
   <div id="toast" class="fixed bottom-6 left-6 px-4 py-3 bg-[#323232] text-white text-xs font-normal rounded-lg shadow-xl translate-y-20 opacity-0 transition-all duration-300 z-50 pointer-events-none">
     Toast message
@@ -1244,6 +1340,79 @@
     let selectedMailIds = new Set();
     let currentLanguage = 'fr';
     let shortcutPreset = 'gmail';
+    let capturingShortcut = null;
+    const SHORTCUT_DEFS = [
+      { id: 'compose',  label: 'Composer',                def: 'c' },
+      { id: 'search',   label: 'Rechercher',              def: '/' },
+      { id: 'next',     label: 'Message suivant',         def: 'j' },
+      { id: 'prev',     label: 'Message précédent',       def: 'k' },
+      { id: 'open',     label: 'Ouvrir',                  def: 'Enter' },
+      { id: 'reply',    label: 'Répondre',                def: 'r' },
+      { id: 'replyAll', label: 'Répondre à tous',         def: 'a' },
+      { id: 'forward',  label: 'Transférer',              def: 'f' },
+      { id: 'archive',  label: 'Archiver',                def: 'e' },
+      { id: 'delete',   label: 'Supprimer',               def: '#' },
+      { id: 'star',     label: 'Suivre / Ne plus suivre', def: 's' },
+      { id: 'unread',   label: 'Marquer non lu',          def: 'u' },
+    ];
+    function getCustomShortcuts(){
+      try { return JSON.parse(localStorage.getItem('simplemail_custom_shortcuts') || '{}'); }
+      catch(e){ return {}; }
+    }
+    function getShortcutKey(actionId){
+      if(shortcutPreset === 'custom'){
+        const c = getCustomShortcuts();
+        if(c[actionId]) return c[actionId];
+      }
+      const d = SHORTCUT_DEFS.find(s => s.id === actionId);
+      return d ? d.def : '';
+    }
+    function setCustomShortcut(actionId, key){
+      const c = getCustomShortcuts();
+      c[actionId] = key;
+      try { localStorage.setItem('simplemail_custom_shortcuts', JSON.stringify(c)); } catch(e){}
+    }
+    function formatKeyLabel(key){
+      if(key === 'Enter') return 'Enter';
+      if(key === ' ') return 'Espace';
+      if(key === 'ArrowDown') return '↓';
+      if(key === 'ArrowUp') return '↑';
+      return key;
+    }
+    function renderShortcutsList(){
+      const list = document.getElementById('shortcuts-list');
+      if(!list) return;
+      const isCustom = shortcutPreset === 'custom';
+      let html = SHORTCUT_DEFS.map(def => {
+        const key = getShortcutKey(def.id);
+        const capturing = capturingShortcut === def.id;
+        const kbdContent = capturing ? '<span style="color:#1a73e8">Appuyez…</span>' : escapeHtml(formatKeyLabel(key));
+        const onclickAttr = isCustom ? `onclick="startCaptureShortcut('${def.id}')"` : '';
+        const cursor = isCustom ? 'cursor:pointer;' : '';
+        return `<div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)">
+          <span>${def.label}</span>
+          <kbd class="kbd" ${onclickAttr} style="${cursor}">${kbdContent}</kbd>
+        </div>`;
+      }).join('');
+      html += `
+        <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Retour</span><kbd class="kbd">ESC</kbd></div>
+        <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Envoyer</span><kbd class="kbd">⌘/Ctrl + Enter</kbd></div>
+        <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Boîte de réception</span><kbd class="kbd">G I</kbd></div>
+        <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Messages suivis</span><kbd class="kbd">G S</kbd></div>
+        <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Corbeille</span><kbd class="kbd">G T</kbd></div>
+        <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Brouillons</span><kbd class="kbd">G D</kbd></div>
+        <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Envoyés</span><kbd class="kbd">G N</kbd></div>
+      `;
+      list.innerHTML = html;
+    }
+    function startCaptureShortcut(actionId){
+      capturingShortcut = actionId;
+      renderShortcutsList();
+    }
+    function cancelCaptureShortcut(){
+      capturingShortcut = null;
+      renderShortcutsList();
+    }
     let loadError = '';
     let searchTimer = null;
 
@@ -1326,10 +1495,21 @@
       if (!iso) return '';
       const d = new Date(iso);
       if (isNaN(d)) return '';
+      const fmt = getDateFormat();
+      if(fmt === 'dd/mm/yyyy'){
+        const dd = String(d.getDate()).padStart(2,'0');
+        const mm = String(d.getMonth()+1).padStart(2,'0');
+        return `${dd}/${mm}/${d.getFullYear()}`;
+      }
+      if(fmt === 'yyyy/mm/dd'){
+        const dd = String(d.getDate()).padStart(2,'0');
+        const mm = String(d.getMonth()+1).padStart(2,'0');
+        return `${d.getFullYear()}/${mm}/${dd}`;
+      }
       const now = new Date();
       const sameDay = d.toDateString() === now.toDateString();
-      const opts = sameDay ? {} : { day: 'numeric', month: 'short' };
-      return d.toLocaleDateString('fr-FR', opts);
+      if(sameDay) return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
     }
     function fmtTime(iso) {
       if (!iso) return '';
@@ -1682,6 +1862,44 @@
       } catch (e) { email.text = email.snippet; email._detail = true; }
       return email;
     }
+    function normalizeNewsletterImageUrl(email, source){
+      const src=(source||'').trim();
+      if(!src) return '';
+      if(/^cid:/i.test(src)){
+        const cid=src.replace(/^cid:/i,'').replace(/[<>]/g,'');
+        return `/api/messages/${email.account}/${email.uid}/cid/${encodeURIComponent(cid)}?folder=${encodeURIComponent(currentFolder)}`;
+      }
+      if(src.startsWith('//')) return 'https:'+src;
+      if(/^(https?:|data:image\/)/i.test(src)) return src;
+      return '';
+    }
+    async function getNewsletterImage(email){
+      if(!email) return '';
+      if(email.newsletterImage !== undefined) return email.newsletterImage;
+      await fetchDetail(email);
+      if(!email.html){ email.newsletterImage=''; return ''; }
+      const documentHtml=new DOMParser().parseFromString(email.html,'text/html');
+      const candidates=[];
+      documentHtml.querySelectorAll('img').forEach((image,index)=>{
+        const src=normalizeNewsletterImageUrl(email,image.getAttribute('src'));
+        if(!src) return;
+        const width=parseInt(image.getAttribute('width')||image.style.width||'0',10)||0;
+        const height=parseInt(image.getAttribute('height')||image.style.height||'0',10)||0;
+        const hint=`${src} ${image.getAttribute('alt')||''} ${image.className||''}`.toLowerCase();
+        if((width&&width<=3)||(height&&height<=3)||/(tracking|pixel|spacer|open\.gif)/.test(hint)) return;
+        let score=(width&&height?width*height:10000)-index;
+        if(/(hero|banner|header|cover|feature)/.test(hint)) score+=500000;
+        if(/(logo|avatar|icon)/.test(hint)) score-=200000;
+        candidates.push({src,score});
+      });
+      documentHtml.querySelectorAll('[background]').forEach((element,index)=>{
+        const src=normalizeNewsletterImageUrl(email,element.getAttribute('background'));
+        if(src) candidates.push({src,score:250000-index});
+      });
+      candidates.sort((a,b)=>b.score-a.score);
+      email.newsletterImage=candidates[0]?.src||'';
+      return email.newsletterImage;
+    }
     async function hydrateMissingAttachmentCounts() {
       const folderAtStart = currentFolder;
       const missing = emails.filter(email => email.hasAttachments && email.attachmentCount < 1);
@@ -2000,8 +2218,8 @@
         else { imageBadge.classList.add('hidden'); whiteState.classList.remove('hidden'); }
         setHeaderState('zero');
       } else if(currentActiveView==='list'){ setHeaderState('list'); renderInboxList(); buildNewsletterCarousel(); }
-      else if(currentActiveView==='conversation'){ setHeaderState('conversation'); }
-      else if(currentActiveView==='newsletter'){ setHeaderState('newsletter'); renderNewsletterDetail(); }
+      else if(currentActiveView==='conversation'){ setHeaderState('conversation'); const d=document.getElementById('newsletter-dock'); if(d) d.classList.add('hidden'); }
+      else if(currentActiveView==='newsletter'){ setHeaderState('newsletter'); renderNewsletterDetail(); const d=document.getElementById('newsletter-dock'); if(d) d.classList.add('hidden'); }
     }
 
     // ====================== Liste (threads + catégories) ======================
@@ -2043,12 +2261,12 @@
         const item=document.createElement('div');
         const borderClass = (currentTheme!=='image' && index===threads.length-1) ? 'border-transparent' : 'border-b border-gray-100';
         const isSelected = index === currentListIndex;
-        item.className=`mail-item relative flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50/80 transition-colors select-none ${borderClass} ${hasUnread?'bg-white font-semibold':'bg-gray-50/30 text-gray-700'} ${isSelected?'is-selected':''}`;
+        item.className=`mail-item ${hasUnread?'mail-unread':'mail-read'} relative flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50/80 transition-colors select-none ${borderClass} ${hasUnread?'bg-white font-semibold':'bg-gray-50/30 text-gray-700'} ${isSelected?'is-selected':''}`;
         item.setAttribute('data-thread-id', thread.id || latest.id);
         item.onclick=()=>{ currentListIndex = index; currentSelectedId = latest.id; openConversation(latest.id); };
         const rowId = latest.id;
         const isRowSelected = selectedMailIds.has(rowId);
-        if(isRowSelected) item.classList.add('is-selected');
+        if(isRowSelected) item.classList.add('is-row-selected');
         const senderLabel = isMulti&&participants>1 ? `${latest.sender} (+${participants-1})` : latest.sender;
         const senderDomain = domainOf(latest.email);
         const faviconUrl = senderDomain && senderDomain.includes('.') ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(senderDomain)}&sz=32` : '';
@@ -2058,21 +2276,12 @@
           : `<div class="sender-fallback shrink-0">${escapeHtml(senderInitial)}</div>`;
         item.innerHTML=`
           <div class="flex items-center gap-4 min-w-0 flex-1 pr-6 relative">
-            <div class="hover-actions">
-              <span class="hover-action-btn" onclick="event.stopPropagation(); toggleMailSelection('${escapeAttr(rowId)}')" title="Sélectionner">
+            <div class="sender-icon-slot">
+              ${senderIconHtml}
+              <span class="mail-row-checkbox" onclick="event.stopPropagation(); toggleMailSelection('${escapeAttr(rowId)}')" title="Sélectionner">
                 <span class="material-symbols-outlined">${isRowSelected?'check_box':'check_box_outline_blank'}</span>
               </span>
-              <span class="hover-action-btn" onclick="event.stopPropagation(); toggleStarItem(event, '${latest.id}')" title="Suivre">
-                <span class="material-symbols-outlined" style="${starred?'color:#f59e0b':''}">${starred?'star':'star_border'}</span>
-              </span>
-              <span class="hover-action-btn" onclick="event.stopPropagation(); archiveItem('${latest.id}')" title="Archiver">
-                <span class="material-symbols-outlined">archive</span>
-              </span>
-              <span class="hover-action-btn" onclick="event.stopPropagation(); deleteItem('${latest.id}')" title="Supprimer">
-                <span class="material-symbols-outlined">delete</span>
-              </span>
             </div>
-            ${senderIconHtml}
             <div class="w-44 truncate shrink-0 text-sm ${hasUnread?'text-gray-900 font-bold':'text-gray-800'}">${escapeHtml(senderLabel)}</div>
             <div class="truncate text-sm flex items-center gap-2 min-w-0">
               <span class="${hasUnread?'text-gray-900 font-bold':'text-gray-800'} truncate">${escapeHtml(latest.subject)}</span>
@@ -2083,26 +2292,77 @@
           <div class="text-xs text-gray-400 shrink-0 font-normal flex items-center gap-1.5">
             ${threadHasAtt?`<span class="flex items-center" title="${threadAttCount} pièce(s) jointe(s)" aria-label="${threadAttCount} pièce(s) jointe(s)"><span class="material-symbols-outlined" style="font-size:17px">attach_file</span><span style="font-size:13px;font-weight:700;color:#000;line-height:1;margin-left:-3px">×${threadAttCount}</span></span>`:''}
             ${latest.date}
-        </div>`;
+          </div>
+          <div class="hover-actions-right">
+            <span class="hover-action-btn" onclick="event.stopPropagation(); toggleStarItem(event, '${latest.id}')" title="Suivre">
+              <span class="material-symbols-outlined" style="${starred?'color:#f59e0b':''}">${starred?'star':'star_border'}</span>
+            </span>
+            <span class="hover-action-btn" onclick="event.stopPropagation(); archiveItem('${latest.id}')" title="Archiver">
+              <span class="material-symbols-outlined">archive</span>
+            </span>
+            <span class="hover-action-btn" onclick="event.stopPropagation(); deleteItem('${latest.id}')" title="Supprimer">
+              <span class="material-symbols-outlined">delete</span>
+            </span>
+          </div>`;
         container.appendChild(item);
         if (isSelected) queueMicrotask(() => item.scrollIntoView({ block: 'nearest' }));
       });
     }
 
     // ====================== Newsletter (expéditeurs récurrents en Promotions) ======================
-    function buildNewsletterCarousel(){
+    async function buildNewsletterCarousel(){
       const c = document.getElementById('nl-carousel'); if(!c) return;
+      const dock = document.getElementById('newsletter-dock');
+      const nlSection = document.getElementById('nl-section');
+      const btn = document.getElementById('nl-toggle-btn');
       const promo = emails.filter(e => (e.category||'primary')==='promotions');
       const byDomain = {};
       promo.forEach(e => { const d = domainOf(e.email) || e.sender; if(!byDomain[d]) byDomain[d]={sender:e.sender, email:e.email, items:[], icon:'article'}; byDomain[d].items.push(e); });
       const top = Object.entries(byDomain).sort((a,b)=>b[1].items.length-a[1].items.length);
-      const btn = document.getElementById('nl-toggle-btn');
-      if(!top.length){ 
+      const dockMode = getNewsletterMode()==='dock';
+      await Promise.all(top.map(async ([,info])=>{
+        const latest=info.items.slice().sort((a,b)=>(b.rawDate||'').localeCompare(a.rawDate||''))[0];
+        info.image=await getNewsletterImage(latest);
+      }));
+
+      if(dock){
+        if(dockMode && top.length && currentFolder === 'INBOX' && (currentActiveView==='list'||currentActiveView==='zero')){
+          dock.classList.remove('hidden');
+          dock.innerHTML = top.map(([dom, info]) => {
+            const unread = info.items.filter(e=>e.unread).length;
+            const initial = (info.sender||'?')[0].toUpperCase();
+            const iconHtml = info.image
+              ? `<img src="${escapeAttr(info.image)}" class="nl-dock-icon" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="nl-dock-fallback hidden" style="background:#5f6368">${escapeHtml(initial)}</div>`
+              : `<div class="nl-dock-fallback" style="background:#5f6368">${escapeHtml(initial)}</div>`;
+            const badge = unread > 0 ? `<span class="nl-dock-badge">${unread}</span>` : '';
+            return `<div class="nl-dock-item" onclick="openNewsletter('${escapeAttr(dom)}')">
+              ${iconHtml}
+              ${badge}
+              <span class="nl-dock-tooltip">${escapeHtml(nameOf(info.sender))}</span>
+            </div>`;
+          }).join('');
+        } else {
+          dock.classList.add('hidden');
+          dock.innerHTML = '';
+        }
+      }
+
+      if(!top.length){
         c.innerHTML='<div class="text-xs text-gray-400 italic px-1 py-6 select-none">Aucune newsletter dans ce dossier.</div>';
         if(btn) btn.classList.add('hidden');
-        return; 
+        return;
       }
-      if(btn) btn.classList.remove('hidden');
+      if(dockMode){
+        if(nlSection) nlSection.classList.add('hidden');
+        if(btn) btn.classList.add('hidden');
+        return;
+      }
+
+      if(nlSection) nlSection.classList.toggle('hidden', currentFolder !== 'INBOX');
+      if(btn) btn.classList.toggle('hidden', currentFolder !== 'INBOX');
+
+      const showItems = newsletterCarouselExpanded ? top : top.slice(0, 4);
+      c.className = 'carousel-container gap-4';
       const palettes = [
         ['from-orange-950 via-orange-900/50 to-orange-800','text-orange-200','text-orange-200/70'],
         ['from-slate-900 via-slate-800/50 to-slate-600','text-slate-200','text-slate-300/70'],
@@ -2111,7 +2371,6 @@
         ['from-rose-950 via-rose-900/50 to-rose-700','text-rose-200','text-rose-300/80'],
         ['from-emerald-950 via-emerald-900/50 to-emerald-700','text-emerald-200','text-emerald-300/80'],
       ];
-      const showItems = newsletterCarouselExpanded ? top : top.slice(0, 4);
       const maxCols = Math.min(showItems.length, 4);
       c.style.gridTemplateColumns = `repeat(${Math.max(1, maxCols)}, minmax(0, 1fr))`;
       c.innerHTML = showItems.map(([dom, info], i) => {
@@ -2120,7 +2379,8 @@
         const cnt = unread>0 ? `${unread} non lu${unread>1?'s':''}` : `${info.items.length} message${info.items.length>1?'s':''}`;
         const isExtra = i >= 4;
         return `<div onclick="openNewsletter('${escapeAttr(dom)}')" class="newsletter-recent-card h-52 rounded-xl overflow-hidden cursor-pointer relative group shadow-md transition-transform hover:-translate-y-1 duration-200${isExtra ? ' nl-card-enter' : ''}"${isExtra ? ` style="animation-delay:${(i-4)*0.07}s"` : ''}>
-          <div class="absolute inset-0 bg-gradient-to-t ${grad} flex flex-col justify-between p-4">
+          ${info.image?`<img src="${escapeAttr(info.image)}" alt="" class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy">`:''}
+          <div class="absolute inset-0 ${info.image?'':`bg-gradient-to-t ${grad}`} flex flex-col justify-between p-4"${info.image?' style="background:linear-gradient(180deg,rgba(0,0,0,0.08),rgba(0,0,0,0.82))"':''}>
             <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center border border-white/20 select-none"><span class="material-symbols-outlined !text-white text-lg">${info.icon}</span></div>
             <div class="flex flex-col">
               <span class="text-[10px] ${sub} uppercase font-semibold tracking-wider truncate">${escapeHtml(nameOf(info.sender))}</span>
@@ -2131,11 +2391,9 @@
         </div>`;
       }).join('');
       if(btn){
-        if(newsletterCarouselExpanded){
-          btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">collapse_content</span> Voir moins';
-        } else {
-          btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">grid_view</span> Voir toutes les newsletters';
-        }
+        btn.innerHTML = newsletterCarouselExpanded
+          ? '<span class="material-symbols-outlined" style="font-size:14px">collapse_content</span> Voir moins'
+          : '<span class="material-symbols-outlined" style="font-size:14px">grid_view</span> Voir toutes les newsletters';
       }
     }
 
@@ -2148,14 +2406,16 @@
       newsletterCarouselExpanded = !newsletterCarouselExpanded;
       buildNewsletterCarousel();
     }
-    function renderNewsletterDetail(){
+    async function renderNewsletterDetail(){
       const list = emails.filter(e => domainOf(e.email) === currentNewsletterFilter || (domainOf(e.email)==='' && e.sender===currentNewsletterFilter));
       const hero=document.getElementById('nl-hero-bg');
-      const sample = list[0];
+      const sample = list.slice().sort((a,b)=>(b.rawDate||'').localeCompare(a.rawDate||''))[0];
       const title = sample ? sample.sender : currentNewsletterFilter;
       const email = sample ? sample.email : '';
       const total = list.length, unread = list.filter(e=>e.unread).length;
-      const heroUrl = `https://images.unsplash.com/photo-${(['1526374965328-7f61d4dc18c5','1610945415295-d9bbf067e59c','1516035069371-29a1b244cc32','1559526324-4b87b5e36e44'][Math.abs(hashCode(title))%4])}?auto=format&fit=crop&w=1600&q=80`;
+      const fallbackHero = `https://images.unsplash.com/photo-${(['1526374965328-7f61d4dc18c5','1610945415295-d9bbf067e59c','1516035069371-29a1b244cc32','1559526324-4b87b5e36e44'][Math.abs(hashCode(title))%4])}?auto=format&fit=crop&w=1600&q=80`;
+      const heroUrl = await getNewsletterImage(sample) || fallbackHero;
+      if(currentActiveView!=='newsletter') return;
       const view=document.getElementById('newsletter-detail-view'); view.scrollTop=0;
       hero.style.backgroundImage=`url('${heroUrl}')`; hero.style.animation='none'; void hero.offsetWidth; hero.style.animation='';
       view.querySelectorAll('.nl-fade-in').forEach(el=>{ el.style.animation='none'; void el.offsetWidth; el.style.animation=''; });
@@ -2232,6 +2492,19 @@
       if(key==='expansion'&&['all','latest'].includes(value)) settings.threadExpansion=value;
       saveSettings();
       if(currentActiveView==='conversation'&&currentSelectedId) openConversation(currentSelectedId);
+    }
+
+    function getDateFormat(){ try { return localStorage.getItem('simplemail_date_format') || 'relative'; } catch(e){ return 'relative'; } }
+    function setDateFormat(fmt){
+      try { localStorage.setItem('simplemail_date_format', fmt); } catch(e){}
+      showToast('Format de date : ' + (fmt==='relative'?'Relatif':fmt==='dd/mm/yyyy'?'JJ/MM/AAAA':'AAAA/MM/JJ'));
+      loadMessages(true);
+    }
+    function getNewsletterMode(){ try { return localStorage.getItem('simplemail_newsletter_mode') || 'cards'; } catch(e){ return 'cards'; } }
+    function setNewsletterMode(mode){
+      try { localStorage.setItem('simplemail_newsletter_mode', mode); } catch(e){}
+      showToast('Newsletters : ' + (mode==='cards'?'Cartes':'Dock'));
+      buildNewsletterCarousel();
     }
 
     async function openConversation(id){
@@ -2701,8 +2974,18 @@
     let _pendingKey = null;
     let _pendingTimer = null;
     document.addEventListener('keydown',(e)=>{
+      // --- Capture de raccourci personnalisé ---
+      if(capturingShortcut){
+        e.preventDefault(); e.stopPropagation();
+        if(e.key === 'Escape'){ cancelCaptureShortcut(); return; }
+        const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+        setCustomShortcut(capturingShortcut, key);
+        capturingShortcut = null;
+        renderShortcutsList();
+        showToast('Raccourci enregistré');
+        return;
+      }
       // Laisser au navigateur et au système tous les raccourcis Ctrl/⌘/Alt
-      // (copier, coller, rechercher, actualiser, etc.).
       if(e.ctrlKey || e.metaKey || e.altKey) return;
       // --- Immersive reader ---
       if(immersiveOpen){
@@ -2753,30 +3036,32 @@
       // --- Single-key shortcuts ---
       const isList = currentActiveView==='list'||currentActiveView==='zero';
       const isConv = currentActiveView==='conversation';
+      const sk = {};
+      SHORTCUT_DEFS.forEach(d => sk[d.id] = getShortcutKey(d.id));
+      const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
       if(isList){
-        if(e.key==='c'){ e.preventDefault(); openCompose(); }
-        else if(e.key==='/'){ e.preventDefault(); const si=document.getElementById('search-input'); if(si) si.focus(); }
-        else if(e.key==='ArrowDown' || e.key==='j'){ e.preventDefault(); moveSelection(1); }
-        else if(e.key==='ArrowUp' || e.key==='k'){ e.preventDefault(); moveSelection(-1); }
-        else if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openSelectedThread(); }
+        if(key === sk.compose){ e.preventDefault(); openCompose(); }
+        else if(key === sk.search){ e.preventDefault(); const si=document.getElementById('search-input'); if(si) si.focus(); }
+        else if(key === 'ArrowDown' || key === sk.next){ e.preventDefault(); moveSelection(1); }
+        else if(key === 'ArrowUp' || key === sk.prev){ e.preventDefault(); moveSelection(-1); }
+        else if(key === sk.open || key === ' '){ e.preventDefault(); openSelectedThread(); }
         else if(e.key.length===1 && !e.ctrlKey && !e.metaKey && !e.altKey){
           const si=document.getElementById('search-input');
           if(si){ si.focus(); si.value+=e.key; handleSearch(si.value); e.preventDefault(); }
         }
       }
       if(isConv){
-        if(e.key==='c'){ e.preventDefault(); openCompose(); }
-        else if(e.key==='j'){ e.preventDefault(); navigateMail(1); }
-        else if(e.key==='k'){ e.preventDefault(); navigateMail(-1); }
-        else if(e.key==='r'){ e.preventDefault(); replyCurrent(); }
-        else if(e.key==='a'){ e.preventDefault(); replyAllCurrent(); }
-        else if(e.key==='f'){ e.preventDefault(); forwardCurrent(); }
-        else if(e.key==='e'){ e.preventDefault(); archiveCurrent(); }
-        else if(e.key==='#'){ e.preventDefault(); deleteCurrent(); }
-        else if(e.key==='u'){ e.preventDefault(); toggleUnreadCurrent(); }
-        else if(e.key==='s'){ e.preventDefault(); const m=emails.find(e=>e.id===currentSelectedId); if(m){ m.starred=!m.starred; apiCallFlag(m,null,m.starred); showToast(m.starred?'Ajouté aux suivis':'Retiré des suivis'); } }
-        else if(e.key==='o' || e.key==='Enter'){ e.preventDefault(); }
-        else if(e.key==='/'){ e.preventDefault(); handleBack(); }
+        if(key === sk.compose){ e.preventDefault(); openCompose(); }
+        else if(key === sk.next){ e.preventDefault(); navigateMail(1); }
+        else if(key === sk.prev){ e.preventDefault(); navigateMail(-1); }
+        else if(key === sk.reply){ e.preventDefault(); replyCurrent(); }
+        else if(key === sk.replyAll){ e.preventDefault(); replyAllCurrent(); }
+        else if(key === sk.forward){ e.preventDefault(); forwardCurrent(); }
+        else if(key === sk.archive){ e.preventDefault(); archiveCurrent(); }
+        else if(key === sk.delete){ e.preventDefault(); deleteCurrent(); }
+        else if(key === sk.unread){ e.preventDefault(); toggleUnreadCurrent(); }
+        else if(key === sk.star){ e.preventDefault(); const m=emails.find(e=>e.id===currentSelectedId); if(m){ m.starred=!m.starred; apiCallFlag(m,null,m.starred); showToast(m.starred?'Ajouté aux suivis':'Retiré des suivis'); } }
+        else if(key === sk.search){ e.preventDefault(); handleBack(); }
       }
     });
 
@@ -2958,25 +3243,6 @@
                 </div>
               </div>
               <div class="grid grid-cols-2 gap-x-10 gap-y-0 text-sm" id="shortcuts-list">
-                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Composer</span><kbd class="kbd">C</kbd></div>
-                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Rechercher</span><kbd class="kbd">/</kbd></div>
-                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Message suivant</span><kbd class="kbd">J</kbd></div>
-                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Message précédent</span><kbd class="kbd">K</kbd></div>
-                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Ouvrir</span><kbd class="kbd">Enter</kbd></div>
-                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Retour</span><kbd class="kbd">ESC</kbd></div>
-                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Répondre</span><kbd class="kbd">R</kbd></div>
-                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Répondre à tous</span><kbd class="kbd">A</kbd></div>
-                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Transférer</span><kbd class="kbd">F</kbd></div>
-                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Archiver</span><kbd class="kbd">E</kbd></div>
-                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Supprimer</span><kbd class="kbd">#</kbd></div>
-                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Suivre / Ne plus suivre</span><kbd class="kbd">S</kbd></div>
-                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Marquer non lu</span><kbd class="kbd">U</kbd></div>
-                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Envoyer</span><kbd class="kbd">⌘/Ctrl + Enter</kbd></div>
-                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Boîte de réception</span><kbd class="kbd">G I</kbd></div>
-                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Messages suivis</span><kbd class="kbd">G S</kbd></div>
-                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Corbeille</span><kbd class="kbd">G T</kbd></div>
-                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Brouillons</span><kbd class="kbd">G D</kbd></div>
-                <div class="flex justify-between py-2.5 border-b" style="border-color:rgba(0,0,0,0.05)"><span>Envoyés</span><kbd class="kbd">G N</kbd></div>
               </div>
             </div>
 
@@ -3078,6 +3344,22 @@
               </div>
             </div>
 
+            <!-- PAGE: NEWSLETTERS -->
+            <div id="set-page-newsletters" class="settings-page hidden px-10 py-8">
+              <h2 class="text-2xl font-semibold mb-1">Newsletters</h2>
+              <p class="text-sm mb-8" style="color:#5f6368">Affichez vos newsletters en cartes ou en dock horizontal.</p>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <div class="settings-row-title">Mode d'affichage</div>
+                  <div class="settings-row-desc">Cartes = grille visuelle, Dock = barre horizontale compacte.</div>
+                </div>
+                <select onchange="setNewsletterMode(this.value)" class="settings-select">
+                  <option value="cards" ${getNewsletterMode()==='cards'?'selected':''}>Cartes</option>
+                  <option value="dock" ${getNewsletterMode()==='dock'?'selected':''}>Dock horizontal</option>
+                </select>
+              </div>
+            </div>
+
             <!-- PAGE: LANGUE -->
             <div id="set-page-language" class="settings-page hidden px-10 py-8">
               <h2 class="text-2xl font-semibold mb-1">Langue</h2>
@@ -3128,6 +3410,7 @@
         if(ev.key==='Escape'){ closeSettings(); document.removeEventListener('keydown',_escSettings); }
       });
       renderSettingsAccounts(settingsAccountId);
+      renderShortcutsList();
     }
     let settingsAccountId = '';
     function openAccountDetails(id){
@@ -3235,54 +3518,10 @@
       shortcutPreset = preset;
       try { localStorage.setItem('simplemail_shortcut_preset', preset); } catch(e){}
       showToast(`Raccourcis : ${preset==='gmail'?'Gmail':preset==='outlook'?'Outlook':'Personnalisé'}`);
-      // Mettre à jour la liste des raccourcis selon le preset
-      const shortcutsList = document.getElementById('shortcuts-list');
-      if(!shortcutsList) return;
-      if(preset === 'outlook'){
-        shortcutsList.innerHTML = `
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Composer</span><kbd class="kbd">Ctrl+N</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Rechercher</span><kbd class="kbd">Ctrl+E</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Message suivant</span><kbd class="kbd">↓</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Message précédent</span><kbd class="kbd">↑</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Ouvrir</span><kbd class="kbd">Enter</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Retour</span><kbd class="kbd">ESC</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Répondre</span><kbd class="kbd">Ctrl+R</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Répondre à tous</span><kbd class="kbd">Ctrl+Shift+R</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Transférer</span><kbd class="kbd">Ctrl+F</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Archiver</span><kbd class="kbd">Ctrl+E</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Supprimer</span><kbd class="kbd">Delete</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Suivre / Ne plus suivre</span><kbd class="kbd">Ctrl+U</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Marquer non lu</span><kbd class="kbd">Ctrl+U</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Envoyer</span><kbd class="kbd">Alt+S</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Boîte de réception</span><kbd class="kbd">Ctrl+Shift+I</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Messages suivis</span><kbd class="kbd">Ctrl+Shift+F</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Corbeille</span><kbd class="kbd">Ctrl+Shift+D</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Brouillons</span><kbd class="kbd">Ctrl+Shift+D</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Envoyés</span><kbd class="kbd">Ctrl+Shift+O</kbd></div>
-        `;
-      } else {
-        shortcutsList.innerHTML = `
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Composer</span><kbd class="kbd">C</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Rechercher</span><kbd class="kbd">/</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Message suivant</span><kbd class="kbd">J</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Message précédent</span><kbd class="kbd">K</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Ouvrir</span><kbd class="kbd">Enter</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Retour</span><kbd class="kbd">ESC</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Répondre</span><kbd class="kbd">R</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Répondre à tous</span><kbd class="kbd">A</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Transférer</span><kbd class="kbd">F</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Archiver</span><kbd class="kbd">E</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Supprimer</span><kbd class="kbd">#</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Suivre / Ne plus suivre</span><kbd class="kbd">S</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Marquer non lu</span><kbd class="kbd">U</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Envoyer</span><kbd class="kbd">⌘/Ctrl + Enter</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Boîte de réception</span><kbd class="kbd">G I</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Messages suivis</span><kbd class="kbd">G S</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Corbeille</span><kbd class="kbd">G T</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Brouillons</span><kbd class="kbd">G D</kbd></div>
-          <div class="flex justify-between py-2 border-b" style="border-color:rgba(0,0,0,0.04)"><span>Envoyés</span><kbd class="kbd">G N</kbd></div>
-        `;
-      }
+      renderShortcutsList();
+      const btns = document.querySelectorAll('#set-page-shortcuts .preset-btn');
+      const map = { gmail: 0, outlook: 1, custom: 2 };
+      btns.forEach((b, i) => b.classList.toggle('active', i === map[preset]));
     }
 
     // ====================== Add Account Modal (IMAP) ======================
