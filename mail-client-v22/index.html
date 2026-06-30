@@ -2666,14 +2666,32 @@
     }
     function deleteCurrent(){
       const m=emails.find(e=>e.id===currentSelectedId); if(!m) return;
-      api(`/api/messages/${m.account}/${m.uid}?folder=${encodeURIComponent(currentFolder)}`, {method:'DELETE'}).then(()=>{
-        emails=emails.filter(e=>e.id!==currentSelectedId); handleBack(); showToast('Message supprimé'); buildNewsletterCarousel();
+      const threadId = m.threadId;
+      const toDelete = threadId ? emails.filter(e => e.threadId === threadId) : [m];
+      const idsToDelete = new Set(toDelete.map(e => e.id));
+      Promise.all(toDelete.map(msg =>
+        api(`/api/messages/${msg.account}/${msg.uid}?folder=${encodeURIComponent(currentFolder)}`, {method:'DELETE'})
+      )).then(()=>{
+        emails=emails.filter(e=>!idsToDelete.has(e.id));
+        handleBack();
+        const count = toDelete.length;
+        showToast(`Conversation supprimée (${count} message${count>1?'s':''})`);
+        buildNewsletterCarousel();
       }).catch(e=>showToast('Suppression impossible : '+e.message));
     }
     function deleteItem(id){
       const m=emails.find(e=>e.id===id); if(!m) return;
-      api(`/api/messages/${m.account}/${m.uid}?folder=${encodeURIComponent(currentFolder)}`, {method:'DELETE'}).then(()=>{
-        emails=emails.filter(e=>e.id!==id); handleBack(); showToast('Message supprimé'); buildNewsletterCarousel();
+      const threadId = m.threadId;
+      const toDelete = threadId ? emails.filter(e => e.threadId === threadId) : [m];
+      const idsToDelete = new Set(toDelete.map(e => e.id));
+      Promise.all(toDelete.map(msg =>
+        api(`/api/messages/${msg.account}/${msg.uid}?folder=${encodeURIComponent(currentFolder)}`, {method:'DELETE'})
+      )).then(()=>{
+        emails=emails.filter(e=>!idsToDelete.has(e.id));
+        handleBack();
+        const count = toDelete.length;
+        showToast(`Conversation supprimée (${count} message${count>1?'s':''})`);
+        buildNewsletterCarousel();
       }).catch(e=>showToast('Suppression impossible : '+e.message));
     }
     async function archiveItem(id){
