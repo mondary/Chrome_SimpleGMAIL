@@ -22,3 +22,6 @@ secrets/
 .venv/
 __pycache__/
 *.log
+*.db
+*.sqlite
+*.sqlite3
