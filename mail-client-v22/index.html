@@ -1626,6 +1626,27 @@
 
     function domainOf(addr) { return (addr || '').split('@').pop().toLowerCase(); }
     function nameOf(sender) { return (sender || '').split(' ')[0] || sender; }
+    function localPartOf(addr) { return (addr || '').split('@')[0].toLowerCase(); }
+    const NL_LOCALPARTS=['newsletter','no-reply','noreply','digest','weekly','mailer','mailchimp','sendgrid','mailgun','postmaster','notification','updates','noreply'];
+    const NL_SUBJECT=['newsletter','unsubscribe','désabonnement','se désabonner','digest','weekly','briefing','votre récap',"this week's",'cette semaine',"aujourd'hui",'les articles',"les + lus",'quotidien'];
+    const NL_DOMAINS=['substack.com','medium.com','mailchi.mp','sendgrid.net','e.lemonde.fr','wordpress.com','blogspot.com','mailtrack.io','beehiiv.com','convertkit.com'];
+    const NL_PLATFORMS=['mailchimp','sendgrid','mailgun','campaign','monitore','brevo','activecampaign','mailerlite'];
+    const NL_SNIPPET_UNSUB=['se désinscrire','se desinscrire','désabonnement','desabonnement','unsubscribe','click here to unsubscribe','vous recevez cet email','you are receiving this email','email car vous'];
+    function isLikelyNewsletter(e){
+      const addr = e.email||'';
+      const local = localPartOf(addr);
+      const domain = domainOf(addr);
+      const subj = (e.subject||'').toLowerCase();
+      const sender = (e.sender||'').toLowerCase();
+      const snippet = (e.snippet||'').toLowerCase();
+      if(NL_LOCALPARTS.some(k=>k===local||k===local.split('+')[0])) return true;
+      if(NL_SUBJECT.some(k=>subj.includes(k))) return true;
+      if(NL_DOMAINS.some(d=>domain.includes(d))) return true;
+      if(NL_PLATFORMS.some(p=>domain.includes(p)||sender.includes(p))) return true;
+      if(sender.includes('newsletter')||sender.includes('news')||sender.includes('digest')) return true;
+      if(NL_SNIPPET_UNSUB.some(k=>snippet.includes(k))) return true;
+      return false;
+    }
 
     // ====================== Accounts / folders ======================
     let allAccounts = [];
@@ -2658,7 +2679,7 @@
       const dock = document.getElementById('newsletter-dock');
       const nlSection = document.getElementById('nl-section');
       const btn = document.getElementById('nl-toggle-btn');
-      const promo = emails.filter(e => (e.category||'primary')==='promotions');
+      const promo = emails.filter(e => (e.category||'primary')==='promotions' || isLikelyNewsletter(e));
       const byDomain = {};
       promo.forEach(e => { const d = domainOf(e.email) || e.sender; if(!byDomain[d]) byDomain[d]={sender:e.sender, email:e.email, items:[], icon:'article'}; byDomain[d].items.push(e); });
       const top = Object.entries(byDomain).sort((a,b)=>b[1].items.length-a[1].items.length);
@@ -3392,6 +3413,12 @@
         immersiveSendReply();
       }
     }
+    function allRecipientsExcludingSelf(msg, excludeAddr){
+      const seen=new Set();
+      const addrs=[msg.email||'', msg.to||'', msg.cc||''].join(',').split(',').map(s=>s.trim()).filter(s=>s.includes('@'));
+      const exclude=excludeAddr ? excludeAddr.toLowerCase() : '';
+      return addrs.filter(a=>{const al=a.toLowerCase(); if(al===exclude||seen.has(al)) return false; seen.add(al); return true;}).join(', ');
+    }
     async function immersiveSendReply(){
       const input=document.getElementById('immersive-reply');
       const button=document.getElementById('immersive-send-btn');
@@ -3404,11 +3431,13 @@
       input.disabled=true;
       try{
         await fetchDetail(recipient);
+        const myEmail=accounts.find(a=>a.id===currentAccount)?.email||'';
+        const allTo=allRecipientsExcludingSelf(recipient, myEmail);
         const response=await api('/api/send',{
           method:'POST', headers:{'Content-Type':'application/json'},
           body:JSON.stringify({
             account:recipient.account,
-            to:recipient.email,
+            to:allTo||recipient.email,
             subject:'Re: '+(recipient.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,''),
             text,
             in_reply_to:recipient.messageId||null,
@@ -3438,7 +3467,7 @@
         input.focus();
       }
     }
-    function immersiveReply(){ const e=immersiveList[immersiveIndex]; if(!e) return; fetchDetail(e).then(()=>{ openCompose({to:e.email, subject:'Re: '+(e.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,''), focusBody:true, inReplyTo:e.messageId||null, references:e.messageId||null}); }); }
+    function immersiveReply(){ immersiveReplyAll(); }
     function immersiveReplyAll(){
       const e=immersiveList[immersiveIndex]; if(!e) return;
       fetchDetail(e).then(()=>{ openCompose({to:e.email, cc:e.cc||'', subject:'Re: '+(e.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,''), focusBody:true, inReplyTo:e.messageId||null, references:e.messageId||null}); });
