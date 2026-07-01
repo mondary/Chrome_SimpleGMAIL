@@ -874,6 +874,20 @@
     .im-title { font-size: clamp(2.1rem, 4.8vw, 3.35rem); line-height: 1.1; letter-spacing: -0.04em; font-weight: 500; }
     .im-article { font-size: 1.06rem; line-height: 2; color: inherit; opacity: 0.95; }
     .im-article p { margin-bottom: 1.15em; }
+    .im-article img { max-width:100%; height:auto; border-radius:8px; margin:1.2em 0; display:block; }
+    .im-article, .im-article * { border:0 !important; border-style:none !important; outline:0 !important; background:transparent !important; background-color:transparent !important; }
+    .im-article table { width:auto; border-collapse:collapse; border-spacing:0; margin:1em 0; font-size:.95em; }
+    .im-article td, .im-article th { padding:4px 6px; text-align:left; vertical-align:top; }
+    .im-article th { font-weight:600; }
+    .im-article a { color:#1a73e8; text-decoration:underline; text-underline-offset:2px; }
+    .im-article a:hover { opacity:.8; }
+    .im-article h1, .im-article h2, .im-article h3, .im-article h4 { font-weight:600; line-height:1.3; margin-top:1.8em; margin-bottom:.6em; letter-spacing:-.02em; }
+    .im-article ul, .im-article ol { padding-left:1.6em; margin:1em 0; }
+    .im-article li { margin-bottom:.35em; }
+    .im-article blockquote { color:#666; }
+    .im-article hr { margin:2em 0; }
+    .im-article iframe { max-width:100%; }
+    .mail-body-copy img { max-width:100%; height:auto; }
     .im-thread-message + .im-thread-message {
       margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(17,17,17,0.12);
     }
@@ -2028,6 +2042,64 @@
       div.innerHTML = html || '';
       return (div.textContent || div.innerText || '').replace(/\u00a0/g, ' ').trim();
     }
+    function cleanHtmlForImmersive(e){
+      if(!e.html) return '';
+      const parsed=new DOMParser().parseFromString(e.html,'text/html');
+      const doc=parsed.body;
+      parsed.querySelectorAll('script, style, link, meta, noscript').forEach(el=>el.remove());
+      parsed.querySelectorAll('[style]').forEach(el => {
+        let s=el.getAttribute('style')||'';
+        s=s.replace(/background(?:-color|-image)?\s*:[^;]+;?/gi,'');
+        s=s.replace(/border(?:-\w+)?\s*:[^;]+;?/gi,'');
+        s=s.replace(/border-(?:top|right|bottom|left)\s*:[^;]+;?/gi,'');
+        s=s.replace(/border-radius\s*:[^;]+;?/gi,'');
+        s=s.replace(/box-shadow\s*:[^;]+;?/gi,'');
+        s=s.replace(/outline\s*:[^;]+;?/gi,'');
+        s=s.replace(/padding\s*:[^;]+;?/gi,'');
+        s=s.replace(/margin\s*:[^;]+;?/gi,'');
+        s=s.replace(/width\s*:[^;]+;?/gi,'');
+        s=s.replace(/height\s*:[^;]+;?/gi,'');
+        s=s.replace(/min-width\s*:[^;]+;?/gi,'');
+        s=s.replace(/min-height\s*:[^;]+;?/gi,'');
+        s=s.replace(/max-width\s*:[^;]+;?/gi,'');
+        s=s.replace(/max-height\s*:[^;]+;?/gi,'');
+        s=s.replace(/vertical-align\s*:[^;]+;?/gi,'');
+        s=s.replace(/float\s*:[^;]+;?/gi,'');
+        s=s.replace(/display\s*:[^;]+;?/gi,'');
+        s=s.replace(/position\s*:[^;]+;?/gi,'');
+        s=s.replace(/top\s*:[^;]+;?/gi,'');
+        s=s.replace(/right\s*:[^;]+;?/gi,'');
+        s=s.replace(/bottom\s*:[^;]+;?/gi,'');
+        s=s.replace(/left\s*:[^;]+;?/gi,'');
+        s=s.trim();
+        s?el.setAttribute('style',s):el.removeAttribute('style');
+      });
+      const allEls=parsed.querySelectorAll('*');
+      allEls.forEach(el=>{
+        el.removeAttribute('bgcolor');
+        el.removeAttribute('background');
+        el.removeAttribute('border');
+        el.removeAttribute('bordercolor');
+        el.removeAttribute('cellpadding');
+        el.removeAttribute('cellspacing');
+        el.removeAttribute('valign');
+        el.removeAttribute('align');
+        el.removeAttribute('width');
+        el.removeAttribute('height');
+        el.removeAttribute('hspace');
+        el.removeAttribute('vspace');
+        const tag=el.tagName;
+        if(tag==='A'){el.removeAttribute('target');}
+        if(tag==='TD'||tag==='TH'){el.style.fontWeight='';el.style.textAlign='';}
+        if(tag==='TABLE'){el.style.fontWeight='';}
+      });
+      doc.querySelectorAll('img').forEach(el=>{
+        el.removeAttribute('hspace');el.removeAttribute('vspace');el.removeAttribute('border');
+        if(el.style.float) el.style.float='';
+      });
+      let content=doc.innerHTML.replace(/src=["']cid:([^"']+)["']/gi,(m,cid)=>`src="/api/messages/${e.account}/${e.uid}/cid/${cid}?folder=${encodeURIComponent(currentFolder)}"`);
+      return content;
+    }
     function avatarBg(name){
       const colors = ['bg-indigo-500','bg-purple-500','bg-pink-500','bg-emerald-600','bg-blue-600','bg-orange-500','bg-teal-600','bg-gray-700','bg-blue-700','bg-rose-500'];
       let h=0; for(const c of (name||'?')) h=(h*31+c.charCodeAt(0))>>>0;
@@ -2078,7 +2150,11 @@
       button.setAttribute('aria-expanded',String(show));
     }
     function simplifiedMessageProse(e){
-      const plain = (e.text && e.text.trim()) ? e.text : (e.html ? stripHtmlTags(e.html) : (e.snippet || ''));
+      if(e.html){
+        const cleaned=cleanHtmlForImmersive(e);
+        return `<div class="mail-body-copy" style="max-width:100%">${cleaned}</div>`;
+      }
+      const plain = (e.text && e.text.trim()) ? e.text : (e.snippet || '');
       const {visible,quoted}=splitQuotedPlainText(plain);
       const quoteId=`quoted-history-${++quotedHistorySequence}`;
       return `<div class="mail-body-copy">${proseParagraphs(visible)}${quoted?`<button class="quoted-history-toggle" onclick="toggleQuotedHistory('${quoteId}',this)" title="Afficher le texte cité" aria-expanded="false">•••</button><div id="${quoteId}" class="quoted-history hidden">${proseParagraphs(quoted)}</div>`:''}</div>`;
@@ -3279,7 +3355,7 @@
               ${conversationMessages.map(message=>`<section class="im-thread-message">
                 <div class="im-thread-meta"><strong>${escapeHtml(message._isSent?'Vous':message.sender)}</strong> · ${escapeHtml(message.longDate||((message.date||'')+' · '+(message.time||'')))}</div>
                 <article class="immersive-serif im-article">${simplifiedMessageProse(message)}</article>
-                ${mailImageGalleryHtml(message)}
+                ${message.html?'':mailImageGalleryHtml(message)}
                 <div class="mt-8">${attachmentsHtml(message)}</div>
               </section>`).join('')}
             </div>
