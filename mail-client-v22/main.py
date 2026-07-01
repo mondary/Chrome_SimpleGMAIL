@@ -3,6 +3,8 @@ import os
 import time
 import asyncio
 import threading
+import sqlite3
+import hashlib
 from contextlib import contextmanager, asynccontextmanager
 from email.message import EmailMessage
 from email.utils import parseaddr, formatdate, make_msgid
@@ -17,13 +19,214 @@ import base64
 import re
 
 from imap_tools import MailBox, MailBoxStartTls, MailBoxUnencrypted, AND, MailMessageFlags
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Body
 from fastapi.responses import FileResponse, Response, StreamingResponse
 from pydantic import BaseModel
 
 BASE_DIR = Path(__file__).resolve().parent
 CONFIG_PATH = BASE_DIR / "config.json"
 SECRETS_PATH = BASE_DIR / "secrets" / "mail.env"
+DB_PATH = BASE_DIR / "simplemail.db"
+
+
+# ---------- IMAP connection pool ----------
+_IMAP_POOL: dict[str, list] = {}  # account_id -> [(conn, ts), ...] idle connections
+_POOL_LOCK = threading.Lock()
+_POOL_TTL = 45
+
+
+def _pool_cleanup():
+    while True:
+        time.sleep(20)
+        now = time.time()
+        with _POOL_LOCK:
+            for aid in list(_IMAP_POOL.keys()):
+                kept = []
+                for conn, ts in _IMAP_POOL[aid]:
+                    if now - ts > _POOL_TTL:
+                        try: conn.logout()
+                        except Exception: pass
+                    else:
+                        kept.append((conn, ts))
+                _IMAP_POOL[aid] = kept
+
+
+def _open_imap(account: dict):
+    """Open a brand-new IMAP connection."""
+    imap = account["imap"]
+    host, port = imap["host"], imap.get("port", 993)
+    ssl = imap.get("ssl", True)
+    starttls = imap.get("starttls", False)
+    if not imap.get("password"):
+        raise HTTPException(status_code=500, detail=f"Mot de passe IMAP manquant pour {imap['user']}")
+    if starttls:
+        box = MailBoxStartTls(host, port)
+    elif ssl:
+        box = MailBox(host, port)
+    else:
+        box = MailBoxUnencrypted(host, port)
+    try:
+        return box.login(imap["user"], imap["password"])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Connexion IMAP impossible pour {imap['user']} sur {host}:{port} ({e})")
+
+
+def _checkout_mailbox(account: dict):
+    """Take an idle connection from the pool, or open a new one."""
+    aid = account["id"]
+    with _POOL_LOCK:
+        if aid in _IMAP_POOL and _IMAP_POOL[aid]:
+            conn, _ = _IMAP_POOL[aid].pop()
+            return conn
+    return _open_imap(account)
+
+
+def _checkin_mailbox(aid: str, conn):
+    """Return a connection to the pool for reuse."""
+    with _POOL_LOCK:
+        _IMAP_POOL.setdefault(aid, []).append((conn, time.time()))
+
+
+# ---------- SQLite persistence (settings, newsletters, labels) ----------
+def _init_db():
+    db = sqlite3.connect(str(DB_PATH))
+    db.row_factory = sqlite3.Row
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        )
+    """)
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS newsletter_domains (
+            domain TEXT PRIMARY KEY
+        )
+    """)
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS labels (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            color TEXT DEFAULT '#1a73e8'
+        )
+    """)
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS response_cache (
+            cache_key TEXT PRIMARY KEY,
+            data TEXT NOT NULL,
+            fetched_at REAL NOT NULL
+        )
+    """)
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS msg_detail_cache (
+            account TEXT NOT NULL,
+            uid TEXT NOT NULL,
+            data TEXT NOT NULL,
+            fetched_at REAL NOT NULL,
+            PRIMARY KEY (account, uid)
+        )
+    """)
+    db.commit()
+    db.close()
+
+
+def _response_cache_get(key: str, ttl: float = 30.0):
+    try:
+        db = sqlite3.connect(str(DB_PATH))
+        row = db.execute(
+            "SELECT data FROM response_cache WHERE cache_key = ? AND fetched_at > ?",
+            (key, time.time() - ttl),
+        ).fetchone()
+        db.close()
+        if row:
+            return json.loads(row[0])
+    except Exception:
+        pass
+    return None
+
+
+def _response_cache_set(key: str, data):
+    try:
+        raw = json.dumps(data, ensure_ascii=False, default=str)
+        db = sqlite3.connect(str(DB_PATH))
+        db.execute(
+            "INSERT OR REPLACE INTO response_cache (cache_key, data, fetched_at) VALUES (?, ?, ?)",
+            (key, raw, time.time()),
+        )
+        db.commit()
+        db.close()
+    except Exception:
+        pass
+
+
+def _response_cache_invalidate(prefix: str):
+    try:
+        db = sqlite3.connect(str(DB_PATH))
+        db.execute("DELETE FROM response_cache WHERE cache_key LIKE ?", (prefix + "%",))
+        db.commit()
+        db.close()
+    except Exception:
+        pass
+
+
+def _get_settings() -> dict:
+    try:
+        db = sqlite3.connect(str(DB_PATH))
+        db.row_factory = sqlite3.Row
+        rows = db.execute("SELECT key, value FROM settings").fetchall()
+        db.close()
+        return {r["key"]: r["value"] for r in rows}
+    except Exception:
+        return {}
+
+
+def _set_settings(data: dict):
+    db = sqlite3.connect(str(DB_PATH))
+    db.execute("BEGIN")
+    try:
+        for key, value in data.items():
+            db.execute(
+                "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                (key, str(value)),
+            )
+        db.commit()
+    except Exception:
+        db.rollback()
+    finally:
+        db.close()
+
+
+def _get_newsletter_domains() -> list:
+    try:
+        db = sqlite3.connect(str(DB_PATH))
+        rows = db.execute("SELECT domain FROM newsletter_domains").fetchall()
+        db.close()
+        return [r[0] for r in rows]
+    except Exception:
+        return []
+
+
+def _add_newsletter_domain(domain: str):
+    db = sqlite3.connect(str(DB_PATH))
+    try:
+        db.execute(
+            "INSERT OR IGNORE INTO newsletter_domains (domain) VALUES (?)", (domain,)
+        )
+        db.commit()
+    except Exception:
+        pass
+    finally:
+        db.close()
+
+
+def _remove_newsletter_domain(domain: str):
+    db = sqlite3.connect(str(DB_PATH))
+    try:
+        db.execute("DELETE FROM newsletter_domains WHERE domain = ?", (domain,))
+        db.commit()
+    except Exception:
+        pass
+    finally:
+        db.close()
 
 
 def _reload_env(env_path: Path):
@@ -154,6 +357,8 @@ def idle_worker(account: dict):
 @asynccontextmanager
 async def lifespan(app):
     global MAIN_LOOP
+    _init_db()
+    threading.Thread(target=_pool_cleanup, daemon=True, name="imap-pool-cleanup").start()
     MAIN_LOOP = asyncio.get_running_loop()
     if _is_demo():
         print("[DEMO] Mode démo actif — identifiants non configurés. Données fictives.")
@@ -230,29 +435,14 @@ def get_account(account_id: str):
 
 @contextmanager
 def open_mailbox(account):
-    imap = account["imap"]
-    host, port = imap["host"], imap.get("port", 993)
-    ssl = imap.get("ssl", True)
-    starttls = imap.get("starttls", False)
-    if not imap.get("password"):
-        raise HTTPException(status_code=500, detail=f"Mot de passe IMAP manquant pour {imap['user']}")
-    if starttls:
-        box = MailBoxStartTls(host, port)
-    elif ssl:
-        box = MailBox(host, port)
-    else:
-        box = MailBoxUnencrypted(host, port)
-    try:
-        conn = box.login(imap["user"], imap["password"])
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Connexion IMAP impossible pour {imap['user']} sur {host}:{port} ({e})")
+    conn = _checkout_mailbox(account)
     try:
         yield conn
-    finally:
-        try:
-            conn.logout()
-        except Exception:
-            pass
+        _checkin_mailbox(account["id"], conn)
+    except Exception:
+        try: conn.logout()
+        except Exception: pass
+        raise
 
 
 def send_via_smtp(account, msg: EmailMessage):
@@ -1083,24 +1273,31 @@ def delete_account(account_id: str):
 def folders(account_id: str):
     if _is_demo() or _is_demo_account(account_id):
         return DEMO_FOLDERS.get(account_id, [])
+    cache_key = "folders:" + account_id
+    cached = _response_cache_get(cache_key, ttl=300.0)
+    if cached:
+        return cached
     account = get_account(account_id)
     with open_mailbox(account) as mailbox:
         result = []
-        # Prioriser les dossiers communs
         order = ["INBOX", "Sent", "Drafts", "Trash", "Junk", "Spam", "Archive"]
+        priority = {"inbox", "sent", "drafts", "trash", "junk", "spam", "archive",
+                     "[gmail]/all mail", "[gmail]/starred", "[gmail]/important", "[gmail]/spam"}
         for folder in mailbox.folder.list():
             name = folder.name
-            try:
-                status = mailbox.folder.status(name)
-            except Exception:
-                status = {}
-            result.append({
-                "name": name,
-                "unseen": status.get("UNSEEN", 0),
-                "total": status.get("MESSAGES", 0),
-            })
+            key = name.lower().split("/").pop().strip()
+            # Only fetch STATUS for key folders — skip the rest for speed
+            if key in priority or "/" not in name:
+                try:
+                    status = mailbox.folder.status(name)
+                    result.append({"name": name, "unseen": status.get("UNSEEN", 0), "total": status.get("MESSAGES", 0)})
+                except Exception:
+                    result.append({"name": name, "unseen": 0, "total": 0})
+            else:
+                result.append({"name": name, "unseen": 0, "total": 0})
         result.sort(key=lambda f: _folder_key(f["name"], order))
-        return result
+    _response_cache_set(cache_key, result)
+    return result
 
 
 @app.post("/api/accounts/{account_id}/folders")
@@ -1152,6 +1349,8 @@ def _relocate_message(account: str, uid: str, source_folder: str, destination_fo
             mailbox.move(uid, dest)
     cache_invalidate(account, source, uid)
     cache_invalidate(account, dest)
+    _response_cache_invalidate("messages:" + account)
+    _response_cache_invalidate("folders:" + account)
     return {"ok": True, "account": account, "uid": str(uid), "source_folder": source, "destination_folder": dest, "copied": copy_only}
 
 
@@ -1169,8 +1368,10 @@ def list_messages(
     folder: str = Query("INBOX"),
     q: str = Query(""),
     page: int = Query(1, ge=1),
-    page_size: int = Query(40, ge=1, le=120),
+    page_size: int = Query(100, ge=1, le=500),
     unseen: bool = Query(False),
+    category: str = Query(""),
+    no_cache: bool = Query(False),
 ):
     if _is_demo() or _is_demo_account(account):
         msgs = _demo_messages(account, folder)
@@ -1179,7 +1380,23 @@ def list_messages(
         if q:
             ql = q.lower()
             msgs = [m for m in msgs if ql in m["subject"].lower() or ql in m["snippet"].lower() or ql in m["from_name"].lower()]
-        return {"messages": msgs, "page": page}
+        manual_domains = set(_get_newsletter_domains())
+        if category:
+            if category == "newsletter":
+                msgs = [m for m in msgs if _is_newsletter_entry(m, manual_domains)]
+            elif category == "promotions":
+                msgs = [m for m in msgs if m.get("category") == "promotions" and not _is_newsletter_entry(m, manual_domains)]
+            else:
+                msgs = [m for m in msgs if m.get("category", "primary") == category and not _is_newsletter_entry(m, manual_domains)]
+        total = len(msgs)
+        start = (page - 1) * page_size
+        return {"messages": msgs[start:start + page_size], "page": page, "page_size": page_size,
+                "total": total, "total_pages": max(1, (total + page_size - 1) // page_size)}
+    cache_key = f"messages:{account}:{folder}:{category}:{page}:{page_size}"
+    if not q and not unseen and not no_cache:
+        cached = _response_cache_get(cache_key, ttl=30.0)
+        if cached:
+            return cached
     acc = get_account(account)
     with open_mailbox(acc) as mailbox:
         mailbox.folder.set(folder)
@@ -1190,26 +1407,27 @@ def list_messages(
             kwargs["seen"] = False
         criteria = AND(**kwargs) if kwargs else AND(all=True)
 
-        msgs = []
+        all_messages = []
         offset = (page - 1) * page_size
+        direct_folder_page = not category and not q and not unseen
+        folder_total = None
+        if direct_folder_page:
+            status = _status_or_none(mailbox, folder) or {}
+            folder_total = int(status.get("MESSAGES", 0) or 0)
         fetched = mailbox.fetch(
             criteria,
-            limit=page_size + offset,
+            limit=(offset + page_size) if direct_folder_page else None,
             reverse=True,
             mark_seen=False,
             bulk=True,
-            headers_only=False,
+            headers_only=True,
         )
-        for i, msg in enumerate(fetched):
-            if i < offset:
+        manual_domains = set(_get_newsletter_domains())
+        for index, msg in enumerate(fetched):
+            if direct_folder_page and index < offset:
                 continue
             from_name, from_addr = parseaddr(msg.from_)
-            snippet = ""
-            if msg.text:
-                snippet = " ".join(msg.text.split())[:160]
-            elif msg.html:
-                snippet = _strip_html(msg.html)[:160]
-            msgs.append({
+            entry = {
                 "account": account,
                 "uid": str(msg.uid),
                 "subject": msg.subject or "(sans objet)",
@@ -1218,21 +1436,103 @@ def list_messages(
                 "date": msg.date.isoformat() if msg.date else None,
                 "seen": "\\Seen" in [str(f) for f in msg.flags],
                 "flagged": "\\Flagged" in [str(f) for f in msg.flags],
-                "has_attachments": len(msg.attachments) > 0,
-                "attachment_count": len(msg.attachments),
-                "snippet": snippet,
+                "has_attachments": False,
+                "attachment_count": 0,
+                "snippet": "",
                 "message_id": header_value(msg.headers, "message-id"),
                 "in_reply_to": header_value(msg.headers, "in-reply-to"),
                 "references": header_value(msg.headers, "references"),
-            })
-        # V22 : catégories heuristiques + threading (THREAD=REFERENCES avec repli sujet)
-        thread_map = _compute_threads(account, mailbox, folder, msgs)
-        thread_counts = _thread_counts_with_sent(mailbox, folder, msgs, thread_map)
-        for m in msgs:
-            m["category"] = _categorize(m["from_addr"], m["from_name"], m["subject"])
-            m["thread_id"] = thread_map.get(m["uid"], m["uid"])
-            m["thread_count"] = thread_counts.get(m["thread_id"], 1)
-        return {"messages": msgs, "page": page}
+                "list_unsubscribe": header_value(msg.headers, "list-unsubscribe"),
+                "list_id": header_value(msg.headers, "list-id"),
+            }
+            entry["category"] = _categorize(entry["from_addr"], entry["from_name"], entry["subject"])
+            newsletter = _is_newsletter_entry(entry, manual_domains)
+            if category == "newsletter" and not newsletter:
+                continue
+            if category == "promotions" and (entry["category"] != "promotions" or newsletter):
+                continue
+            if category and category not in ("newsletter", "promotions") and (entry["category"] != category or newsletter):
+                continue
+            all_messages.append(entry)
+            if direct_folder_page and len(all_messages) >= page_size:
+                break
+        total = folder_total if direct_folder_page else len(all_messages)
+        msgs = all_messages if direct_folder_page else all_messages[offset:offset + page_size]
+        result = {"messages": msgs, "page": page, "page_size": page_size, "total": total,
+                  "total_pages": max(1, (total + page_size - 1) // page_size)}
+    if not q and not unseen:
+        _response_cache_set(cache_key, result)
+    return result
+
+
+@app.get("/api/newsletter-messages")
+def list_newsletter_messages(
+    account: str = Query(...),
+    folder: str = Query("INBOX"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(200, ge=20, le=500),
+):
+    """Return a page of newsletter candidates independently from the active inbox category."""
+    manual_domains = set(_get_newsletter_domains())
+
+    def is_newsletter(entry: dict) -> bool:
+        return _is_newsletter_entry(entry, manual_domains)
+
+    if _is_demo() or _is_demo_account(account):
+        candidates = [message for message in _demo_messages(account, folder) if is_newsletter(message)]
+        start = (page - 1) * page_size
+        batch = candidates[start:start + page_size]
+        return {"messages": batch, "page": page, "has_more": start + len(batch) < len(candidates)}
+
+    cache_key = f"newsletter-messages:{account}:{folder}:{page}:{page_size}"
+    cached = _response_cache_get(cache_key, ttl=60.0)
+    if cached:
+        return cached
+
+    acc = get_account(account)
+    target_start = (page - 1) * page_size
+    target_end = target_start + page_size + 1
+    candidates = []
+    with open_mailbox(acc) as mailbox:
+        mailbox.folder.set(folder)
+        fetched = mailbox.fetch(
+            AND(all=True),
+            limit=min(max(target_end * 6, 600), 5000),
+            reverse=True,
+            mark_seen=False,
+            bulk=True,
+            headers_only=True,
+        )
+        for msg in fetched:
+            from_name, from_addr = parseaddr(msg.from_)
+            entry = {
+                "account": account,
+                "uid": str(msg.uid),
+                "subject": msg.subject or "(sans objet)",
+                "from_name": from_name or from_addr,
+                "from_addr": from_addr,
+                "date": msg.date.isoformat() if msg.date else None,
+                "seen": "\\Seen" in [str(flag) for flag in msg.flags],
+                "flagged": "\\Flagged" in [str(flag) for flag in msg.flags],
+                "has_attachments": False,
+                "attachment_count": 0,
+                "snippet": "",
+                "message_id": header_value(msg.headers, "message-id"),
+                "in_reply_to": header_value(msg.headers, "in-reply-to"),
+                "references": header_value(msg.headers, "references"),
+                "list_unsubscribe": header_value(msg.headers, "list-unsubscribe"),
+                "list_id": header_value(msg.headers, "list-id"),
+                "category": "promotions",
+            }
+            if is_newsletter(entry):
+                candidates.append(entry)
+                if len(candidates) >= target_end:
+                    break
+
+    batch = candidates[target_start:target_start + page_size]
+    result = {"messages": batch, "page": page, "has_more": len(candidates) > target_start + len(batch)}
+    _response_cache_set(cache_key, result)
+    return result
 
 
 @app.get("/api/messages/{account}/{uid}")
@@ -1247,6 +1547,20 @@ def get_message(account: str, uid: str, folder: str = Query("INBOX")):
     cached = cache_get(ck)
     if cached is not None:
         return cached
+    # Check SQLite cache
+    try:
+        db = sqlite3.connect(str(DB_PATH))
+        row = db.execute(
+            "SELECT data FROM msg_detail_cache WHERE account=? AND uid=? AND fetched_at>?",
+            (account, uid, time.time() - 600),
+        ).fetchone()
+        db.close()
+        if row:
+            result = json.loads(row[0])
+            cache_set(ck, result)
+            return result
+    except Exception:
+        pass
     acc = get_account(account)
     with open_mailbox(acc) as mailbox:
         mailbox.folder.set(folder)
@@ -1282,6 +1596,16 @@ def get_message(account: str, uid: str, folder: str = Query("INBOX")):
             "attachments": attachments,
         }
         cache_set(ck, result)
+        try:
+            db = sqlite3.connect(str(DB_PATH))
+            db.execute(
+                "INSERT OR REPLACE INTO msg_detail_cache (account, uid, data, fetched_at) VALUES (?, ?, ?, ?)",
+                (account, uid, json.dumps(result, ensure_ascii=False, default=str), time.time()),
+            )
+            db.commit()
+            db.close()
+        except Exception:
+            pass
         return result
 
 
@@ -1508,6 +1832,7 @@ def update_flags(account: str, uid: str, body: FlagUpdate, folder: str = Query("
         if flags_to_del:
             mailbox.flag(uid, flags_to_del, False)
     cache_invalidate(account, folder, uid)
+    _response_cache_invalidate("messages:" + account)
     return {"ok": True}
 
 
@@ -1528,6 +1853,8 @@ def delete_message(account: str, uid: str, folder: str = Query("INBOX")):
     cache_invalidate(account, folder, uid)
     if dest:
         cache_invalidate(account, dest)
+    _response_cache_invalidate("messages:" + account)
+    _response_cache_invalidate("folders:" + account)
     return {"ok": True, "destination_folder": dest}
 
 
@@ -1571,6 +1898,7 @@ def archive_message(account: str, uid: str, folder: str = Query("INBOX")):
         dest = _folder_candidates(mailbox, "Archive", ["INBOX.Archive", "Archived", "Archives"])
         mailbox.move(uid, dest)
     cache_invalidate(account, folder, uid)
+    _response_cache_invalidate("messages:" + account)
     return {"ok": True, "destination_folder": dest}
 
 
@@ -1584,6 +1912,7 @@ def spam_message(account: str, uid: str, folder: str = Query("INBOX")):
         dest = _folder_candidates(mailbox, "Spam", ["Junk", "INBOX.Spam", "INBOX.Junk", "INBOX.spam", "Junk E-mail"])
         mailbox.move(uid, dest)
     cache_invalidate(account, folder, uid)
+    _response_cache_invalidate("messages:" + account)
     return {"ok": True, "destination_folder": dest}
 
 
@@ -1597,6 +1926,7 @@ def snooze_message(account: str, uid: str, folder: str = Query("INBOX")):
         dest = _folder_candidates(mailbox, "Snoozed", ["SNOOZED", "Waiting", "WAITING"])
         mailbox.move(uid, dest)
     cache_invalidate(account, folder, uid)
+    _response_cache_invalidate("messages:" + account)
     return {"ok": True, "destination_folder": dest}
 
 
@@ -1702,6 +2032,11 @@ _PROMO_SUBJECT = ("newsletter", "unsubscribe", "désabonnement", "se désabonner
 _PURCHASE_SUBJECT = ("commande", "order", "facture", "invoice", "reçu", "receipt", "paiement",
                      "payment", "livraison", "expédié", "shipped", "achat", "purchase")
 _PURCHASE_LOCALPARTS = ("orders", "order", "receipt", "receipts", "billing", "invoice")
+_NEWSLETTER_DOMAINS = ("substack.com", "medium.com", "mailchi.mp", "sendgrid.net", "beehiiv.com",
+                       "convertkit.com", "mailerlite.com", "brevo.com")
+_NEWSLETTER_LOCALPARTS = ("newsletter", "digest", "weekly", "mailer")
+_NEWSLETTER_SUBJECT = ("newsletter", "digest", "weekly", "briefing", "unsubscribe",
+                       "désabonnement", "se désabonner", "votre récap")
 
 
 def _categorize(from_addr: str, from_name: str, subject: str) -> str:
@@ -1730,6 +2065,30 @@ def _categorize(from_addr: str, from_name: str, subject: str) -> str:
     if any(k in name for k in ("newsletter", "news", "digest", "media", "studio")):
         return "promotions"
     return "primary"
+
+
+def _is_newsletter_entry(entry: dict, manual_domains: Optional[set] = None) -> bool:
+    address = (entry.get("from_addr") or "").lower()
+    name = (entry.get("from_name") or "").lower()
+    subject = (entry.get("subject") or "").lower()
+    parsed_name, parsed_address = parseaddr(address)
+    if parsed_address:
+        address = parsed_address.lower()
+        if not name:
+            name = parsed_name.lower()
+    domain = address.rsplit("@", 1)[-1] if "@" in address else address
+    local = address.split("@", 1)[0] if "@" in address else ""
+    if manual_domains and domain in manual_domains:
+        return True
+    if entry.get("list_unsubscribe") or entry.get("list_id"):
+        return True
+    if any(part == local or part == local.split("+", 1)[0] for part in _NEWSLETTER_LOCALPARTS):
+        return True
+    if any(value in domain for value in _NEWSLETTER_DOMAINS):
+        return True
+    if any(value in subject for value in _NEWSLETTER_SUBJECT):
+        return True
+    return any(value in name for value in ("newsletter", "digest", "weekly"))
 
 
 # THREAD=REFERENCES : parse la réponse parenthésée de Dovecot
@@ -1856,6 +2215,37 @@ def _compute_threads(account: str, mailbox, folder: str, messages: list) -> dict
 
 
 _STATIC_BLOCKLIST = {"config.json", "config.example.json", "main.py", "requirements.txt", "start.sh", ".gitignore"}
+
+
+@app.get("/api/settings")
+def get_settings():
+    return _get_settings()
+
+
+@app.put("/api/settings")
+def put_settings(data: dict = Body(...)):
+    _set_settings(data)
+    return {"ok": True}
+
+
+@app.get("/api/newsletters")
+def get_newsletters():
+    return {"domains": _get_newsletter_domains()}
+
+
+@app.post("/api/newsletters")
+def add_newsletter(data: dict = Body(...)):
+    domain = (data.get("domain") or "").strip().lower()
+    if not domain:
+        raise HTTPException(400, "domain required")
+    _add_newsletter_domain(domain)
+    return {"ok": True}
+
+
+@app.delete("/api/newsletters/{domain}")
+def remove_newsletter(domain: str):
+    _remove_newsletter_domain(domain.strip().lower())
+    return {"ok": True}
 
 
 @app.get("/{filename:path}")
