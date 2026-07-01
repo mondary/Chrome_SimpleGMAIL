@@ -4246,6 +4246,20 @@
           ${connected&&account.id!==currentAccount?`<button type="button" onclick="closeSettings();onAccountChange('${escapeAttr(account.id)}')" class="preset-btn">Utiliser ce compte</button>`:''}
         </div>
         <label class="block text-xs mb-3"><span style="color:#80868b">Adresse e-mail / identifiant</span><input id="account-email" type="email" class="settings-select account-edit-input mt-1" value="${escapeAttr(account.email||'')}" required></label>
+        <details class="mb-4 text-xs" style="color:#5f6368">
+          <summary class="cursor-pointer font-medium hover:text-gray-700">Configuration Gmail / Outlook</summary>
+          <div class="mt-2 p-3 rounded-lg leading-relaxed" style="background:#f8f9fa">
+            <strong>Gmail :</strong><br>
+            Serveur IMAP : <code>imap.gmail.com:993</code> SSL<br>
+            Serveur SMTP : <code>smtp.gmail.com:465</code> SSL<br>
+            Mot de passe : utiliser un <strong>Mot de passe d'application</strong> depuis <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:#1a73e8">myaccount.google.com/apppasswords</a><br><br>
+            <strong>Outlook / Hotmail / Live :</strong><br>
+            Serveur IMAP : <code>outlook.office365.com:993</code> SSL<br>
+            Serveur SMTP : <code>smtp.office365.com:587</code> STARTTLS (cocher SSL puis décocher si erreur, le serveur force TLS)<br>
+            Mot de passe : Mot de passe d'application depuis <a href="https://account.live.com/apppasswords" target="_blank" style="color:#1a73e8">account.live.com/apppasswords</a> (si 2FA activé) ou le mot de passe normal.<br><br>
+            ⚠️ <strong>IMAP :</strong> Dans les paramètres du webmail, régler "Suppression via IMAP" sur <strong>"Déplacer dans la corbeille"</strong> pour éviter les pertes accidentelles.
+          </div>
+        </details>
         <div class="grid gap-3">${accountConnectionFormHtml('Réception IMAP','imap',account.imap)}${accountConnectionFormHtml('Envoi SMTP','smtp',account.smtp)}</div>
         <div id="account-save-status" class="text-xs min-h-[18px] mt-4" style="color:#5f6368"></div>
         <div class="flex justify-end mt-2"><button id="account-save-button" type="submit" class="preset-btn active">Enregistrer</button></div>
