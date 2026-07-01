@@ -1139,8 +1139,7 @@ def _relocate_message(account: str, uid: str, source_folder: str, destination_fo
         else:
             mailbox.move(uid, dest)
     cache_invalidate(account, source, uid)
-    if copy_only:
-        cache_invalidate(account, dest)
+    cache_invalidate(account, dest)
     return {"ok": True, "account": account, "uid": str(uid), "source_folder": source, "destination_folder": dest, "copied": copy_only}
 
 
@@ -1211,12 +1210,16 @@ def list_messages(
                 "attachment_count": len(msg.attachments),
                 "snippet": snippet,
                 "message_id": header_value(msg.headers, "message-id"),
+                "in_reply_to": header_value(msg.headers, "in-reply-to"),
+                "references": header_value(msg.headers, "references"),
             })
         # V22 : catégories heuristiques + threading (THREAD=REFERENCES avec repli sujet)
         thread_map = _compute_threads(account, mailbox, folder, msgs)
+        thread_counts = _thread_counts_with_sent(mailbox, folder, msgs, thread_map)
         for m in msgs:
             m["category"] = _categorize(m["from_addr"], m["from_name"], m["subject"])
             m["thread_id"] = thread_map.get(m["uid"], m["uid"])
+            m["thread_count"] = thread_counts.get(m["thread_id"], 1)
         return {"messages": msgs, "page": page}
 
 
@@ -1262,10 +1265,149 @@ def get_message(account: str, uid: str, folder: str = Query("INBOX")):
             "text": msg.text or "",
             "html": msg.html or "",
             "message_id": header_value(msg.headers, "message-id"),
+            "in_reply_to": header_value(msg.headers, "in-reply-to"),
+            "references": header_value(msg.headers, "references"),
             "attachments": attachments,
         }
         cache_set(ck, result)
         return result
+
+
+def _find_sent_folder(mailbox):
+    for sent_name in ("Sent", "INBOX.Sent", "Sent Items", "Boîte d'envoi", "Éléments envoyés"):
+        try:
+            if mailbox.folder.exists(sent_name):
+                return sent_name
+        except Exception:
+            continue
+    return None
+
+
+def _normalize_subject(subj: str) -> str:
+    """Strip Re:/Fwd:/etc. prefixes and normalize for subject-based thread matching."""
+    s = (subj or "").strip().lower()
+    while True:
+        new = re.sub(r"^(re|fwd|fw|sv|tr|aw|wg)\s*:\s*", "", s)
+        if new == s:
+            break
+        s = new
+    return " ".join(s.split())
+
+
+def _thread_counts_with_sent(mailbox, folder: str, messages: list, thread_map: dict) -> dict:
+    """Compte les messages reçus et envoyés appartenant aux threads de l'INBOX."""
+    groups = {}
+    for message in messages:
+        thread_id = thread_map.get(message["uid"], message["uid"])
+        group = groups.setdefault(thread_id, {"count": 0, "ids": set(), "subjects": set(), "sent": set()})
+        group["count"] += 1
+        group["ids"].update(re.findall(r"<[^>]+>", " ".join([
+            message.get("message_id") or "",
+            message.get("in_reply_to") or "",
+            message.get("references") or "",
+        ])))
+        subject = _normalize_subject(message.get("subject") or "")
+        if subject:
+            group["subjects"].add(subject)
+
+    if (folder or "").upper().split(".")[-1] != "INBOX":
+        return {thread_id: group["count"] for thread_id, group in groups.items()}
+    try:
+        related_folders = [item.name for item in mailbox.folder.list() if item.name != folder]
+        for related_folder in related_folders:
+            mailbox.folder.set(related_folder)
+            related_messages = mailbox.fetch(AND(all=True), limit=300, reverse=True, mark_seen=False, bulk=True)
+            for related in related_messages:
+                related_id = header_value(related.headers, "message-id")
+                linked_ids = set(re.findall(r"<[^>]+>", " ".join([
+                    related_id,
+                    header_value(related.headers, "in-reply-to"),
+                    header_value(related.headers, "references"),
+                ])))
+                subject = _normalize_subject(related.subject or "")
+                for group in groups.values():
+                    if (linked_ids & group["ids"]) or (subject and subject in group["subjects"]):
+                        key = (related_folder, str(related.uid))
+                        if key not in group["sent"]:
+                            group["sent"].add(key)
+                            group["count"] += 1
+    except Exception:
+        pass
+    return {thread_id: group["count"] for thread_id, group in groups.items()}
+
+
+@app.get("/api/thread/{account}/sent")
+def get_thread_sent(
+    account: str,
+    message_ids: str = Query(""),
+    subject: str = Query(""),
+    current_folder: str = Query("INBOX"),
+):
+    """Récupère les messages liés dans tous les autres dossiers du compte."""
+    if _is_demo() or _is_demo_account(account):
+        return {"messages": []}
+    acc = get_account(account)
+    mids = [m.strip() for m in message_ids.split(",") if m.strip()]
+    norm_subj = _normalize_subject(subject)
+    if not mids and not norm_subj:
+        return {"messages": []}
+    out = []
+    try:
+        with open_mailbox(acc) as mailbox:
+            related_folders = [item.name for item in mailbox.folder.list() if item.name != current_folder]
+            for related_folder in related_folders:
+                mailbox.folder.set(related_folder)
+                fetched = mailbox.fetch(AND(all=True), limit=300, reverse=True, mark_seen=False, bulk=True)
+                for msg in fetched:
+                    in_reply_to = header_value(msg.headers, "in-reply-to")
+                    references = header_value(msg.headers, "references")
+                    candidate_message_id = header_value(msg.headers, "message-id")
+                    header_match = mids and any(
+                        mid == candidate_message_id or mid in in_reply_to or mid in references
+                        for mid in mids
+                    )
+                    subj_match = norm_subj and _normalize_subject(msg.subject or "") == norm_subj
+                    if not header_match and not subj_match:
+                        continue
+                    from_name, from_addr = parseaddr(msg.from_)
+                    to_addr = header_value(msg.headers, "to")
+                    snippet = ""
+                    if msg.text:
+                        snippet = " ".join(msg.text.split())[:160]
+                    elif msg.html:
+                        snippet = _strip_html(msg.html)[:160]
+                    attachments = []
+                    for idx, att in enumerate(msg.attachments):
+                        attachments.append({
+                            "index": idx,
+                            "filename": att.filename or "sans-nom",
+                            "content_type": att.content_type,
+                            "size": len(att.payload) if att.payload else 0,
+                            "content_id": att.content_id,
+                        })
+                    out.append({
+                        "account": account,
+                        "uid": str(msg.uid),
+                        "folder": related_folder,
+                        "subject": msg.subject or "(sans objet)",
+                        "from_name": from_name or from_addr,
+                        "from_addr": from_addr,
+                        "to": to_addr,
+                        "date": msg.date.isoformat() if msg.date else None,
+                        "seen": "\\Seen" in [str(f) for f in msg.flags],
+                        "flagged": "\\Flagged" in [str(f) for f in msg.flags],
+                        "text": msg.text or "",
+                        "html": msg.html or "",
+                        "message_id": header_value(msg.headers, "message-id"),
+                        "has_attachments": len(msg.attachments) > 0,
+                        "attachment_count": len(msg.attachments),
+                        "snippet": snippet,
+                        "attachments": attachments,
+                        "is_sent": _folder_simple_key(related_folder) == "SENT",
+                    })
+    except Exception as e:
+        return {"messages": [], "error": str(e)}
+    return {"messages": out}
 
 
 @app.get("/api/messages/{account}/{uid}/attachment/{index}")
@@ -1364,9 +1506,17 @@ def delete_message(account: str, uid: str, folder: str = Query("INBOX")):
     acc = get_account(account)
     with open_mailbox(acc) as mailbox:
         mailbox.folder.set(folder)
-        mailbox.delete(uid)
+        trash_key = _folder_simple_key(folder)
+        if trash_key == "TRASH":
+            mailbox.delete(uid)
+            dest = None
+        else:
+            dest = _folder_candidates(mailbox, "Trash", ["INBOX.Trash", "INBOX.Corbeille", "Corbeille", "Deleted", "INBOX.Deleted Messages"])
+            mailbox.move(uid, dest)
     cache_invalidate(account, folder, uid)
-    return {"ok": True}
+    if dest:
+        cache_invalidate(account, dest)
+    return {"ok": True, "destination_folder": dest}
 
 
 @app.post("/api/messages/{account}/{uid}/move")
@@ -1384,11 +1534,19 @@ def copy_message(account: str, uid: str, body: MoveMessageRequest, folder: str =
 
 
 def _folder_candidates(mailbox, preferred: str, aliases: list[str]):
+    existing = {}
+    for f in mailbox.folder.list():
+        existing[f.name.lower()] = f.name
     for name in [preferred, *aliases]:
-        if mailbox.folder.exists(name):
-            return name
+        real = existing.get(name.lower())
+        if real:
+            return real
     mailbox.folder.create(preferred)
     return preferred
+
+
+def _folder_simple_key(name: str) -> str:
+    return (name or "").upper().replace("/", ".").split(".").pop()
 
 
 @app.post("/api/messages/{account}/{uid}/archive")
@@ -1411,7 +1569,7 @@ def spam_message(account: str, uid: str, folder: str = Query("INBOX")):
     acc = get_account(account)
     with open_mailbox(acc) as mailbox:
         mailbox.folder.set(folder)
-        dest = _folder_candidates(mailbox, "Spam", ["Junk", "INBOX.Spam", "INBOX.Junk"])
+        dest = _folder_candidates(mailbox, "Spam", ["Junk", "INBOX.Spam", "INBOX.Junk", "INBOX.spam", "Junk E-mail"])
         mailbox.move(uid, dest)
     cache_invalidate(account, folder, uid)
     return {"ok": True, "destination_folder": dest}
@@ -1599,7 +1757,7 @@ def _subject_thread_fallback(messages: list) -> dict:
     """Repli : groupe par sujet normalisé (Re:/Fwd:/Sv: retirés)."""
     groups = {}
     for m in messages:
-        s = re.sub(r"(?i)^(re|fwd|fw|sv|tr)\s*:\s*", "", (m.get("subject") or "").strip())
+        s = re.sub(r"(?i)^(?:(?:re|fwd|fw|sv|tr)\s*:\s*)+", "", (m.get("subject") or "").strip())
         s = re.sub(r"\s+", " ", s).strip().lower()
         key = s or m["uid"]
         groups.setdefault(key, []).append(m["uid"])
@@ -1612,8 +1770,8 @@ def _subject_thread_fallback(messages: list) -> dict:
 
 
 def _compute_threads(account: str, mailbox, folder: str, messages: list) -> dict:
-    """Retourne {uid: thread_id}. Tente THREAD=REFERENCES, repli par sujet."""
-    ck = (account, folder)
+    """Retourne {uid: thread_id} en fusionnant IMAP, en-têtes de réponse et sujet."""
+    ck = (account, folder, "v2", tuple(m["uid"] for m in messages))
     cached = _THREAD_CACHE.get(ck)
     if cached and time.time() - cached[0] < _THREAD_TTL:
         return cached[1]
@@ -1632,8 +1790,54 @@ def _compute_threads(account: str, mailbox, folder: str, messages: list) -> dict
     except Exception:
         mapping = {}
 
-    if not mapping:
-        mapping = _subject_thread_fallback(messages)
+    # Certains serveurs retournent des numéros de séquence (ou une cartographie
+    # partielle) pour THREAD. On réconcilie donc toujours les résultats avec les
+    # véritables en-têtes RFC et l'objet normalisé de la page chargée.
+    uids = {str(m["uid"]) for m in messages}
+    parent = {uid: uid for uid in uids}
+
+    def find(uid):
+        while parent[uid] != uid:
+            parent[uid] = parent[parent[uid]]
+            uid = parent[uid]
+        return uid
+
+    def union(left, right):
+        if left not in parent or right not in parent:
+            return
+        a, b = find(left), find(right)
+        if a != b:
+            parent[max(a, b)] = min(a, b)
+
+    # Le THREAD brut d'o2switch renvoie ici des numéros de séquence et non des
+    # UID. Les fusionner produirait des conversations arbitraires. On conserve
+    # donc uniquement les signaux RFC stables ci-dessous.
+
+    message_ids = {
+        (m.get("message_id") or "").strip(): str(m["uid"])
+        for m in messages if (m.get("message_id") or "").strip()
+    }
+    for message in messages:
+        uid = str(message["uid"])
+        linked_ids = re.findall(r"<[^>]+>", " ".join([
+            message.get("in_reply_to") or "",
+            message.get("references") or "",
+        ]))
+        for message_id in linked_ids:
+            if message_id in message_ids:
+                union(uid, message_ids[message_id])
+
+    subject_groups = {}
+    for message in messages:
+        subject = re.sub(r"(?i)^(?:(?:re|fwd|fw|sv|tr)\s*:\s*)+", "", (message.get("subject") or "").strip())
+        subject = re.sub(r"\s+", " ", subject).strip().lower()
+        if subject:
+            subject_groups.setdefault(subject, []).append(str(message["uid"]))
+    for group in subject_groups.values():
+        for uid in group[1:]:
+            union(group[0], uid)
+
+    mapping = {uid: find(uid) for uid in uids}
 
     _THREAD_CACHE[ck] = (time.time(), mapping)
     return mapping

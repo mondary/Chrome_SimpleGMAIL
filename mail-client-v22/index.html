@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/icon.png">
   <title>SimpleMail</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -148,20 +149,28 @@
     .mail-item { --mail-actions-bg: #ffffff; }
     .mail-item.mail-read { --mail-actions-bg: #fbfbfc; }
     .mail-item:hover { --mail-actions-bg: #f9fafb; }
-    .mail-item.is-selected,
+    .mail-item.is-selected {
+      background: var(--row-selected-bg, rgba(26,115,232,0.08)) !important;
+      box-shadow: inset 3px 0 0 var(--row-accent, #1a73e8);
+      --mail-actions-bg: var(--row-selected-solid, #edf4fd);
+    }
     .mail-item.is-row-selected {
-      background: rgba(26,115,232,0.08) !important;
-      box-shadow: inset 3px 0 0 #1a73e8;
-      --mail-actions-bg: #edf4fd;
+      background: var(--row-checked-bg, rgba(26,115,232,0.08)) !important;
+      box-shadow: inset 3px 0 0 var(--row-checked-accent, #1a73e8);
+      --mail-actions-bg: var(--row-checked-solid, #edf4fd);
     }
     body.theme-dark .mail-item { --mail-actions-bg: #141414; }
     body.theme-dark .mail-item.mail-read { --mail-actions-bg: #191919; }
     body.theme-dark .mail-item:hover { --mail-actions-bg: #222222; }
-    body.theme-dark .mail-item.is-selected,
+    body.theme-dark .mail-item.is-selected {
+      background: var(--row-selected-dark-bg, rgba(138,180,248,0.12)) !important;
+      box-shadow: inset 3px 0 0 var(--row-accent, #8ab4f8);
+      --mail-actions-bg: var(--row-selected-dark-solid, #242c38);
+    }
     body.theme-dark .mail-item.is-row-selected {
-      background: rgba(138,180,248,0.12) !important;
-      box-shadow: inset 3px 0 0 #8ab4f8;
-      --mail-actions-bg: #242c38;
+      background: var(--row-checked-dark-bg, rgba(138,180,248,0.12)) !important;
+      box-shadow: inset 3px 0 0 var(--row-checked-accent, #8ab4f8);
+      --mail-actions-bg: var(--row-checked-dark-solid, #242c38);
     }
     .sender-favicon {
       width: 20px; height: 20px; border-radius: 4px; object-fit: contain;
@@ -721,7 +730,7 @@
     body.theme-dark .thread-badge { background: rgba(124,172,248,0.18); color: #8ac4ff; }
 
     /* Collapsible messages inside a thread */
-    .thread-msg { border-bottom: 1px solid rgba(0,0,0,0.06); }
+    .thread-msg { --thread-content-indent: 74px; border-bottom: 1px solid rgba(0,0,0,0.06); }
     .thread-msg:last-child { border-bottom: 0; }
     body.theme-dark .thread-msg { border-color: rgba(255,255,255,0.06); }
     .thread-msg-head {
@@ -737,8 +746,9 @@
     .thread-msg-subject { font-size: 13px; font-weight: 600; color: #202124; transition: color 150ms; }
     body.theme-dark .thread-msg-subject { color: #e8e8e8; }
     .thread-msg-preview { font-size: 12px; color: #5f6368; flex: 1; min-width: 0; }
+    .thread-msg:not(.collapsed) .thread-msg-preview { display: none; }
     body.theme-dark .thread-msg-preview { color: #9aa0a6; }
-    .thread-msg-body { padding: 4px 0 18px 52px; }
+    .thread-msg-body { padding: 4px 0 18px var(--thread-content-indent); }
     .mail-body-copy {
       font-family: var(--mail-body-font, var(--font-mono, 'JetBrains Mono', 'Space Mono', 'Iosevka', monospace));
       font-size: 15px;
@@ -749,7 +759,7 @@
 
     /* HTML email iframe */
     .html-mail-frame {
-      width: calc(100% + 52px); margin-left: -52px;
+      width: 100%; margin-left: 0;
       min-height: 120px; border: none; border-radius: 0;
       background: transparent; overflow: hidden;
     }
@@ -827,11 +837,20 @@
     .immersive-input::placeholder { color: #999; }
     body.theme-dark .immersive-input::placeholder { color: #777; }
     .immersive-send-btn {
-      background: #202124; color: #fff;
+      background: #1a73e8; color: #fff;
     }
-    body.theme-dark .immersive-send-btn { background: #e8e8e8; color: #141414; }
+    .immersive-send-btn:hover { background: #1765cc; }
+    .immersive-send-btn:disabled { opacity: 0.55; cursor: wait; transform: none; }
+    body.theme-dark .immersive-send-btn { background: #1a73e8; color: #fff; }
     .immersive-star-on { color: #f59e0b !important; }
     .immersive-star-on .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
+    .mail-image-gallery { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:24px; }
+    .mail-image-thumb { width:100%; height:180px; object-fit:cover; border-radius:12px; cursor:zoom-in; background:#f1f3f4; transition:opacity 150ms,transform 150ms; }
+    .mail-image-thumb:hover { opacity:.9; transform:scale(1.01); }
+    #image-lightbox { background:rgba(0,0,0,.96); }
+    #image-lightbox img { max-width:calc(100vw - 160px); max-height:calc(100vh - 100px); object-fit:contain; user-select:none; }
+    .lightbox-btn { width:44px;height:44px;border-radius:999px;color:#fff;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer; }
+    .lightbox-btn:hover { background:rgba(255,255,255,.2); }
 
     /* Slide transitions */
     .im-slide {
@@ -844,6 +863,15 @@
     .im-title { font-size: clamp(2.1rem, 4.8vw, 3.35rem); line-height: 1.1; letter-spacing: -0.04em; font-weight: 500; }
     .im-article { font-size: 1.06rem; line-height: 2; color: inherit; opacity: 0.95; }
     .im-article p { margin-bottom: 1.15em; }
+    .im-thread-message + .im-thread-message {
+      margin-top: 3rem; padding-top: 3rem; border-top: 1px solid rgba(17,17,17,0.12);
+    }
+    .im-thread-meta { margin-bottom: 1.5rem; color: #777; font-size: 0.78rem; letter-spacing: 0.01em; }
+    .im-thread-meta strong { color: #303030; font-weight: 600; }
+    .quoted-history-toggle { margin-top:1.25rem; padding:3px 11px; border-radius:999px; background:#f1f3f4; color:#777; font-size:15px; line-height:1; cursor:pointer; }
+    .quoted-history-toggle:hover { background:#e5e7eb; color:#333; }
+    .quoted-history { margin-top:1rem; padding-left:1rem; border-left:2px solid #e5e7eb; color:#777; font-size:.9em; }
+    .quoted-history.hidden { display:none; }
     .im-drop-cap::first-letter {
       font-size: 3.2em; font-weight: 500; float: left;
       line-height: 0.85; padding: 0.08em 0.12em 0 0; color: inherit;
@@ -985,6 +1013,7 @@
     .resize-handle:hover, .resize-handle.active { background: rgba(26,115,232,0.4); }
     .resize-handle-drawer { right: -3px; }
     .resize-handle-list { right: -3px; top: 0; bottom: 0; }
+    .resize-handle-list-left { left: -3px; top: 0; bottom: 0; }
   </style>
 </head>
 <body class="h-screen w-screen flex flex-col overflow-hidden relative theme-white">
@@ -1050,9 +1079,9 @@
           <div id="thread-toggle-all" class="icon-btn-container" title="Replier toute la conversation" onclick="toggleAllThreadMsgs()"><span id="thread-toggle-icon" class="material-symbols-outlined">unfold_less</span></div>
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
-          <div class="icon-btn-container" title="Archiver" onclick="archiveCurrent()"><span class="material-symbols-outlined">archive</span></div>
-          <div class="icon-btn-container" title="Signaler comme spam" onclick="reportSpamCurrent()"><span class="material-symbols-outlined">report</span></div>
-          <div class="icon-btn-container" title="Supprimer" onclick="deleteCurrent()"><span class="material-symbols-outlined">delete</span></div>
+          <div id="header-folder-primary-action" class="icon-btn-container" title="Archiver" onclick="archiveCurrent()"><span class="material-symbols-outlined">archive</span></div>
+          <div id="header-spam-action" class="icon-btn-container" title="Signaler comme spam" onclick="reportSpamCurrent()"><span class="material-symbols-outlined">report</span></div>
+          <div id="header-delete-action" class="icon-btn-container" title="Supprimer" onclick="deleteCurrent()"><span class="material-symbols-outlined">delete</span></div>
           <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
           <div class="icon-btn-container" title="Marquer comme non lu" onclick="toggleUnreadCurrent()"><span class="material-symbols-outlined">mail</span></div>
           <div class="icon-btn-container" title="Mettre en attente" onclick="snoozeCurrent()"><span class="material-symbols-outlined">schedule</span></div>
@@ -1094,22 +1123,17 @@
     <main id="inbox-zero-view" class="absolute inset-0 flex flex-col justify-center items-center p-8 transition-all duration-300">
       <div id="image-theme-badge-container" class="absolute bottom-8 left-8">
         <button id="inbox-zero-badge" onclick="loadMessages(true)" class="bg-black/25 text-white/90 border border-white/10 hover:bg-black/35 backdrop-blur-md px-4 py-2.5 rounded-lg text-xs font-normal tracking-wide transition-all select-none">
-          Aucun nouveau message <span class="opacity-60 text-[10px] ml-1.5">Actualiser</span>
+          <span id="image-empty-label">Aucun nouveau message</span> <span class="opacity-60 text-[10px] ml-1.5">Actualiser</span>
         </button>
       </div>
       <div id="white-theme-empty-state" class="flex flex-col items-center justify-center text-center max-w-sm hidden">
         <div class="w-20 h-20 mb-6 text-gray-200 select-none flex items-center justify-center">
-          <svg viewBox="0 0 24 24" width="72" height="72" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="4" width="20" height="16" rx="2" />
-            <path d="M22 6l-10 7L2 6" />
-            <circle cx="18" cy="14" r="3" stroke-width="1" class="text-blue-400" />
-            <path d="M16.5 14l1 1 2-2" stroke-width="1" class="text-blue-400" />
-          </svg>
+          <span id="empty-icon" class="material-symbols-outlined" style="font-size:72px;font-weight:200">inbox</span>
         </div>
         <h2 id="empty-title" class="text-base font-medium text-gray-800 mb-2">Votre boîte est propre</h2>
         <p id="empty-description" class="text-xs text-gray-400 leading-relaxed mb-6">Aucun nouveau message pour le moment.</p>
-        <button onclick="loadMessages(true)" class="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-xs font-medium text-gray-600 transition-colors">
-          Actualiser la boîte de réception
+        <button id="empty-refresh-button" onclick="loadMessages(true)" class="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-xs font-medium text-gray-600 transition-colors">
+          Actualiser
         </button>
       </div>
     </main>
@@ -1117,6 +1141,7 @@
     <!-- State 2: Inbox List View -->
     <main id="inbox-list-view" class="absolute inset-0 flex flex-col items-center px-6 pb-6 pt-2 overflow-hidden opacity-0 pointer-events-none transition-all duration-300">
       <div id="mail-list-container" class="glass-container w-full flex-1 rounded-2xl shadow-2xl flex flex-col overflow-hidden relative" style="max-width:var(--list-max-w, 56rem)">
+        <div class="resize-handle resize-handle-list-left" onmousedown="startResizeListLeft(event)"></div>
         <div class="resize-handle resize-handle-list" onmousedown="startResizeList(event)"></div>
         <!-- Zone de scroll unique : la section newsletters défile et passe sous le list-header sticky -->
         <div class="flex-1 overflow-y-auto">
@@ -1147,8 +1172,8 @@
             <div id="lh-selection" class="hidden items-center gap-1.5">
               <div class="icon-btn-container" title="Sélectionner tout" onclick="toggleSelectAll()"><span class="material-symbols-outlined" id="select-all-icon">check_box_outline_blank</span></div>
               <span id="selection-count" class="text-sm font-medium px-2"></span>
-              <div class="icon-btn-container" title="Archiver" onclick="bulkAction('archive')"><span class="material-symbols-outlined">archive</span></div>
-              <div class="icon-btn-container" title="Supprimer" onclick="bulkAction('delete')"><span class="material-symbols-outlined">delete</span></div>
+              <div id="bulk-folder-action" class="icon-btn-container" title="Archiver" onclick="bulkAction('archive')"><span class="material-symbols-outlined">archive</span></div>
+              <div id="bulk-delete-action" class="icon-btn-container" title="Supprimer" onclick="bulkAction('delete')"><span class="material-symbols-outlined">delete</span></div>
               <div class="icon-btn-container" title="Marquer comme lu" onclick="bulkAction('read')"><span class="material-symbols-outlined">drafts</span></div>
               <div class="icon-btn-container" title="Effacer la sélection" onclick="clearSelection()"><span class="material-symbols-outlined">close</span></div>
             </div>
@@ -1173,6 +1198,7 @@
     <!-- State 3: Conversation View -->
     <main id="conversation-view" class="absolute inset-0 flex flex-col items-center px-6 pb-6 pt-2 overflow-hidden opacity-0 pointer-events-none transition-all duration-300">
       <div class="w-full bg-white flex-1 rounded-2xl p-6 lg:p-10 flex flex-col overflow-y-auto relative" id="conversation-card" style="max-width:var(--conv-max-w, 56rem)">
+        <div class="resize-handle resize-handle-list-left" onmousedown="startResizeConversationLeft(event)"></div>
         <div class="resize-handle resize-handle-list" onmousedown="startResizeConversation(event)"></div>
         <div id="thread-content" class="w-full flex flex-col"></div>
       </div>
@@ -1287,12 +1313,20 @@
         </div>
       </div>
       <div class="flex-1 max-w-lg flex items-center immersive-reply-box rounded-xl p-1.5">
-        <input type="text" id="immersive-reply" placeholder="Répondre rapidement..." class="immersive-input flex-1 bg-transparent px-3 py-1.5 text-sm outline-none">
-        <button onclick="immersiveSendReply()" class="immersive-send-btn p-2 rounded-lg transition-transform hover:scale-105 active:scale-95 shrink-0 flex items-center justify-center">
+        <input type="text" id="immersive-reply" placeholder="Répondre rapidement..." onkeydown="handleImmersiveReplyKeydown(event)" class="immersive-input flex-1 bg-transparent px-3 py-1.5 text-sm outline-none">
+        <button id="immersive-send-btn" onclick="immersiveSendReply()" title="Envoyer (⌘ Entrée)" class="immersive-send-btn p-2 rounded-lg transition-transform hover:scale-105 active:scale-95 shrink-0 flex items-center justify-center">
           <span class="material-symbols-outlined" style="font-size:18px;color:inherit">send</span>
         </button>
       </div>
     </div>
+  </div>
+
+  <div id="image-lightbox" class="fixed inset-0 z-[100] hidden items-center justify-center" onclick="if(event.target===this) closeImageLightbox()">
+    <button class="lightbox-btn absolute top-6 right-6" onclick="closeImageLightbox()" title="Fermer (Échap)"><span class="material-symbols-outlined">close</span></button>
+    <button id="lightbox-prev" class="lightbox-btn absolute left-6" onclick="stepImageLightbox(-1)" title="Image précédente"><span class="material-symbols-outlined">chevron_left</span></button>
+    <img id="lightbox-image" alt="Image du message en plein écran">
+    <button id="lightbox-next" class="lightbox-btn absolute right-6" onclick="stepImageLightbox(1)" title="Image suivante"><span class="material-symbols-outlined">chevron_right</span></button>
+    <div id="lightbox-counter" class="absolute bottom-6 text-white/70 text-xs font-medium tracking-widest"></div>
   </div>
 
   <!-- ================= FLOATING ACTION BUTTON (frosted glass, matches inbox-zero badge) ================= -->
@@ -1460,6 +1494,10 @@
       const color = categoryColors[id] || DEFAULT_CATEGORY_COLORS[id] || '#1a73e8';
       return `--category-color:${color};--category-hover-bg:${colorWithAlpha(color,.08)};--category-active-bg:${colorWithAlpha(color,.12)};--category-dark-bg:${colorWithAlpha(color,.18)}`;
     }
+    function categoryRowStyle(id){
+      const color = categoryColors[id] || DEFAULT_CATEGORY_COLORS[id] || '#1a73e8';
+      return `--row-accent:${color};--row-selected-bg:${colorWithAlpha(color,.10)};--row-selected-solid:${colorWithAlpha(color,.10)};--row-selected-dark-bg:${colorWithAlpha(color,.20)};--row-selected-dark-solid:${colorWithAlpha(color,.20)}`;
+    }
     function setCategoryColor(id, color){
       if(!DEFAULT_CATEGORY_COLORS[id] || !/^#[0-9a-f]{6}$/i.test(color)) return;
       categoryColors[id] = color;
@@ -1534,6 +1572,7 @@
         starred: !!m.flagged, unread: !m.seen,
         category: m.category || 'primary',
         threadId: m.thread_id ? (m.account + ':' + m.thread_id) : (m.account + ':' + m.uid),
+        threadCount: Number(m.thread_count) || 1,
         snippet: m.snippet || '',
         hasAttachments: !!m.has_attachments,
         attachmentCount: m.attachment_count || 0,
@@ -1625,6 +1664,21 @@
     function folderKey(name){ return (name||'').toUpperCase().split(/[/.]/).pop(); }
     function folderLabel(name){ const k=folderKey(name); return (FOLDER_META[k] && FOLDER_META[k].label) || name; }
     function folderIcon(name){ const k=folderKey(name); return (FOLDER_META[k] && FOLDER_META[k].icon) || 'label'; }
+    function emptyFolderState(){
+      const states={
+        INBOX:{icon:'inbox',title:'Boîte de réception vide',description:'Aucun message dans la boîte de réception.',badge:'Aucun message reçu',action:'Actualiser la boîte de réception'},
+        SENT:{icon:'send',title:'Aucun message envoyé',description:'Les messages que vous envoyez apparaîtront ici.',badge:'Aucun message envoyé',action:'Actualiser les messages envoyés'},
+        DRAFTS:{icon:'drafts',title:'Aucun brouillon',description:'Vos messages enregistrés sans être envoyés apparaîtront ici.',badge:'Aucun brouillon',action:'Actualiser les brouillons'},
+        TRASH:{icon:'delete',title:'La corbeille est vide',description:'Aucun message supprimé.',badge:'Corbeille vide',action:'Actualiser la corbeille'},
+        SPAM:{icon:'report',title:'Aucun spam',description:'Aucun message indésirable dans ce dossier.',badge:'Aucun spam',action:'Actualiser les spams'},
+        JUNK:{icon:'report',title:'Aucun spam',description:'Aucun message indésirable dans ce dossier.',badge:'Aucun spam',action:'Actualiser les spams'},
+        ARCHIVE:{icon:'archive',title:'Aucun message archivé',description:'Les messages archivés apparaîtront ici.',badge:'Aucune archive',action:'Actualiser les archives'},
+        SNOOZED:{icon:'schedule',title:'Aucun message en attente',description:'Les messages mis en attente apparaîtront ici.',badge:'Aucun message en attente',action:'Actualiser'},
+        SCHEDULED:{icon:'event',title:'Aucun message planifié',description:'Les messages programmés apparaîtront ici.',badge:'Aucun message planifié',action:'Actualiser'},
+      };
+      const key=folderKey(currentFolder);
+      return states[key]||{icon:folderIcon(currentFolder),title:`${folderLabel(currentFolder)} est vide`,description:'Aucun message dans ce dossier.',badge:'Dossier vide',action:`Actualiser ${folderLabel(currentFolder)}`};
+    }
     function findServerFolder(...keys){ return folders.find(f => keys.includes(folderKey(f.name))); }
     function folderNavItem(folder, fallbackLabel, fallbackIcon){
       if (folder) {
@@ -1772,7 +1826,7 @@
       if(currentSpecial==='starred') return 'Suivis';
       if(currentFolder==='INBOX' && cat) return cat;
       if(currentFolder==='INBOX') return 'Primary';
-      const f=allFolders.find(f=>f.name===currentFolder);
+      const f=folders.find(f=>f.name===currentFolder);
       return f ? f.name : currentFolder;
     }
     function updateSearchContext(context){
@@ -1856,6 +1910,9 @@
           index: a.index, url: `/api/messages/${email.account}/${email.uid}/attachment/${a.index}?folder=${encodeURIComponent(currentFolder)}`
         }));
         email.longDate = fmtLong(d.date);
+        email.messageId = d.message_id || '';
+        email.inReplyTo = d.in_reply_to || '';
+        email.references = d.references || '';
         email._detail = true;
       } catch (e) { email.text = email.snippet; email._detail = true; }
       return email;
@@ -1954,6 +2011,48 @@
         : `<p></p>`;
       return `<div class="mail-body-copy">${body}</div>`;
     }
+    function splitQuotedPlainText(plain){
+      const markers=[
+        /(?:^|\n)\s*(?:Le|On)\s+.{1,300}?(?:a écrit|wrote)\s*:?\s*(?:\n|$)/i,
+        /(?:^|\n)\s*>/,
+        /(?:^|\n)\s*-{2,}\s*(?:Message (?:transféré|d'origine)|Original Message)\s*-{2,}/i,
+      ];
+      const indexes=markers.map(regex=>plain.search(regex)).filter(index=>index>=0);
+      const index=indexes.length?Math.min(...indexes):-1;
+      return {
+        visible:(index>=0?plain.slice(0,index):plain).replace(/\n{3,}/g,'\n\n').trim(),
+        quoted:(index>=0?plain.slice(index):'').replace(/^\s*>+\s?/gm,'').replace(/\n{3,}/g,'\n\n').trim(),
+      };
+    }
+    function cleanThreadPreview(text){
+      const normalized=(text||'').replace(/\s+/g,' ').trim();
+      const marker=normalized.search(/\s(?:Le|On)\s+.{1,220}?(?:a écrit|wrote)\s*:/i);
+      return (marker>=0?normalized.slice(0,marker):normalized).replace(/\s*>.*$/,'').trim();
+    }
+    function displayThreadSubject(subject){
+      const normalized=(subject||'').replace(/^(?:(?:re|fwd|fw|sv|tr|aw|wg)\s*:\s*)+/i,'').trim();
+      return normalized||'(sans objet)';
+    }
+    let quotedHistorySequence=0;
+    function proseParagraphs(text){
+      return text
+        ? text.split(/\n{2,}/).map(p => `<p>${escapeHtml(p).replace(/\n/g,'<br>')}</p>`).join('')
+        : '<p></p>';
+    }
+    function toggleQuotedHistory(id,button){
+      const quoted=document.getElementById(id); if(!quoted) return;
+      const show=quoted.classList.contains('hidden');
+      quoted.classList.toggle('hidden',!show);
+      button.textContent=show?'−':'•••';
+      button.title=show?'Masquer le texte cité':'Afficher le texte cité';
+      button.setAttribute('aria-expanded',String(show));
+    }
+    function simplifiedMessageProse(e){
+      const plain = (e.text && e.text.trim()) ? e.text : (e.html ? stripHtmlTags(e.html) : (e.snippet || ''));
+      const {visible,quoted}=splitQuotedPlainText(plain);
+      const quoteId=`quoted-history-${++quotedHistorySequence}`;
+      return `<div class="mail-body-copy">${proseParagraphs(visible)}${quoted?`<button class="quoted-history-toggle" onclick="toggleQuotedHistory('${quoteId}',this)" title="Afficher le texte cité" aria-expanded="false">•••</button><div id="${quoteId}" class="quoted-history hidden">${proseParagraphs(quoted)}</div>`:''}</div>`;
+    }
     function attachmentsHtml(e){
       if(!e.attachments || !e.attachments.length) return '';
       const chips = e.attachments.map(a => {
@@ -1966,10 +2065,55 @@
       }).join('');
       return `<div class="mt-5"><div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">${e.attachments.length} pièce${e.attachments.length>1?'s':''} jointe${e.attachments.length>1?'s':''}</div><div class="flex flex-wrap gap-2">${chips}</div></div>`;
     }
+    const mailImageGalleries=new Map();
+    function mailImageSources(e){
+      const sources=[];
+      if(e.html){
+        const parsed=new DOMParser().parseFromString(e.html,'text/html');
+        parsed.querySelectorAll('img').forEach(image=>{
+          const src=normalizeNewsletterImageUrl(e,image.getAttribute('src'));
+          const width=parseInt(image.getAttribute('width')||'0',10)||0;
+          const height=parseInt(image.getAttribute('height')||'0',10)||0;
+          if(src && !(width&&width<=8) && !(height&&height<=8)) sources.push(src);
+        });
+      }
+      (e.attachments||[]).filter(attachment=>attachment.type==='image').forEach(attachment=>sources.push(attachment.url));
+      return [...new Set(sources)];
+    }
+    function mailImageGalleryHtml(e){
+      const sources=mailImageSources(e); if(!sources.length) return '';
+      const key=`${e.account}:${e.uid}`; mailImageGalleries.set(key,sources);
+      return `<div class="mail-image-gallery">${sources.map((src,index)=>`<img src="${escapeAttr(src)}" class="mail-image-thumb" loading="lazy" onclick="openMailImageGallery('${escapeAttr(key)}',${index})" alt="Image ${index+1} du message">`).join('')}</div>`;
+    }
+    let lightboxImages=[], lightboxIndex=0;
+    function openMailImageGallery(key,index){ openImageLightbox(mailImageGalleries.get(key)||[],index); }
+    function openImageLightbox(images,index=0){
+      lightboxImages=[...new Set((images||[]).filter(Boolean))]; if(!lightboxImages.length) return;
+      lightboxIndex=Math.max(0,Math.min(index,lightboxImages.length-1));
+      const box=document.getElementById('image-lightbox'); box.classList.remove('hidden'); box.classList.add('flex');
+      renderImageLightbox();
+    }
+    function renderImageLightbox(){
+      document.getElementById('lightbox-image').src=lightboxImages[lightboxIndex]||'';
+      document.getElementById('lightbox-counter').textContent=lightboxImages.length>1?`${lightboxIndex+1} / ${lightboxImages.length}`:'';
+      document.getElementById('lightbox-prev').classList.toggle('hidden',lightboxImages.length<2);
+      document.getElementById('lightbox-next').classList.toggle('hidden',lightboxImages.length<2);
+    }
+    function stepImageLightbox(direction){ if(lightboxImages.length<2) return; lightboxIndex=(lightboxIndex+direction+lightboxImages.length)%lightboxImages.length; renderImageLightbox(); }
+    function closeImageLightbox(){ const box=document.getElementById('image-lightbox'); box.classList.add('hidden'); box.classList.remove('flex'); document.getElementById('lightbox-image').removeAttribute('src'); }
     function htmlMailBlock(e){
       if(!e.html) return '';
       const fid = 'htmlframe-' + e.uid + '-' + Math.random().toString(36).slice(2,7);
-      let doc = e.html.replace(/src=["']cid:([^"']+)["']/gi, (m, cid) =>
+      const parsed=new DOMParser().parseFromString(e.html,'text/html');
+      const quoteCandidates=[...parsed.body.querySelectorAll('.gmail_quote_container, blockquote.gmail_quote, blockquote[type="cite"]')];
+      const topLevelQuotes=quoteCandidates.filter(element=>!quoteCandidates.some(parent=>parent!==element&&parent.contains(element)));
+      topLevelQuotes.forEach(quote=>{
+        quote.classList.add('simplemail-quoted');
+        const button=parsed.createElement('button'); button.type='button'; button.className='simplemail-quote-toggle';
+        button.textContent='•••'; button.title='Afficher le texte cité';
+        quote.parentNode.insertBefore(button,quote);
+      });
+      let doc = parsed.body.innerHTML.replace(/src=["']cid:([^"']+)["']/gi, (m, cid) =>
         `src="/api/messages/${e.account}/${e.uid}/cid/${cid}?folder=${encodeURIComponent(currentFolder)}"`);
       doc = `<style>
         html, body, body * {
@@ -1979,15 +2123,33 @@
           font-variant-ligatures: none;
         }
         body { line-height: 1.75; background: #ffffff; }
+        .simplemail-quoted { display:none; margin-top:12px; padding-left:12px; border-left:2px solid #e5e7eb; color:#777 !important; }
+        .simplemail-quoted.is-visible { display:block; }
+        .simplemail-quote-toggle { border:0; border-radius:999px; padding:3px 11px; margin:10px 0; background:#f1f3f4; color:#777; cursor:pointer; font:600 14px/1 system-ui,sans-serif !important; }
       </style>` + doc;
       return `<iframe id="${fid}" class="html-mail-frame" sandbox="allow-same-origin allow-popups" srcdoc="${escapeAttr(doc)}" onload="resizeHtmlFrame('${fid}')"></iframe>`;
     }
     function resizeHtmlFrame(id){
       const f = document.getElementById(id); if(!f) return;
       try {
-        const retry = () => { const d=f.contentDocument; if(!d||!d.body) return false; const h=Math.max(d.body.scrollHeight,d.documentElement.scrollHeight); if(h){f.style.height=(h+4)+'px'; return true;} return false; };
+        const retry = () => { const d=f.contentDocument; if(!d||!d.body) return false; const h=Math.max(d.body.scrollHeight,d.documentElement.scrollHeight); if(h){f.style.height=(h+4)+'px'; setupFrameImageLightbox(f); return true;} return false; };
         if(!retry()) setTimeout(retry, 200);
       } catch(e) {}
+    }
+    function setupFrameImageLightbox(frame){
+      const images=[...frame.contentDocument.querySelectorAll('img')].filter(image=>image.src && (image.naturalWidth>8||parseInt(image.getAttribute('width')||'0',10)>8) && (image.naturalHeight>8||parseInt(image.getAttribute('height')||'0',10)>8));
+      const sources=[...new Set(images.map(image=>image.currentSrc||image.src))];
+      images.forEach(image=>{ image.style.cursor='zoom-in'; image.onclick=event=>{ event.preventDefault(); event.stopPropagation(); openImageLightbox(sources,Math.max(0,sources.indexOf(image.currentSrc||image.src))); }; });
+      frame.contentDocument.querySelectorAll('.simplemail-quote-toggle').forEach(button=>{
+        if(button.dataset.ready) return; button.dataset.ready='1';
+        button.onclick=()=>{
+          const quote=button.nextElementSibling; if(!quote) return;
+          const visible=quote.classList.toggle('is-visible');
+          button.textContent=visible?'−':'•••'; button.title=visible?'Masquer le texte cité':'Afficher le texte cité';
+          setTimeout(()=>resizeHtmlFrame(frame.id),0);
+        };
+      });
+      if(!frame.dataset.imageLightboxRetry){ frame.dataset.imageLightboxRetry='1'; setTimeout(()=>setupFrameImageLightbox(frame),600); }
     }
 
     // ====================== Threading (côté client sur la page chargée) ======================
@@ -1996,7 +2158,11 @@
       const q = searchText.toLowerCase();
       return emails.filter(e => (e.sender||'').toLowerCase().includes(q) || (e.subject||'').toLowerCase().includes(q));
     }
-    function getCategoryEmails(list) { const src = list || getFilteredEmails(); return src.filter(e => (e.category||'primary') === currentCategory); }
+    function getCategoryEmails(list) {
+      const src = list || getFilteredEmails();
+      if(currentFolder!=='INBOX') return src;
+      return src.filter(e => (e.category||'primary') === currentCategory);
+    }
     function setCategory(cat){ currentCategory = cat; renderInboxList(); }
     function updateCategoryTabs(){
       const filtered = getFilteredEmails();
@@ -2202,12 +2368,36 @@
       ab.setAttribute('aria-hidden', showActions ? 'false' : 'true');
       const center=document.getElementById('header-center');
       if(center) center.style.maxWidth = showActions ? 'var(--conv-max-w, 56rem)' : 'var(--list-max-w, 56rem)';
+      updateHeaderFolderActions();
       const burger=document.getElementById('burger-btn'), backBtn=document.getElementById('burger-back-btn');
       if(burger && backBtn){
         const showBack = (state==='conversation');
         burger.classList.toggle('hidden', showBack);
         backBtn.classList.toggle('hidden', !showBack);
       }
+    }
+    function updateHeaderFolderActions(){
+      const primary=document.getElementById('header-folder-primary-action');
+      const spam=document.getElementById('header-spam-action');
+      const remove=document.getElementById('header-delete-action');
+      if(!primary||!spam||!remove) return;
+      const key=folderKey(currentFolder);
+      const restorable=key==='TRASH'||key==='ARCHIVE';
+      primary.title=restorable?'Restaurer dans la boîte de réception':'Archiver';
+      primary.querySelector('.material-symbols-outlined').textContent=restorable?(key==='TRASH'?'restore_from_trash':'move_to_inbox'):'archive';
+      primary.onclick=restorable?restoreCurrent:archiveCurrent;
+      spam.classList.toggle('hidden',key==='TRASH'||key==='SPAM'||key==='JUNK'||key==='ARCHIVE');
+      remove.title=key==='TRASH'?'Supprimer définitivement':'Déplacer vers la corbeille';
+    }
+    function updateBulkFolderActions(){
+      const primary=document.getElementById('bulk-folder-action');
+      const remove=document.getElementById('bulk-delete-action');
+      if(!primary||!remove) return;
+      const key=folderKey(currentFolder), restorable=key==='TRASH'||key==='ARCHIVE';
+      primary.title=restorable?'Restaurer dans la boîte de réception':'Archiver';
+      primary.querySelector('.material-symbols-outlined').textContent=restorable?(key==='TRASH'?'restore_from_trash':'move_to_inbox'):'archive';
+      primary.onclick=()=>bulkAction(restorable?'restore':'archive');
+      remove.title=key==='TRASH'?'Supprimer définitivement':'Déplacer vers la corbeille';
     }
     function updateUIState(){
       const isZero = emails.length===0;
@@ -2218,9 +2408,14 @@
       show(zero, currentActiveView==='zero'); show(list, currentActiveView==='list');
       show(conv, currentActiveView==='conversation'); show(nl, currentActiveView==='newsletter');
       if(currentActiveView==='zero'){
+        const state=emptyFolderState();
         const title=document.getElementById('empty-title'), description=document.getElementById('empty-description');
-        if(title) title.textContent=loadError?'Connexion au compte impossible':'Votre boîte est propre';
-        if(description) description.textContent=loadError?loadError:'Aucun nouveau message pour le moment.';
+        const icon=document.getElementById('empty-icon'), refresh=document.getElementById('empty-refresh-button'), imageLabel=document.getElementById('image-empty-label');
+        if(title) title.textContent=loadError?'Connexion au compte impossible':state.title;
+        if(description) description.textContent=loadError?loadError:state.description;
+        if(icon) icon.textContent=loadError?'cloud_off':state.icon;
+        if(refresh) refresh.textContent=loadError?'Réessayer':state.action;
+        if(imageLabel) imageLabel.textContent=loadError?'Connexion impossible':state.badge;
         if(currentTheme==='image'){ imageBadge.classList.remove('hidden'); whiteState.classList.add('hidden'); }
         else { imageBadge.classList.add('hidden'); whiteState.classList.remove('hidden'); }
         setHeaderState('zero');
@@ -2243,6 +2438,7 @@
       updateSearchContext(getSearchContext());
       container.innerHTML='';
       updateCategoryTabs();
+      updateBulkFolderActions();
       // Masquer newsletters et catégories hors INBOX
       const nlSection = document.getElementById('nl-section');
       const catIcons = document.getElementById('cat-icons');
@@ -2253,17 +2449,20 @@
         currentSelectedId = null; 
         const cl=(CATEGORIES.find(c=>c.id===currentCategory)||{}).label||''; 
         const isSearch = searchText.trim().length > 0;
-        const emptyTitle = isSearch ? 'Aucun résultat' : 'Votre boîte est propre';
-        const emptyDesc = isSearch ? `Aucun message ne correspond à "${escapeHtml(searchText)}".` : 'Aucun nouveau message pour le moment.';
-        const emptyBtn = isSearch ? '<button onclick="handleSearch(\'\');document.getElementById(\'search-input\').value=\'\';loadMessages();" class="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-xs font-medium text-gray-600 transition-colors">Effacer la recherche</button>' : '<button onclick="loadMessages(true)" class="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-xs font-medium text-gray-600 transition-colors">Actualiser la boîte de réception</button>';
-        container.innerHTML=`<div class="p-12 text-center"><h2 class="text-base font-medium text-gray-800 mb-2">${emptyTitle}</h2><p class="text-xs text-gray-400 leading-relaxed mb-6">${emptyDesc}</p>${emptyBtn}</div>`; 
+        const state=emptyFolderState();
+        const emptyTitle = isSearch ? 'Aucun résultat' : state.title;
+        const emptyDesc = isSearch ? `Aucun message ne correspond à "${escapeHtml(searchText)}".` : state.description;
+        const emptyBtn = isSearch ? '<button onclick="handleSearch(\'\');document.getElementById(\'search-input\').value=\'\';loadMessages();" class="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-xs font-medium text-gray-600 transition-colors">Effacer la recherche</button>' : `<button onclick="loadMessages(true)" class="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-xs font-medium text-gray-600 transition-colors">${escapeHtml(state.action)}</button>`;
+        container.innerHTML=`<div class="p-12 text-center"><span class="material-symbols-outlined text-gray-300 mb-4" style="font-size:48px">${escapeHtml(state.icon)}</span><h2 class="text-base font-medium text-gray-800 mb-2">${emptyTitle}</h2><p class="text-xs text-gray-400 leading-relaxed mb-6">${emptyDesc}</p>${emptyBtn}</div>`;
         return; 
       }
       const selectedIndex = getSelectedThreadIndex();
       currentListIndex = selectedIndex < 0 ? 0 : selectedIndex;
       threads.forEach((thread, index) => {
         const msgs=thread.messages, latest=msgs[msgs.length-1];
-        const hasUnread=msgs.some(m=>m.unread), starred=msgs.some(m=>m.starred), isMulti=msgs.length>1;
+        const hasUnread=msgs.some(m=>m.unread), starred=msgs.some(m=>m.starred);
+        const threadCount=Math.max(msgs.length,...msgs.map(message=>message.threadCount||1));
+        const isMulti=threadCount>1;
         const threadAttCount = msgs.reduce((sum, message) => {
           const count = Number(message.attachmentCount) || 0;
           return sum + (count > 0 ? count : (message.hasAttachments ? 1 : 0));
@@ -2274,6 +2473,7 @@
         const borderClass = (currentTheme!=='image' && index===threads.length-1) ? 'border-transparent' : 'border-b border-gray-100';
         const isSelected = index === currentListIndex;
         item.className=`mail-item ${hasUnread?'mail-unread':'mail-read'} relative flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50/80 transition-colors select-none ${borderClass} ${hasUnread?'bg-white font-semibold':'bg-gray-50/30 text-gray-700'} ${isSelected?'is-selected':''}`;
+        item.setAttribute('style', categoryRowStyle(currentCategory));
         item.setAttribute('data-thread-id', thread.id || latest.id);
         item.onclick=()=>{ currentListIndex = index; currentSelectedId = latest.id; openConversation(latest.id); };
         const rowId = latest.id;
@@ -2286,6 +2486,11 @@
         const senderIconHtml = faviconUrl
           ? `<img src="${faviconUrl}" alt="" class="sender-favicon shrink-0" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="sender-fallback shrink-0" style="display:none">${escapeHtml(senderInitial)}</div>`
           : `<div class="sender-fallback shrink-0">${escapeHtml(senderInitial)}</div>`;
+        const folderIsRestorable=['TRASH','ARCHIVE'].includes(folderKey(currentFolder));
+        const restoreIcon=folderKey(currentFolder)==='TRASH'?'restore_from_trash':'move_to_inbox';
+        const folderActionHtml=folderIsRestorable
+          ? `<span class="hover-action-btn" onclick="event.stopPropagation(); restoreItem('${latest.id}')" title="Restaurer dans la boîte de réception"><span class="material-symbols-outlined">${restoreIcon}</span></span>`
+          : `<span class="hover-action-btn" onclick="event.stopPropagation(); archiveItem('${latest.id}')" title="Archiver"><span class="material-symbols-outlined">archive</span></span>`;
         item.innerHTML=`
           <div class="flex items-center gap-4 min-w-0 flex-1 pr-6 relative">
             <div class="sender-icon-slot">
@@ -2296,9 +2501,9 @@
             </div>
             <div class="w-44 truncate shrink-0 text-sm ${hasUnread?'text-gray-900 font-bold':'text-gray-800'}">${escapeHtml(senderLabel)}</div>
             <div class="truncate text-sm flex items-center gap-2 min-w-0">
-              <span class="${hasUnread?'text-gray-900 font-bold':'text-gray-800'} truncate">${escapeHtml(latest.subject)}</span>
-              ${isMulti?`<span class="thread-badge shrink-0">${msgs.length}</span>`:''}
-              <span class="text-gray-400 text-xs font-normal opacity-80 truncate hidden lg:inline">- ${escapeHtml(latest.snippet||'').slice(0,60)}</span>
+              <span class="${hasUnread?'text-gray-900 font-bold':'text-gray-800'} truncate">${escapeHtml(displayThreadSubject(latest.subject))}</span>
+              ${isMulti?`<span class="thread-badge shrink-0">${threadCount}</span>`:''}
+              <span class="text-gray-400 text-xs font-normal opacity-80 truncate hidden lg:inline">- ${escapeHtml(cleanThreadPreview(latest.snippet||'')).slice(0,60)}</span>
             </div>
           </div>
           <div class="text-xs text-gray-400 shrink-0 font-normal flex items-center gap-1.5">
@@ -2309,10 +2514,8 @@
             <span class="hover-action-btn" onclick="event.stopPropagation(); toggleStarItem(event, '${latest.id}')" title="Suivre">
               <span class="material-symbols-outlined" style="${starred?'color:#f59e0b':''}">${starred?'star':'star_border'}</span>
             </span>
-            <span class="hover-action-btn" onclick="event.stopPropagation(); archiveItem('${latest.id}')" title="Archiver">
-              <span class="material-symbols-outlined">archive</span>
-            </span>
-            <span class="hover-action-btn" onclick="event.stopPropagation(); deleteItem('${latest.id}')" title="Supprimer">
+            ${folderActionHtml}
+            <span class="hover-action-btn" onclick="event.stopPropagation(); deleteItem('${latest.id}')" title="${folderKey(currentFolder)==='TRASH'?'Supprimer définitivement':'Déplacer vers la corbeille'}">
               <span class="material-symbols-outlined">delete</span>
             </span>
           </div>`;
@@ -2543,6 +2746,7 @@
     }
     if (!settings.convOrder) settings.convOrder = 'oldest';
     if (!settings.threadExpansion) settings.threadExpansion = 'all';
+    if (!settings.readMode) settings.readMode = 'classic';
     if (!settings.lang) settings.lang = 'fr';
     if (!settings.shortcuts) settings.shortcuts = null;
     function saveSettings(){ try { localStorage.setItem('mm_settings', JSON.stringify(settings)); } catch(e){} }
@@ -2550,9 +2754,11 @@
     function getConvOrder(){ return settings.convOrder || 'oldest'; }
     function setConvOrder(o){ settings.convOrder = o; saveSettings(); }
     function getThreadExpansion(){ return settings.threadExpansion || 'all'; }
+    function getReadMode(){ return settings.readMode || 'classic'; }
     function setConversationPreference(key,value){
       if(key==='order'&&['oldest','newest'].includes(value)) settings.convOrder=value;
       if(key==='expansion'&&['all','latest'].includes(value)) settings.threadExpansion=value;
+      if(key==='readMode'&&['classic','simplified'].includes(value)) settings.readMode=value;
       saveSettings();
       if(currentActiveView==='conversation'&&currentSelectedId) openConversation(currentSelectedId);
     }
@@ -2570,7 +2776,58 @@
       buildNewsletterCarousel();
     }
 
-    async function openConversation(id){
+    function mapSentMessage(m){
+      const id = m.account + ':sent:' + m.uid;
+      const folder = m.folder || 'Sent';
+      return {
+        id, uid: String(m.uid), account: m.account,
+        sender: m.from_name || m.from_addr || '(moi)',
+        email: m.from_addr || '',
+        to: m.to || '',
+        subject: m.subject || '(sans objet)',
+        date: fmtDate(m.date), time: fmtTime(m.date), rawDate: m.date, longDate: fmtLong(m.date),
+        starred: false, unread: false,
+        category: 'primary',
+        threadId: 'sent-' + id,
+        snippet: m.snippet || '',
+        hasAttachments: !!m.has_attachments,
+        attachmentCount: m.attachment_count || 0,
+        html: m.html || null, text: m.text || '',
+        attachments: (m.attachments||[]).map(a => ({
+          name: a.filename || 'fichier', size: humanSize(a.size), type: guessType(a),
+          index: a.index, url: `/api/messages/${m.account}/${m.uid}/attachment/${a.index}?folder=${encodeURIComponent(folder)}`
+        })),
+        messageId: m.message_id || '',
+        _detail: true,
+        _isSent: true,
+        _sentFolder: folder,
+      };
+    }
+    function mapRelatedMessage(message){
+      if(message.is_sent) return mapSentMessage(message);
+      const folder=message.folder||currentFolder;
+      return {
+        id:`${message.account}:${folder}:${message.uid}`, uid:String(message.uid), account:message.account,
+        sender:message.from_name||message.from_addr||'(inconnu)', email:message.from_addr||'', to:message.to||'',
+        subject:message.subject||'(sans objet)', date:fmtDate(message.date), time:fmtTime(message.date),
+        rawDate:message.date, longDate:fmtLong(message.date), starred:!!message.flagged, unread:!message.seen,
+        category:'primary', threadId:`related:${message.message_id||message.uid}`, snippet:message.snippet||'',
+        hasAttachments:!!message.has_attachments, attachmentCount:message.attachment_count||0,
+        html:message.html||null, text:message.text||'', messageId:message.message_id||'',
+        attachments:(message.attachments||[]).map(attachment=>({
+          name:attachment.filename||'fichier', size:humanSize(attachment.size), type:guessType(attachment), index:attachment.index,
+          url:`/api/messages/${message.account}/${message.uid}/attachment/${attachment.index}?folder=${encodeURIComponent(folder)}`,
+        })),
+        _detail:true, _sourceFolder:folder,
+      };
+    }
+
+    async function openConversation(id, forceClassic=false){
+      if(!forceClassic && getReadMode()==='simplified'){
+        currentSelectedId=id;
+        await openImmersive(id);
+        return;
+      }
       currentSelectedId=id;
       const all=getThreads(emails);
       let thread=all.find(t=>t.messages.some(m=>m.id===id));
@@ -2593,27 +2850,53 @@
       const chain=document.getElementById('thread-chain'); chain.innerHTML='';
       const detailed = await Promise.all(msgs.map(m => fetchDetail(m)));
       detailed.forEach(e => { if(e.unread){ e.unread=false; apiCallFlag(e,true,null); } });
+
+      // Récupérer les réponses envoyées liées au thread (dossier Sent)
+      let sentMsgs = [];
+      try {
+        const mids = [...new Set(detailed.flatMap(d => [d.messageId, ...((d.inReplyTo+' '+d.references).match(/<[^>]+>/g)||[])]).filter(Boolean))];
+        const threadSubject = (subject||'');
+        if (detailed[0]) {
+          const qs = new URLSearchParams();
+          if (mids.length) qs.set('message_ids', mids.join(','));
+          if (threadSubject) qs.set('subject', threadSubject);
+          qs.set('current_folder',currentFolder);
+          const resp = await api(`/api/thread/${detailed[0].account}/sent?${qs.toString()}`);
+          const existingMessageIds = new Set(detailed.map(d => d.messageId).filter(Boolean));
+          sentMsgs = (resp.messages||[]).filter(m => !existingMessageIds.has(m.message_id)).map(mapRelatedMessage);
+        }
+      } catch(e) {}
+      const allMsgs = [...new Map([...detailed,...sentMsgs].map(message=>[message.messageId||message.id,message])).values()];
+
+      // Mise à jour du badge de compte
+      const badge = threadEl.querySelector('.thread-badge');
+      if(badge){ const n=allMsgs.length; badge.textContent=n; badge.title=n+' messages'; }
+
       // Ordre d'affichage et dépliage par défaut, paramétrables.
       const newestFirst = (getConvOrder()==='newest');
-      const ordered = newestFirst ? detailed.slice().reverse() : detailed.slice();
+      const ordered = newestFirst ? allMsgs.slice().sort((a,b)=>(b.rawDate||'').localeCompare(a.rawDate||'')) : allMsgs.slice().sort((a,b)=>(a.rawDate||'').localeCompare(b.rawDate||''));
       const latestIndex = newestFirst ? 0 : ordered.length - 1;
       const expandAll = getThreadExpansion()==='all';
       ordered.forEach((m,i)=>{
         const expanded = expandAll || i===latestIndex;
+        const isSent = !!m._isSent;
+        const senderLabel = isSent ? 'Vous' : m.sender;
+        const emailLabel = isSent ? (m.to||'') : m.email;
         const div=document.createElement('div'); div.className='thread-msg'+(expanded?'':' collapsed');
         div.innerHTML=`
           <div class="thread-msg-head" onclick="toggleThreadMsg(this)">
             <span class="material-symbols-outlined thread-msg-chevron">expand_more</span>
-            <div class="w-8 h-8 rounded-full ${avatarBg(m.sender)} flex items-center justify-center font-bold text-white text-xs shrink-0">${escapeHtml((m.sender||'?')[0])}</div>
+            <div class="w-8 h-8 rounded-full ${isSent?'bg-blue-500':avatarBg(m.sender)} flex items-center justify-center font-bold text-white text-xs shrink-0">${escapeHtml((senderLabel||'?')[0])}</div>
             <div class="flex flex-col min-w-0 flex-1">
-              <span class="thread-msg-subject">${escapeHtml(m.sender)} <span class="font-normal text-gray-400">· ${escapeHtml(m.email)}</span></span>
-              <span class="thread-msg-preview truncate">${escapeHtml((m.snippet||'').slice(0,90))}</span>
+              <span class="thread-msg-subject">${escapeHtml(senderLabel)} <span class="font-normal text-gray-400">· ${escapeHtml(emailLabel)}${isSent?'':''}</span></span>
+              <span class="thread-msg-preview truncate">${escapeHtml(cleanThreadPreview(m.snippet||'').slice(0,90))}</span>
             </div>
             <div class="text-xs text-gray-400 shrink-0 pl-3 whitespace-nowrap">${escapeHtml(m.longDate||((m.date||'')+' · '+(m.time||'')))}</div>
           </div>
           <div class="thread-msg-body">
             <div class="text-sm leading-relaxed">${m.html?'':messageProse(m)}</div>
             ${htmlMailBlock(m)}
+            ${m.html?'':mailImageGalleryHtml(m)}
             ${attachmentsHtml(m)}
           </div>`;
         chain.appendChild(div);
@@ -2647,6 +2930,7 @@
         if(copyOnly) showToast(`Copié dans ${dest.trim()}`);
         else showToast(`Déplacé dans ${dest.trim()}`);
         await loadMessages(true);
+        loadFolders(currentAccount);
       }catch(e){
         showToast(`${actionLabel} impossible : ${e.message}`);
       }
@@ -2677,6 +2961,7 @@
         const count = toDelete.length;
         showToast(`Conversation supprimée (${count} message${count>1?'s':''})`);
         buildNewsletterCarousel();
+        loadFolders(currentAccount);
       }).catch(e=>showToast('Suppression impossible : '+e.message));
     }
     function deleteItem(id){
@@ -2692,6 +2977,7 @@
         const count = toDelete.length;
         showToast(`Conversation supprimée (${count} message${count>1?'s':''})`);
         buildNewsletterCarousel();
+        loadFolders(currentAccount);
       }).catch(e=>showToast('Suppression impossible : '+e.message));
     }
     async function archiveItem(id){
@@ -2704,7 +2990,32 @@
         showToast(`Archivé dans ${dest}`);
         if(emails.length===0){ handleBack(); return; }
         renderInboxList(); buildNewsletterCarousel();
+        loadFolders(currentAccount);
       }catch(e){ showToast('Archivage impossible : '+e.message); }
+    }
+    async function restoreThreadMessages(messages, closeConversationAfter=false){
+      const inbox=findServerFolder('INBOX')?.name||'INBOX';
+      if(!messages.length) return;
+      const restoredIds=new Set(messages.map(message=>message.id));
+      try{
+        await Promise.all(messages.map(message=>moveMailToFolder(message,inbox,false)));
+        emails=emails.filter(message=>!restoredIds.has(message.id));
+        showToast(`${messages.length>1?'Conversation restaurée':'Message restauré'} dans la boîte de réception`);
+        if(closeConversationAfter) handleBack();
+        else if(emails.length) renderInboxList();
+        else { currentActiveView='zero'; updateUIState(); }
+        loadFolders(currentAccount);
+      }catch(error){ showToast('Restauration impossible : '+error.message); }
+    }
+    function restoreItem(id){
+      const message=emails.find(item=>item.id===id); if(!message) return;
+      const messages=message.threadId?emails.filter(item=>item.threadId===message.threadId):[message];
+      restoreThreadMessages(messages,false);
+    }
+    function restoreCurrent(){
+      const message=currentMailForAction(); if(!message) return showToast('Aucun message sélectionné');
+      const messages=message.threadId?emails.filter(item=>item.threadId===message.threadId):[message];
+      restoreThreadMessages(messages,true);
     }
     async function archiveCurrent(){
       await specialFolderAction(findServerFolder('ARCHIVE')?.name || 'Archive', 'Archiver', false);
@@ -2802,10 +3113,14 @@
         icon.textContent = allSelected ? 'check_box' : 'check_box_outline_blank';
       }
     }
-    function bulkAction(action){
+    async function bulkAction(action){
       const n = selectedMailIds.size;
       if(n === 0) return;
-      if(action === 'delete'){
+      if(action === 'restore'){
+        const messages=emails.filter(message=>selectedMailIds.has(message.id));
+        selectedMailIds.clear();
+        await restoreThreadMessages(messages,false);
+      } else if(action === 'delete'){
         selectedMailIds.forEach(id => {
           const m = emails.find(e => e.id === id);
           if(m) api(`/api/messages/${m.account}/${m.uid}?folder=${encodeURIComponent(currentFolder)}`, {method:'DELETE'}).catch(()=>{});
@@ -2832,14 +3147,14 @@
     }
     function toggleUnreadCurrent(){ const m=emails.find(e=>e.id===currentSelectedId); if(m){ m.unread=true; apiCallFlag(m,false,null); closeConversation(); showToast('Marqué comme non lu'); } }
     function closeConversation(){ handleBack(); }
-    function replyCurrent(){ const m=emails.find(e=>e.id===currentSelectedId); openCompose(m?{to:m.email, subject:'Re: '+(m.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,''), focusBody:true}:null); }
+    function replyCurrent(){ const m=emails.find(e=>e.id===currentSelectedId); if(!m) return; fetchDetail(m).then(()=>{ openCompose({to:m.email, subject:'Re: '+(m.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,''), focusBody:true, inReplyTo:m.messageId||null, references:m.messageId||null}); }); }
     function replyAllCurrent(){
       const m=emails.find(e=>e.id===currentSelectedId);
       if(!m) return;
       fetchDetail(m).then(()=>{
         const to=m.email||'';
         const cc=m.cc||'';
-        openCompose({to, cc, subject:'Re: '+(m.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,''), focusBody:true});
+        openCompose({to, cc, subject:'Re: '+(m.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,''), focusBody:true, inReplyTo:m.messageId||null, references:m.messageId||null});
       });
     }
     function forwardCurrent(){
@@ -2852,6 +3167,11 @@
     }
     // ====================== Immersive reader ======================
     let immersiveOpen=false, immersiveList=[], immersiveIndex=0;
+    const immersiveLocalReplies=new Map();
+    function immersiveThreadKey(message){
+      const thread=getThreads(emails).find(item=>item.messages.some(candidate=>candidate.id===message.id));
+      return thread?.id||message.threadId||message.id;
+    }
     function getImmersiveList(){ if(currentNewsletterFilter) return emails.filter(e=>domainOf(e.email)===currentNewsletterFilter); return getCategoryEmails(); }
     async function openImmersive(id){
       immersiveList=getImmersiveList(); immersiveIndex=Math.max(0,immersiveList.findIndex(e=>e.id===id));
@@ -2861,30 +3181,59 @@
     }
     function closeImmersive(){ document.getElementById('immersive-reader').classList.add('opacity-0','pointer-events-none'); immersiveOpen=false; }
     async function immersiveNext(dir){ const n=immersiveIndex+dir; if(n<0||n>=immersiveList.length){ showToast(dir>0?'Dernier message':'Premier message'); return; } immersiveIndex=n; await renderImmersiveSlides(); }
-    async function renderImmersiveSlides(){
+    async function renderImmersiveSlides(scrollToLatest=false){
       const vp=document.getElementById('immersive-viewport'); const e=immersiveList[immersiveIndex]; if(!e){ vp.innerHTML=''; updateImmersiveChrome(); return; }
-      await fetchDetail(e); if(e.unread){ e.unread=false; apiCallFlag(e,true,null); }
+      const thread=getThreads(emails).find(t=>t.messages.some(m=>m.id===e.id));
+      const threadMessages=(thread?thread.messages:[e]).slice().sort((a,b)=>(a.rawDate||'').localeCompare(b.rawDate||''));
+      const detailed=await Promise.all(threadMessages.map(fetchDetail));
+      detailed.forEach(message=>{ if(message.unread){ message.unread=false; apiCallFlag(message,true,null); } });
+      let sentMessages=[];
+      try {
+        const messageIds=[...new Set(detailed.flatMap(message=>[message.messageId,...((message.inReplyTo+' '+message.references).match(/<[^>]+>/g)||[])]).filter(Boolean))];
+        const imSubject=(detailed[0]?.subject||e.subject||'').replace(/^(re|fwd|fw|sv|tr)\s*:\s*/i,'');
+        if(detailed[0]){
+          const qs=new URLSearchParams();
+          if(messageIds.length) qs.set('message_ids',messageIds.join(','));
+          if(imSubject) qs.set('subject',imSubject);
+          qs.set('current_folder',currentFolder);
+          const response=await api(`/api/thread/${detailed[0].account}/sent?${qs.toString()}`);
+          const receivedMessageIds=new Set(detailed.map(message=>message.messageId).filter(Boolean));
+          sentMessages=(response.messages||[]).filter(message=>!receivedMessageIds.has(message.message_id)).map(mapRelatedMessage);
+        }
+      } catch(error) {}
+      const localReplies=immersiveLocalReplies.get(immersiveThreadKey(e))||[];
+      const uniqueMessages=new Map();
+      [...detailed,...sentMessages,...localReplies].forEach(message=>{
+        uniqueMessages.set(message.messageId||message.id,message);
+      });
+      const conversationMessages=[...uniqueMessages.values()].sort((a,b)=>(a.rawDate||'').localeCompare(b.rawDate||''));
+      const subject=(conversationMessages[0]?.subject||e.subject||'').replace(/^(re|fwd|fw|sv|tr)\s*:\s*/i,'');
       const slide=document.createElement('div'); slide.className='im-slide active';
       slide.innerHTML=`<div class="h-full overflow-y-auto bg-white">
         <div class="mx-auto flex min-h-full w-full max-w-5xl justify-center px-6 py-12 md:px-10 md:py-16">
           <div class="w-full max-w-3xl">
             <div class="text-center">
-              <h1 class="immersive-serif im-title max-w-4xl mx-auto">${escapeHtml(e.subject)}</h1>
+              <h1 class="immersive-serif im-title max-w-4xl mx-auto">${escapeHtml(subject)}</h1>
               <div class="mt-6 flex flex-col items-center gap-1 text-sm text-[#707070]">
-                <div class="font-medium text-[#303030]">${escapeHtml(e.sender)}</div>
-                <div class="truncate max-w-full">${escapeHtml(e.email)}</div>
-                <div>${escapeHtml(e.longDate||(e.date+' · '+e.time))}</div>
+                <div>${conversationMessages.length} message${conversationMessages.length>1?'s':''} · du plus ancien au plus récent</div>
               </div>
             </div>
             <div class="mx-auto mt-14 max-w-2xl" style="--mail-body-font:'Inter', 'Avenir Next', 'SF Pro Display', system-ui, sans-serif;">
-              <article class="immersive-serif im-article">${messageProse(e)}</article>
-              <div class="mt-8">${attachmentsHtml(e)}</div>
+              ${conversationMessages.map(message=>`<section class="im-thread-message">
+                <div class="im-thread-meta"><strong>${escapeHtml(message._isSent?'Vous':message.sender)}</strong> · ${escapeHtml(message.longDate||((message.date||'')+' · '+(message.time||'')))}</div>
+                <article class="immersive-serif im-article">${simplifiedMessageProse(message)}</article>
+                ${mailImageGalleryHtml(message)}
+                <div class="mt-8">${attachmentsHtml(message)}</div>
+              </section>`).join('')}
             </div>
             <div class="h-24"></div>
           </div>
         </div>
       </div>`;
-      vp.innerHTML=''; vp.appendChild(slide); slide.querySelector('.overflow-y-auto').scrollTop=0; updateImmersiveChrome();
+      vp.innerHTML=''; vp.appendChild(slide);
+      const scroller=slide.querySelector('.overflow-y-auto');
+      scroller.scrollTop=scrollToLatest?scroller.scrollHeight:0;
+      updateImmersiveChrome();
     }
     function updateImmersiveChrome(){
       const total=immersiveList.length, n=immersiveIndex+1;
@@ -2904,11 +3253,62 @@
       }).catch(err=>showToast('Suppression impossible : '+err.message));
     }
     function immersiveToggleUnread(){ const e=immersiveList[immersiveIndex]; if(!e) return; e.unread=!e.unread; apiCallFlag(e,!e.unread,null); showToast(e.unread?'Marqué non lu':'Marqué lu'); }
-    function immersiveSendReply(){ const i=document.getElementById('immersive-reply'); if(i.value.trim()){ const e=immersiveList[immersiveIndex]; openCompose({to:e?e.email:'', text:i.value, focusBody:true}); i.value=''; } }
-    function immersiveReply(){ const e=immersiveList[immersiveIndex]; if(!e) return; openCompose({to:e.email, subject:'Re: '+(e.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,''), focusBody:true}); }
+    function handleImmersiveReplyKeydown(event){
+      if((event.metaKey||event.ctrlKey) && event.key==='Enter'){
+        event.preventDefault();
+        immersiveSendReply();
+      }
+    }
+    async function immersiveSendReply(){
+      const input=document.getElementById('immersive-reply');
+      const button=document.getElementById('immersive-send-btn');
+      const text=(input?.value||'').trim();
+      const selected=immersiveList[immersiveIndex];
+      if(!text||!selected||button?.disabled) return;
+      const thread=getThreads(emails).find(item=>item.messages.some(message=>message.id===selected.id));
+      const recipient=(thread?.messages||[selected]).slice().sort((a,b)=>(b.rawDate||'').localeCompare(a.rawDate||''))[0];
+      button.disabled=true;
+      input.disabled=true;
+      try{
+        await fetchDetail(recipient);
+        const response=await api('/api/send',{
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            account:recipient.account,
+            to:recipient.email,
+            subject:'Re: '+(recipient.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,''),
+            text,
+            in_reply_to:recipient.messageId||null,
+            references:recipient.messageId||null,
+          }),
+        });
+        const now=new Date();
+        const localReply={
+          id:'local-sent-'+Date.now(), uid:'local-'+Date.now(), account:recipient.account,
+          sender:'Vous', email:'', to:recipient.email,
+          subject:'Re: '+(recipient.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,''),
+          text, html:null, snippet:text.slice(0,140), rawDate:now.toISOString(),
+          date:fmtDate(now.toISOString()), time:fmtTime(now.toISOString()), longDate:fmtLong(now.toISOString()),
+          unread:false, starred:false, attachments:[], hasAttachments:false, attachmentCount:0,
+          messageId:response.message_id||('local-'+Date.now()), _detail:true, _isSent:true,
+        };
+        const threadKey=immersiveThreadKey(selected);
+        immersiveLocalReplies.set(threadKey,[...(immersiveLocalReplies.get(threadKey)||[]),localReply]);
+        input.value='';
+        showToast('Réponse envoyée');
+        await renderImmersiveSlides(true);
+      }catch(error){
+        showToast('Envoi impossible : '+error.message);
+      }finally{
+        input.disabled=false;
+        button.disabled=false;
+        input.focus();
+      }
+    }
+    function immersiveReply(){ const e=immersiveList[immersiveIndex]; if(!e) return; fetchDetail(e).then(()=>{ openCompose({to:e.email, subject:'Re: '+(e.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,''), focusBody:true, inReplyTo:e.messageId||null, references:e.messageId||null}); }); }
     function immersiveReplyAll(){
       const e=immersiveList[immersiveIndex]; if(!e) return;
-      fetchDetail(e).then(()=>{ openCompose({to:e.email, cc:e.cc||'', subject:'Re: '+(e.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,''), focusBody:true}); });
+      fetchDetail(e).then(()=>{ openCompose({to:e.email, cc:e.cc||'', subject:'Re: '+(e.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,''), focusBody:true, inReplyTo:e.messageId||null, references:e.messageId||null}); });
     }
     function immersiveForward(){
       const e=immersiveList[immersiveIndex]; if(!e) return;
@@ -3016,6 +3416,7 @@
         if(prefill.bcc){ toggleComposeRecipient('bcc'); document.getElementById('cmp-bcc').value=prefill.bcc; }
         if(prefill.subject) document.getElementById('cmp-subject').value=prefill.subject;
         if(prefill.text) document.getElementById('cmp-body').value=prefill.text;
+        if(prefill.inReplyTo){ overlay.dataset.inReplyTo=prefill.inReplyTo; overlay.dataset.references=prefill.references||prefill.inReplyTo; }
       }
       setTimeout(()=>document.getElementById(prefill?.focusBody?'cmp-body':'cmp-to').focus(),80);
     }
@@ -3040,11 +3441,15 @@
       if(!to){ st.textContent='⚠ Destinataire requis'; document.getElementById('cmp-to').focus(); return; }
       st.textContent='Envoi en cours…'; document.getElementById('cmp-send').disabled=true;
       try{
-        const r=await api('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({account:acc,to,cc,bcc,subject,text})});
+        const payload={account:acc,to,cc,bcc,subject,text};
+        const overlay=document.getElementById('compose-overlay');
+        if(overlay && overlay.dataset.inReplyTo){ payload.in_reply_to=overlay.dataset.inReplyTo; payload.references=overlay.dataset.references||overlay.dataset.inReplyTo; }
+        const r=await api('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
         st.textContent='✓ Envoyé' + (r.sent_folder?` (copié dans ${r.sent_folder})`:'');
         showToast('Message envoyé');
         setTimeout(closeCompose, 800);
         loadMessages();
+        loadFolders(acc);
       }catch(e){ st.textContent='✗ Erreur : '+e.message; document.getElementById('cmp-send').disabled=false; }
     }
 
@@ -3055,6 +3460,13 @@
     let _pendingKey = null;
     let _pendingTimer = null;
     document.addEventListener('keydown',(e)=>{
+      const lightbox=document.getElementById('image-lightbox');
+      if(lightbox&&!lightbox.classList.contains('hidden')){
+        if(e.key==='Escape'){ e.preventDefault(); closeImageLightbox(); }
+        else if(e.key==='ArrowLeft'){ e.preventDefault(); stepImageLightbox(-1); }
+        else if(e.key==='ArrowRight'){ e.preventDefault(); stepImageLightbox(1); }
+        return;
+      }
       // --- Capture de raccourci personnalisé ---
       if(capturingShortcut){
         e.preventDefault(); e.stopPropagation();
@@ -3208,7 +3620,7 @@
     function startResizeList(e){
       e.preventDefault();
       const container=document.getElementById('mail-list-container');
-      const handle=container.querySelector('.resize-handle');
+      const handle=container.querySelector('.resize-handle-list');
       const startX=e.clientX;
       const startW=container.offsetWidth;
       handle.classList.add('active');
@@ -3216,6 +3628,31 @@
       document.body.style.userSelect='none';
       function onMove(ev){
         const w=Math.min(Math.max(startW + ev.clientX - startX, 400), Math.min(window.innerWidth - 80, 1200));
+        container.style.setProperty('--list-max-w', w + 'px');
+        document.documentElement.style.setProperty('--list-max-w', w + 'px');
+      }
+      function onUp(){
+        handle.classList.remove('active');
+        document.body.style.cursor='';
+        document.body.style.userSelect='';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        _savePrefs('listMaxW', container.offsetWidth);
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    }
+    function startResizeListLeft(e){
+      e.preventDefault();
+      const container=document.getElementById('mail-list-container');
+      const handle=container.querySelector('.resize-handle-list-left');
+      const startX=e.clientX;
+      const startW=container.offsetWidth;
+      handle.classList.add('active');
+      document.body.style.cursor='col-resize';
+      document.body.style.userSelect='none';
+      function onMove(ev){
+        const w=Math.min(Math.max(startW + startX - ev.clientX, 400), Math.min(window.innerWidth - 80, 1200));
         container.style.setProperty('--list-max-w', w + 'px');
         document.documentElement.style.setProperty('--list-max-w', w + 'px');
       }
@@ -3241,6 +3678,31 @@
       document.body.style.userSelect='none';
       function onMove(ev){
         const w=Math.min(Math.max(startW + ev.clientX - startX, 400), Math.min(window.innerWidth - 80, 1200));
+        card.style.setProperty('--conv-max-w', w + 'px');
+        document.documentElement.style.setProperty('--conv-max-w', w + 'px');
+      }
+      function onUp(){
+        handle.classList.remove('active');
+        document.body.style.cursor='';
+        document.body.style.userSelect='';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        _savePrefs('convMaxW', card.offsetWidth);
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    }
+    function startResizeConversationLeft(e){
+      e.preventDefault();
+      const card=document.getElementById('conversation-card');
+      const handle=card.querySelector('.resize-handle-list-left');
+      const startX=e.clientX;
+      const startW=card.offsetWidth;
+      handle.classList.add('active');
+      document.body.style.cursor='col-resize';
+      document.body.style.userSelect='none';
+      function onMove(ev){
+        const w=Math.min(Math.max(startW + startX - ev.clientX, 400), Math.min(window.innerWidth - 80, 1200));
         card.style.setProperty('--conv-max-w', w + 'px');
         document.documentElement.style.setProperty('--conv-max-w', w + 'px');
       }
@@ -3422,6 +3884,17 @@
                 <select onchange="setConversationPreference('expansion',this.value)" class="settings-select">
                   <option value="all" ${getThreadExpansion()==='all'?'selected':''}>Tout déplier</option>
                   <option value="latest" ${getThreadExpansion()==='latest'?'selected':''}>Dernier message uniquement</option>
+                </select>
+              </div>
+
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <div class="settings-row-title">Mode de lecture par défaut</div>
+                  <div class="settings-row-desc">Ouvrir les mails dans l’affichage classique ou dans une lecture simplifiée plein écran.</div>
+                </div>
+                <select onchange="setConversationPreference('readMode',this.value)" class="settings-select">
+                  <option value="classic" ${getReadMode()==='classic'?'selected':''}>Mode classique</option>
+                  <option value="simplified" ${getReadMode()==='simplified'?'selected':''}>Lecture simplifiée</option>
                 </select>
               </div>
             </div>
