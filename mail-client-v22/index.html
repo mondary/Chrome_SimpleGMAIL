@@ -1300,6 +1300,10 @@
               <span class="material-symbols-outlined !text-white" style="font-size:18px">drafts</span>
               Lu
             </button>
+            <button onclick="unsubscribeNewsletter()" class="nl-btn-ghost px-4 py-2 rounded-md font-semibold flex items-center gap-2 text-sm">
+              <span class="material-symbols-outlined !text-white" style="font-size:18px">unsubscribe</span>
+              Se désabonner
+            </button>
           </div>
         </div>
       </section>
@@ -1632,6 +1636,9 @@
     const NL_DOMAINS=['substack.com','medium.com','mailchi.mp','sendgrid.net','e.lemonde.fr','wordpress.com','blogspot.com','mailtrack.io','beehiiv.com','convertkit.com'];
     const NL_PLATFORMS=['mailchimp','sendgrid','mailgun','campaign','monitore','brevo','activecampaign','mailerlite'];
     const NL_SNIPPET_UNSUB=['se désinscrire','se desinscrire','désabonnement','desabonnement','unsubscribe','click here to unsubscribe','vous recevez cet email','you are receiving this email','email car vous'];
+    function getManualNewsletterDomains(){
+      try{return JSON.parse(localStorage.getItem('simplemail_manual_newsletters')||'[]');}catch(e){return[];}
+    }
     function isLikelyNewsletter(e){
       const addr = e.email||'';
       const local = localPartOf(addr);
@@ -1645,7 +1652,20 @@
       if(NL_PLATFORMS.some(p=>domain.includes(p)||sender.includes(p))) return true;
       if(sender.includes('newsletter')||sender.includes('news')||sender.includes('digest')) return true;
       if(NL_SNIPPET_UNSUB.some(k=>snippet.includes(k))) return true;
+      if(getManualNewsletterDomains().includes(domain)) return true;
       return false;
+    }
+    function markAsNewsletter(domainOrEmail){
+      const domain=domainOrEmail.includes('@')?domainOf(domainOrEmail):domainOrEmail;
+      if(!domain) return;
+      const list=getManualNewsletterDomains();
+      if(!list.includes(domain)){
+        list.push(domain);
+        try{localStorage.setItem('simplemail_manual_newsletters',JSON.stringify(list));}catch(e){}
+      }
+      buildNewsletterCarousel();
+      renderInboxList();
+      showToast(`"${domain}" marqué comme newsletter`);
     }
 
     // ====================== Accounts / folders ======================
@@ -2304,10 +2324,15 @@
       const q = searchText.toLowerCase();
       return emails.filter(e => (e.sender||'').toLowerCase().includes(q) || (e.subject||'').toLowerCase().includes(q));
     }
+    function newslettersActive(){ const m=getNewsletterMode(); return m==='cards'||m==='dock'; }
     function getCategoryEmails(list) {
       const src = list || getFilteredEmails();
       if(currentFolder!=='INBOX') return src;
-      return src.filter(e => (e.category||'primary') === currentCategory);
+      let filtered = src.filter(e => (e.category||'primary') === currentCategory);
+      if(currentCategory==='primary' && newslettersActive()){
+        filtered = filtered.filter(e => !isLikelyNewsletter(e));
+      }
+      return filtered;
     }
     function setCategory(cat){ currentCategory = cat; renderInboxList(); }
     function updateCategoryTabs(){
@@ -2664,6 +2689,9 @@
               <span class="material-symbols-outlined" style="${starred?'color:#f59e0b':''}">${starred?'star':'star_border'}</span>
             </span>
             ${folderActionHtml}
+            <span class="hover-action-btn" onclick="event.stopPropagation(); markAsNewsletter('${escapeAttr(latest.email||domainOf(latest.email))}')" title="Marquer comme newsletter">
+              <span class="material-symbols-outlined">mail_outline</span>
+            </span>
             <span class="hover-action-btn" onclick="event.stopPropagation(); deleteItem('${latest.id}')" title="${folderKey(currentFolder)==='TRASH'?'Supprimer définitivement':'Déplacer vers la corbeille'}">
               <span class="material-symbols-outlined">delete</span>
             </span>
@@ -2679,6 +2707,12 @@
       const dock = document.getElementById('newsletter-dock');
       const nlSection = document.getElementById('nl-section');
       const btn = document.getElementById('nl-toggle-btn');
+      if(getNewsletterMode()==='hidden'){
+        if(nlSection) nlSection.classList.add('hidden');
+        if(btn) btn.classList.add('hidden');
+        if(dock) { dock.classList.add('hidden'); dock.innerHTML=''; }
+        return;
+      }
       const promo = emails.filter(e => (e.category||'primary')==='promotions' || isLikelyNewsletter(e));
       const byDomain = {};
       promo.forEach(e => { const d = domainOf(e.email) || e.sender; if(!byDomain[d]) byDomain[d]={sender:e.sender, email:e.email, items:[], icon:'article'}; byDomain[d].items.push(e); });
@@ -2859,6 +2893,34 @@
     function hashCode(s){let h=0;for(let i=0;i<(s||'').length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h;}
     function readLatestNewsletter(){ const list=emails.filter(e=>domainOf(e.email)===currentNewsletterFilter).sort((a,b)=>(b.rawDate||'').localeCompare(a.rawDate||'')); if(list[0]) openConversation(list[0].id); }
     function markNewsletterRead(){ let n=0; emails.forEach(e=>{ if(domainOf(e.email)===currentNewsletterFilter && e.unread){ e.unread=false; n++; apiCallFlag(e,true,null); } }); renderNewsletterDetail(); showToast(n?(`${n} marqué(s) comme lu(s)`):'Rien à marquer'); }
+    async function unsubscribeNewsletter(){
+      const list=emails.filter(e=>domainOf(e.email)===currentNewsletterFilter).sort((a,b)=>(b.rawDate||'').localeCompare(a.rawDate||''));
+      if(!list[0]){ showToast('Aucun email trouvé'); return; }
+      try{
+        const detail=await fetchDetail(list[0]);
+        let url='';
+        if(detail.html){
+          const p=new DOMParser().parseFromString(detail.html,'text/html');
+          const links=[...p.querySelectorAll('a')];
+          const unsub=links.find(a=>/(se.désinscrire|unsubscribe|se.desinscrire|désabonnement|desabonnement|click.here|se.retirer|stop)/i.test(a.textContent||'')&&a.href);
+          if(unsub) url=unsub.href;
+          if(!url){
+            const keywordLinks=links.filter(a=>/(se.désinscrire|unsubscribe|se.desinscrire|désabonnement|desabonnement)/i.test(decodeURIComponent(a.href||'')));
+            if(keywordLinks.length) url=keywordLinks[0].href;
+          }
+        }
+        if(!url&&detail.text){
+          const m=detail.text.match(/https?:\/\/[^\s]*(?:unsubscribe|desinscrire|desabonnement)[^\s]*/i);
+          if(m) url=m[0];
+        }
+        if(url){
+          window.open(url,'_blank','noopener,noreferrer');
+          showToast('Lien de désabonnement ouvert');
+        } else {
+          showToast('Aucun lien de désabonnement trouvé');
+        }
+      }catch(e){ showToast('Erreur: '+e.message); }
+    }
 
     // ====================== Conversation (thread repliable + détail API) ======================
     function toggleThreadMsg(headEl){
@@ -2921,8 +2983,10 @@
     function getNewsletterMode(){ try { return localStorage.getItem('simplemail_newsletter_mode') || 'cards'; } catch(e){ return 'cards'; } }
     function setNewsletterMode(mode){
       try { localStorage.setItem('simplemail_newsletter_mode', mode); } catch(e){}
-      showToast('Newsletters : ' + (mode==='cards'?'Cartes':'Dock'));
+      const labels={cards:'Cartes',dock:'Dock horizontal',hidden:'Masqué'};
+      showToast('Newsletters : ' + (labels[mode]||mode));
       buildNewsletterCarousel();
+      renderInboxList();
     }
 
     function mapSentMessage(m){
@@ -3208,7 +3272,7 @@
     function closeConversationMoreMenu(){ document.getElementById('conversation-more-menu')?.remove(); }
     function runConversationMenu(action){
       closeConversationMoreMenu();
-      const actions={replyAll:replyAllCurrent,forward:forwardCurrent,reader:()=>openImmersive(currentSelectedId),toggle:toggleAllThreadMsgs,unread:toggleUnreadCurrent,spam:reportSpamCurrent,snooze:snoozeCurrent,tasks:addToTasksCurrent,move:moveCurrent,label:labelCurrent};
+      const actions={replyAll:replyAllCurrent,forward:forwardCurrent,reader:()=>openImmersive(currentSelectedId),toggle:toggleAllThreadMsgs,unread:toggleUnreadCurrent,newsletter:()=>{const m=currentMailForAction();if(m){markAsNewsletter(m.email||domainOf(m.email));}},spam:reportSpamCurrent,snooze:snoozeCurrent,tasks:addToTasksCurrent,move:moveCurrent,label:labelCurrent};
       actions[action]?.();
     }
     function showMoreConversationActions(){
@@ -3221,6 +3285,7 @@
         <button onclick="runConversationMenu('reader')"><span class="material-symbols-outlined">auto_stories</span>Lecture simplifiée</button>
         <button onclick="runConversationMenu('toggle')"><span class="material-symbols-outlined">unfold_more</span>Déplier ou replier le fil</button>
         <button onclick="runConversationMenu('unread')"><span class="material-symbols-outlined">mail</span>Marquer comme non lu</button>
+        <button onclick="runConversationMenu('newsletter')"><span class="material-symbols-outlined">mail_outline</span>Marquer comme newsletter</button>
         <button onclick="runConversationMenu('spam')"><span class="material-symbols-outlined">report</span>Signaler comme spam</button>
         <button onclick="runConversationMenu('snooze')"><span class="material-symbols-outlined">schedule</span>Mettre en attente</button>
         <button onclick="runConversationMenu('move')"><span class="material-symbols-outlined">drive_file_move</span>Déplacer</button>
@@ -4064,15 +4129,16 @@
             <!-- PAGE: NEWSLETTERS -->
             <div id="set-page-newsletters" class="settings-page hidden px-10 py-8">
               <h2 class="text-2xl font-semibold mb-1">Newsletters</h2>
-              <p class="text-sm mb-8" style="color:#5f6368">Affichez vos newsletters en cartes ou en dock horizontal.</p>
+              <p class="text-sm mb-8" style="color:#5f6368">Affichez vos newsletters en cartes ou en dock horizontal. Mode Masqué : tout revient dans la boîte de réception.</p>
               <div class="settings-row">
                 <div class="settings-row-label">
                   <div class="settings-row-title">Mode d'affichage</div>
-                  <div class="settings-row-desc">Cartes = grille visuelle, Dock = barre horizontale compacte.</div>
+                  <div class="settings-row-desc">Cartes = grille visuelle, Dock = barre horizontale compacte, Masqué = tout afficher dans la boîte.</div>
                 </div>
                 <select onchange="setNewsletterMode(this.value)" class="settings-select">
                   <option value="cards" ${getNewsletterMode()==='cards'?'selected':''}>Cartes</option>
                   <option value="dock" ${getNewsletterMode()==='dock'?'selected':''}>Dock horizontal</option>
+                  <option value="hidden" ${getNewsletterMode()==='hidden'?'selected':''}>Masqué</option>
                 </select>
               </div>
             </div>
