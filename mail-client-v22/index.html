@@ -1225,6 +1225,7 @@
           <!-- Droite : catégories (icônes seules, uniquement INBOX) -->
           <div id="cat-icons" class="flex items-center gap-0.5">
             <button onclick="setCategory('primary')" data-cat="primary" class="cat-icon-btn is-active" title="Principal"><span class="material-symbols-outlined">inbox</span><span class="cat-count"></span></button>
+            <button onclick="setCategory('newsletter')" data-cat="newsletter" class="cat-icon-btn" title="Newsletter"><span class="material-symbols-outlined">whatshot</span><span class="cat-count"></span></button>
             <button onclick="setCategory('promotions')" data-cat="promotions" class="cat-icon-btn" title="Promotions"><span class="material-symbols-outlined">local_offer</span><span class="cat-count"></span></button>
             <button onclick="setCategory('social')" data-cat="social" class="cat-icon-btn" title="Réseaux"><span class="material-symbols-outlined">group</span><span class="cat-count"></span></button>
             <button onclick="setCategory('updates')" data-cat="updates" class="cat-icon-btn" title="Notifications"><span class="material-symbols-outlined">info</span><span class="cat-count"></span></button>
@@ -1514,6 +1515,7 @@
 
     const CATEGORIES = [
       { id: 'primary',    label: 'Principal',       icon: 'inbox' },
+      { id: 'newsletter', label: 'Newsletter',      icon: 'whatshot' },
       { id: 'purchases',  label: 'Achats',          icon: 'shopping_bag' },
       { id: 'promotions', label: 'Promotions',      icon: 'local_offer' },
       { id: 'social',     label: 'Réseaux sociaux', icon: 'group' },
@@ -1521,8 +1523,8 @@
       { id: 'forums',     label: 'Forums',          icon: 'forum' },
     ];
     const DEFAULT_CATEGORY_COLORS = Object.freeze({
-      primary: '#1a73e8', purchases: '#e08a00', promotions: '#d93075',
-      social: '#f9ab00', updates: '#188038', forums: '#7b4bb7',
+      primary: '#1a73e8', purchases: '#e08a00', newsletter: '#0891b2',
+      promotions: '#d93075', social: '#f9ab00', updates: '#188038', forums: '#7b4bb7',
     });
     function loadCategoryColors(){
       try {
@@ -1812,14 +1814,14 @@
       fc.innerHTML = html;
 
       // --- Catégories principales (toujours visibles) ---
-      const mainCats = CATEGORIES.filter(c => ['primary','promotions','social','updates'].includes(c.id));
-      const extraCats = CATEGORIES.filter(c => !['primary','promotions','social','updates'].includes(c.id));
+      const mainCats = CATEGORIES.filter(c => ['primary','promotions','newsletter','social','updates'].includes(c.id));
+      const extraCats = CATEGORIES.filter(c => !['primary','promotions','newsletter','social','updates'].includes(c.id));
       const snoozed=findServerFolder('SNOOZED','WAITING');
       const scheduled=findServerFolder('SCHEDULED');
 
       const cc=document.getElementById('drawer-categories');
       cc.innerHTML = mainCats.map(c => {
-        const ce = emails.filter(e => (e.category||'primary')===c.id);
+        const ce = c.id==='newsletter' ? emails.filter(e => isLikelyNewsletter(e)) : emails.filter(e => (e.category||'primary')===c.id);
         const unread = ce.filter(e=>e.unread).length;
         const active = (c.id===currentCategory && currentFolder==='INBOX' && !currentSpecial);
         return `<div class="nav-item ${active?'is-active':''}" data-category="${c.id}" style="${categoryNavStyle(c.id)}" onclick="selectCategory('${c.id}')">
@@ -2324,21 +2326,17 @@
       const q = searchText.toLowerCase();
       return emails.filter(e => (e.sender||'').toLowerCase().includes(q) || (e.subject||'').toLowerCase().includes(q));
     }
-    function newslettersActive(){ const m=getNewsletterMode(); return m==='cards'||m==='dock'; }
     function getCategoryEmails(list) {
       const src = list || getFilteredEmails();
       if(currentFolder!=='INBOX') return src;
-      let filtered = src.filter(e => (e.category||'primary') === currentCategory);
-      if(currentCategory==='primary' && newslettersActive()){
-        filtered = filtered.filter(e => !isLikelyNewsletter(e));
-      }
-      return filtered;
+      if(currentCategory==='newsletter') return src.filter(e => isLikelyNewsletter(e));
+      return src.filter(e => (e.category||'primary') === currentCategory && !isLikelyNewsletter(e));
     }
     function setCategory(cat){ currentCategory = cat; renderInboxList(); }
     function updateCategoryTabs(){
       const filtered = getFilteredEmails();
       CATEGORIES.forEach(c => {
-        const ce = filtered.filter(e => (e.category||'primary') === c.id);
+        const ce = c.id==='newsletter' ? filtered.filter(e => isLikelyNewsletter(e)) : filtered.filter(e => (e.category||'primary') === c.id);
         const unread = ce.filter(e => e.unread).length;
         const tab = document.querySelector('.cat-icon-btn[data-cat="'+c.id+'"]');
         if(!tab) return;
@@ -2624,10 +2622,11 @@
         const cl=(CATEGORIES.find(c=>c.id===currentCategory)||{}).label||''; 
         const isSearch = searchText.trim().length > 0;
         const state=emptyFolderState();
-        const emptyTitle = isSearch ? 'Aucun résultat' : state.title;
+        const catIcon=(CATEGORIES.find(c=>c.id===currentCategory)||{}).icon||'inbox';
+        const emptyTitle = isSearch ? 'Aucun résultat' : (currentFolder==='INBOX'?`${cl} : aucun message`:state.title);
         const emptyDesc = isSearch ? `Aucun message ne correspond à "${escapeHtml(searchText)}".` : state.description;
         const emptyBtn = isSearch ? '<button onclick="handleSearch(\'\');document.getElementById(\'search-input\').value=\'\';loadMessages();" class="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-xs font-medium text-gray-600 transition-colors">Effacer la recherche</button>' : `<button onclick="loadMessages(true)" class="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-xs font-medium text-gray-600 transition-colors">${escapeHtml(state.action)}</button>`;
-        container.innerHTML=`<div class="p-12 text-center"><span class="material-symbols-outlined text-gray-300 mb-4" style="font-size:48px">${escapeHtml(state.icon)}</span><h2 class="text-base font-medium text-gray-800 mb-2">${emptyTitle}</h2><p class="text-xs text-gray-400 leading-relaxed mb-6">${emptyDesc}</p>${emptyBtn}</div>`;
+        container.innerHTML=`<div class="p-12 text-center"><span class="material-symbols-outlined text-gray-300 mb-4" style="font-size:48px">${escapeHtml(catIcon)}</span><h2 class="text-base font-medium text-gray-800 mb-2">${emptyTitle}</h2><p class="text-xs text-gray-400 leading-relaxed mb-6">${emptyDesc}</p>${emptyBtn}</div>`;
         return; 
       }
       const selectedIndex = getSelectedThreadIndex();
@@ -2758,8 +2757,8 @@
         return;
       }
 
-      if(nlSection) nlSection.classList.toggle('hidden', currentFolder !== 'INBOX');
-      if(btn) btn.classList.toggle('hidden', currentFolder !== 'INBOX');
+      if(nlSection) nlSection.classList.toggle('hidden', currentFolder !== 'INBOX' || currentCategory === 'newsletter');
+      if(btn) btn.classList.toggle('hidden', currentFolder !== 'INBOX' || currentCategory === 'newsletter');
 
       const showItems = newsletterCarouselExpanded ? top : top.slice(0, 4);
       c.className = 'carousel-container gap-4';
@@ -4129,11 +4128,11 @@
             <!-- PAGE: NEWSLETTERS -->
             <div id="set-page-newsletters" class="settings-page hidden px-10 py-8">
               <h2 class="text-2xl font-semibold mb-1">Newsletters</h2>
-              <p class="text-sm mb-8" style="color:#5f6368">Affichez vos newsletters en cartes ou en dock horizontal. Mode Masqué : tout revient dans la boîte de réception.</p>
+              <p class="text-sm mb-8" style="color:#5f6368">Les newsletters ont leur propre catégorie (onglet <strong>Newsletter</strong>) et sont masquées des autres onglets.</p>
               <div class="settings-row">
                 <div class="settings-row-label">
-                  <div class="settings-row-title">Mode d'affichage</div>
-                  <div class="settings-row-desc">Cartes = grille visuelle, Dock = barre horizontale compacte, Masqué = tout afficher dans la boîte.</div>
+                  <div class="settings-row-title">Mode d'affichage des cartes</div>
+                  <div class="settings-row-desc">Cartes = grille visuelle, Dock = barre horizontale compacte, Masqué = pas de cartes.</div>
                 </div>
                 <select onchange="setNewsletterMode(this.value)" class="settings-select">
                   <option value="cards" ${getNewsletterMode()==='cards'?'selected':''}>Cartes</option>
