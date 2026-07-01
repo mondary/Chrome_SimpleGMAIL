@@ -255,6 +255,16 @@
       transition: background-color 150ms;
       flex-shrink: 0;
     }
+    .conversation-more-menu {
+      position: fixed; top: 58px; right: 14px; z-index: 80; width: 230px;
+      padding: 6px; border: 1px solid rgba(0,0,0,.08); border-radius: 12px;
+      background: #fff; color: #202124; box-shadow: 0 12px 34px rgba(0,0,0,.18);
+    }
+    .conversation-more-menu button { width:100%; display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; font-size:13px; text-align:left; }
+    .conversation-more-menu button:hover { background:#f1f3f4; }
+    .conversation-more-menu .material-symbols-outlined { font-size:18px; color:#5f6368; }
+    body.theme-dark .conversation-more-menu { background:#242424; color:#eee; border-color:rgba(255,255,255,.1); }
+    body.theme-dark .conversation-more-menu button:hover { background:#333; }
     .header-style-light .icon-btn-container:hover { background-color: rgba(60,64,67,0.08); }
     .header-style-dark .icon-btn-container:hover { background-color: rgba(255, 255, 255, 0.12); }
 
@@ -748,7 +758,7 @@
     .thread-msg-preview { font-size: 12px; color: #5f6368; flex: 1; min-width: 0; }
     .thread-msg:not(.collapsed) .thread-msg-preview { display: none; }
     body.theme-dark .thread-msg-preview { color: #9aa0a6; }
-    .thread-msg-body { padding: 4px 0 18px var(--thread-content-indent); }
+    .thread-msg-body { padding: 2px 0 10px var(--thread-content-indent); }
     .mail-body-copy {
       font-family: var(--mail-body-font, var(--font-mono, 'JetBrains Mono', 'Space Mono', 'Iosevka', monospace));
       font-size: 15px;
@@ -756,11 +766,12 @@
       letter-spacing: 0;
     }
     .mail-body-copy p { margin-bottom: 1.05em; }
+    .mail-body-copy p:last-child { margin-bottom: 0; }
 
     /* HTML email iframe */
     .html-mail-frame {
       width: 100%; margin-left: 0;
-      min-height: 120px; border: none; border-radius: 0;
+      min-height: 0; border: none; border-radius: 0;
       background: transparent; overflow: hidden;
     }
 
@@ -864,17 +875,37 @@
     .im-article { font-size: 1.06rem; line-height: 2; color: inherit; opacity: 0.95; }
     .im-article p { margin-bottom: 1.15em; }
     .im-thread-message + .im-thread-message {
-      margin-top: 3rem; padding-top: 3rem; border-top: 1px solid rgba(17,17,17,0.12);
+      margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(17,17,17,0.12);
     }
     .im-thread-meta { margin-bottom: 1.5rem; color: #777; font-size: 0.78rem; letter-spacing: 0.01em; }
     .im-thread-meta strong { color: #303030; font-weight: 600; }
-    .quoted-history-toggle { margin-top:1.25rem; padding:3px 11px; border-radius:999px; background:#f1f3f4; color:#777; font-size:15px; line-height:1; cursor:pointer; }
+    .quoted-history-toggle { margin-top:.4rem; padding:3px 11px; border-radius:999px; background:#f1f3f4; color:#777; font-size:15px; line-height:1; cursor:pointer; }
     .quoted-history-toggle:hover { background:#e5e7eb; color:#333; }
-    .quoted-history { margin-top:1rem; padding-left:1rem; border-left:2px solid #e5e7eb; color:#777; font-size:.9em; }
+    .quoted-history { margin-top:.55rem; padding-left:1rem; border-left:2px solid #e5e7eb; color:#777; font-size:.9em; }
     .quoted-history.hidden { display:none; }
     .im-drop-cap::first-letter {
       font-size: 3.2em; font-weight: 500; float: left;
       line-height: 0.85; padding: 0.08em 0.12em 0 0; color: inherit;
+    }
+    @media (max-width: 900px) {
+      #main-header { padding-left:8px !important; padding-right:8px !important; }
+      #header-center { left:56px !important; right:104px !important; width:auto !important; max-width:none !important; transform:none !important; padding-left:0 !important; padding-right:0 !important; }
+      #header-search-bar { padding-left:12px !important; padding-right:12px !important; gap:8px !important; }
+      #search-context { display:none !important; }
+      #header-actions .responsive-secondary, #header-actions .responsive-separator { display:none !important; }
+      #header-actions .icon-btn-container { width:36px; height:36px; }
+      #header-actions > div { gap:2px !important; }
+    }
+    @media (max-width: 640px) {
+      #header-center { right:56px !important; }
+      #header-search-bar #search-count { display:none !important; }
+      .header-settings { display:none !important; }
+      #conversation-view { padding-left:8px !important; padding-right:8px !important; padding-bottom:8px !important; }
+      #conversation-card { padding:16px !important; border-radius:12px; }
+      .thread-msg { --thread-content-indent: 62px; }
+      .thread-msg-head { gap:8px; }
+      .thread-msg-head .w-8 { width:28px; height:28px; }
+      .thread-msg-head .text-xs.whitespace-nowrap { max-width:90px; overflow:hidden; text-overflow:ellipsis; }
     }
     /* ============ NAVIGATION DRAWER — Clean & Sober ============ */
     #drawer-overlay { background: rgba(0,0,0,0.3); transition: opacity 250ms; }
@@ -1073,33 +1104,32 @@
       <div id="header-actions" class="w-full flex items-center justify-between opacity-0 pointer-events-none transition-all duration-300 absolute inset-y-0">
         <div class="flex items-center gap-1.5 shrink-0">
           <div class="icon-btn-container" title="Répondre" onclick="replyCurrent()"><span class="material-symbols-outlined">reply</span></div>
-          <div class="icon-btn-container" title="Tout répondre" onclick="replyAllCurrent()"><span class="material-symbols-outlined">reply_all</span></div>
-          <div class="icon-btn-container" title="Transférer" onclick="forwardCurrent()"><span class="material-symbols-outlined">forward</span></div>
-          <div class="icon-btn-container" title="Lecture immersive" onclick="openImmersive(currentSelectedId)"><span class="material-symbols-outlined">auto_stories</span></div>
-          <div id="thread-toggle-all" class="icon-btn-container" title="Replier toute la conversation" onclick="toggleAllThreadMsgs()"><span id="thread-toggle-icon" class="material-symbols-outlined">unfold_less</span></div>
+          <div class="icon-btn-container responsive-secondary" title="Tout répondre" onclick="replyAllCurrent()"><span class="material-symbols-outlined">reply_all</span></div>
+          <div class="icon-btn-container responsive-secondary" title="Transférer" onclick="forwardCurrent()"><span class="material-symbols-outlined">forward</span></div>
+          <div class="icon-btn-container responsive-secondary" title="Lecture immersive" onclick="openImmersive(currentSelectedId)"><span class="material-symbols-outlined">auto_stories</span></div>
+          <div id="thread-toggle-all" class="icon-btn-container responsive-secondary" title="Replier toute la conversation" onclick="toggleAllThreadMsgs()"><span id="thread-toggle-icon" class="material-symbols-outlined">unfold_less</span></div>
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
           <div id="header-folder-primary-action" class="icon-btn-container" title="Archiver" onclick="archiveCurrent()"><span class="material-symbols-outlined">archive</span></div>
-          <div id="header-spam-action" class="icon-btn-container" title="Signaler comme spam" onclick="reportSpamCurrent()"><span class="material-symbols-outlined">report</span></div>
+          <div id="header-spam-action" class="icon-btn-container responsive-secondary" title="Signaler comme spam" onclick="reportSpamCurrent()"><span class="material-symbols-outlined">report</span></div>
           <div id="header-delete-action" class="icon-btn-container" title="Supprimer" onclick="deleteCurrent()"><span class="material-symbols-outlined">delete</span></div>
-          <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
-          <div class="icon-btn-container" title="Marquer comme non lu" onclick="toggleUnreadCurrent()"><span class="material-symbols-outlined">mail</span></div>
-          <div class="icon-btn-container" title="Mettre en attente" onclick="snoozeCurrent()"><span class="material-symbols-outlined">schedule</span></div>
-          <div class="icon-btn-container" title="Ajouter aux tâches" onclick="addToTasksCurrent()"><span class="material-symbols-outlined">add_task</span></div>
-          <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
-          <div class="icon-btn-container" title="Déplacer vers" onclick="moveCurrent()"><span class="material-symbols-outlined">drive_file_move</span></div>
-          <div class="icon-btn-container" title="Libellés" onclick="labelCurrent()"><span class="material-symbols-outlined">label</span></div>
-          <div class="icon-btn-container" title="Plus" onclick="moreMessageActions()"><span class="material-symbols-outlined">more_vert</span></div>
-          <div class="h-5 w-[1px] bg-gray-200 mx-1.5"></div>
-          <div class="icon-btn-container" title="Plus ancien" onclick="navigateMail(-1)"><span class="material-symbols-outlined">chevron_left</span></div>
-          <div class="icon-btn-container" title="Plus récent" onclick="navigateMail(1)"><span class="material-symbols-outlined">chevron_right</span></div>
+          <div class="responsive-separator h-5 w-[1px] bg-gray-200 mx-1.5"></div>
+          <div class="icon-btn-container responsive-secondary" title="Marquer comme non lu" onclick="toggleUnreadCurrent()"><span class="material-symbols-outlined">mail</span></div>
+          <div class="icon-btn-container responsive-secondary" title="Mettre en attente" onclick="snoozeCurrent()"><span class="material-symbols-outlined">schedule</span></div>
+          <div class="icon-btn-container responsive-secondary" title="Ajouter aux tâches" onclick="addToTasksCurrent()"><span class="material-symbols-outlined">add_task</span></div>
+          <div class="responsive-separator h-5 w-[1px] bg-gray-200 mx-1.5"></div>
+          <div class="icon-btn-container responsive-secondary" title="Déplacer vers" onclick="moveCurrent()"><span class="material-symbols-outlined">drive_file_move</span></div>
+          <div class="icon-btn-container responsive-secondary" title="Libellés" onclick="labelCurrent()"><span class="material-symbols-outlined">label</span></div>
+          <div class="responsive-separator h-5 w-[1px] bg-gray-200 mx-1.5"></div>
+          <div class="icon-btn-container responsive-secondary" title="Plus ancien" onclick="navigateMail(-1)"><span class="material-symbols-outlined">chevron_left</span></div>
+          <div class="icon-btn-container responsive-secondary" title="Plus récent" onclick="navigateMail(1)"><span class="material-symbols-outlined">chevron_right</span></div>
           <div class="icon-btn-container" title="Plus" onclick="showMoreConversationActions()"><span class="material-symbols-outlined">more_vert</span></div>
         </div>
       </div>
     </div>
 
     <div class="flex items-center gap-2">
-      <div class="relative mr-1">
+      <div class="relative mr-1 header-settings">
         <div class="icon-btn-container" onclick="openSettings()" title="Paramètres">
           <span class="material-symbols-outlined">settings</span>
         </div>
@@ -2108,6 +2138,17 @@
       const quoteCandidates=[...parsed.body.querySelectorAll('.gmail_quote_container, blockquote.gmail_quote, blockquote[type="cite"]')];
       const topLevelQuotes=quoteCandidates.filter(element=>!quoteCandidates.some(parent=>parent!==element&&parent.contains(element)));
       topLevelQuotes.forEach(quote=>{
+        if(quote.previousElementSibling?.tagName==='BR') quote.previousElementSibling.remove();
+        const signature=parsed.body.querySelector('.gmail_signature');
+        if(signature&&!quote.contains(signature)){
+          let sibling=quote.nextSibling;
+          while(sibling){
+            const next=sibling.nextSibling;
+            quote.appendChild(sibling);
+            if(sibling===signature) break;
+            sibling=next;
+          }
+        }
         quote.classList.add('simplemail-quoted');
         const button=parsed.createElement('button'); button.type='button'; button.className='simplemail-quote-toggle';
         button.textContent='•••'; button.title='Afficher le texte cité';
@@ -2122,17 +2163,25 @@
           font-synthesis: none;
           font-variant-ligatures: none;
         }
+        html, body { height:auto !important; min-height:0 !important; margin:0 !important; padding:0 !important; overflow:hidden !important; }
         body { line-height: 1.75; background: #ffffff; }
         .simplemail-quoted { display:none; margin-top:12px; padding-left:12px; border-left:2px solid #e5e7eb; color:#777 !important; }
         .simplemail-quoted.is-visible { display:block; }
-        .simplemail-quote-toggle { border:0; border-radius:999px; padding:3px 11px; margin:10px 0; background:#f1f3f4; color:#777; cursor:pointer; font:600 14px/1 system-ui,sans-serif !important; }
+        .simplemail-quote-toggle { border:0; border-radius:999px; padding:3px 11px; margin:3px 0; background:#f1f3f4; color:#777; cursor:pointer; font:600 14px/1 system-ui,sans-serif !important; }
       </style>` + doc;
       return `<iframe id="${fid}" class="html-mail-frame" sandbox="allow-same-origin allow-popups" srcdoc="${escapeAttr(doc)}" onload="resizeHtmlFrame('${fid}')"></iframe>`;
     }
     function resizeHtmlFrame(id){
       const f = document.getElementById(id); if(!f) return;
       try {
-        const retry = () => { const d=f.contentDocument; if(!d||!d.body) return false; const h=Math.max(d.body.scrollHeight,d.documentElement.scrollHeight); if(h){f.style.height=(h+4)+'px'; setupFrameImageLightbox(f); return true;} return false; };
+        const retry = () => {
+          const d=f.contentDocument; if(!d||!d.body) return false;
+          f.style.height='1px';
+          void f.offsetHeight;
+          const h=Math.ceil(Math.max(d.body.scrollHeight,d.body.getBoundingClientRect().height));
+          if(h){ f.style.height=(h+2)+'px'; setupFrameImageLightbox(f); return true; }
+          return false;
+        };
         if(!retry()) setTimeout(retry, 200);
       } catch(e) {}
     }
@@ -2257,6 +2306,8 @@
     document.addEventListener('click', (e) => {
       const apop = document.getElementById('account-popover');
       if(apop && !apop.classList.contains('hidden') && !apop.contains(e.target) && !e.target.closest('#account-avatar')) apop.classList.add('hidden');
+      const moreMenu=document.getElementById('conversation-more-menu');
+      if(moreMenu&&!moreMenu.contains(e.target)&&!e.target.closest('[onclick="showMoreConversationActions()"]')) moreMenu.remove();
     });
     function toggleTheme(){ const o=['image','white','dark']; setTheme(o[(o.indexOf(currentTheme)+1)%o.length]); }
 
@@ -2346,6 +2397,7 @@
     }
     function setHeaderState(state){
       const header=document.getElementById('main-header');
+      header.dataset.state=state;
       const sb=document.getElementById('header-search-bar');
       const ab=document.getElementById('header-actions');
       const cfg=THEME_CFG[currentTheme]; const base="h-16 flex items-center justify-between px-6 shrink-0 select-none z-30 transition-all duration-300";
@@ -3056,22 +3108,27 @@
       }
     }
     async function moreMessageActions(){ await showMoreConversationActions(); }
-    async function showMoreConversationActions(){
-      const m=currentMailForAction();
-      if(!m) return showToast('Aucun message sélectionné');
-      const choice = prompt('Action: reply, replyall, forward, archive, spam, move, label, snooze, tasks', 'archive');
-      if(!choice) return;
-      const c = choice.trim().toLowerCase();
-      if(c==='reply') return replyCurrent();
-      if(c==='replyall' || c==='reply all') return replyAllCurrent();
-      if(c==='forward') return forwardCurrent();
-      if(c==='archive') return archiveCurrent();
-      if(c==='spam') return reportSpamCurrent();
-      if(c==='move') return moveCurrent();
-      if(c==='label') return labelCurrent();
-      if(c==='snooze') return snoozeCurrent();
-      if(c==='tasks') return addToTasksCurrent();
-      showToast('Action inconnue');
+    function closeConversationMoreMenu(){ document.getElementById('conversation-more-menu')?.remove(); }
+    function runConversationMenu(action){
+      closeConversationMoreMenu();
+      const actions={replyAll:replyAllCurrent,forward:forwardCurrent,reader:()=>openImmersive(currentSelectedId),toggle:toggleAllThreadMsgs,unread:toggleUnreadCurrent,spam:reportSpamCurrent,snooze:snoozeCurrent,tasks:addToTasksCurrent,move:moveCurrent,label:labelCurrent};
+      actions[action]?.();
+    }
+    function showMoreConversationActions(){
+      if(!currentMailForAction()) return showToast('Aucun message sélectionné');
+      const existing=document.getElementById('conversation-more-menu'); if(existing){ existing.remove(); return; }
+      const menu=document.createElement('div'); menu.id='conversation-more-menu'; menu.className='conversation-more-menu';
+      menu.innerHTML=`
+        <button onclick="runConversationMenu('replyAll')"><span class="material-symbols-outlined">reply_all</span>Tout répondre</button>
+        <button onclick="runConversationMenu('forward')"><span class="material-symbols-outlined">forward</span>Transférer</button>
+        <button onclick="runConversationMenu('reader')"><span class="material-symbols-outlined">auto_stories</span>Lecture simplifiée</button>
+        <button onclick="runConversationMenu('toggle')"><span class="material-symbols-outlined">unfold_more</span>Déplier ou replier le fil</button>
+        <button onclick="runConversationMenu('unread')"><span class="material-symbols-outlined">mail</span>Marquer comme non lu</button>
+        <button onclick="runConversationMenu('spam')"><span class="material-symbols-outlined">report</span>Signaler comme spam</button>
+        <button onclick="runConversationMenu('snooze')"><span class="material-symbols-outlined">schedule</span>Mettre en attente</button>
+        <button onclick="runConversationMenu('move')"><span class="material-symbols-outlined">drive_file_move</span>Déplacer</button>
+        <button onclick="runConversationMenu('label')"><span class="material-symbols-outlined">label</span>Libellés</button>`;
+      document.body.appendChild(menu);
     }
     async function showMoreListActions(){
       if(selectedMailIds.size > 0){
