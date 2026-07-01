@@ -1067,6 +1067,18 @@ def update_account(account_id: str, body: UpdateAccountRequest):
     expanded = next(item for item in load_config(False)["accounts"] if item.get("id") == account_id)
     return {"ok": True, "id": account_id, "connected": _account_is_configured(expanded)}
 
+@app.delete("/api/accounts/{account_id}")
+def delete_account(account_id: str):
+    if _is_demo_account(account_id):
+        raise HTTPException(status_code=400, detail="Impossible de supprimer le compte de démonstration")
+    cfg = _raw_config()
+    idx = next((i for i, item in enumerate(cfg.get("accounts", [])) if item.get("id") == account_id), None)
+    if idx is None:
+        raise HTTPException(status_code=404, detail=f"Compte '{account_id}' inconnu")
+    cfg["accounts"].pop(idx)
+    CONFIG_PATH.write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return {"ok": True, "id": account_id}
+
 @app.get("/api/accounts/{account_id}/folders")
 def folders(account_id: str):
     if _is_demo() or _is_demo_account(account_id):

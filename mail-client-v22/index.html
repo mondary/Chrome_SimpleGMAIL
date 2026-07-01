@@ -1207,10 +1207,12 @@
 
         <!-- List Header (sticky : cartes newsletters passent dessous + catégories fusionnées) -->
         <div class="sticky top-0 z-10 h-14 border-b border-gray-200/80 flex items-center justify-between px-6 select-none list-header-surface" id="list-header-bar">
+          <div id="loading-bar" style="position:absolute;top:0;left:0;right:0;height:3px;background:#1a73e8;transform:scaleX(0);transform-origin:left;transition:none;pointer-events:none;z-index:20"></div>
           <!-- Gauche : actions -->
           <div class="flex items-center gap-1.5">
             <div id="lh-normal" class="flex items-center gap-1.5">
               <div class="icon-btn-container" title="Rafraîchir" onclick="loadMessages(true)"><span class="material-symbols-outlined">refresh</span></div>
+              <a id="header-webmail-link" href="#" target="_blank" class="icon-btn-container" title="Ouvrir dans le webmail" style="display:none;text-decoration:none"><span class="material-symbols-outlined">open_in_new</span></a>
               <div class="icon-btn-container" title="Plus" onclick="showMoreListActions()"><span class="material-symbols-outlined">more_vert</span></div>
             </div>
             <div id="lh-selection" class="hidden items-center gap-1.5">
@@ -1411,6 +1413,11 @@
     let folders = [];
     let currentAccount = '';
     let currentFolder = 'INBOX';
+    let currentPage = 1;
+    let emailsPerPage = 50;
+    let pageCache = new Map();
+    let maxKnownPage = 1;
+    let infiniteObserver = null;
     let _detailCache = {};
     let _evtSource = null;
     let currentFont = 'futura';
@@ -1631,6 +1638,14 @@
     }
 
     function domainOf(addr) { return (addr || '').split('@').pop().toLowerCase(); }
+    function webmailUrl(email){
+      const d = domainOf(email);
+      if(d==='gmail.com') return 'https://mail.google.com';
+      if(['outlook.com','hotmail.com','live.com'].includes(d)) return 'https://outlook.live.com/mail/';
+      if(d==='yahoo.com') return 'https://mail.yahoo.com';
+      if(d==='protonmail.com'||d==='proton.me') return 'https://mail.proton.me';
+      return `https://${d}`;
+    }
     function nameOf(sender) { return (sender || '').split(' ')[0] || sender; }
     function localPartOf(addr) { return (addr || '').split('@')[0].toLowerCase(); }
     const NL_LOCALPARTS=['newsletter','no-reply','noreply','digest','weekly','mailer','mailchimp','sendgrid','mailgun','postmaster','notification','updates','noreply'];
@@ -1688,6 +1703,9 @@
       const letter=document.getElementById('account-avatar-letter');
       if(avatar) avatar.title=account?account.email:'Aucun compte connecté';
       if(letter) letter.textContent=account?(account.email||account.name||'?').charAt(0).toUpperCase():'?';
+      const wl=document.getElementById('header-webmail-link');
+      if(wl && account && account.email){ wl.href=webmailUrl(account.email); wl.style.display=''; }
+      else if(wl) wl.style.display='none';
     }
     function toggleAccountPopover(e){
       if(e) e.stopPropagation();
@@ -1699,7 +1717,7 @@
       const list=document.getElementById('account-popover-list');
       if(!list) return;
       const colors=['#1a73e8','#e23b3b','#0a66c2','#f59e0b','#a259ff','#1a7f37','#e11d48','#0d9488'];
-      list.innerHTML=allAccounts.map((a,i)=>{
+      list.innerHTML=allAccounts.filter(a => showDemoInDropdown() || a.id!=='demo').map((a,i)=>{
         const active=a.id===currentAccount;
         const connected=a.id==='demo' ? true : a.connected!==false;
         const letter=(a.email||a.name||'?').charAt(0).toUpperCase();
@@ -1713,6 +1731,7 @@
             <span class="account-popover-email">${escapeHtml(a.email||'')}</span>
           </div>
           <div class="flex items-center gap-2 shrink-0">
+            <a href="${webmailUrl(a.email)}" target="_blank" class="material-symbols-outlined" onclick="event.stopPropagation()" style="font-size:16px;cursor:pointer;color:#9aa0a6;padding:2px;border-radius:4px;text-decoration:none" title="Ouvrir dans le webmail" onmouseover="this.style.background='rgba(0,0,0,0.06)'" onmouseout="this.style.background=''">open_in_new</a>
             <span class="account-popover-status" style="color:${dotColor}"><span class="material-symbols-outlined" style="font-size:14px">circle</span>${statusText}</span>
             <span class="material-symbols-outlined account-popover-settings" onclick="event.stopPropagation();openAccountDetails('${escapeAttr(a.id)}')" style="font-size:16px;cursor:pointer;color:#9aa0a6;padding:2px;border-radius:4px;" onmouseover="this.style.background='rgba(0,0,0,0.06)'" onmouseout="this.style.background=''">settings</span>
           </div>
@@ -1964,14 +1983,26 @@
 
 
     // ====================== Messages ======================
+    function showLoading(){ const b=document.getElementById('loading-bar'); if(b){ b.style.transition='none'; b.style.transform='scaleX(0.3)'; b.style.opacity='1'; requestAnimationFrame(()=>{ b.style.transition='transform 30s cubic-bezier(0,0.7,0.3,1)'; b.style.transform='scaleX(0.85)'; }); } }
+    function hideLoading(){ const b=document.getElementById('loading-bar'); if(b){ b.style.transition='transform 0.15s ease'; b.style.transform='scaleX(1)'; setTimeout(()=>{ b.style.transition='opacity 0.3s'; b.style.opacity='0'; },120); } }
     async function loadMessages(alertFlag) {
+      showLoading();
       if (!currentAccount) { await loadAccounts(); if (currentAccount) await loadFolders(currentAccount); }
-      if (!currentAccount) { emails=[]; currentActiveView='zero'; updateUIState(); return; }
+      if (!currentAccount) { emails=[]; currentActiveView='zero'; updateUIState(); hideLoading(); return; }
+      emailsPerPage = getPageSize();
+      if(infiniteObserver){ infiniteObserver.disconnect(); infiniteObserver = null; }
+      pageCache = new Map();
+      maxKnownPage = 1;
+      currentPage = 1;
       try {
-        const qs = new URLSearchParams({ account: currentAccount, folder: currentFolder, page: 1, page_size: 60 });
+        const qs = new URLSearchParams({ account: currentAccount, folder: currentFolder, page: 1, page_size: emailsPerPage });
         if (searchText.trim()) qs.set('q', searchText.trim());
         const data = await api('/api/messages?' + qs.toString());
-        emails = (data.messages || []).map(mapMessage);
+        const raw = data.messages || [];
+        const mapped = raw.map(mapMessage);
+        pageCache.set(1, mapped);
+        if(raw.length < emailsPerPage) maxKnownPage = 1; else maxKnownPage = 2;
+        emails = [...mapped];
         loadError = '';
         currentSelectedId = null;
         currentListIndex = -1;
@@ -1980,10 +2011,39 @@
         hydrateMissingAttachmentCounts();
         if (alertFlag) showToast(`${emails.length} message(s) — ${currentFolder}`);
         buildNewsletterCarousel();
+        hideLoading();
       } catch (e) {
         loadError = e.message; emails = []; currentActiveView = 'zero'; updateUIState();
+        hideLoading();
         showToast('Erreur chargement : ' + e.message);
       }
+    }
+
+    async function goToPage(page){
+      if(page < 1) return;
+      if(pageCache.has(page)){
+        currentPage = page;
+        renderInboxList();
+        return;
+      }
+      showLoading();
+      try {
+        const qs = new URLSearchParams({ account: currentAccount, folder: currentFolder, page, page_size: emailsPerPage });
+        if (searchText.trim()) qs.set('q', searchText.trim());
+        const data = await api('/api/messages?' + qs.toString());
+        const raw = data.messages || [];
+        const mapped = raw.map(mapMessage);
+        pageCache.set(page, mapped);
+        if(raw.length < emailsPerPage) maxKnownPage = page;
+        else if(page >= maxKnownPage) maxKnownPage = page + 1;
+        const existingIds = new Set(emails.map(e => e.id));
+        mapped.forEach(e => { if(!existingIds.has(e.id)){ emails.push(e); existingIds.add(e.id); } });
+        currentPage = page;
+        currentActiveView = 'list';
+        renderInboxList();
+        buildNewsletterCarousel();
+        hideLoading();
+      } catch(e) { hideLoading(); showToast('Erreur : ' + e.message); }
     }
 
     async function fetchDetail(email) {
@@ -2604,9 +2664,11 @@
         if(lh) lh.style.display=''; if(mc) mc.style.display='';
       }
       const container=document.getElementById('messages-container');
-      const threads=getThreads();
+      const pageEmails = pageCache.get(currentPage) || [];
+      const filteredPage = getCategoryEmails(pageEmails);
+      const threads = getThreads(filteredPage);
       const sc=document.getElementById('search-count');
-      if(sc){ const n=threads.length; sc.textContent=`${n} mail${n>1?'s':''}`; }
+      if(sc){ sc.textContent = `Page ${currentPage} · ${threads.length} affiché${threads.length>1?'s':''}`; }
       updateSearchContext(getSearchContext());
       container.innerHTML='';
       updateCategoryTabs();
@@ -2698,6 +2760,37 @@
         container.appendChild(item);
         if (isSelected) queueMicrotask(() => item.scrollIntoView({ block: 'nearest' }));
       });
+      // Pagination / load more / infinite scroll
+      const mode = getListMode();
+      const totalPages = Math.max(maxKnownPage, currentPage);
+      if(mode === 'pagination' && totalPages > 1){
+        const bar = document.createElement('div');
+        bar.className = 'flex items-center justify-center gap-2 py-4 text-sm';
+        const pages = [];
+        for(let p = Math.max(1, currentPage - 2); p <= Math.min(totalPages, currentPage + 2); p++) pages.push(p);
+        let html = '';
+        html += `<button onclick="goToPage(${currentPage - 1})" class="px-3 py-1.5 rounded-lg border transition-colors hover:bg-gray-50 ${currentPage <= 1 ? 'opacity-30 pointer-events-none' : ''}" style="border-color:rgba(0,0,0,0.08)">‹</button>`;
+        pages.forEach(p => {
+          html += `<button onclick="goToPage(${p})" class="px-3 py-1.5 rounded-lg border transition-colors font-medium ${p === currentPage ? 'text-white' : 'hover:bg-gray-50'}" style="border-color:rgba(0,0,0,0.08);${p === currentPage ? 'background:#1a73e8' : ''}">${p}</button>`;
+        });
+        html += `<button onclick="goToPage(${currentPage + 1})" class="px-3 py-1.5 rounded-lg border transition-colors hover:bg-gray-50 ${currentPage >= totalPages ? 'opacity-30 pointer-events-none' : ''}" style="border-color:rgba(0,0,0,0.08)">›</button>`;
+        bar.innerHTML = html;
+        container.appendChild(bar);
+      } else if(mode === 'loadmore' && currentPage < maxKnownPage){
+        const lm = document.createElement('div');
+        lm.className = 'flex justify-center py-6';
+        lm.innerHTML = `<button onclick="goToPage(${currentPage + 1})" class="px-6 py-2.5 rounded-xl text-sm font-medium border transition-colors hover:bg-gray-50" style="border-color:rgba(0,0,0,0.1)">Charger plus de messages</button>`;
+        container.appendChild(lm);
+      } else if(mode === 'infinite' && currentPage < maxKnownPage){
+        if(infiniteObserver) infiniteObserver.disconnect();
+        const sentinel = document.createElement('div');
+        sentinel.className = 'h-2';
+        container.appendChild(sentinel);
+        infiniteObserver = new IntersectionObserver(entries => {
+          if(entries[0].isIntersecting){ infiniteObserver.disconnect(); goToPage(currentPage + 1); }
+        }, { rootMargin: '200px' });
+        infiniteObserver.observe(sentinel);
+      }
     }
 
     // ====================== Newsletter (expéditeurs récurrents en Promotions) ======================
@@ -2980,6 +3073,20 @@
       loadMessages(true);
     }
     function getNewsletterMode(){ try { return localStorage.getItem('simplemail_newsletter_mode') || 'cards'; } catch(e){ return 'cards'; } }
+    function showDemoInDropdown(){ try { return localStorage.getItem('simplemail_show_demo')!=='false'; } catch(e){ return true; } }
+    function getListMode(){ try { return localStorage.getItem('simplemail_list_mode') || 'pagination'; } catch(e){ return 'pagination'; } }
+    function setListMode(mode){
+      try { localStorage.setItem('simplemail_list_mode', mode); } catch(e){}
+      const labels={pagination:'Pagination',loadmore:'Charger plus',infinite:'Infini'};
+      showToast('Mode liste : ' + (labels[mode]||mode));
+      loadMessages(true);
+    }
+    function getPageSize(){ try { const v=parseInt(localStorage.getItem('simplemail_page_size')); return v>=1?Math.min(v,100):50; } catch(e){ return 50; } }
+    function setPageSize(n){
+      try { localStorage.setItem('simplemail_page_size', String(n)); } catch(e){}
+      showToast(`${n} messages par page`);
+      loadMessages(true);
+    }
     function setNewsletterMode(mode){
       try { localStorage.setItem('simplemail_newsletter_mode', mode); } catch(e){}
       const labels={cards:'Cartes',dock:'Dock horizontal',hidden:'Masqué'};
@@ -3978,6 +4085,10 @@
                   <span class="material-symbols-outlined" style="font-size:18px">forum</span>
                   <span>Conversations</span>
                 </button>
+                <button onclick="gotoSettingsSection('list')" data-nav="list" class="settings-nav-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors">
+                  <span class="material-symbols-outlined" style="font-size:18px">format_list_bulleted</span>
+                  <span>Liste des messages</span>
+                </button>
                 <button onclick="gotoSettingsSection('newsletters')" data-nav="newsletters" class="settings-nav-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors">
                   <span class="material-symbols-outlined" style="font-size:18px">newspaper</span>
                   <span>Newsletters</span>
@@ -4125,6 +4236,36 @@
               </div>
             </div>
 
+            <!-- PAGE: LISTE DES MESSAGES -->
+            <div id="set-page-list" class="settings-page hidden px-10 py-8">
+              <h2 class="text-2xl font-semibold mb-1">Liste des messages</h2>
+              <p class="text-sm mb-8" style="color:#5f6368">Mode de navigation dans la liste des emails et nombre de messages par page.</p>
+
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <div class="settings-row-title">Mode de navigation</div>
+                  <div class="settings-row-desc">Pagination = barre de pages, Charger plus = bouton en bas, Infini = chargement automatique en descendant.</div>
+                </div>
+                <select onchange="setListMode(this.value)" class="settings-select">
+                  <option value="pagination" ${getListMode()==='pagination'?'selected':''}>Pagination</option>
+                  <option value="loadmore" ${getListMode()==='loadmore'?'selected':''}>Charger plus</option>
+                  <option value="infinite" ${getListMode()==='infinite'?'selected':''}>Infini</option>
+                </select>
+              </div>
+
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <div class="settings-row-title">Messages par page</div>
+                  <div class="settings-row-desc">Nombre d’emails chargés à chaque fois.</div>
+                </div>
+                <select onchange="setPageSize(this.value)" class="settings-select">
+                  <option value="25" ${getPageSize()===25?'selected':''}>25</option>
+                  <option value="50" ${getPageSize()===50?'selected':''}>50</option>
+                  <option value="100" ${getPageSize()===100?'selected':''}>100</option>
+                </select>
+              </div>
+            </div>
+
             <!-- PAGE: NEWSLETTERS -->
             <div id="set-page-newsletters" class="settings-page hidden px-10 py-8">
               <h2 class="text-2xl font-semibold mb-1">Newsletters</h2>
@@ -4238,7 +4379,23 @@
       if(!details) return;
       const account=source.find(a=>a.id===selectedId);
       if(!account){ details.innerHTML='<div class="text-sm text-center py-6" style="color:#80868b">Cliquez sur un compte pour afficher toute sa configuration.</div>'; return; }
-      if(account.test){ details.innerHTML='<div class="text-sm text-center py-6" style="color:#80868b">Le compte test utilise des données locales et ne nécessite aucune configuration.</div>'; return; }
+      if(account.test){
+        const demoChecked = showDemoInDropdown();
+        details.innerHTML=`<div class="rounded-2xl border p-5" style="border-color:rgba(0,0,0,0.1)">
+          <div class="flex items-start justify-between gap-4 mb-5">
+            <div class="flex-1"><div class="text-base font-semibold">${escapeHtml(account.name||account.id)}</div><div class="text-xs mt-1" style="color:#5f6368">${escapeHtml(account.email||'')}</div></div>
+          </div>
+          <p class="text-sm mb-4" style="color:#5f6368">Ce compte utilise des données locales de démonstration. Aucune configuration IMAP requise.</p>
+          <div class="settings-row" style="border:0;padding:0">
+            <div class="settings-row-label">
+              <div class="settings-row-title">Afficher dans la liste des comptes</div>
+              <div class="settings-row-desc">Masque le compte de démonstration du menu déroulant.</div>
+            </div>
+            <label class="toggle-wrapper"><input type="checkbox" ${demoChecked?'checked':''} onchange="localStorage.setItem('simplemail_show_demo',this.checked?'true':'false');showToast(this.checked?'Compte Demo affiché':'Compte Demo masqué')"><span class="toggle-slider"></span></label>
+          </div>
+        </div>`;
+        return;
+      }
       const connected=account.connected!==false;
       details.innerHTML=`<form onsubmit="saveAccountSettings(event,'${escapeAttr(account.id)}')" class="rounded-2xl border p-5" style="border-color:rgba(0,0,0,0.1)">
         <div class="flex items-start justify-between gap-4 mb-5">
@@ -4262,7 +4419,7 @@
         </details>
         <div class="grid gap-3">${accountConnectionFormHtml('Réception IMAP','imap',account.imap)}${accountConnectionFormHtml('Envoi SMTP','smtp',account.smtp)}</div>
         <div id="account-save-status" class="text-xs min-h-[18px] mt-4" style="color:#5f6368"></div>
-        <div class="flex justify-end mt-2"><button id="account-save-button" type="submit" class="preset-btn active">Enregistrer</button></div>
+        <div class="flex justify-between items-center mt-2"><button type="button" onclick="removeAccount('${escapeAttr(account.id)}')" class="text-xs font-medium" style="color:#d93025">Supprimer ce compte</button><button id="account-save-button" type="submit" class="preset-btn active">Enregistrer</button></div>
       </form>`;
     }
     async function saveAccountSettings(event,id){
@@ -4294,6 +4451,17 @@
       const mc=document.getElementById('main-content');
       if(mc) mc.classList.remove('hidden');
       updateUIState();
+    }
+    async function removeAccount(id){
+      if(!confirm(`Supprimer le compte "${id}" ?`)) return;
+      try{
+        await api(`/api/accounts/${encodeURIComponent(id)}`,{method:'DELETE'});
+        await loadAccounts();
+        if(currentAccount===id) currentAccount='';
+        closeSettings();
+        loadMessages();
+        showToast('Compte supprimé');
+      }catch(e){ showToast('Erreur : '+e.message); }
     }
     function gotoSettingsSection(key){
       document.querySelectorAll('.settings-page').forEach(p => p.classList.add('hidden'));
