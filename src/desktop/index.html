@@ -1900,8 +1900,11 @@
       catch (e) { accounts = []; loadError = e.message; showToast('Connexion : ' + e.message); }
       try { allAccounts = await api('/api/accounts/all'); } catch (e) { allAccounts = [...accounts]; }
       try { lastAccountId = localStorage.getItem('simplemail_last_account') || ''; } catch(e){}
+      const defaultId = (()=>{ try { return localStorage.getItem('simplemail_default_account')||''; } catch(e){ return ''; } })();
+      const defaultAcc = defaultId ? accounts.find(a => a.id === defaultId) : null;
       const saved = accounts.find(a => a.id === lastAccountId);
-      if (saved) currentAccount = saved.id;
+      if (defaultAcc) currentAccount = defaultAcc.id;
+      else if (saved) currentAccount = saved.id;
       else {
         if (accounts.length && !accounts.some(a => a.id === currentAccount)) currentAccount = accounts[0].id;
       }
@@ -5091,6 +5094,13 @@
               </div>
               <p class="text-sm mb-8" style="color:#5f6368">Gérez vos comptes de messagerie IMAP/SMTP.</p>
               <input id="accounts-import-input" type="file" accept="application/json,.json" class="hidden" onchange="importAccountsBundle(event)">
+              <div class="settings-row mb-6">
+                <div class="settings-row-label">
+                  <div class="settings-row-title">Compte par défaut</div>
+                  <div class="settings-row-desc">Compte utilisé au démarrage de l'application.</div>
+                </div>
+                <select id="settings-default-account" onchange="setDefaultAccount(this.value)" class="settings-select"></select>
+              </div>
               <div id="settings-accounts-list" class="space-y-2"></div>
               <div id="settings-account-details" class="mt-6"></div>
             </div>
@@ -5142,11 +5152,21 @@
         </div>
       </div>`;
     }
+     function setDefaultAccount(id){
+      if(id) localStorage.setItem('simplemail_default_account',id);
+      else localStorage.removeItem('simplemail_default_account');
+      showToast(id?'Compte par défaut défini':'Compte par défaut réinitialisé');
+    }
     function renderSettingsAccounts(selectedId=''){
       const alist=document.getElementById('settings-accounts-list');
       const details=document.getElementById('settings-account-details');
       if(!alist) return;
       const source=allAccounts.length?allAccounts:accounts;
+      const defSel=document.getElementById('settings-default-account');
+      if(defSel){
+        const currentDefault=localStorage.getItem('simplemail_default_account')||'';
+        defSel.innerHTML='<option value="">— Dernier utilisé —</option>'+source.map(a=>`<option value="${a.id}" ${a.id===currentDefault?'selected':''}>${escapeHtml(a.name||a.id)} — ${escapeHtml(a.email||'')}</option>`).join('');
+      }
       const colors=['#1a73e8','#e8710a','#0d904f','#7b4bb7'];
       alist.innerHTML=source.map((a,index)=>{
         const connected=a.connected!==false;
