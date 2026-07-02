@@ -1,0 +1,59 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/desktop/**"
+      - ".github/workflows/build.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: src/desktop
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r build-requirements.txt
+          pip install uvicorn fastapi pydantic imap-tools aiosmtplib
+
+      - name: Install Linux system deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev 2>/dev/null || sudo apt-get install -y libwebkit2gtk-4.0-dev
+
+      - name: Build
+        run: |
+          chmod +x build_*.sh 2>/dev/null || true
+          if [ "$RUNNER_OS" = "macOS" ]; then ./build_macos.sh
+          elif [ "$RUNNER_OS" = "Linux" ]; then ./build_linux.sh
+          fi
+        shell: bash
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: .\build_windows.ps1
+        shell: powershell
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SimpleMail-${{ runner.os }}
+          path: releases/
+          if-no-files-found: error
