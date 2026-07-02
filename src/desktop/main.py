@@ -1534,6 +1534,30 @@ def _folder_key(name: str, order: list[str]):
     return (1, name.lower())
 
 
+@app.get("/api/debug/gmail-labels")
+def debug_gmail_labels(account: str = Query(...), folder: str = Query("INBOX"), limit: int = Query(10, le=50)):
+    """Diagnostic: show gmail_labels on recent messages + test X-GM-LABELS search."""
+    acc = get_account(account)
+    result = {"is_gmail": _is_gmail_imap(acc), "folder": folder, "samples": [], "label_search_tests": {}}
+    with open_mailbox(acc) as mailbox:
+        mailbox.folder.set(folder)
+        msgs = list(mailbox.fetch(AND(all=True), limit=limit, reverse=True, mark_seen=False, bulk=True, headers_only=True))
+        for m in msgs:
+            result["samples"].append({
+                "uid": str(m.uid),
+                "from": m.from_,
+                "subject": m.subject,
+                "gmail_labels": list(getattr(m, 'gmail_labels', None) or []),
+            })
+        for cat_label in ("category:primary", "category:promotions", "category:social", "category:updates"):
+            try:
+                uids = list(mailbox.fetch(AND(gmail_label=cat_label), limit=1, mark_seen=False, bulk=True, headers_only=True))
+                result["label_search_tests"][cat_label] = len(uids) > 0
+            except Exception as e:
+                result["label_search_tests"][cat_label] = f"error: {e}"
+    return result
+
+
 @app.get("/api/messages")
 def list_messages(
     account: str = Query(...),
@@ -1593,10 +1617,22 @@ def list_messages(
                                   reverse=True, mark_seen=False, bulk=True, headers_only=True)
 
         if use_gmail_cat:
-            fetched = list(_do_fetch({"gmail_label": _GMAIL_CATEGORY_LABELS[category]}))
-            if not fetched:
-                use_gmail_cat = False
-                fetched = _do_fetch({})
+            target_label = _GMAIL_CATEGORY_LABELS[category]
+            # Tier 1: IMAP-level X-GM-LABELS search
+            label_fetched = list(_do_fetch({"gmail_label": target_label}))
+            if label_fetched:
+                fetched = label_fetched
+            else:
+                # Tier 2: fetch all, filter by per-message gmail_labels attribute
+                all_fetched = list(_do_fetch({}))
+                label_filtered = [m for m in all_fetched
+                                  if target_label in (getattr(m, 'gmail_labels', None) or [])]
+                if label_filtered:
+                    fetched = label_filtered
+                else:
+                    # Tier 3: heuristic fallback
+                    use_gmail_cat = False
+                    fetched = all_fetched
         else:
             fetched = _do_fetch({})
 
