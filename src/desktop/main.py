@@ -19,7 +19,7 @@ imaplib.Debug = 0
 import base64
 import re
 
-from imap_tools import MailBox, MailBoxStartTls, MailBoxUnencrypted, AND, MailMessageFlags
+from imap_tools import MailBox, MailBoxStartTls, MailBoxUnencrypted, AND, A, MailMessageFlags
 from fastapi import FastAPI, HTTPException, Query, Body
 from fastapi.responses import FileResponse, Response, StreamingResponse
 from pydantic import BaseModel
@@ -114,6 +114,22 @@ def _checkin_mailbox(aid: str, conn):
     """Return a connection to the pool for reuse."""
     with _POOL_LOCK:
         _IMAP_POOL.setdefault(aid, []).append((conn, time.time()))
+
+
+# ---------- Gmail detection ----------
+_GMAIL_HOSTS = ("imap.gmail.com", "imap.googlemail.com")
+
+def _is_gmail_imap(account: dict) -> bool:
+    host = (account.get("imap", {}).get("host") or "").lower().strip()
+    return host in _GMAIL_HOSTS
+
+_GMAIL_CATEGORY_LABELS = {
+    "primary": "category:primary",
+    "social": "category:social",
+    "promotions": "category:promotions",
+    "updates": "category:updates",
+    "forums": "category:forums",
+}
 
 
 # ---------- SQLite persistence (settings, newsletters, labels) ----------
@@ -1554,6 +1570,8 @@ def list_messages(
         if cached:
             return cached
     acc = get_account(account)
+    is_gmail = _is_gmail_imap(acc)
+    use_gmail_cat = is_gmail and category in _GMAIL_CATEGORY_LABELS
     with open_mailbox(acc) as mailbox:
         mailbox.folder.set(folder)
         kwargs = {}
@@ -1561,6 +1579,8 @@ def list_messages(
             kwargs["text"] = q
         if unseen:
             kwargs["seen"] = False
+        if use_gmail_cat:
+            kwargs["gmail_label"] = _GMAIL_CATEGORY_LABELS[category]
         criteria = AND(**kwargs) if kwargs else AND(all=True)
 
         all_messages = []
@@ -1601,14 +1621,20 @@ def list_messages(
                 "list_unsubscribe": header_value(msg.headers, "list-unsubscribe"),
                 "list_id": header_value(msg.headers, "list-id"),
             }
-            entry["category"] = _categorize(entry["from_addr"], entry["from_name"], entry["subject"])
-            newsletter = _is_newsletter_entry(entry, manual_domains)
-            if category == "newsletter" and not newsletter:
-                continue
-            if category == "promotions" and (entry["category"] != "promotions" or newsletter):
-                continue
-            if category and category not in ("newsletter", "promotions") and (entry["category"] != category or newsletter):
-                continue
+            if use_gmail_cat:
+                entry["category"] = category
+                newsletter = _is_newsletter_entry(entry, manual_domains)
+                if category in ("primary", "promotions") and newsletter:
+                    continue
+            else:
+                entry["category"] = _categorize(entry["from_addr"], entry["from_name"], entry["subject"])
+                newsletter = _is_newsletter_entry(entry, manual_domains)
+                if category == "newsletter" and not newsletter:
+                    continue
+                if category == "promotions" and (entry["category"] != "promotions" or newsletter):
+                    continue
+                if category and category not in ("newsletter", "promotions") and (entry["category"] != category or newsletter):
+                    continue
             all_messages.append(entry)
             if direct_folder_page and len(all_messages) >= page_size:
                 break
