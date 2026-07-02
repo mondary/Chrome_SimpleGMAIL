@@ -19,6 +19,7 @@
             --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
             --radius-xl: 24px;
             --radius-lg: 16px;
+            --email-col-width: 400px;
         }
 
         [data-theme="nordic-zen"] {
@@ -142,20 +143,30 @@
 
         header {
             height: 72px;
-            padding: 0 32px;
-            display: flex;
+            padding: 0;
+            display: grid;
+            grid-template-columns: var(--email-col-width) minmax(0, 1fr) auto;
             align-items: center;
-            justify-content: space-between;
+            gap: 24px;
             border-bottom: 1px solid var(--border-glass);
             background: var(--bg-glass);
             backdrop-filter: var(--bg-blur);
         }
 
         .search-bar {
-            flex: 1;
-            max-width: 600px;
+            width: 100%;
             position: relative;
         }
+
+        .header-controls {
+            grid-column: 3;
+            justify-self: end;
+            padding-right: 32px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
         .search-input {
             width: 100%;
             background: rgba(0,0,0,0.04);
@@ -176,7 +187,8 @@
         }
 
         .email-list {
-            width: 400px;
+            width: var(--email-col-width);
+            flex: 0 0 var(--email-col-width);
             border-right: 1px solid var(--border-glass);
             overflow-y: auto;
             background: rgba(255,255,255,0.3);
@@ -186,10 +198,16 @@
             padding: 20px 24px;
             border-bottom: 1px solid var(--border-glass);
             cursor: pointer;
-            transition: all 0.2s;
+            transition: background 0.2s, transform 0.2s;
+            animation: email-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
         .email-item:hover { background: rgba(255,255,255,0.5); }
         .email-item.unread { font-weight: 700; border-left: 3px solid var(--accent); }
+
+        @keyframes email-enter {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
 
         .item-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
         .item-sender { font-size: 14px; color: var(--text-main); }
@@ -266,9 +284,68 @@
         .compose-body { padding: 24px; display: flex; flex-direction: column; gap: 16px; flex: 1; }
         .compose-input { border: none; border-bottom: 1px solid #eee; padding: 8px 0; outline: none; font-size: 14px; }
         .compose-textarea { flex: 1; border: none; resize: none; outline: none; font-size: 14px; line-height: 1.6; }
+
+        /* --- STARTUP LOADER --- */
+        .startup-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(248, 250, 252, 0.78);
+            backdrop-filter: blur(18px);
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+        }
+
+        .startup-loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .startup-loader-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            padding: 28px 32px;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            box-shadow: 0 24px 80px rgba(15, 23, 42, 0.08);
+        }
+
+        .startup-loader-spinner {
+            width: 38px;
+            height: 38px;
+            border-radius: 999px;
+            border: 3px solid rgba(82, 114, 234, 0.15);
+            border-top-color: var(--accent);
+            animation: spin 0.9s linear infinite;
+        }
+
+        .startup-loader-label {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body data-theme="aero-glass">
+    <div id="startup-loader" class="startup-loader" role="status" aria-live="polite" aria-label="Chargement de l'application">
+        <div class="startup-loader-card">
+            <div class="startup-loader-spinner" aria-hidden="true"></div>
+            <div class="startup-loader-label">Synchronisation en cours</div>
+        </div>
+    </div>
+
     <div class="app-shell">
         <aside>
             <div class="logo">ZenMail</div>
@@ -290,7 +367,7 @@
                     <svg style="position: absolute; left: 16px; top: 12px; opacity: 0.4;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
                     <input type="text" id="search-input" class="search-input" placeholder="Search your archive...">
                 </div>
-                <div style="display: flex; align-items: center; gap: 24px;">
+                <div class="header-controls">
                     <div class="theme-pill">
                         <div class="theme-btn active" data-t="aero-glass">Aero</div>
                         <div class="theme-btn" data-t="nordic-zen">Nordic</div>

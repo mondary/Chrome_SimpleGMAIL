@@ -4,6 +4,15 @@ const GMAIL_API_BASE = 'https://gmail.googleapis.com/gmail/v1/users/me';
 let currentFolder = 'INBOX';
 let isLoading = false;
 let authToken = null;
+let initialLoadComplete = false;
+let nextPageToken = null;
+const PAGE_SIZE = 24;
+
+function setStartupLoaderVisible(visible) {
+    const loader = document.getElementById('startup-loader');
+    if (!loader) return;
+    loader.classList.toggle('hidden', !visible);
+}
 
 // --- API LAYER ---
 
@@ -58,61 +67,89 @@ async function fetchUserProfile() {
     } catch (e) { console.warn('Profile sync skipped'); }
 }
 
-async function fetchEmails(folder = 'INBOX', q = '') {
+async function fetchEmails(folder = 'INBOX', q = '', append = false) {
     if (isLoading) return;
     isLoading = true;
+    if (!initialLoadComplete) setStartupLoaderVisible(true);
     
     const container = document.getElementById('email-items');
-    container.innerHTML = '<div style="padding: 40px; text-align: center; opacity: 0.4; font-size: 11px; font-weight: 800; letter-spacing: 2px;">SYNCHRONIZING...</div>';
+    if (!append) {
+        nextPageToken = null;
+        container.innerHTML = '<div style="padding: 40px; text-align: center; opacity: 0.4; font-size: 11px; font-weight: 800; letter-spacing: 2px;">SYNCHRONIZING...</div>';
+    } else {
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        if (loadMoreBtn) loadMoreBtn.remove();
+    }
 
     try {
         let query = q;
         const folderQueries = { 'STARRED': 'is:starred', 'SENT': 'is:sent', 'TRASH': 'is:trash', 'INBOX': 'label:INBOX' };
         if (folderQueries[folder]) query += ` ${folderQueries[folder]}`;
 
-        const data = await apiRequest(`/messages?maxResults=20${query ? '&q=' + encodeURIComponent(query) : ''}`);
+        let url = `/messages?maxResults=${PAGE_SIZE}${query ? '&q=' + encodeURIComponent(query) : ''}`;
+        if (append && nextPageToken) url += `&pageToken=${encodeURIComponent(nextPageToken)}`;
+
+        const data = await apiRequest(url);
         
         if (!data.messages) {
-            container.innerHTML = '<div style="padding: 40px; text-align: center; opacity: 0.3;">Inbox Zero</div>';
+            if (!append) container.innerHTML = '<div style="padding: 40px; text-align: center; opacity: 0.3;">Inbox Zero</div>';
             isLoading = false;
+            initialLoadComplete = true;
+            setStartupLoaderVisible(false);
             return;
         }
 
-        const details = await Promise.all(data.messages.map(m => apiRequest(`/messages/${m.id}`).catch(() => null)));
-        renderEmailList(details.filter(d => d !== null));
+        nextPageToken = data.nextPageToken || null;
+        if (!append) container.innerHTML = '';
+
+        await Promise.all(data.messages.map(m =>
+            apiRequest(`/messages/${m.id}`).then(appendEmailItem).catch(() => null)
+        ));
+        appendLoadMoreButton();
     } catch (error) {
         container.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--accent); font-size: 12px; font-weight: 700;">SYNC ERROR. CHECK CLIENT ID.</div>';
     } finally { isLoading = false; }
+    initialLoadComplete = true;
+    setStartupLoaderVisible(false);
 }
 
 // --- RENDERING ---
 
-function renderEmailList(emails) {
+function appendEmailItem(email) {
     const container = document.getElementById('email-items');
-    container.innerHTML = '';
+    const headers = email.payload.headers || [];
+    const from = headers.find(h => h.name === 'From')?.value || 'Unknown';
+    const subject = headers.find(h => h.name === 'Subject')?.value || '(No Subject)';
+    const date = new Date(parseInt(email.internalDate));
+    const isUnread = email.labelIds?.includes('UNREAD');
 
-    emails.forEach(email => {
-        const headers = email.payload.headers || [];
-        const from = headers.find(h => h.name === 'From')?.value || 'Unknown';
-        const subject = headers.find(h => h.name === 'Subject')?.value || '(No Subject)';
-        const date = new Date(parseInt(email.internalDate));
-        const isUnread = email.labelIds?.includes('UNREAD');
+    const senderName = from.split('<')[0].trim().replace(/"/g, '') || from;
 
-        const senderName = from.split('<')[0].trim().replace(/"/g, '') || from;
+    const div = document.createElement('div');
+    div.className = `email-item ${isUnread ? 'unread' : ''}`;
+    div.innerHTML = `
+        <div class="item-header">
+            <span class="item-sender">${senderName}</span>
+            <span class="item-date">${formatDate(date)}</span>
+        </div>
+        <div class="item-subject">${subject}</div>
+        <div class="item-snippet">${email.snippet}</div>
+    `;
+    div.onclick = () => openEmail(email);
+    container.appendChild(div);
+}
 
-        const div = document.createElement('div');
-        div.className = `email-item ${isUnread ? 'unread' : ''}`;
-        div.innerHTML = `
-            <div class="item-header">
-                <span class="item-sender">${senderName}</span>
-                <span class="item-date">${formatDate(date)}</span>
-            </div>
-            <div class="item-subject">${subject}</div>
-            <div class="item-snippet">${email.snippet}</div>
-        `;
-        div.onclick = () => openEmail(email);
-        container.appendChild(div);
-    });
+function appendLoadMoreButton() {
+    if (!nextPageToken) return;
+    const container = document.getElementById('email-items');
+    const btn = document.createElement('button');
+    btn.id = 'load-more-btn';
+    btn.innerHTML = 'Charger plus';
+    btn.style.cssText = 'display:block;width:calc(100% - 48px);margin:16px 24px;padding:14px;background:transparent;border:1px solid var(--border-glass);border-radius:var(--radius-lg);color:var(--text-muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.2s;';
+    btn.onmouseenter = () => { btn.style.color = 'var(--accent)'; btn.style.borderColor = 'var(--accent)'; };
+    btn.onmouseleave = () => { btn.style.color = 'var(--text-muted)'; btn.style.borderColor = 'var(--border-glass)'; };
+    btn.onclick = () => fetchEmails(currentFolder, document.getElementById('search-input').value, true);
+    container.appendChild(btn);
 }
 
 function getEmailBody(payload) {
@@ -171,6 +208,20 @@ function formatDate(date) {
 
 // --- INTERACTION ---
 
+function syncHeaderToMailColumn() {
+    const emailList = document.getElementById('email-items');
+    if (!emailList) return;
+
+    const sync = () => {
+        const width = Math.round(emailList.getBoundingClientRect().width);
+        if (width > 0) document.documentElement.style.setProperty('--email-col-width', `${width}px`);
+    };
+
+    sync();
+    if ('ResizeObserver' in window) new ResizeObserver(sync).observe(emailList);
+    window.addEventListener('resize', sync);
+}
+
 function initHandlers() {
     // Nav
     document.querySelectorAll('.nav-link').forEach(link => {
@@ -217,9 +268,12 @@ function initHandlers() {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => fetchEmails(currentFolder, e.target.value), 500);
     };
+
+    syncHeaderToMailColumn();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    setStartupLoaderVisible(true);
     initHandlers();
     fetchUserProfile();
     fetchEmails();

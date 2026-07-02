@@ -904,6 +904,20 @@
       font-size: 3.2em; font-weight: 500; float: left;
       line-height: 0.85; padding: 0.08em 0.12em 0 0; color: inherit;
     }
+    #main-header { position: relative; }
+    #header-center {
+      position: absolute;
+      left: var(--header-center-left, 50%);
+      width: var(--header-center-width, var(--list-max-w, 56rem));
+      max-width: none !important;
+      transform: translateX(0);
+      z-index: 35;
+    }
+    #main-header > :last-child {
+      margin-left: auto;
+      position: relative;
+      z-index: 40;
+    }
     @media (max-width: 900px) {
       #main-header { padding-left:8px !important; padding-right:8px !important; gap:4px !important; }
       #header-search-bar { padding-left:12px !important; padding-right:12px !important; gap:8px !important; }
@@ -2628,6 +2642,39 @@
       const latest = threads[idx].messages[threads[idx].messages.length - 1];
       if (latest) openConversation(latest.id);
     }
+    function syncHeaderCenterToContent(){
+      const header=document.getElementById('main-header');
+      const center=document.getElementById('header-center');
+      if(!header||!center) return;
+
+      const target = currentActiveView==='conversation'
+        ? document.getElementById('conversation-card')
+        : document.getElementById('mail-list-container');
+      if(!target) return;
+
+      const headerRect=header.getBoundingClientRect();
+      const targetRect=target.getBoundingClientRect();
+      const leftGroup=header.firstElementChild;
+      const rightGroup=header.lastElementChild;
+      const leftGroupRect=leftGroup?.getBoundingClientRect();
+      const rightGroupRect=rightGroup?.getBoundingClientRect();
+      const safeGap=12;
+
+      const desiredLeft=targetRect.left;
+      const desiredRight=targetRect.right;
+      const minLeft=leftGroupRect ? leftGroupRect.right + safeGap : headerRect.left;
+      const maxRight=rightGroupRect ? rightGroupRect.left - safeGap : headerRect.right;
+
+      // Keep the v22 alignment when possible; only clamp to avoid overlapping header controls.
+      const visibleLeft=Math.max(desiredLeft, minLeft);
+      const visibleRight=Math.min(desiredRight, maxRight);
+      const width=Math.round(Math.max(0, visibleRight-visibleLeft));
+      const left=Math.round(visibleLeft-headerRect.left);
+      if(width<=120) return;
+
+      header.style.setProperty('--header-center-left', `${left}px`);
+      header.style.setProperty('--header-center-width', `${width}px`);
+    }
     function setHeaderState(state){
       const header=document.getElementById('main-header');
       header.dataset.state=state;
@@ -2653,6 +2700,7 @@
       ab.setAttribute('aria-hidden', showActions ? 'false' : 'true');
       const center=document.getElementById('header-center');
       if(center) center.style.maxWidth = showActions ? 'var(--conv-max-w, 56rem)' : 'var(--list-max-w, 56rem)';
+      syncHeaderCenterToContent();
       updateHeaderFolderActions();
       updateHeaderOverflow();
       const burger=document.getElementById('burger-btn'), backBtn=document.getElementById('burger-back-btn');
@@ -4019,7 +4067,10 @@
     let _pendingKey = null;
     let _pendingTimer = null;
     let _resizeTimer=null;
-    window.addEventListener('resize',()=>{ clearTimeout(_resizeTimer); _resizeTimer=setTimeout(updateHeaderOverflow,100); });
+    window.addEventListener('resize',()=>{
+      clearTimeout(_resizeTimer);
+      _resizeTimer=setTimeout(()=>{ syncHeaderCenterToContent(); updateHeaderOverflow(); },100);
+    });
 
     document.addEventListener('keydown',(e)=>{
       const lightbox=document.getElementById('image-lightbox');
@@ -4192,6 +4243,7 @@
         const w=Math.min(Math.max(startW + ev.clientX - startX, 400), Math.min(window.innerWidth - 80, 1200));
         container.style.setProperty('--list-max-w', w + 'px');
         document.documentElement.style.setProperty('--list-max-w', w + 'px');
+        syncHeaderCenterToContent();
       }
       function onUp(){
         handle.classList.remove('active');
@@ -4217,6 +4269,7 @@
         const w=Math.min(Math.max(startW + startX - ev.clientX, 400), Math.min(window.innerWidth - 80, 1200));
         container.style.setProperty('--list-max-w', w + 'px');
         document.documentElement.style.setProperty('--list-max-w', w + 'px');
+        syncHeaderCenterToContent();
       }
       function onUp(){
         handle.classList.remove('active');
