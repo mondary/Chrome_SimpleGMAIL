@@ -1,0 +1,4 @@
+# Build-only dependencies for the desktop .app (pywebview + PyInstaller)
+# Install with: python3 -m pip install --user -r src/desktop/build-requirements.txt
+pywebview>=6.0
+pyinstaller>=6.0
