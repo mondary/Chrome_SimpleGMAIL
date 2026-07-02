@@ -1574,15 +1574,7 @@ def list_messages(
     use_gmail_cat = is_gmail and category in _GMAIL_CATEGORY_LABELS
     with open_mailbox(acc) as mailbox:
         mailbox.folder.set(folder)
-        kwargs = {}
-        if q:
-            kwargs["text"] = q
-        if unseen:
-            kwargs["seen"] = False
-        if use_gmail_cat:
-            kwargs["gmail_label"] = _GMAIL_CATEGORY_LABELS[category]
-        criteria = AND(**kwargs) if kwargs else AND(all=True)
-
+        manual_domains = set(_get_newsletter_domains())
         all_messages = []
         offset = (page - 1) * page_size
         direct_folder_page = not category and not q and not unseen
@@ -1590,15 +1582,24 @@ def list_messages(
         if direct_folder_page:
             status = _status_or_none(mailbox, folder) or {}
             folder_total = int(status.get("MESSAGES", 0) or 0)
-        fetched = mailbox.fetch(
-            criteria,
-            limit=(offset + page_size) if direct_folder_page else None,
-            reverse=True,
-            mark_seen=False,
-            bulk=True,
-            headers_only=True,
-        )
-        manual_domains = set(_get_newsletter_domains())
+
+        def _do_fetch(extra_kwargs):
+            kw = {}
+            if q: kw["text"] = q
+            if unseen: kw["seen"] = False
+            kw.update(extra_kwargs)
+            crit = AND(**kw) if kw else AND(all=True)
+            return mailbox.fetch(crit, limit=(offset + page_size) if direct_folder_page else None,
+                                  reverse=True, mark_seen=False, bulk=True, headers_only=True)
+
+        if use_gmail_cat:
+            fetched = list(_do_fetch({"gmail_label": _GMAIL_CATEGORY_LABELS[category]}))
+            if not fetched:
+                use_gmail_cat = False
+                fetched = _do_fetch({})
+        else:
+            fetched = _do_fetch({})
+
         for index, msg in enumerate(fetched):
             if direct_folder_page and index < offset:
                 continue
