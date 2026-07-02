@@ -1089,6 +1089,34 @@ def _demo_messages(account, folder):
               text="Rapport Google Analytics — Juin 2026\n\n🌐 Site : clément-mondary.design\n\n📈 Visiteurs : 3 247 (+12% vs mai)\n👀 Pages vues : 8 942\n⏱️ Temps moyen : 3 min 42 secondes\n↩️ Taux de rebond : 38.5% ✅\n\nTop pages :\n1. /portfolio — 1 284 vues\n2. / — 892 vues\n3. /contact — 445 vues\n4. /apropos — 312 vues\n\nAcquisition :\n- Recherche organique : 45%\n- Direct : 28%\n- Réseaux sociaux : 15%\n- Référencement : 12%\n\nVoir le rapport complet →"),
         ]
 
+    # Enrichir les newsletters avec de vraies images Unsplash
+    _NL_IMAGES = {
+        "lemonde.fr":       "https://images.unsplash.com/photo-1504711434969-e33886168d6c",
+        "substack.com":     "https://images.unsplash.com/photo-1513364776144-60967b0f800f",
+        "medium.com":       "https://images.unsplash.com/photo-1455390582262-044cdead277a",
+        "korben.info":      "https://images.unsplash.com/photo-1518770660439-4636190af475",
+        "producthunt.com":  "https://images.unsplash.com/photo-1460925895917-afdab827c52f",
+        "dribbble.com":     "https://images.unsplash.com/photo-1558655146-9f40138edfeb",
+        "tailwindlabs.com": "https://images.unsplash.com/photo-1507721999472-8ed4421c4af2",
+        "brut.media":       "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+        "theguardian.com":  "https://images.unsplash.com/photo-1495020689067-958852a7765e",
+        "techweekly.io":    "https://images.unsplash.com/photo-1535378917042-10a22c95931a",
+    }
+    for e in entries:
+        raw = (e.get("from_addr") or "").lower()
+        _, parsed = parseaddr(raw)
+        domain = (parsed or raw).rsplit("@", 1)[-1] if "@" in (parsed or raw) else ""
+        img = _NL_IMAGES.get(domain)
+        if img:
+            e["newsletterImage"] = img + "?w=600&q=80&fit=crop"
+            if "<img" not in (e.get("html") or ""):
+                fallback = "<p>" + (e.get("snippet") or "") + "</p>"
+                e["html"] = (
+                    f'<img src="{img}?w=600&q=80&fit=crop"'
+                    f' style="max-width:100%;border-radius:8px;margin-bottom:14px;display:block" alt="">'
+                    f'{e.get("html") or fallback}'
+                )
+
     msgs = []
     for e in entries:
         msgs.append(e)
@@ -1329,11 +1357,18 @@ def delete_account(account_id: str):
 
 @app.get("/api/accounts/export")
 def export_accounts():
+    db_b64 = None
+    if DB_PATH.exists():
+        try:
+            db_b64 = base64.b64encode(DB_PATH.read_bytes()).decode("ascii")
+        except Exception:
+            pass
     return {
-        "version": 1,
+        "version": 2,
         "exported_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "config": _raw_config(),
         "secrets": _raw_secrets(),
+        "db_b64": db_b64,
     }
 
 
@@ -1341,6 +1376,7 @@ def export_accounts():
 def import_accounts(payload: dict = Body(...)):
     config = payload.get("config") if isinstance(payload, dict) else None
     secrets = payload.get("secrets") if isinstance(payload, dict) else None
+    db_b64 = payload.get("db_b64") if isinstance(payload, dict) else None
     if not isinstance(config, dict):
         # Backward-compatible fallback: accept a plain accounts list.
         accounts = payload.get("accounts") if isinstance(payload, dict) else None
@@ -1356,10 +1392,27 @@ def import_accounts(payload: dict = Body(...)):
     CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
     CONFIG_PATH.write_text(json.dumps(config, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     _write_secrets_map(secrets or {})
+
+    # Recharger les secrets dans le processus en cours
+    if secrets:
+        for k, v in secrets.items():
+            if k and isinstance(v, str):
+                os.environ[k] = v
+    _reload_env(SECRETS_PATH)
+
+    # Restore SQLite DB (settings + labels + msg detail cache)
+    if isinstance(db_b64, str):
+        try:
+            DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+            DB_PATH.write_bytes(base64.b64decode(db_b64))
+        except Exception as e:
+            pass  # ne bloque pas l'import si la DB est corrompue
+
     return {
         "ok": True,
         "accounts": len(config.get("accounts", [])),
         "secrets": len(secrets or {}),
+        "db_restored": isinstance(db_b64, str),
     }
 
 @app.get("/api/accounts/{account_id}/folders")
@@ -1644,8 +1697,8 @@ def get_message(account: str, uid: str, folder: str = Query("INBOX")):
     try:
         db = sqlite3.connect(str(DB_PATH))
         row = db.execute(
-            "SELECT data FROM msg_detail_cache WHERE account=? AND uid=? AND fetched_at>?",
-            (account, uid, time.time() - 600),
+            "SELECT data FROM msg_detail_cache WHERE account=? AND uid=?",
+            (account, uid),
         ).fetchone()
         db.close()
         if row:

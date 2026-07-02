@@ -1,4 +1,10 @@
-# Build-only dependencies for the desktop .app (pywebview + PyInstaller)
-# Install with: python3 -m pip install --user -r src/desktop/build-requirements.txt
+# Build-only dependencies for SimpleMail desktop app (pywebview + PyInstaller)
+# Install with:
+#   python3 -m pip install --user -r src/desktop/build-requirements.txt
+#
+# Platform-specific system packages:
+#   macOS: Xcode CLI tools (xcode-select --install)
+#   Linux: sudo apt install libwebkit2gtk-4.0-dev python3 python3-pip python3-venv
+#   Windows: Microsoft Edge WebView2 Runtime (included in Win10+)
 pywebview>=6.0
 pyinstaller>=6.0

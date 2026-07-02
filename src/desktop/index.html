@@ -5238,6 +5238,13 @@
     async function exportAccountsBundle(){
       try{
         const data = await api('/api/accounts/export');
+        data.localStorage = {};
+        for(let i = 0; i < localStorage.length; i++){
+          const k = localStorage.key(i);
+          if(k && (k.startsWith('simplemail_') || k === 'mm_settings')){
+            try{ data.localStorage[k] = localStorage.getItem(k); }catch(e){}
+          }
+        }
         downloadJson(`SimpleMail-accounts-${new Date().toISOString().slice(0,10)}.json`, data);
         showToast('Export téléchargé');
       }catch(e){ showToast('Export impossible : ' + e.message); }
@@ -5257,10 +5264,16 @@
           headers:{'Content-Type':'application/json'},
           body: JSON.stringify(data),
         });
+        if(data.localStorage && typeof data.localStorage === 'object'){
+          for(const [k, v] of Object.entries(data.localStorage)){
+            try{ localStorage.setItem(k, v); }catch(e){}
+          }
+        }
         await loadAccounts();
         if(currentAccount) await loadFolders(currentAccount);
-        showToast('Import réussi');
+        showToast('Import réussi — rechargement…');
         closeSettings();
+        setTimeout(() => location.reload(), 600);
       }catch(e){
         showToast('Import impossible : ' + e.message);
       }finally{

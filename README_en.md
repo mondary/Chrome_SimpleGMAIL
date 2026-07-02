@@ -4,26 +4,25 @@
 
 [🇬🇧 EN](README_en.md) · [🇫🇷 FR](README.md)
 
-Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Packaged as a native macOS app.
+Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Packaged as native desktop app (macOS · Windows · Linux).
 
 ## Features
 
-- Message list + resizable conversation column
-- Newsletters: multi-card carousel, animated macOS-style dock, hero detail
+- Resizable message list + conversation split
+- Newsletters: multi-card carousel, animated dock, hero detail with real images
 - Gmail categories (icons + badges)
 - Fully configurable keyboard shortcuts
-- Full-screen Settings page (fonts, theme, date format, newsletters, languages, accounts, about)
+- Full-screen Settings (fonts, theme, date format, newsletters, language, accounts, about)
 - Light/dark/photo background theme
 - Selection mode with bulk actions
-- Hover actions: checkbox left + star/archive/delete right
-- Centered search with mail counter
+- Centered search with counter
 - Sender favicon with initials fallback
-- Attachment counter
 - Immersive reading mode
 - Fullscreen composer
-- Account import/export (JSON: config + passwords)
+- Account import/export (JSON: config + passwords + SQLite DB + localStorage settings)
 - Built-in RSS reader
-- Native macOS .app (pywebview + PyInstaller)
+- Demo data with real Unsplash images
+- Export/import backs up **everything**: accounts, passwords, email cache, UI prefs, column widths, shortcuts
 
 ## Usage
 
@@ -35,17 +34,19 @@ python3 main.py
 # http://0.0.0.0:8000
 ```
 
-### Packaged app (macOS)
+### Packaged app
 ```bash
-./SimpleMail.command
-# or open releases/macos/SimpleMail.app
+./SimpleMail.command                          # macOS (dev)
+# releases/macos/SimpleMail.app               # macOS (packaged)
+# releases/windows/SimpleMail/SimpleMail.exe  # Windows
+# releases/linux/SimpleMail/SimpleMail        # Linux
 ```
 
 ## Keyboard shortcuts
 
 | Key | Action |
 |-----|--------|
-| `⌘,` | Open Settings |
+| `⌘,` / `Ctrl+,` | Open Settings |
 | `Escape` (1×) | Step back (selection → search → list view) |
 | `Escape` (extra) | Toggle sidebar drawer |
 | `G` then `I` | Inbox |
@@ -60,45 +61,78 @@ python3 main.py
 | `Enter` / `Space` | Open message |
 | `/` | Search |
 
-All shortcuts are customizable in Settings → Shortcuts.
+All shortcuts customizable in Settings → Shortcuts.
 
 ## Configuration
 
-- `src/desktop/config.json`: IMAP/SMTP accounts
-- `src/desktop/secrets/mail.env`: passwords (never in repo)
+User data is stored per platform:
+- **macOS**: `~/Library/Application Support/SimpleMail/`
+- **Windows**: `%APPDATA%/SimpleMail/`
+- **Linux**: `~/.local/share/SimpleMail/`
 
-In packaged mode (.app), these live in `~/Library/Application Support/SimpleMail/`.
+Contents:
+- `config.json`: IMAP/SMTP accounts
+- `secrets/mail.env`: passwords (never in repo)
+- `simplemail.db`: message cache, settings, labels
 
 ## Installation
 
 1. Clone the project
 2. `cd src/desktop`
 3. Copy `config.example.json` → `config.json`, fill your accounts
-4. Create `secrets/mail.env` with passwords
-5. Run `python3 main.py` or open `SimpleMail.app`
+4. Create `secrets/mail.env` with your passwords
+5. Run `python3 main.py`
 
-## Building the macOS app
+To migrate to another machine: **Settings → Accounts → Export**, then **Import** on the target machine.
 
+## Build
+
+### macOS
 ```bash
 cd src/desktop
 ./build_macos.sh
-# Output: releases/macos/SimpleMail.app
+# → releases/macos/SimpleMail.app
 ```
 
-The bundle is clean: zero accounts, zero passwords, zero personal data.
+### Windows
+```powershell
+cd src\desktop
+.\build_windows.ps1
+# → releases\windows\SimpleMail\
+```
+
+### Linux
+```bash
+cd src/desktop
+sudo apt install libwebkit2gtk-4.0-dev  # system dependency
+./build_linux.sh
+# → releases/linux/SimpleMail
+```
+
+### Build prerequisites (all platforms)
+```bash
+python3 -m pip install --user -r src/desktop/build-requirements.txt
+```
+
+Bundles are clean: zero accounts, zero passwords, zero personal data shipped.
+First run auto-creates the user data directory with a generic config template.
 
 ## Project structure
 
 ```
-├── src/desktop/          ← Main application
-│   ├── main.py           ← FastAPI backend
-│   ├── app.py            ← pywebview launcher (macOS .app)
-│   ├── index.html        ← Full UI
+├── src/desktop/              ← Main application
+│   ├── main.py               ← FastAPI backend
+│   ├── app.py                ← pywebview launcher (cross-platform)
+│   ├── index.html            ← Full UI
 │   ├── config.example.json
 │   ├── build_macos.sh
+│   ├── build_linux.sh
+│   ├── build_windows.ps1
 │   └── icon.png
-├── releases/             ← Distributable builds (.app)
-├── archives/             ← Old versions
-├── SimpleMail.command    ← Dev launcher
+├── releases/macos            ← macOS builds (.app)
+├── releases/windows          ← Windows builds (.exe)
+├── releases/linux            ← Linux builds
+├── archives/                 ← Old versions
+├── SimpleMail.command        ← Dev launcher (macOS)
 └── README.md
 ```
