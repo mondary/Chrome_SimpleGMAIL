@@ -4479,7 +4479,9 @@
         showToast('Raccourci enregistré');
         return;
       }
-      // Laisser au navigateur et au système tous les raccourcis Ctrl/⌘/Alt
+      // ⌘, → Paramètres (avant le filtre Ctrl/⌘/Alt)
+      if((e.metaKey || e.ctrlKey) && e.key === ','){ e.preventDefault(); openSettings(); return; }
+      // Laisser au navigateur et au système les autres raccourcis Ctrl/⌘/Alt
       if(e.ctrlKey || e.metaKey || e.altKey) return;
       // --- Immersive reader ---
       if(immersiveOpen){
@@ -4501,16 +4503,19 @@
       // --- Ignore si dans un input ---
       const tag=(e.target.tagName||'').toLowerCase();
       if(tag==='input'||tag==='textarea'||tag==='select'||e.target.isContentEditable) return;
-      // --- ESC : toujours retour ---
+      // --- ESC : retour progressif → drawer ---
       if(e.key==='Escape'){
         e.preventDefault();
         if(selectedMailIds.size > 0){ clearSelection(); return; }
         if(newsletterCarouselExpanded){ toggleNewsletterCarousel(); return; }
-        if(currentActiveView==='conversation'||currentActiveView==='newsletter') handleBack();
-        else if(currentActiveView==='list'||currentActiveView==='zero'){
+        if(currentActiveView==='conversation'||currentActiveView==='newsletter'){ handleBack(); return; }
+        if(currentActiveView==='list'||currentActiveView==='zero'){
           const si=document.getElementById('search-input');
-          if(si && si.value){ si.value=''; handleSearch(''); si.blur(); }
+          if(si && si.value){ si.value=''; handleSearch(''); si.blur(); return; }
         }
+        // Plus rien à fermer → toggle le drawer latéral
+        const drawer=document.getElementById('nav-drawer');
+        if(drawer) toggleDrawer(!drawer.classList.contains('open'));
         return;
       }
       // --- Two-key sequences (G+I, G+S, etc.) ---

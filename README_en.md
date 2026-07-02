@@ -1,83 +1,104 @@
-# Chrome_GmailPK
+# SimpleMail
 
-![Project icon](icon.png)
+![icon](src/desktop/icon.png)
 
 [🇬🇧 EN](README_en.md) · [🇫🇷 FR](README.md)
 
-✨ Immersive IMAP mail client with newsletters, cinema mode, and a Python backend.
+Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Packaged as a native macOS app.
 
-## ✅ Features
+## Features
 
-- Chrome new-tab override
-- message list + resizable conversation column
-- newsletters: multi-card carousel, animated macOS-style dock, 33vh hero detail
-- Gmail categories (icons + badges in header bar)
-- fully configurable keyboard shortcuts
-- full-screen Settings page (fonts, theme, date format, newsletter mode, languages, accounts, about)
-- light/dark/photo background theme (unified `#1a1a1a`)
-- selection mode with bulk actions (check, star, archive, delete)
-- hover actions: checkbox left + star/archive/delete right with gradient
-- thread-aware delete
-- centered search with mail counter and clear button
-- sender favicon (`google.com/s2/favicons`) with initials fallback
-- attachment counter
-- immersive reading mode
-- fullscreen distraction-free composer
-- built-in demo data (55 messages, 9 newsletter sources)
+- Message list + resizable conversation column
+- Newsletters: multi-card carousel, animated macOS-style dock, hero detail
+- Gmail categories (icons + badges)
+- Fully configurable keyboard shortcuts
+- Full-screen Settings page (fonts, theme, date format, newsletters, languages, accounts, about)
+- Light/dark/photo background theme
+- Selection mode with bulk actions
+- Hover actions: checkbox left + star/archive/delete right
+- Centered search with mail counter
+- Sender favicon with initials fallback
+- Attachment counter
+- Immersive reading mode
+- Fullscreen composer
+- Account import/export (JSON: config + passwords)
+- Built-in RSS reader
+- Native macOS .app (pywebview + PyInstaller)
 
-## 🧠 Usage
+## Usage
 
+### Development mode
 ```bash
-cd mail-client-v22
-export $(grep -v '^#' secrets/mail.env | xargs)
+cd src/desktop
+source secrets/mail.env
 python3 main.py
+# http://0.0.0.0:8000
 ```
 
-Or from the repo root:
+### Packaged app (macOS)
 ```bash
-./mail-client-v22.command
+./SimpleMail.command
+# or open releases/macos/SimpleMail.app
 ```
 
-The server listens on `http://0.0.0.0:8000`.
+## Keyboard shortcuts
 
-## ⚙️ Settings
+| Key | Action |
+|-----|--------|
+| `⌘,` | Open Settings |
+| `Escape` (1×) | Step back (selection → search → list view) |
+| `Escape` (extra) | Toggle sidebar drawer |
+| `G` then `I` | Inbox |
+| `G` then `S` | Starred |
+| `G` then `T` | Trash |
+| `G` then `D` | Drafts |
+| `G` then `A` | Archive |
+| `G` then `N` | Sent |
+| `C` | Compose |
+| `J` / `↓` | Next message |
+| `K` / `↑` | Previous message |
+| `Enter` / `Space` | Open message |
+| `/` | Search |
 
-- `mail-client-v22/config.json`: IMAP accounts (mondary, pouark, gmail)
-- `mail-client-v22/secrets/mail.env`: local passwords
-- `DEMO=1`: forces all accounts to demo data (disable in production)
-- localStorage: fonts, theme, date format, newsletter mode, custom shortcuts
+All shortcuts are customizable in Settings → Shortcuts.
 
-## 🧾 Commands
+## Configuration
 
-- `./mail-client-v22.command`: launch the full client
-- `python3 main.py` inside `mail-client-v22/`: backend server only
-- `curl http://127.0.0.1:8000/api/messages?account=demo`: direct API access
+- `src/desktop/config.json`: IMAP/SMTP accounts
+- `src/desktop/secrets/mail.env`: passwords (never in repo)
 
-## 📦 Build & Package
+In packaged mode (.app), these live in `~/Library/Application Support/SimpleMail/`.
 
-No build step. Vanilla HTML/CSS/JS + Python FastAPI. Load unpacked extension in `chrome://extensions/`.
-
-## 🧪 Install (Antigravity)
+## Installation
 
 1. Clone the project
-2. Fill `mail-client-v22/secrets/mail.env`
-3. Run `./mail-client-v22.command`
-4. Load unpacked extension in Chrome
-5. Open a new tab
+2. `cd src/desktop`
+3. Copy `config.example.json` → `config.json`, fill your accounts
+4. Create `secrets/mail.env` with passwords
+5. Run `python3 main.py` or open `SimpleMail.app`
 
-## 🧾 Changelog
+## Building the macOS app
 
-- v22.9: thread-aware delete, borderless newsletter dock, responsive grid, 9 demo sources
-- v22.8: configurable keyboard shortcuts, date format (relative/dd/mm/yyyy/yyyy/mm/dd), newsletter mode (cards/dock), unified dark theme `#1a1a1a`
-- v22.7: og-image backend, newsletter hero 33vh, favicon→gradient fallback, domain favicon in dock
-- v22.6: split hover actions (checkbox left + actions right with gradient), keyboard selection, bulk actions
-- v22.5: full-screen settings with sidebar navigation, fonts (Futura/Poppins/Nerd), newsletter carousel
-- v22.4: reliable search focus, clear button and Escape support; attachment counters; customizable category colors; header actions wired to the backend
-- v22.3: functional IMAP backend for move/copy/archive/spam/snooze/label
-- v22.2: sender favicon, attachment counts, immersive header button, contextual burger-back button, mail counter in search, visible keyboard selection
-- v22.1: sans-serif fonts, full-screen Settings pages, newsletter mosaic, hide non-INBOX categories, no-results search state
+```bash
+cd src/desktop
+./build_macos.sh
+# Output: releases/macos/SimpleMail.app
+```
 
-## 🔗 Links
+The bundle is clean: zero accounts, zero passwords, zero personal data.
 
-- FR README: [README.md](README.md)
-- Main client: [mail-client-v22](mail-client-v22)
+## Project structure
+
+```
+├── src/desktop/          ← Main application
+│   ├── main.py           ← FastAPI backend
+│   ├── app.py            ← pywebview launcher (macOS .app)
+│   ├── index.html        ← Full UI
+│   ├── config.example.json
+│   ├── build_macos.sh
+│   └── icon.png
+├── releases/             ← Distributable builds (.app)
+├── archives/             ← Old versions
+├── SimpleMail.command    ← Dev launcher
+└── README.md
+```
