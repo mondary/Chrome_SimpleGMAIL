@@ -154,6 +154,16 @@ def _init_db():
             PRIMARY KEY (account, uid)
         )
     """)
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS newsletter_msg_cache (
+            account TEXT NOT NULL,
+            folder TEXT NOT NULL,
+            uid TEXT NOT NULL,
+            data TEXT NOT NULL,
+            fetched_at REAL NOT NULL,
+            PRIMARY KEY (account, folder, uid)
+        )
+    """)
     db.commit()
     db.close()
 
@@ -1617,6 +1627,7 @@ def list_newsletter_messages(
     folder: str = Query("INBOX"),
     page: int = Query(1, ge=1),
     page_size: int = Query(200, ge=20, le=500),
+    cached: int = Query(0, ge=0, le=1),
 ):
     """Return a page of newsletter candidates independently from the active inbox category."""
     manual_domains = set(_get_newsletter_domains())
@@ -1629,6 +1640,20 @@ def list_newsletter_messages(
         start = (page - 1) * page_size
         batch = candidates[start:start + page_size]
         return {"messages": batch, "page": page, "has_more": start + len(batch) < len(candidates)}
+
+    # Fast path: return ALL cached newsletter messages from SQLite instantly
+    if cached:
+        try:
+            db = sqlite3.connect(str(DB_PATH))
+            rows = db.execute(
+                "SELECT data FROM newsletter_msg_cache WHERE account=? AND folder=? ORDER BY fetched_at DESC",
+                (account, folder),
+            ).fetchall()
+            db.close()
+            messages = [json.loads(r[0]) for r in rows]
+            return {"messages": messages, "page": 1, "has_more": False, "cached": True}
+        except Exception:
+            pass
 
     cache_key = f"newsletter-messages:{account}:{folder}:{page}:{page_size}"
     cached = _response_cache_get(cache_key, ttl=60.0)
@@ -1677,6 +1702,21 @@ def list_newsletter_messages(
 
     batch = candidates[target_start:target_start + page_size]
     result = {"messages": batch, "page": page, "has_more": len(candidates) > target_start + len(batch)}
+
+    # Persist all discovered newsletter messages in SQLite for instant future loads
+    try:
+        db = sqlite3.connect(str(DB_PATH))
+        now = time.time()
+        for entry in candidates:
+            db.execute(
+                "INSERT OR REPLACE INTO newsletter_msg_cache (account, folder, uid, data, fetched_at) VALUES (?, ?, ?, ?, ?)",
+                (account, folder, entry["uid"], json.dumps(entry, ensure_ascii=False, default=str), now),
+            )
+        db.commit()
+        db.close()
+    except Exception:
+        pass
+
     _response_cache_set(cache_key, result)
     return result
 

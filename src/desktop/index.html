@@ -403,6 +403,7 @@
       display: grid;
       width: 100%;
       grid-auto-rows: auto;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
     }
     .newsletter-recent-card { width: 100%; min-width: 0; }
 
@@ -1611,6 +1612,7 @@
     let newsletterLoading = false;
     let newsletterObserver = null;
     let newsletterRenderSeq = 0;
+    let newsletterVisibleCount = 24;
     let selectedMailIds = new Set();
     let currentLanguage = 'fr';
     let shortcutPreset = 'gmail';
@@ -3198,7 +3200,7 @@
       if(nlSection) nlSection.classList.toggle('hidden', currentFolder !== 'INBOX' || currentCategory === 'newsletter');
       if(btn) btn.classList.toggle('hidden', currentFolder !== 'INBOX' || currentCategory === 'newsletter');
 
-      const showItems = newsletterCarouselExpanded ? top : top.slice(0, 4);
+      const showItems = newsletterCarouselExpanded ? top.slice(0, newsletterVisibleCount) : top.slice(0, 4);
       c.className = 'carousel-container gap-4';
       const palettes = [
         ['from-orange-950 via-orange-900/50 to-orange-800','text-orange-200','text-orange-200/70'],
@@ -3208,8 +3210,6 @@
         ['from-rose-950 via-rose-900/50 to-rose-700','text-rose-200','text-rose-300/80'],
         ['from-emerald-950 via-emerald-900/50 to-emerald-700','text-emerald-200','text-emerald-300/80'],
       ];
-      const maxCols = Math.min(showItems.length, 4);
-      c.style.gridTemplateColumns = `repeat(${Math.max(1, maxCols)}, minmax(0, 1fr))`;
       c.innerHTML = showItems.map(([dom, info], i) => {
         const [grad, sub, sub2] = palettes[i % palettes.length];
         const unread = info.items.filter(e=>e.unread).length;
@@ -3238,7 +3238,11 @@
         footer.id='newsletter-scroll-sentinel';
         footer.style.gridColumn='1 / -1';
         footer.className='py-5 text-center text-xs text-gray-400';
-        footer.textContent=newsletterLoading?'Chargement des newsletters…':(newsletterHasMore?'Descendez pour charger davantage':'Toutes les newsletters disponibles sont affichées');
+        const moreCards = top.length > newsletterVisibleCount;
+        if(newsletterLoading) footer.textContent='Chargement des newsletters…';
+        else if(moreCards) footer.textContent='Descendez pour voir plus de newsletters';
+        else if(newsletterHasMore) footer.textContent='Recherche de newsletters…';
+        else footer.textContent='Toutes les newsletters disponibles sont affichées';
         c.appendChild(footer);
         observeNewsletterSentinel();
       }
@@ -3267,8 +3271,9 @@
         if(messages) messages.style.display = '';
       }
       if(newsletterCarouselExpanded){
-        newsletterEmails=[]; newsletterPage=0; newsletterHasMore=true;
-        await loadNewsletterBatch();
+        newsletterVisibleCount=24; newsletterEmails=[]; newsletterPage=0; newsletterHasMore=true;
+        await loadNewsletterFromCache();
+        loadNewsletterBatch();
       } else {
         if(newsletterObserver){ newsletterObserver.disconnect(); newsletterObserver=null; }
         buildNewsletterCarousel();
@@ -3452,7 +3457,19 @@
     function setNewsletterBatchSize(value){
       saveSetting('simplemail_newsletter_batch_size',parseInt(value)||200);
       showToast('Volume de chargement mis à jour');
-      if(newsletterCarouselExpanded){ newsletterEmails=[]; newsletterPage=0; newsletterHasMore=true; loadNewsletterBatch(); }
+      if(newsletterCarouselExpanded){ newsletterVisibleCount=24; newsletterEmails=[]; newsletterPage=0; newsletterHasMore=true; loadNewsletterFromCache(); loadNewsletterBatch(); }
+    }
+    async function loadNewsletterFromCache(){
+      if(!currentAccount) return;
+      try{
+        const qs=new URLSearchParams({account:currentAccount,folder:'INBOX',cached:'1'});
+        const data=await api('/api/newsletter-messages?'+qs.toString());
+        if(data.messages && data.messages.length){
+          const known=new Set(newsletterEmails.map(e=>e.id));
+          data.messages.map(mapMessage).forEach(e=>{ if(!known.has(e.id)){ newsletterEmails.push(e); known.add(e.id); } });
+          buildNewsletterCarousel();
+        }
+      }catch(e){}
     }
     async function loadNewsletterBatch(){
       if(newsletterLoading||!newsletterHasMore||!currentAccount||currentFolder!=='INBOX') return;
@@ -3472,9 +3489,14 @@
     function observeNewsletterSentinel(){
       if(newsletterObserver){ newsletterObserver.disconnect(); newsletterObserver=null; }
       const sentinel=document.getElementById('newsletter-scroll-sentinel');
-      if(!sentinel||!newsletterHasMore||newsletterLoading) return;
+      if(!sentinel) return;
       newsletterObserver=new IntersectionObserver(entries=>{
-        if(entries[0].isIntersecting){ newsletterObserver.disconnect(); loadNewsletterBatch(); }
+        if(entries[0].isIntersecting){
+          newsletterObserver.disconnect();
+          newsletterVisibleCount += 24;
+          buildNewsletterCarousel();
+          if(newsletterHasMore && !newsletterLoading) loadNewsletterBatch();
+        }
       },{rootMargin:'500px'});
       newsletterObserver.observe(sentinel);
     }
