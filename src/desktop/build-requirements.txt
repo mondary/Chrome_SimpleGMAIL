@@ -8,3 +8,4 @@
 #   Windows: Microsoft Edge WebView2 Runtime (included in Win10+)
 pywebview>=6.0
 pyinstaller>=6.0
+pillow>=10.0
