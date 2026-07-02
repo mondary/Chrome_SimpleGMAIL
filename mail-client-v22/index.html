@@ -911,8 +911,10 @@
       width: var(--header-center-width, var(--list-max-w, 56rem));
       max-width: none !important;
       transform: translateX(0);
+      overflow: hidden;
       z-index: 35;
     }
+    #header-actions { min-width: 0; overflow: hidden; }
     #main-header > :last-child {
       margin-left: auto;
       position: relative;
@@ -2718,10 +2720,10 @@
       secondary.forEach(el=>el.style.display='');
       separators.forEach(el=>el.style.display='');
       if(moreBtn) moreBtn.style.display='none';
-      const right=actions.querySelector('div:last-child');
+      const right=actions.children[1];
       if(!right) return;
       let tries=0;
-      while(right.scrollWidth>right.clientWidth && tries<secondary.length){
+      while((right.scrollWidth>right.clientWidth || actions.scrollWidth>actions.clientWidth) && tries<secondary.length){
         const visible=secondary.filter(el=>el.style.display!=='none');
         if(!visible.length) break;
         visible.pop().style.display='none';
