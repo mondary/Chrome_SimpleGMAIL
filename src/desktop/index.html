@@ -15,6 +15,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Iosevka:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
+    /* Defaults responsifs : la colonne centrale suit la largeur de l'écran
+       plutôt que de rester bloquée à 56rem fixes. Plancher 56rem (lecture
+       confortable), 70vw sur les grands écrans, plafond 112rem (~1792px).
+       Un redimensionnement manuel (poignées) surcharge ces valeurs en px. */
+    :root {
+      --list-max-w: clamp(56rem, 70vw, 112rem);
+      --conv-max-w: clamp(56rem, 70vw, 112rem);
+    }
     body {
       font-family: var(--font-primary, 'Poppins', 'Futura', 'Century Gothic', 'Tw Cen MT', 'Inter', system-ui, -apple-system, sans-serif);
       color: #202124;
@@ -403,7 +411,9 @@
       display: grid;
       width: 100%;
       grid-auto-rows: auto;
-      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      /* 168px (au lieu de 190) : sur une colonne centrale large, on passe de 4
+         à 5/6/7/8 colonnes de cartes selon la place disponible. */
+      grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
     }
     .newsletter-recent-card { width: 100%; min-width: 0; }
 
@@ -3203,7 +3213,7 @@
       if(nlSection) nlSection.classList.toggle('hidden', currentFolder !== 'INBOX' || currentCategory === 'newsletter');
       if(btn) btn.classList.toggle('hidden', currentFolder !== 'INBOX' || currentCategory === 'newsletter');
 
-      const showItems = newsletterCarouselExpanded ? top.slice(0, newsletterVisibleCount) : top.slice(0, 4);
+      const showItems = newsletterCarouselExpanded ? top.slice(0, newsletterVisibleCount) : top.slice(0, 12);
       c.className = 'carousel-container gap-4';
       const palettes = [
         ['from-orange-950 via-orange-900/50 to-orange-800','text-orange-200','text-orange-200/70'],
@@ -4602,9 +4612,14 @@
     function _loadPrefs(){
       try {
         const p = JSON.parse(localStorage.getItem('simplemail_prefs') || '{}');
+        // Ne restaure une largeur px sauvegardée que si elle est AUSSI large
+        // que le défaut responsif actuel (clamp(56rem, 70vw, 112rem)). Sinon on
+        // laisse le défaut responsif s'appliquer : l'ancienne valeur fixe et
+        // étroite empêchait d'agrandir la colonne sur les grands écrans.
+        const responsiveW = Math.min(Math.max(896, window.innerWidth * 0.70), 1792);
+        if(p.listMaxW && p.listMaxW >= responsiveW - 20) document.documentElement.style.setProperty('--list-max-w', p.listMaxW + 'px');
+        if(p.convMaxW && p.convMaxW >= responsiveW - 20) document.documentElement.style.setProperty('--conv-max-w', p.convMaxW + 'px');
         if(p.drawerWidth) document.documentElement.style.setProperty('--drawer-width', p.drawerWidth + 'px');
-        if(p.listMaxW) document.documentElement.style.setProperty('--list-max-w', p.listMaxW + 'px');
-        if(p.convMaxW) document.documentElement.style.setProperty('--conv-max-w', p.convMaxW + 'px');
       } catch(e){}
       loadFontSettings();
       try { 
@@ -4658,7 +4673,7 @@
       document.body.style.cursor='col-resize';
       document.body.style.userSelect='none';
       function onMove(ev){
-        const w=Math.min(Math.max(startW + ev.clientX - startX, 400), Math.min(window.innerWidth - 80, 1200));
+        const w=Math.min(Math.max(startW + ev.clientX - startX, 360), window.innerWidth - 80);
         container.style.setProperty('--list-max-w', w + 'px');
         document.documentElement.style.setProperty('--list-max-w', w + 'px');
         syncHeaderCenterToContent();
@@ -4684,7 +4699,7 @@
       document.body.style.cursor='col-resize';
       document.body.style.userSelect='none';
       function onMove(ev){
-        const w=Math.min(Math.max(startW + startX - ev.clientX, 400), Math.min(window.innerWidth - 80, 1200));
+        const w=Math.min(Math.max(startW + startX - ev.clientX, 360), window.innerWidth - 80);
         container.style.setProperty('--list-max-w', w + 'px');
         document.documentElement.style.setProperty('--list-max-w', w + 'px');
         syncHeaderCenterToContent();
@@ -4710,7 +4725,7 @@
       document.body.style.cursor='col-resize';
       document.body.style.userSelect='none';
       function onMove(ev){
-        const w=Math.min(Math.max(startW + ev.clientX - startX, 400), Math.min(window.innerWidth - 80, 1200));
+        const w=Math.min(Math.max(startW + ev.clientX - startX, 400), window.innerWidth - 80);
         card.style.setProperty('--conv-max-w', w + 'px');
         document.documentElement.style.setProperty('--conv-max-w', w + 'px');
       }
@@ -4735,7 +4750,7 @@
       document.body.style.cursor='col-resize';
       document.body.style.userSelect='none';
       function onMove(ev){
-        const w=Math.min(Math.max(startW + startX - ev.clientX, 400), Math.min(window.innerWidth - 80, 1200));
+        const w=Math.min(Math.max(startW + startX - ev.clientX, 400), window.innerWidth - 80);
         card.style.setProperty('--conv-max-w', w + 'px');
         document.documentElement.style.setProperty('--conv-max-w', w + 'px');
       }

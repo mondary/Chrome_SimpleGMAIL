@@ -8,8 +8,8 @@ Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Package
 
 ## Features
 
-- Resizable message list + conversation split
-- Newsletters: multi-card carousel, animated dock, hero detail with real images
+- Resizable message list + conversation split (responsive %-based width on large screens)
+- Newsletters: adaptive multi-card carousel (4→8 columns depending on space), animated dock, hero detail with real images
 - Gmail categories (icons + badges)
 - Fully configurable keyboard shortcuts
 - Full-screen Settings (fonts, theme, date format, newsletters, language, accounts, about)
@@ -74,6 +74,13 @@ Contents:
 - `config.json`: IMAP/SMTP accounts
 - `secrets/mail.env`: passwords (never in repo)
 - `simplemail.db`: message cache, settings, labels
+
+## Performance
+
+The backend keeps its memory footprint bounded:
+- Bounded in-RAM LRU caches: threads (40 entries), message bodies (150 entries, 5 min TTL)
+- 6000-header cap per filtered fetch (category/search) — prevents loading the whole mailbox into RAM
+- Background thread purges SQLite caches every 10 min (`response_cache`, `msg_detail_cache`, `newsletter_msg_cache`)
 
 ## Installation
 

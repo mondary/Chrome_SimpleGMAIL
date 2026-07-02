@@ -299,9 +299,14 @@ def _reload_env(env_path: Path):
 _reload_env(SECRETS_PATH)
 
 # ---------- Message cache (in-memory, TTL) ----------
+# Les corps HTML des mails sont volumineux : on garde un cache court et borné
+# pour éviter que la RAM n'explose (historiquement 500 entrées × plusieurs Mo).
 _MSG_CACHE = {}
-_CACHE_TTL = 600  # 10 min
-_CACHE_MAX = 500
+_CACHE_TTL = 300  # 5 min
+_CACHE_MAX = 150
+# Nombre maximum d'en-têtes chargés lors d'un filtrage (catégorie/recherche/non-lus).
+# Sans cette borne, on rapatrie toute la boîte en RAM → explosion mémoire.
+_FETCH_FILTER_CAP = 6000
 
 
 def _cache_key(account, folder, uid):
@@ -409,11 +414,32 @@ def idle_worker(account: dict):
             backoff = min(backoff * 2, 120)
 
 
+def _db_cache_cleanup():
+    """Purge périodique des caches SQLite pour éviter une croissance infinie.
+    - response_cache : TTL court (30 min)
+    - msg_detail_cache / newsletter_msg_cache : TTL long (7 jours)
+    """
+    while True:
+        time.sleep(600)  # toutes les 10 min
+        try:
+            now = time.time()
+            db = sqlite3.connect(str(DB_PATH))
+            db.execute("DELETE FROM response_cache WHERE fetched_at < ?", (now - 1800,))
+            db.execute("DELETE FROM msg_detail_cache WHERE fetched_at < ?", (now - 7 * 86400,))
+            db.execute("DELETE FROM newsletter_msg_cache WHERE fetched_at < ?", (now - 7 * 86400,))
+            db.execute("VACUUM")
+            db.commit()
+            db.close()
+        except Exception:
+            pass
+
+
 @asynccontextmanager
 async def lifespan(app):
     global MAIN_LOOP
     _init_db()
     threading.Thread(target=_pool_cleanup, daemon=True, name="imap-pool-cleanup").start()
+    threading.Thread(target=_db_cache_cleanup, daemon=True, name="db-cache-cleanup").start()
     MAIN_LOOP = asyncio.get_running_loop()
     if _is_demo():
         print("[DEMO] Mode démo actif — identifiants non configurés. Données fictives.")
@@ -1613,7 +1639,12 @@ def list_messages(
             if unseen: kw["seen"] = False
             kw.update(extra_kwargs)
             crit = AND(**kw) if kw else AND(all=True)
-            return mailbox.fetch(crit, limit=(offset + page_size) if direct_folder_page else None,
+            # Borne de sécurité : sans limite, on chargeait TOUS les messages du
+            # dossier en RAM lors d'un filtrage par catégorie/recherche, ce qui
+            # faisait exploser la mémoire sur les grosses boîtes (jusqu'à 50 Go+).
+            # On plafonne à 6000 en-têtes (le filtre catégorie se fait ensuite).
+            limit = (offset + page_size) if direct_folder_page else _FETCH_FILTER_CAP
+            return mailbox.fetch(crit, limit=limit,
                                   reverse=True, mark_seen=False, bulk=True, headers_only=True)
 
         if use_gmail_cat:
@@ -2371,6 +2402,9 @@ def _parse_thread_response(text: str):
 
 _THREAD_CACHE = {}  # (account, folder) -> (timestamp, {uid: thread_id})
 _THREAD_TTL = 90
+# La clé Historique incluait le tuple complet des UIDs de la page, ce qui créait
+# une entrée par combinaison unique → croissance illimitée de la RAM. On borne.
+_THREAD_CACHE_MAX = 40
 
 
 def _subject_thread_fallback(messages: list) -> dict:
@@ -2460,6 +2494,11 @@ def _compute_threads(account: str, mailbox, folder: str, messages: list) -> dict
     mapping = {uid: find(uid) for uid in uids}
 
     _THREAD_CACHE[ck] = (time.time(), mapping)
+    # Éviction LRU : on ne garde qu'un nombre borné d'entrées pour éviter une
+    # croissance illimitée (chaque page aux UIDs différents créait une entrée).
+    if len(_THREAD_CACHE) > _THREAD_CACHE_MAX:
+        for stale in sorted(_THREAD_CACHE, key=lambda k: _THREAD_CACHE[k][0])[: len(_THREAD_CACHE) - _THREAD_CACHE_MAX]:
+            _THREAD_CACHE.pop(stale, None)
     return mapping
 
 
