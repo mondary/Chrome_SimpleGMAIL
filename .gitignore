@@ -24,6 +24,9 @@ secrets/
 __pycache__/
 *.log
 *.db
+*.db-journal
+*.db-wal
+*.db-shm
 *.sqlite
 *.sqlite3
 releases/
