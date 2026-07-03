@@ -1385,7 +1385,7 @@
         <div class="flex-1 overflow-hidden">
 
           <!-- Newsletter section placeholder (mirrors #nl-section) -->
-          <div class="p-6 border-b border-gray-200/50">
+          <div id="skel-nl-section" class="p-6 border-b border-gray-200/50">
             <div class="flex items-center justify-between mb-3.5">
               <div class="skel skel-nltitle"></div>
               <div class="skel skel-nltoggle"></div>
@@ -1554,6 +1554,11 @@
               <div class="icon-btn-container" title="Effacer la sélection" onclick="clearSelection()"><span class="material-symbols-outlined">close</span></div>
             </div>
           </div>
+          <!-- Centre : indicateur de dossier (visible uniquement hors INBOX) -->
+          <div class="flex items-center gap-1.5 hidden" id="location-badge">
+            <span class="material-symbols-outlined text-gray-400" style="font-size:16px">folder</span>
+            <span id="location-label" class="text-xs font-medium text-gray-500 truncate max-w-36 select-none"></span>
+          </div>
           <!-- Droite : catégories (icônes seules, uniquement INBOX) -->
           <div id="cat-icons" class="flex items-center gap-0.5">
             <button onclick="setCategory('primary')" data-cat="primary" class="cat-icon-btn is-active" title="Principal"><span class="material-symbols-outlined">inbox</span><span class="cat-count"></span></button>
@@ -1568,8 +1573,12 @@
         <!-- Spam info banner -->
         <div id="spam-info-banner" class="hidden px-6 py-2.5 bg-amber-50 border-b border-amber-200/60 flex items-center justify-between gap-4 text-xs">
           <span class="text-amber-800">Les messages stockés dans le spam pendant plus de 30 jours sont automatiquement supprimés.</span>
-          <button onclick="emptySpamFolder()" class="shrink-0 font-medium text-amber-900 hover:text-amber-700 underline underline-offset-2">Supprimer tous les messages de spam</button>
-        </div>
+        <button onclick="emptySpamFolder()" class="shrink-0 font-medium text-amber-900 hover:text-amber-700 underline underline-offset-2">Supprimer tous les messages de spam</button>
+          </div>
+          <div id="trash-info-banner" class="hidden px-6 py-2.5 bg-red-50 border-b border-red-200/60 flex items-center justify-between gap-4 text-xs">
+            <span class="text-red-800">Les messages dans la corbeille peuvent être supprimés définitivement.</span>
+            <button onclick="emptyTrashFolder()" class="shrink-0 font-medium text-red-900 hover:text-red-700 underline underline-offset-2">Vider la corbeille</button>
+          </div>
 
         <!-- Messages list (flux naturel, le scroll est géré par le conteneur parent) -->
         <div id="messages-container" class="divide-y divide-gray-100"></div>
@@ -2390,6 +2399,26 @@
       if(context){ el.textContent=context; el.classList.remove('hidden'); }
       else{ el.classList.add('hidden'); el.textContent=''; }
     }
+    function updateLocationLabel(){
+      const badge=document.getElementById('location-badge');
+      const label=document.getElementById('location-label');
+      const icon=badge?.querySelector('.material-symbols-outlined');
+      if(!badge||!label||!icon) return;
+      let text='', iconName='';
+      if(currentSpecial==='starred'){ text='Messages suivis'; iconName='star'; }
+      else if(currentSpecial==='all'){ text='Tous les messages'; iconName='mail'; }
+      else if(currentFolder!=='INBOX'){
+        text=folderLabel(currentFolder);
+        const k=folderKey(currentFolder);
+        iconName=(FOLDER_META[k] && FOLDER_META[k].icon) || 'folder';
+      }
+      else if(currentCategory){
+        const cat=CATEGORIES.find(c=>c.id===currentCategory);
+        if(cat){ text=cat.label; iconName=cat.icon; }
+      }
+      if(text){ label.textContent=text; icon.textContent=iconName; badge.classList.remove('hidden'); }
+      else{ badge.classList.add('hidden'); }
+    }
     function renderStarredList(){
       const container=document.getElementById('messages-container');
       const starred=emails.filter(e=>e.starred);
@@ -3035,7 +3064,7 @@
         if (idx >= 0) return idx;
       }
       if (currentListIndex >= 0 && currentListIndex < threads.length) return currentListIndex;
-      return 0;
+      return -1;
     }
 
     function setSelectedThreadIndex(index){
@@ -3199,7 +3228,11 @@
       show(conv, currentActiveView==='conversation'); show(nl, currentActiveView==='newsletter');
       show(rss, currentActiveView==='rss'); show(loading, currentActiveView==='loading');
       if(currentActiveView==='rss'){ setHeaderState('list'); renderRssView(); return; }
-      if(currentActiveView==='loading'){ return; }
+      if(currentActiveView==='loading'){
+        const sn=document.getElementById('skel-nl-section');
+        if(sn) sn.classList.toggle('hidden', currentFolder!=='INBOX');
+        return;
+      }
       if(currentActiveView==='zero'){
         const state=emptyFolderState();
         const title=document.getElementById('empty-title'), description=document.getElementById('empty-description');
@@ -3215,6 +3248,7 @@
       } else if(currentActiveView==='list'){ setHeaderState('list'); renderInboxList(); buildNewsletterCarousel(); }
       else if(currentActiveView==='conversation'){ setHeaderState('conversation'); const d=document.getElementById('newsletter-dock'); if(d) d.classList.add('hidden'); }
       else if(currentActiveView==='newsletter'){ setHeaderState('newsletter'); renderNewsletterDetail(); const d=document.getElementById('newsletter-dock'); if(d) d.classList.add('hidden'); }
+      updateLocationLabel();
     }
 
     // ====================== Liste (threads + catégories) ======================
@@ -3264,6 +3298,8 @@
       if(catIcons) catIcons.classList.toggle('hidden', currentFolder !== 'INBOX');
       const spamBanner = document.getElementById('spam-info-banner');
       if(spamBanner) spamBanner.classList.toggle('hidden', !['SPAM','JUNK'].includes(folderKey(currentFolder)));
+      const trashBanner = document.getElementById('trash-info-banner');
+      if(trashBanner) trashBanner.classList.toggle('hidden', folderKey(currentFolder)!=='TRASH');
       if(!visibleRows.length){
         currentListIndex = -1; 
         currentSelectedId = null; 
@@ -3277,8 +3313,7 @@
         container.innerHTML=`<div class="p-12 text-center"><span class="material-symbols-outlined text-gray-300 mb-4" style="font-size:48px">${escapeHtml(catIcon)}</span><h2 class="text-base font-medium text-gray-800 mb-2">${emptyTitle}</h2><p class="text-xs text-gray-400 leading-relaxed mb-6">${emptyDesc}</p>${emptyBtn}</div>`;
         return; 
       }
-      const selectedIndex = getSelectedThreadIndex();
-      currentListIndex = selectedIndex < 0 ? 0 : selectedIndex;
+      currentListIndex = getSelectedThreadIndex();
       visibleRows.forEach((email, index) => {
         const hasUnread=email.unread, starred=email.starred;
         const attCount = Number(email.attachmentCount) || (email.hasAttachments ? 1 : 0);
@@ -4419,6 +4454,18 @@
           api(`/api/messages/${m.account}/${m.uid}?folder=${encodeURIComponent(currentFolder)}`, {method:'DELETE'}).catch(()=>{})
         ));
         showToast(`${emails.length} messages supprimés`);
+        emails = [];
+        loadMessages();
+      }catch(e){ showToast('Erreur: ' + e.message); }
+    }
+    async function emptyTrashFolder(){
+      if(!emails.length){ showToast('La corbeille est déjà vide'); return; }
+      if(!confirm(`Supprimer définitivement tous les ${emails.length} messages de la corbeille ?`)) return;
+      try{
+        await Promise.all(emails.map(m =>
+          api(`/api/messages/${m.account}/${m.uid}?folder=${encodeURIComponent(currentFolder)}`, {method:'DELETE'}).catch(()=>{})
+        ));
+        showToast('Corbeille vidée');
         emails = [];
         loadMessages();
       }catch(e){ showToast('Erreur: ' + e.message); }
