@@ -1155,6 +1155,15 @@
       color: var(--category-color);
       background: var(--category-dark-bg);
     }
+    /* Keyboard focus highlight for drawer nav items (Arrow/Enter navigation) */
+    .nav-item.is-focused {
+      background: rgba(26,115,232,0.10);
+      box-shadow: inset 3px 0 0 #1a73e8;
+    }
+    body.theme-dark .nav-item.is-focused {
+      background: rgba(138,196,248,0.12);
+      box-shadow: inset 3px 0 0 #8ab4f8;
+    }
     .nav-item .material-symbols-outlined {
       font-size: 19px; color: #5f6368; flex-shrink: 0;
       font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -1236,6 +1245,12 @@
     .skel-subject { width: 9rem;  height: 14px; flex-shrink: 0; }
     .skel-snippet { flex: 1; height: 10px; max-width: 18rem; }
     .skel-date    { width: 3rem; height: 10px; flex-shrink: 0; }
+    /* Skeleton size helpers mirroring the real inbox layout */
+    .skel-nltitle  { width: 8.5rem; height: 10px; flex-shrink: 0; }
+    .skel-nltoggle { width: 9rem; height: 16px; border-radius: 6px; flex-shrink: 0; }
+    .skel-card     { width: 100%; min-width: 0; height: 13rem; border-radius: 12px; }
+    .skel-iconbtn  { width: 40px; height: 40px; border-radius: 50%; flex: 0 0 40px; }
+    .skel-catbtn   { width: 34px; height: 34px; border-radius: 8px; flex: 0 0 34px; }
   </style>
 </head>
 <body class="h-screen w-screen flex flex-col overflow-hidden relative theme-white">
@@ -1364,91 +1379,135 @@
       </div>
     </main>
 
-    <!-- State 1.5: Inbox Loading View (skeleton, shown during fetch) -->
+    <!-- State 1.5: Inbox Loading View (skeleton mirroring the real inbox layout) -->
     <main id="inbox-loading-view" class="absolute inset-0 flex flex-col items-center px-6 pb-6 pt-2 overflow-hidden transition-all duration-300">
       <div class="glass-container w-full flex-1 rounded-2xl shadow-2xl flex flex-col overflow-hidden relative" style="max-width:var(--list-max-w, 56rem)">
-        <div class="flex items-center gap-2.5 px-6 h-14 border-b border-gray-200/80 text-gray-500 select-none">
-          <span class="material-symbols-outlined animate-spin" style="font-size:18px">progress_activity</span>
-          <span class="text-sm font-medium" id="loading-label">Chargement de la boîte…</span>
-        </div>
         <div class="flex-1 overflow-hidden">
-          <div class="skel-row flex items-center justify-between px-6 py-4">
-            <div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
-              <div class="skel skel-avatar"></div>
-              <div class="skel skel-sender"></div>
-              <div class="flex items-center gap-2 min-w-0 flex-1">
-                <div class="skel skel-subject"></div>
-                <div class="skel skel-snippet"></div>
-              </div>
+
+          <!-- Newsletter section placeholder (mirrors #nl-section) -->
+          <div class="p-6 border-b border-gray-200/50">
+            <div class="flex items-center justify-between mb-3.5">
+              <div class="skel skel-nltitle"></div>
+              <div class="skel skel-nltoggle"></div>
             </div>
-            <div class="skel skel-date"></div>
-          </div>
-          <div class="skel-row flex items-center justify-between px-6 py-4">
-            <div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
-              <div class="skel skel-avatar"></div>
-              <div class="skel skel-sender"></div>
-              <div class="flex items-center gap-2 min-w-0 flex-1">
-                <div class="skel skel-subject"></div>
-                <div class="skel skel-snippet"></div>
-              </div>
+            <div class="carousel-container gap-4">
+              <div class="skel skel-card"></div>
+              <div class="skel skel-card"></div>
+              <div class="skel skel-card"></div>
+              <div class="skel skel-card"></div>
+              <div class="skel skel-card"></div>
+              <div class="skel skel-card"></div>
             </div>
-            <div class="skel skel-date"></div>
           </div>
-          <div class="skel-row flex items-center justify-between px-6 py-4">
-            <div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
-              <div class="skel skel-avatar"></div>
-              <div class="skel skel-sender"></div>
-              <div class="flex items-center gap-2 min-w-0 flex-1">
-                <div class="skel skel-subject"></div>
-                <div class="skel skel-snippet"></div>
-              </div>
+
+          <!-- List header bar placeholder (mirrors #list-header-bar) -->
+          <div class="h-14 border-b border-gray-200/80 flex items-center justify-between px-6 select-none">
+            <div class="flex items-center gap-1.5">
+              <div class="skel skel-iconbtn"></div>
+              <div class="skel skel-iconbtn"></div>
             </div>
-            <div class="skel skel-date"></div>
-          </div>
-          <div class="skel-row flex items-center justify-between px-6 py-4">
-            <div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
-              <div class="skel skel-avatar"></div>
-              <div class="skel skel-sender"></div>
-              <div class="flex items-center gap-2 min-w-0 flex-1">
-                <div class="skel skel-subject"></div>
-                <div class="skel skel-snippet"></div>
-              </div>
+            <div class="flex items-center gap-0.5">
+              <div class="skel skel-catbtn"></div>
+              <div class="skel skel-catbtn"></div>
+              <div class="skel skel-catbtn"></div>
+              <div class="skel skel-catbtn"></div>
+              <div class="skel skel-catbtn"></div>
+              <div class="skel skel-catbtn"></div>
             </div>
-            <div class="skel skel-date"></div>
           </div>
-          <div class="skel-row flex items-center justify-between px-6 py-4">
-            <div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
-              <div class="skel skel-avatar"></div>
-              <div class="skel skel-sender"></div>
-              <div class="flex items-center gap-2 min-w-0 flex-1">
-                <div class="skel skel-subject"></div>
-                <div class="skel skel-snippet"></div>
+
+          <!-- Message rows placeholder (mirrors .mail-item rows in #messages-container) -->
+          <div class="divide-y divide-gray-100">
+            <div class="skel-row flex items-center justify-between px-6 py-4">
+              <div class="flex items-center gap-4 min-w-0 flex-1 pr-6 relative">
+                <div class="skel skel-avatar"></div>
+                <div class="skel skel-sender"></div>
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  <div class="skel skel-subject"></div>
+                  <div class="skel skel-snippet"></div>
+                </div>
               </div>
+              <div class="skel skel-date"></div>
             </div>
-            <div class="skel skel-date"></div>
-          </div>
-          <div class="skel-row flex items-center justify-between px-6 py-4">
-            <div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
-              <div class="skel skel-avatar"></div>
-              <div class="skel skel-sender"></div>
-              <div class="flex items-center gap-2 min-w-0 flex-1">
-                <div class="skel skel-subject"></div>
-                <div class="skel skel-snippet"></div>
+            <div class="skel-row flex items-center justify-between px-6 py-4">
+              <div class="flex items-center gap-4 min-w-0 flex-1 pr-6 relative">
+                <div class="skel skel-avatar"></div>
+                <div class="skel skel-sender"></div>
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  <div class="skel skel-subject"></div>
+                  <div class="skel skel-snippet"></div>
+                </div>
               </div>
+              <div class="skel skel-date"></div>
             </div>
-            <div class="skel skel-date"></div>
-          </div>
-          <div class="skel-row flex items-center justify-between px-6 py-4">
-            <div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
-              <div class="skel skel-avatar"></div>
-              <div class="skel skel-sender"></div>
-              <div class="flex items-center gap-2 min-w-0 flex-1">
-                <div class="skel skel-subject"></div>
-                <div class="skel skel-snippet"></div>
+            <div class="skel-row flex items-center justify-between px-6 py-4">
+              <div class="flex items-center gap-4 min-w-0 flex-1 pr-6 relative">
+                <div class="skel skel-avatar"></div>
+                <div class="skel skel-sender"></div>
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  <div class="skel skel-subject"></div>
+                  <div class="skel skel-snippet"></div>
+                </div>
               </div>
+              <div class="skel skel-date"></div>
             </div>
-            <div class="skel skel-date"></div>
+            <div class="skel-row flex items-center justify-between px-6 py-4">
+              <div class="flex items-center gap-4 min-w-0 flex-1 pr-6 relative">
+                <div class="skel skel-avatar"></div>
+                <div class="skel skel-sender"></div>
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  <div class="skel skel-subject"></div>
+                  <div class="skel skel-snippet"></div>
+                </div>
+              </div>
+              <div class="skel skel-date"></div>
+            </div>
+            <div class="skel-row flex items-center justify-between px-6 py-4">
+              <div class="flex items-center gap-4 min-w-0 flex-1 pr-6 relative">
+                <div class="skel skel-avatar"></div>
+                <div class="skel skel-sender"></div>
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  <div class="skel skel-subject"></div>
+                  <div class="skel skel-snippet"></div>
+                </div>
+              </div>
+              <div class="skel skel-date"></div>
+            </div>
+            <div class="skel-row flex items-center justify-between px-6 py-4">
+              <div class="flex items-center gap-4 min-w-0 flex-1 pr-6 relative">
+                <div class="skel skel-avatar"></div>
+                <div class="skel skel-sender"></div>
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  <div class="skel skel-subject"></div>
+                  <div class="skel skel-snippet"></div>
+                </div>
+              </div>
+              <div class="skel skel-date"></div>
+            </div>
+            <div class="skel-row flex items-center justify-between px-6 py-4">
+              <div class="flex items-center gap-4 min-w-0 flex-1 pr-6 relative">
+                <div class="skel skel-avatar"></div>
+                <div class="skel skel-sender"></div>
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  <div class="skel skel-subject"></div>
+                  <div class="skel skel-snippet"></div>
+                </div>
+              </div>
+              <div class="skel skel-date"></div>
+            </div>
+            <div class="skel-row flex items-center justify-between px-6 py-4">
+              <div class="flex items-center gap-4 min-w-0 flex-1 pr-6 relative">
+                <div class="skel skel-avatar"></div>
+                <div class="skel skel-sender"></div>
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  <div class="skel skel-subject"></div>
+                  <div class="skel skel-snippet"></div>
+                </div>
+              </div>
+              <div class="skel skel-date"></div>
+            </div>
           </div>
+
         </div>
       </div>
     </main>
@@ -2158,6 +2217,12 @@
     }
 
     let drawerExtraOpen = false;
+    let drawerFocusIndex = -1;
+    function applyDrawerFocus(items, idx){
+      items.forEach((it,i)=> it.classList.toggle('is-focused', i===idx));
+      const el = items[idx];
+      if(el && el.scrollIntoView) el.scrollIntoView({block:'nearest'});
+    }
     function toggleDrawerExtra(){ drawerExtraOpen=!drawerExtraOpen; renderDrawer(); }
 
     function toggleDrawer(force){
@@ -2165,7 +2230,16 @@
       const open = force!==undefined ? force : !d.classList.contains('open');
       d.classList.toggle('open', open);
       o.classList.toggle('opacity-0', !open); o.classList.toggle('pointer-events-none', !open);
-      if(open) renderDrawer();
+      if(open){
+        renderDrawer();
+        const items=[...d.querySelectorAll('.nav-item')];
+        drawerFocusIndex = items.findIndex(it=>it.classList.contains('is-active'));
+        if(drawerFocusIndex < 0) drawerFocusIndex = items.length ? 0 : -1;
+        if(drawerFocusIndex >= 0) applyDrawerFocus(items, drawerFocusIndex);
+      } else {
+        drawerFocusIndex = -1;
+        [...d.querySelectorAll('.nav-item')].forEach(it=>it.classList.remove('is-focused'));
+      }
     }
     function renderDrawer(){
       const fc=document.getElementById('drawer-folders'); if(!fc) return;
@@ -2280,6 +2354,15 @@
       const foot=document.getElementById('drawer-foot');
       const acc = accounts.find(a=>a.id===currentAccount);
       if(foot && acc) foot.textContent = `${acc.email}`;
+      // Re-apply keyboard focus highlight after a re-render while the drawer is open
+      const _drawerEl=document.getElementById('nav-drawer');
+      if(_drawerEl && _drawerEl.classList.contains('open')){
+        const items=[..._drawerEl.querySelectorAll('.nav-item')];
+        if(drawerFocusIndex < 0) drawerFocusIndex = items.findIndex(it=>it.classList.contains('is-active'));
+        if(drawerFocusIndex < 0) drawerFocusIndex = items.length ? 0 : -1;
+        if(drawerFocusIndex >= items.length) drawerFocusIndex = items.length - 1;
+        if(items.length && drawerFocusIndex >= 0) applyDrawerFocus(items, drawerFocusIndex);
+      }
     }
     async function createLabel(){
       const name=prompt('Nom du nouveau libellé');
@@ -4743,6 +4826,27 @@
       // --- Ignore si dans un input ---
       const tag=(e.target.tagName||'').toLowerCase();
       if(tag==='input'||tag==='textarea'||tag==='select'||e.target.isContentEditable) return;
+      // --- Drawer (sidebar) keyboard navigation when open (Arrow/Enter) ---
+      const drawerEl=document.getElementById('nav-drawer');
+      if(drawerEl && drawerEl.classList.contains('open')){
+        if(e.key==='ArrowDown' || e.key==='ArrowUp'){
+          e.preventDefault();
+          const items=[...drawerEl.querySelectorAll('.nav-item')];
+          if(!items.length) return;
+          if(drawerFocusIndex < 0) drawerFocusIndex = items.findIndex(it=>it.classList.contains('is-active'));
+          if(drawerFocusIndex < 0) drawerFocusIndex = 0;
+          drawerFocusIndex = (drawerFocusIndex + (e.key==='ArrowDown'?1:-1) + items.length) % items.length;
+          applyDrawerFocus(items, drawerFocusIndex);
+          return;
+        }
+        if(e.key==='Enter'){
+          e.preventDefault();
+          const items=[...drawerEl.querySelectorAll('.nav-item')];
+          if(drawerFocusIndex >= 0 && items[drawerFocusIndex]) items[drawerFocusIndex].click();
+          return;
+        }
+        // ESC falls through to the ESC branch below to close the drawer
+      }
       // --- ESC : retour progressif → drawer ---
       if(e.key==='Escape'){
         e.preventDefault();

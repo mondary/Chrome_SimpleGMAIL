@@ -2517,18 +2517,11 @@ def _compute_threads(account: str, mailbox, folder: str, messages: list) -> dict
         return cached[1]
 
     mapping = {}
-    try:
-        typ, data = mailbox.client.thread("REFERENCES", "UTF-8", "ALL")
-        if typ == "OK" and data:
-            text = b"".join(data).decode("utf-8", errors="ignore")
-            for grp in _parse_thread_response(text):
-                if not grp:
-                    continue
-                tid = sorted(grp)[0]
-                for uid in grp:
-                    mapping[uid] = tid
-    except Exception:
-        mapping = {}
+    # La commande IMAP THREAD=REFERENCES demande au serveur de calculer les
+    # threads sur TOUTE la boîte → plusieurs secondes sur Gmail (jusqu'à 8-11s).
+    # De plus o2switch renvoie des numéros de séquence (résultat inutilisable).
+    # On s'appuie donc uniquement sur les en-têtes RFC (In-Reply-To/References)
+    # et le sujet normalisé, calculés localement sur les en-têtes déjà chargés.
 
     # Certains serveurs retournent des numéros de séquence (ou une cartographie
     # partielle) pour THREAD. On réconcilie donc toujours les résultats avec les
