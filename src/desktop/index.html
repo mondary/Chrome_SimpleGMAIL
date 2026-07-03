@@ -1315,6 +1315,7 @@
           <div class="icon-btn-container responsive-secondary" title="Tout répondre" onclick="replyAllCurrent()"><span class="material-symbols-outlined">reply_all</span></div>
           <div class="icon-btn-container responsive-secondary" title="Transférer" onclick="forwardCurrent()"><span class="material-symbols-outlined">forward</span></div>
           <div class="icon-btn-container responsive-secondary" title="Lecture immersive" onclick="openImmersive(currentSelectedId)"><span class="material-symbols-outlined">auto_stories</span></div>
+          <div class="icon-btn-container responsive-secondary" title="Lecture plein écran" onclick="openFullscreenReader(currentSelectedId)" id="fs-reader-btn" style="display:none"><span class="material-symbols-outlined">fullscreen</span></div>
           <div id="thread-toggle-all" class="icon-btn-container responsive-secondary" title="Replier toute la conversation" onclick="toggleAllThreadMsgs()"><span id="thread-toggle-icon" class="material-symbols-outlined">unfold_less</span></div>
         </div>
         <div class="flex items-center gap-1.5 shrink-0 overflow-hidden">
@@ -1740,6 +1741,72 @@
           <span class="material-symbols-outlined" style="font-size:18px;color:inherit">send</span>
         </button>
       </div>
+    </div>
+  </div>
+
+  <style>
+    /* Fullscreen reader (diaporama) */
+    #fs-reader{position:fixed;inset:0;z-index:99999;background:#000;flex-direction:column;color:#fff}
+    #fs-close,#fs-prev,#fs-next{position:absolute;z-index:10;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);backdrop-filter:blur(12px);border:none;color:#fff;cursor:pointer;transition:all .2s}
+    #fs-close:hover,#fs-prev:hover,#fs-next:hover{background:rgba(255,255,255,0.25)}
+    #fs-close{top:24px;right:24px;width:44px;height:44px;border-radius:50%}
+    #fs-prev{top:50%;left:16px;transform:translateY(-50%);width:52px;height:52px;border-radius:50%}
+    #fs-next{top:50%;right:16px;transform:translateY(-50%);width:52px;height:52px;border-radius:50%}
+    #fs-stage{flex:1;overflow-y:auto;position:relative}
+    #fs-bg{position:sticky;top:0;height:60vh;background:#111;background-size:cover;background-position:center;transition:opacity .45s}
+    #fs-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,#000 20%,transparent 70%)}
+    #fs-bottom{position:relative;background:#0a0a0a;color:#fff;padding:36px 8%;margin-top:-28px;border-radius:24px 24px 0 0;z-index:10;min-height:55vh}
+    #fs-title{font-size:clamp(24px,4vw,42px);font-weight:800;line-height:1.2;margin-bottom:20px;color:#4d7cff;text-shadow:0 0 24px rgba(77,124,255,0.45)}
+    #fs-meta{font-size:11px;text-transform:uppercase;letter-spacing:0.16em;opacity:0.6;margin-bottom:12px}
+    #fs-text{font-size:1.125rem;line-height:1.75;opacity:0.95;color:#ddd}
+    #fs-text p{margin-bottom:1rem}
+    #fs-text a{color:#4d7cff;text-decoration:underline}
+    #fs-text a:hover{color:#6b9aff}
+    #fs-thumbs{display:flex;gap:8px;overflow-x:auto;margin-top:16px;padding-bottom:8px}
+    #fs-thumbs img{width:72px;height:72px;object-fit:cover;border-radius:8px;flex-shrink:0;cursor:pointer;border:2px solid rgba(255,255,255,0.2);transition:all .2s}
+    #fs-thumbs img:hover{border-color:#fff;transform:translateY(-2px)}
+    #fs-readmore{display:inline-block;margin-top:24px;color:#fff;text-decoration:none;font-weight:600;font-size:12px;padding:10px 18px;border:1px solid rgba(255,255,255,0.4);border-radius:9999px;transition:all .2s}
+    #fs-readmore:hover{background:rgba(255,255,255,0.2);border-color:#fff}
+    #fs-lightbox{position:absolute;inset:0;background:rgba(0,0,0,0.96);z-index:20;display:none;align-items:center;justify-content:center;padding:40px}
+    #fs-lightbox.flex{display:flex}
+    #fs-lightbox-close{position:absolute;top:24px;right:24px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    #fs-lightbox-img{max-width:90vw;max-height:90vh;object-fit:contain;border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,0.6)}
+    @media(max-width:640px){
+      #fs-bottom{padding:24px 5%}
+      #fs-title{font-size:22px}
+      #fs-text{font-size:1rem}
+      #fs-close{top:16px;right:16px;width:36px;height:36px}
+      #fs-prev,#fs-next{width:40px;height:40px}
+      #fs-prev{left:8px}
+      #fs-next{right:8px}
+    }
+  </style>
+  <!-- ================= FULLSCREEN READER (diaporama) ================= -->
+  <div id="fs-reader" class="fixed inset-0 z-[99999] hidden flex-col" role="dialog" aria-modal="true" aria-hidden="true">
+    <button id="fs-close" onclick="closeFullscreenReader()" class="absolute top-6 right-6 w-11 h-11 rounded-full bg-white/10 backdrop-blur border-none text-white cursor-pointer z-10 flex items-center justify-center hover:bg-white/25 transition-colors" type="button" aria-label="Fermer">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+    </button>
+    <button id="fs-prev" onclick="fsNav(-1)" class="absolute top-1/2 left-4 -translate-y-1/2 w-13 h-13 rounded-full bg-white/10 backdrop-blur border-none text-white cursor-pointer z-10 flex items-center justify-center hover:bg-white/25 transition-colors hidden" type="button" aria-label="Précédent">
+      <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+    </button>
+    <button id="fs-next" onclick="fsNav(1)" class="absolute top-1/2 right-4 -translate-y-1/2 w-13 h-13 rounded-full bg-white/10 backdrop-blur border-none text-white cursor-pointer z-10 flex items-center justify-center hover:bg-white/25 transition-colors hidden" type="button" aria-label="Suivant">
+      <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+    </button>
+    <div id="fs-stage" class="flex-1 overflow-y-auto">
+      <div id="fs-bg" class="sticky top-0 h-[60vh] bg-[#111] bg-cover bg-center" style="transition:opacity 0.45s"></div>
+      <div id="fs-bottom" class="relative bg-[#0a0a0a] text-white px-[8%] py-9 -mt-7 rounded-t-2xl z-10 min-h-[55vh]">
+        <div id="fs-meta" class="text-[11px] uppercase tracking-widest opacity-60 mb-3"></div>
+        <h2 id="fs-title" class="text-[clamp(24px,4vw,42px)] font-extrabold leading-tight mb-5" style="color:#4d7cff;text-shadow:0 0 24px rgba(77,124,255,0.45)"></h2>
+        <div id="fs-text" class="text-lg leading-relaxed opacity-95"></div>
+        <div id="fs-thumbs" class="flex gap-2 overflow-x-auto mt-4 pb-2"></div>
+        <a id="fs-readmore" href="#" target="_blank" rel="noopener" class="inline-block mt-6 text-white no-underline font-semibold text-xs px-[18px] py-[10px] border border-white/40 rounded-full transition-colors hover:bg-white/20 hover:border-white">Lire dans le webmail &rarr;</a>
+      </div>
+    </div>
+    <div id="fs-lightbox" class="absolute inset-0 bg-black/96 hidden items-center justify-center z-20 p-10">
+      <button id="fs-lightbox-close" onclick="closeFsLightbox()" class="absolute top-6 right-6 w-11 h-11 rounded-full bg-white/15 border-none text-white cursor-pointer flex items-center justify-center" type="button" aria-label="Fermer l'image">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+      <img id="fs-lightbox-img" src="" alt="" class="max-w-[90vw] max-h-[90vh] object-contain rounded shadow-2xl">
     </div>
   </div>
 
@@ -3758,8 +3825,11 @@
     if (!settings.loadingStyle) settings.loadingStyle = 'bar';
     if (!settings.lang) settings.lang = 'fr';
     if (!settings.shortcuts) settings.shortcuts = null;
+    if (!settings.fullscreenReader) settings.fullscreenReader = false;
     function saveSettings(){ try { localStorage.setItem('mm_settings', JSON.stringify(settings)); } catch(e){} }
     if (migrateConversationDefaults) saveSettings();
+    function updateFullscreenReaderBtn(){ const btn=document.getElementById('fs-reader-btn'); if(btn) btn.style.display=settings.fullscreenReader?'':'none'; }
+    updateFullscreenReaderBtn();
     function getConvOrder(){ return settings.convOrder || 'oldest'; }
     function setConvOrder(o){ settings.convOrder = o; saveSettings(); }
     function getThreadExpansion(){ return settings.threadExpansion || 'all'; }
@@ -4020,6 +4090,7 @@
       renderInboxList();
       showToast(layout==='footer' ? 'Navigation : header + footer' : 'Navigation : full header');
     }
+    function setFullscreenReader(enabled){ settings.fullscreenReader=enabled; updateFullscreenReaderBtn(); saveSettings(); }
     function getListMode(){ try { return localStorage.getItem('simplemail_list_mode') || 'pagination'; } catch(e){ return 'pagination'; } }
     function setListMode(mode){
       saveSetting('simplemail_list_mode', mode);
@@ -4844,6 +4915,120 @@
       }catch(e){ st.textContent='✗ Erreur : '+e.message; document.getElementById('cmp-send').disabled=false; }
     }
 
+    // ====================== Fullscreen reader (diaporama) ======================
+    async function getParsedMessage(e) {
+      if (!e.html && e.id) {
+        try {
+          const d = await api(`/api/messages/${e.account}/${e.uid}?folder=${encodeURIComponent(currentFolder)}`);
+          if (d) Object.assign(e, d);
+        } catch(ex) {}
+      }
+      if (e.html) {
+        const div = document.createElement('div');
+        div.innerHTML = e.html.replace(/src=["']cid:([^"']+)["']/gi, (m, cid) =>
+          `src="/api/messages/${e.account}/${e.uid}/cid/${cid}?folder=${encodeURIComponent(currentFolder)}"`);
+        return { body: div };
+      }
+      return null;
+    }
+    let fsList = [];
+    let fsIndex = 0;
+    function openFullscreenReader(id) {
+      fsList = [...document.querySelectorAll('#messages-container .mail-item')].map(row => {
+        const tid = row.dataset.threadId;
+        return emails.find(e => (e.threadId || e.id) === tid);
+      }).filter(Boolean);
+      fsIndex = Math.max(0, fsList.findIndex(e => e.id === id || e.threadId === id));
+      if (fsIndex < 0) fsIndex = 0;
+      document.getElementById('fs-reader').classList.remove('hidden');
+      document.getElementById('fs-reader').classList.add('flex');
+      document.getElementById('fs-reader').setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      renderFullscreenSlide();
+    }
+    function closeFullscreenReader() {
+      document.getElementById('fs-reader').classList.add('hidden');
+      document.getElementById('fs-reader').classList.remove('flex');
+      document.getElementById('fs-reader').setAttribute('aria-hidden', 'true');
+      closeFsLightbox();
+      document.body.style.overflow = '';
+    }
+    function fsNav(dir) {
+      const n = fsIndex + dir;
+      if (n < 0 || n >= fsList.length) { showToast(dir > 0 ? 'Dernier message' : 'Premier message'); return; }
+      fsIndex = n;
+      renderFullscreenSlide();
+    }
+    async function getLargestImage(e) {
+      const sources = mailImageSources(e);
+      if (sources.length) return sources[0];
+      const d = domainOf(e.email || '');
+      if (d && d.includes('.')) return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(d)}&sz=256`;
+      return '';
+    }
+    async function renderFullscreenSlide() {
+      const e = fsList[fsIndex];
+      if (!e) return;
+      const stage = document.getElementById('fs-stage');
+      stage.scrollTop = 0;
+      const bg = document.getElementById('fs-bg');
+      bg.style.opacity = '0';
+      const imgUrl = await getLargestImage(e);
+      setTimeout(() => {
+        bg.style.backgroundImage = imgUrl ? `url("${imgUrl}")` : 'none';
+        bg.style.opacity = '1';
+      }, 200);
+      document.getElementById('fs-meta').textContent = (e.date || '') + (e.sender ? '   ·   ' + e.sender : '');
+      document.getElementById('fs-title').textContent = e.subject || '';
+      let html = '';
+      if (e.html) {
+        const parsed = await getParsedMessage(e);
+        if (parsed && parsed.body) {
+          html = parsed.body.innerHTML;
+        }
+      }
+      if (!html && e.text) {
+        html = '<p>' + e.text.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
+      }
+      document.getElementById('fs-text').innerHTML = html;
+      const webmailLink = document.getElementById('header-webmail-link');
+      const href = webmailLink ? webmailLink.getAttribute('href') : '#';
+      document.getElementById('fs-readmore').setAttribute('href', href || '#');
+      const thumbsEl = document.getElementById('fs-thumbs');
+      thumbsEl.innerHTML = '';
+      const sources = mailImageSources(e);
+      (sources || []).forEach(url => {
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = '';
+        img.loading = 'lazy';
+        img.className = 'w-[72px] h-[72px] object-cover rounded-lg shrink-0 cursor-pointer border-2 border-white/20 transition-all hover:border-white hover:-translate-y-0.5';
+        img.onclick = () => openFsLightbox(sources, sources.indexOf(url));
+        thumbsEl.appendChild(img);
+      });
+      document.getElementById('fs-prev').classList.toggle('hidden', fsIndex <= 0 && fsList.length <= 1);
+      document.getElementById('fs-next').classList.toggle('hidden', fsIndex >= fsList.length - 1 && fsList.length <= 1);
+    }
+    let fsLightboxImages = [];
+    let fsLightboxIndex = 0;
+    function openFsLightbox(images, index) {
+      fsLightboxImages = images;
+      fsLightboxIndex = index;
+      document.getElementById('fs-lightbox-img').src = images[index] || '';
+      document.getElementById('fs-lightbox').classList.remove('hidden');
+      document.getElementById('fs-lightbox').classList.add('flex');
+    }
+    function closeFsLightbox() {
+      document.getElementById('fs-lightbox').classList.add('hidden');
+      document.getElementById('fs-lightbox').classList.remove('flex');
+      document.getElementById('fs-lightbox-img').src = '';
+    }
+    function stepFsLightbox(dir) {
+      if (fsLightboxImages.length < 2) return;
+      fsLightboxIndex = (fsLightboxIndex + dir + fsLightboxImages.length) % fsLightboxImages.length;
+      document.getElementById('fs-lightbox-img').src = fsLightboxImages[fsLightboxIndex];
+    }
+
     // ====================== Toast + clavier ======================
     function showToast(msg){ const t=document.getElementById('toast'); t.innerText=msg; t.classList.remove('translate-y-20','opacity-0'); setTimeout(()=>t.classList.add('translate-y-20','opacity-0'),2500); }
 
@@ -4863,6 +5048,12 @@
         else if(e.key==='ArrowLeft'){ e.preventDefault(); stepImageLightbox(-1); }
         else if(e.key==='ArrowRight'){ e.preventDefault(); stepImageLightbox(1); }
         return;
+      }
+      // --- Fullscreen reader keyboard nav ---
+      if (document.getElementById('fs-reader').classList.contains('flex')) {
+        if (e.key === 'Escape') { closeFullscreenReader(); e.preventDefault(); return; }
+        if (e.key === 'ArrowRight') { fsNav(1); e.preventDefault(); return; }
+        if (e.key === 'ArrowLeft') { fsNav(-1); e.preventDefault(); return; }
       }
       // --- Capture de raccourci personnalisé ---
       if(capturingShortcut){
@@ -5245,6 +5436,13 @@
                 </div>
               </div>
 
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <div class="settings-row-title">Lecteur plein écran</div>
+                  <div class="settings-row-desc">Bouton pour lire les emails en mode diaporama plein écran, avec image d'arrière-plan et navigation.</div>
+                </div>
+                <label class="toggle-wrapper"><input type="checkbox" ${settings.fullscreenReader?'checked':''} onchange="setFullscreenReader(this.checked)"><span class="toggle-slider"></span></label>
+              </div>
               <div class="settings-row">
                 <div class="settings-row-label">
                   <div class="settings-row-title">Barre de chargement</div>
