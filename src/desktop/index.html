@@ -1298,9 +1298,10 @@
     <div id="header-center" class="flex-1 min-w-0 h-10 flex items-center justify-center relative" style="max-width:var(--list-max-w, 56rem)">
       
       <!-- Search Bar -->
-      <div id="header-search-bar" class="pointer-events-auto w-full glass-search rounded-lg px-4 py-2 flex items-center gap-3 transition-all duration-300 cursor-text" onclick="focusSearchFromBar(event)">
+      <div id="header-search-bar" class="pointer-events-auto w-full glass-search rounded-lg px-4 py-2 flex items-center gap-3 transition-all duration-300 cursor-text relative overflow-hidden" onclick="focusSearchFromBar(event)">
+        <div id="search-progress" style="position:absolute;top:0;left:0;bottom:0;width:0;background:rgba(26,115,232,0.10);border-radius:8px;pointer-events:none;z-index:0;transition:none;"></div>
         <span class="material-symbols-outlined text-inherit opacity-70 pointer-events-none" id="search-bar-icon">search</span>
-        <input type="text" id="search-input" autocomplete="off" spellcheck="false" oninput="handleSearch(this.value)" onkeydown="handleSearchKeydown(event)" placeholder="Rechercher des mails" class="flex-1 bg-transparent text-inherit text-sm focus:outline-none min-w-0">
+        <input type="text" id="search-input" autocomplete="off" spellcheck="false" oninput="handleSearch(this.value)" onkeydown="handleSearchKeydown(event)" placeholder="Rechercher des mails" class="flex-1 bg-transparent text-inherit text-sm focus:outline-none min-w-0 relative z-[1]">
         <span id="search-clear" class="material-symbols-outlined" style="font-size:18px" onclick="clearSearch(event)" title="Vider la recherche" role="button" aria-label="Vider la recherche">close</span>
         <span id="search-count" class="text-xs opacity-50 whitespace-nowrap shrink-0"></span>
         <span id="search-context" class="text-xs opacity-40 whitespace-nowrap shrink-0 ml-2 hidden"></span>
@@ -2461,9 +2462,32 @@
 
 
     // ====================== Messages ======================
-    function showLoading(){ const b=document.getElementById('loading-bar'); if(b){ b.style.transition='none'; b.style.transform='scaleX(0)'; b.style.opacity='1'; requestAnimationFrame(()=>{ b.style.transition='transform 30s cubic-bezier(0,0.7,0.3,1)'; b.style.transform='scaleX(0.85)'; }); } _loadingStart = Date.now(); }
     let _loadingStart = 0;
-    function hideLoading(){ const elapsed=Date.now()-_loadingStart; const delay=Math.max(0, 400-elapsed); setTimeout(()=>{ const b=document.getElementById('loading-bar'); if(b){ b.style.transition='transform 0.15s ease'; b.style.transform='scaleX(1)'; setTimeout(()=>{ b.style.transition='opacity 0.3s'; b.style.opacity='0'; },120); } }, delay); }
+    function showLoading(){
+      const useSearch = settings.loadingStyle === 'search';
+      if(useSearch){
+        const p=document.getElementById('search-progress');
+        if(p){ p.style.transition='none'; p.style.width='0'; p.style.opacity='1'; requestAnimationFrame(()=>{ p.style.transition='width 30s cubic-bezier(0,0.7,0.3,1)'; p.style.width='85%'; }); }
+      } else {
+        const b=document.getElementById('loading-bar');
+        if(b){ b.style.transition='none'; b.style.transform='scaleX(0)'; b.style.opacity='1'; requestAnimationFrame(()=>{ b.style.transition='transform 30s cubic-bezier(0,0.7,0.3,1)'; b.style.transform='scaleX(0.85)'; }); }
+      }
+      _loadingStart = Date.now();
+    }
+    function hideLoading(){
+      const elapsed=Date.now()-_loadingStart;
+      const delay=Math.max(0, 400-elapsed);
+      setTimeout(()=>{
+        const useSearch = settings.loadingStyle === 'search';
+        if(useSearch){
+          const p=document.getElementById('search-progress');
+          if(p){ p.style.transition='width 0.15s ease'; p.style.width='100%'; setTimeout(()=>{ p.style.transition='opacity 0.3s'; p.style.opacity='0'; },120); }
+        } else {
+          const b=document.getElementById('loading-bar');
+          if(b){ b.style.transition='transform 0.15s ease'; b.style.transform='scaleX(1)'; setTimeout(()=>{ b.style.transition='opacity 0.3s'; b.style.opacity='0'; },120); }
+        }
+      }, delay);
+    }
     async function loadMessages(alertFlag) {
       showLoading();
       currentActiveView='loading'; updateUIState();
@@ -3731,6 +3755,7 @@
     if (!settings.convOrder) settings.convOrder = 'oldest';
     if (!settings.threadExpansion) settings.threadExpansion = 'all';
     if (!settings.readMode) settings.readMode = 'classic';
+    if (!settings.loadingStyle) settings.loadingStyle = 'bar';
     if (!settings.lang) settings.lang = 'fr';
     if (!settings.shortcuts) settings.shortcuts = null;
     function saveSettings(){ try { localStorage.setItem('mm_settings', JSON.stringify(settings)); } catch(e){} }
@@ -3988,6 +4013,7 @@
       if(headerBar && getNavigationLayout()==='footer'){ headerBar.classList.add('hidden'); headerBar.classList.remove('flex'); headerBar.innerHTML=''; }
       if(footerBar && getNavigationLayout()==='header'){ footerBar.classList.add('hidden'); footerBar.classList.remove('flex'); footerBar.innerHTML=''; }
     }
+    function setLoadingStyle(style){ settings.loadingStyle=style; saveSettings(); }
     function setNavigationLayout(layout){
       saveSetting('simplemail_navigation_layout', layout);
       applyNavigationLayout();
@@ -5219,6 +5245,16 @@
                 </div>
               </div>
 
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <div class="settings-row-title">Barre de chargement</div>
+                  <div class="settings-row-desc">Barre bleue dans l'en-tête de la liste ou dans la barre de recherche.</div>
+                </div>
+                <select onchange="setLoadingStyle(this.value)" class="settings-select">
+                  <option value="bar" ${settings.loadingStyle==='bar'?'selected':''}>Barre d'en-tête</option>
+                  <option value="search" ${settings.loadingStyle==='search'?'selected':''}>Barre de recherche</option>
+                </select>
+              </div>
               <div class="settings-row">
                 <div class="settings-row-label">
                   <div class="settings-row-title">Police principale</div>
