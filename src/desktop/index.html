@@ -1213,6 +1213,29 @@
     .resize-handle-drawer { right: -3px; }
     .resize-handle-list { right: -3px; top: 0; bottom: 0; }
     .resize-handle-list-left { left: -3px; top: 0; bottom: 0; }
+
+    /* ===== Loading skeleton ===== */
+    @keyframes skel-shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .skel {
+      background: linear-gradient(90deg, #ececec 25%, #f4f4f4 37%, #ececec 63%);
+      background-size: 200% 100%;
+      animation: skel-shimmer 1.2s ease-in-out infinite;
+      border-radius: 6px;
+    }
+    body.theme-dark .skel {
+      background: linear-gradient(90deg, #2a2a2a 25%, #343434 37%, #2a2a2a 63%);
+      background-size: 200% 100%;
+    }
+    .skel-row { border-bottom: 1px solid rgba(0,0,0,0.04); }
+    body.theme-dark .skel-row { border-bottom-color: rgba(255,255,255,0.05); }
+    .skel-avatar  { width: 20px; height: 20px; border-radius: 50%; flex: 0 0 20px; }
+    .skel-sender  { width: 11rem; height: 14px; flex-shrink: 0; }
+    .skel-subject { width: 9rem;  height: 14px; flex-shrink: 0; }
+    .skel-snippet { flex: 1; height: 10px; max-width: 18rem; }
+    .skel-date    { width: 3rem; height: 10px; flex-shrink: 0; }
   </style>
 </head>
 <body class="h-screen w-screen flex flex-col overflow-hidden relative theme-white">
@@ -1323,7 +1346,7 @@
   <div class="flex-1 relative overflow-hidden z-10 flex flex-col">
     
     <!-- State 1: Inbox Zero View -->
-    <main id="inbox-zero-view" class="absolute inset-0 flex flex-col justify-center items-center p-8 transition-all duration-300">
+    <main id="inbox-zero-view" class="absolute inset-0 flex flex-col justify-center items-center p-8 opacity-0 pointer-events-none transition-all duration-300">
       <div id="image-theme-badge-container" class="absolute bottom-8 left-8">
         <button id="inbox-zero-badge" onclick="loadMessages(true)" class="bg-black/25 text-white/90 border border-white/10 hover:bg-black/35 backdrop-blur-md px-4 py-2.5 rounded-lg text-xs font-normal tracking-wide transition-all select-none">
           <span id="image-empty-label">Aucun nouveau message</span> <span class="opacity-60 text-[10px] ml-1.5">Actualiser</span>
@@ -1338,6 +1361,95 @@
         <button id="empty-refresh-button" onclick="loadMessages(true)" class="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-xs font-medium text-gray-600 transition-colors">
           Actualiser
         </button>
+      </div>
+    </main>
+
+    <!-- State 1.5: Inbox Loading View (skeleton, shown during fetch) -->
+    <main id="inbox-loading-view" class="absolute inset-0 flex flex-col items-center px-6 pb-6 pt-2 overflow-hidden transition-all duration-300">
+      <div class="glass-container w-full flex-1 rounded-2xl shadow-2xl flex flex-col overflow-hidden relative" style="max-width:var(--list-max-w, 56rem)">
+        <div class="flex items-center gap-2.5 px-6 h-14 border-b border-gray-200/80 text-gray-500 select-none">
+          <span class="material-symbols-outlined animate-spin" style="font-size:18px">progress_activity</span>
+          <span class="text-sm font-medium" id="loading-label">Chargement de la boîte…</span>
+        </div>
+        <div class="flex-1 overflow-hidden">
+          <div class="skel-row flex items-center justify-between px-6 py-4">
+            <div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
+              <div class="skel skel-avatar"></div>
+              <div class="skel skel-sender"></div>
+              <div class="flex items-center gap-2 min-w-0 flex-1">
+                <div class="skel skel-subject"></div>
+                <div class="skel skel-snippet"></div>
+              </div>
+            </div>
+            <div class="skel skel-date"></div>
+          </div>
+          <div class="skel-row flex items-center justify-between px-6 py-4">
+            <div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
+              <div class="skel skel-avatar"></div>
+              <div class="skel skel-sender"></div>
+              <div class="flex items-center gap-2 min-w-0 flex-1">
+                <div class="skel skel-subject"></div>
+                <div class="skel skel-snippet"></div>
+              </div>
+            </div>
+            <div class="skel skel-date"></div>
+          </div>
+          <div class="skel-row flex items-center justify-between px-6 py-4">
+            <div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
+              <div class="skel skel-avatar"></div>
+              <div class="skel skel-sender"></div>
+              <div class="flex items-center gap-2 min-w-0 flex-1">
+                <div class="skel skel-subject"></div>
+                <div class="skel skel-snippet"></div>
+              </div>
+            </div>
+            <div class="skel skel-date"></div>
+          </div>
+          <div class="skel-row flex items-center justify-between px-6 py-4">
+            <div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
+              <div class="skel skel-avatar"></div>
+              <div class="skel skel-sender"></div>
+              <div class="flex items-center gap-2 min-w-0 flex-1">
+                <div class="skel skel-subject"></div>
+                <div class="skel skel-snippet"></div>
+              </div>
+            </div>
+            <div class="skel skel-date"></div>
+          </div>
+          <div class="skel-row flex items-center justify-between px-6 py-4">
+            <div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
+              <div class="skel skel-avatar"></div>
+              <div class="skel skel-sender"></div>
+              <div class="flex items-center gap-2 min-w-0 flex-1">
+                <div class="skel skel-subject"></div>
+                <div class="skel skel-snippet"></div>
+              </div>
+            </div>
+            <div class="skel skel-date"></div>
+          </div>
+          <div class="skel-row flex items-center justify-between px-6 py-4">
+            <div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
+              <div class="skel skel-avatar"></div>
+              <div class="skel skel-sender"></div>
+              <div class="flex items-center gap-2 min-w-0 flex-1">
+                <div class="skel skel-subject"></div>
+                <div class="skel skel-snippet"></div>
+              </div>
+            </div>
+            <div class="skel skel-date"></div>
+          </div>
+          <div class="skel-row flex items-center justify-between px-6 py-4">
+            <div class="flex items-center gap-4 min-w-0 flex-1 pr-6">
+              <div class="skel skel-avatar"></div>
+              <div class="skel skel-sender"></div>
+              <div class="flex items-center gap-2 min-w-0 flex-1">
+                <div class="skel skel-subject"></div>
+                <div class="skel skel-snippet"></div>
+              </div>
+            </div>
+            <div class="skel skel-date"></div>
+          </div>
+        </div>
       </div>
     </main>
 
@@ -1597,7 +1709,7 @@
     let currentListIndex = -1;
     let searchText = '';
     let currentTheme = 'white';
-    let currentActiveView = 'zero';
+    let currentActiveView = 'loading';
     let currentNewsletterFilter = '';
     let accounts = [];
     let folders = [];
@@ -2242,6 +2354,7 @@
     function hideLoading(){ const elapsed=Date.now()-_loadingStart; const delay=Math.max(0, 400-elapsed); setTimeout(()=>{ const b=document.getElementById('loading-bar'); if(b){ b.style.transition='transform 0.15s ease'; b.style.transform='scaleX(1)'; setTimeout(()=>{ b.style.transition='opacity 0.3s'; b.style.opacity='0'; },120); } }, delay); }
     async function loadMessages(alertFlag) {
       showLoading();
+      currentActiveView='loading'; updateUIState();
       const container=document.getElementById('messages-container');
       if(container) container.innerHTML='<div class="flex items-center justify-center py-12 text-sm text-gray-400"><span class="material-symbols-outlined mr-2 animate-spin" style="font-size:18px">refresh</span>Chargement…</div>';
       if (!currentAccount) { await loadAccounts(); if (currentAccount) await loadFolders(currentAccount); }
@@ -2611,7 +2724,7 @@
         .simplemail-quoted.is-visible { display:block; }
         .simplemail-quote-toggle { border:0; border-radius:999px; padding:3px 11px; margin:3px 0; background:#f1f3f4; color:#777; cursor:pointer; font:600 14px/1 system-ui,sans-serif !important; }
       </style>` + doc;
-      return `<iframe id="${fid}" class="html-mail-frame" sandbox="allow-same-origin allow-popups" srcdoc="${escapeAttr(doc)}" onload="resizeHtmlFrame('${fid}')"></iframe>`;
+      return `<iframe id="${fid}" class="html-mail-frame" sandbox="allow-same-origin allow-popups" srcdoc="${escapeAttr(doc)}" onload="resizeHtmlFrame('${fid}');wireMailFrameLinks(this);"></iframe>`;
     }
     function resizeHtmlFrame(id){
       const f = document.getElementById(id); if(!f) return;
@@ -2641,6 +2754,35 @@
         };
       });
       if(!frame.dataset.imageLightboxRetry){ frame.dataset.imageLightboxRetry='1'; setTimeout(()=>setupFrameImageLightbox(frame),600); }
+    }
+    // Ouvre une URL en dehors de l'app : méthode native pywebview si dispo, sinon nouvel onglet.
+    function openExternal(url){
+      try {
+        if (window.pywebview && window.pywebview.api) {
+          const ext = window.pywebview.api.open_external || window.pywebview.api.openExternal || window.pywebview.api.openInBrowser;
+          if (typeof ext === 'function') { const r = ext.call(window.pywebview.api, url); if(r && typeof r.then==='function') r.catch(()=>{}); return; }
+        }
+      } catch(e) {}
+      window.open(url, '_blank', 'noopener');
+    }
+    // Branche tous les liens d'un mail HTML sandboxé pour qu'ils s'ouvrent à l'extérieur
+    // de l'iframe (les CTA/liens ne naviguent plus le cadre -> fini l'écran blanc).
+    function wireMailFrameLinks(iframe){
+      try {
+        const doc = iframe && iframe.contentDocument; if(!doc) return;
+        doc.querySelectorAll('a[href]').forEach(a=>{
+          if(a.dataset.mpkWired==='1') return; a.dataset.mpkWired='1';
+          const href = a.getAttribute('href') || '';
+          if (/^mailto:/i.test(href)) {
+            a.addEventListener('click', ev=>{ ev.preventDefault(); try { openCompose({to:href.replace(/^mailto:/i,'').split('?')[0]}); } catch(e){} });
+            return;
+          }
+          if (!/^(https?:)?\/\//i.test(href)) return; // ancres, javascript:, etc. -> on touche pas
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.addEventListener('click', ev=>{ ev.preventDefault(); openExternal(a.href); });
+        });
+      } catch(e) {}
     }
 
     // ====================== Threading (côté client sur la page chargée) ======================
@@ -2793,7 +2935,13 @@
 
     function getVisibleThreads(){
       const list = getCategoryEmails();
-      return list.map(e=>({id:e.threadId||e.id, messages:[e]}));
+      // Groupe réellement par threadId (un thread = plusieurs messages),
+      // au lieu de créer un thread singleton par message.
+      const map = new Map();
+      list.forEach(e => { const k = e.threadId || ('s-'+e.id); if(!map.has(k)) map.set(k, []); map.get(k).push(e); });
+      const out = [];
+      map.forEach(msgs => { msgs.sort((a,b)=>(a.rawDate||'').localeCompare(b.rawDate||'')); out.push({id: msgs[0].threadId||msgs[0].id, messages: msgs}); });
+      return out;
     }
 
     function getSelectedThreadIndex(){
@@ -2961,13 +3109,14 @@
       const isZero = emails.length===0;
       const zero=document.getElementById('inbox-zero-view'), list=document.getElementById('inbox-list-view'),
             conv=document.getElementById('conversation-view'), nl=document.getElementById('newsletter-detail-view'),
-            rss=document.getElementById('rss-view');
+            rss=document.getElementById('rss-view'), loading=document.getElementById('inbox-loading-view');
       const imageBadge=document.getElementById('image-theme-badge-container'), whiteState=document.getElementById('white-theme-empty-state');
       const show=(el,b)=>{ if(!el) return; el.classList.toggle('opacity-0',!b); el.classList.toggle('pointer-events-none',!b); };
       show(zero, currentActiveView==='zero'); show(list, currentActiveView==='list');
       show(conv, currentActiveView==='conversation'); show(nl, currentActiveView==='newsletter');
-      show(rss, currentActiveView==='rss');
+      show(rss, currentActiveView==='rss'); show(loading, currentActiveView==='loading');
       if(currentActiveView==='rss'){ setHeaderState('list'); renderRssView(); return; }
+      if(currentActiveView==='loading'){ return; }
       if(currentActiveView==='zero'){
         const state=emptyFolderState();
         const title=document.getElementById('empty-title'), description=document.getElementById('empty-description');
@@ -3003,6 +3152,18 @@
       const paginationBar = useFooterPagination ? footerPaginationBar : headerPaginationBar;
       const pageEmails = pageCache.get(currentPage) || [];
       const filteredPage = getCategoryEmails(pageEmails);
+      // Collapse les messages par conversation (threadId) : un rang par thread,
+      // le plus récent comme représentant. Évite les doublons et porte la taille
+      // du thread (_threadSize) pour afficher la bulle de comptage.
+      const _byThread = new Map();
+      filteredPage.forEach(e => { const k = e.threadId || ('s-'+e.id); if(_byThread.has(k)) _byThread.get(k).push(e); else _byThread.set(k, [e]); });
+      const visibleRows = [];
+      _byThread.forEach(msgs => {
+        msgs.sort((a,b)=>(b.rawDate||'').localeCompare(a.rawDate||''));
+        const rep = Object.assign({}, msgs[0]);
+        rep._threadSize = msgs.length;
+        visibleRows.push(rep);
+      });
       const sc=document.getElementById('search-count');
       if(sc){
         const first=totalMessages?((currentPage-1)*emailsPerPage+1):0;
@@ -3020,7 +3181,7 @@
       if(catIcons) catIcons.classList.toggle('hidden', currentFolder !== 'INBOX');
       const spamBanner = document.getElementById('spam-info-banner');
       if(spamBanner) spamBanner.classList.toggle('hidden', !['SPAM','JUNK'].includes(folderKey(currentFolder)));
-      if(!filteredPage.length){
+      if(!visibleRows.length){
         currentListIndex = -1; 
         currentSelectedId = null; 
         const cl=(CATEGORIES.find(c=>c.id===currentCategory)||{}).label||''; 
@@ -3035,11 +3196,12 @@
       }
       const selectedIndex = getSelectedThreadIndex();
       currentListIndex = selectedIndex < 0 ? 0 : selectedIndex;
-      filteredPage.forEach((email, index) => {
+      visibleRows.forEach((email, index) => {
         const hasUnread=email.unread, starred=email.starred;
         const attCount = Number(email.attachmentCount) || (email.hasAttachments ? 1 : 0);
+        const threadSize = Number(email._threadSize) || Number(email.threadCount) || 1;
         const item=document.createElement('div');
-        const borderClass = (currentTheme!=='image' && index===filteredPage.length-1) ? 'border-transparent' : 'border-b border-gray-100';
+        const borderClass = (currentTheme!=='image' && index===visibleRows.length-1) ? 'border-transparent' : 'border-b border-gray-100';
         const isSelected = index === currentListIndex;
         item.className=`mail-item ${hasUnread?'mail-unread':'mail-read'} relative flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50/80 transition-colors select-none ${borderClass} ${hasUnread?'bg-white font-semibold':'bg-gray-50/30 text-gray-700'} ${isSelected?'is-selected':''}`;
         item.setAttribute('style', categoryRowStyle(currentCategory));
@@ -3070,6 +3232,7 @@
             <div class="w-44 truncate shrink-0 text-sm ${hasUnread?'text-gray-900 font-bold':'text-gray-800'}">${escapeHtml(email.sender)}</div>
             <div class="truncate text-sm flex items-center gap-2 min-w-0">
               <span class="${hasUnread?'text-gray-900 font-bold':'text-gray-800'} truncate">${escapeHtml(email.subject)}</span>
+              ${threadSize>1?`<span class="thread-badge shrink-0" title="${threadSize} messages dans la conversation">${threadSize}</span>`:''}
               <span class="text-gray-400 text-xs font-normal opacity-80 truncate hidden lg:inline">- ${escapeHtml((email.snippet||'')).slice(0,60)}</span>
             </div>
           </div>
@@ -3143,6 +3306,22 @@
     }
 
     // ====================== Newsletter (expéditeurs récurrents en Promotions) ======================
+    function getNewsletterColumnCount(){
+      const grid=document.getElementById('nl-carousel');
+      if(!grid || !grid.children.length){
+        const list=document.getElementById('mail-list-container');
+        const w=list?list.clientWidth:window.innerWidth;
+        return Math.max(1, Math.floor((w-32)/(168+16)));
+      }
+      const cols=getComputedStyle(grid).gridTemplateColumns.split(' ').length;
+      return Math.max(1, cols);
+    }
+    function snapToCompleteRows(count, cols, hasMore){
+      if(!cols || cols<1) cols=1;
+      if(count<=cols) return count;
+      if(!hasMore) return count;
+      return Math.floor(count/cols)*cols;
+    }
     async function buildNewsletterCarousel(){
       const c = document.getElementById('nl-carousel'); if(!c) return;
       const renderSeq = ++newsletterRenderSeq;
@@ -3171,7 +3350,7 @@
       const dockMode = getNewsletterMode()==='dock';
       await Promise.all(top.map(async ([,info])=>{
         const latest=info.items.slice().sort((a,b)=>(b.rawDate||'').localeCompare(a.rawDate||''))[0];
-        info.image=await getNewsletterImage(latest);
+        if(info.image===undefined) info.image=await getNewsletterImage(latest);
       }));
       if(renderSeq !== newsletterRenderSeq) return;
 
@@ -3213,7 +3392,11 @@
       if(nlSection) nlSection.classList.toggle('hidden', currentFolder !== 'INBOX' || currentCategory === 'newsletter');
       if(btn) btn.classList.toggle('hidden', currentFolder !== 'INBOX' || currentCategory === 'newsletter');
 
-      const showItems = newsletterCarouselExpanded ? top.slice(0, newsletterVisibleCount) : top.slice(0, 12);
+      const cols = getNewsletterColumnCount();
+      const available = top.length;
+      const target = newsletterCarouselExpanded ? newsletterVisibleCount : cols;
+      const snapped = snapToCompleteRows(Math.min(target, available), cols, newsletterHasMore || available>target);
+      const showItems = top.slice(0, snapped);
       c.className = 'carousel-container gap-4';
       const palettes = [
         ['from-orange-950 via-orange-900/50 to-orange-800','text-orange-200','text-orange-200/70'],
@@ -3251,7 +3434,7 @@
         footer.id='newsletter-scroll-sentinel';
         footer.style.gridColumn='1 / -1';
         footer.className='py-5 text-center text-xs text-gray-400';
-        const moreCards = top.length > newsletterVisibleCount;
+        const moreCards = top.length > snapped;
         if(newsletterLoading) footer.textContent='Chargement des newsletters…';
         else if(moreCards) footer.textContent='Descendez pour voir plus de newsletters';
         else if(newsletterHasMore) footer.textContent='Recherche de newsletters…';
@@ -3284,7 +3467,7 @@
         if(messages) messages.style.display = '';
       }
       if(newsletterCarouselExpanded){
-        newsletterVisibleCount=24; newsletterEmails=[]; newsletterPage=0; newsletterHasMore=true;
+        newsletterVisibleCount=getNewsletterColumnCount()*2; newsletterEmails=[]; newsletterPage=0; newsletterHasMore=true;
         await loadNewsletterFromCache();
         loadNewsletterBatch();
       } else {
@@ -3470,7 +3653,7 @@
     function setNewsletterBatchSize(value){
       saveSetting('simplemail_newsletter_batch_size',parseInt(value)||200);
       showToast('Volume de chargement mis à jour');
-      if(newsletterCarouselExpanded){ newsletterVisibleCount=24; newsletterEmails=[]; newsletterPage=0; newsletterHasMore=true; loadNewsletterFromCache(); loadNewsletterBatch(); }
+      if(newsletterCarouselExpanded){ newsletterVisibleCount=getNewsletterColumnCount()*2; newsletterEmails=[]; newsletterPage=0; newsletterHasMore=true; loadNewsletterFromCache(); loadNewsletterBatch(); }
     }
     async function loadNewsletterFromCache(){
       if(!currentAccount) return;
@@ -3487,7 +3670,6 @@
     async function loadNewsletterBatch(){
       if(newsletterLoading||!newsletterHasMore||!currentAccount||currentFolder!=='INBOX') return;
       newsletterLoading=true;
-      if(newsletterCarouselExpanded) buildNewsletterCarousel();
       try{
         const nextPage=newsletterPage+1;
         const qs=new URLSearchParams({account:currentAccount,folder:'INBOX',page:nextPage,page_size:getNewsletterBatchSize()});
@@ -3503,14 +3685,15 @@
       if(newsletterObserver){ newsletterObserver.disconnect(); newsletterObserver=null; }
       const sentinel=document.getElementById('newsletter-scroll-sentinel');
       if(!sentinel) return;
+      const scrollRoot=document.getElementById('mail-scroll');
       newsletterObserver=new IntersectionObserver(entries=>{
         if(entries[0].isIntersecting){
           newsletterObserver.disconnect();
-          newsletterVisibleCount += 24;
+          newsletterVisibleCount += getNewsletterColumnCount() * 2;
           buildNewsletterCarousel();
           if(newsletterHasMore && !newsletterLoading) loadNewsletterBatch();
         }
-      },{rootMargin:'500px'});
+      },{ root: scrollRoot || null, rootMargin: '600px 0px' });
       newsletterObserver.observe(sentinel);
     }
 
@@ -3840,33 +4023,52 @@
         <div id="thread-chain"><div class="text-sm text-gray-400 py-8 text-center">Chargement…</div></div>`;
       currentActiveView='conversation'; updateUIState();
 
-      // Marquer comme lu + charger les détails
-      const chain=document.getElementById('thread-chain'); chain.innerHTML='';
+      // Marquer comme lu + charger les détails (1 appel IMAP par message, rapide)
       const detailed = await Promise.all(msgs.map(m => fetchDetail(m)));
       detailed.forEach(e => { if(e.unread){ e.unread=false; apiCallFlag(e,true,null); } });
 
-      // Récupérer les réponses envoyées liées au thread (dossier Sent)
-      let sentMsgs = [];
-      try {
-        const mids = [...new Set(detailed.flatMap(d => [d.messageId, ...((d.inReplyTo+' '+d.references).match(/<[^>]+>/g)||[])]).filter(Boolean))];
-        const threadSubject = (subject||'');
-        if (detailed[0]) {
+      // Rendu immédiat : on affiche les messages de la boîte de réception SANS
+      // attendre la recherche (lente) des réponses envoyées dans le dossier Sent.
+      let convMsgs = dedupeConv(detailed);
+      renderChain(convMsgs);
+
+      // Récupère en arrière-plan les réponses envoyées liées au thread (dossier Sent).
+      // Le scan des dossiers prend plusieurs secondes : on ne bloque pas l'affichage,
+      // et on réinsère les messages trouvés une fois la promesse résolue.
+      const convId = id;
+      (async () => {
+        try {
+          if (!detailed[0]) return;
+          const mids = [...new Set(detailed.flatMap(d => [d.messageId, ...((d.inReplyTo+' '+d.references).match(/<[^>]+>/g)||[])]).filter(Boolean))];
           const qs = new URLSearchParams();
           if (mids.length) qs.set('message_ids', mids.join(','));
-          if (threadSubject) qs.set('subject', threadSubject);
+          if (subject) qs.set('subject', subject);
           qs.set('current_folder',currentFolder);
           const resp = await api(`/api/thread/${detailed[0].account}/sent?${qs.toString()}`);
           const existingMessageIds = new Set(detailed.map(d => d.messageId).filter(Boolean));
-          sentMsgs = (resp.messages||[]).filter(m => !existingMessageIds.has(m.message_id)).map(mapRelatedMessage);
-        }
-      } catch(e) {}
-      const allMsgs = [...new Map([...detailed,...sentMsgs].map(message=>[message.messageId||message.id,message])).values()];
+          const sentMsgs = (resp.messages||[]).filter(m => !existingMessageIds.has(m.message_id)).map(mapRelatedMessage);
+          if(!sentMsgs.length) return;
+          // Garde-fou : l'utilisateur a pu quitter la conversation entre-temps.
+          if(currentActiveView!=='conversation' || currentSelectedId!==convId) return;
+          convMsgs = dedupeConv([...convMsgs, ...sentMsgs]);
+          renderChain(convMsgs);
+        } catch(e) {}
+      })();
 
-      // Mise à jour du badge de compte
-      const badge = threadEl.querySelector('.thread-badge');
-      if(badge){ const n=allMsgs.length; badge.textContent=n; badge.title=n+' messages'; }
+      buildNewsletterCarousel();
+    }
 
-      // Ordre d'affichage et dépliage par défaut, paramétrables.
+    // Déduplique les messages d'une conversation par messageId/id.
+    function dedupeConv(list){
+      return [...new Map(list.map(message=>[message.messageId||message.id,message])).values()];
+    }
+    // Reconstruit toute la chaîne de la conversation à partir d'une liste de messages.
+    // Utilisé à la fois pour le rendu initial (messages reçus) et pour le ré-affichage
+    // quand les réponses envoyées arrivent en arrière-plan.
+    function renderChain(allMsgs){
+      const chain=document.getElementById('thread-chain');
+      if(!chain) return;
+      chain.innerHTML='';
       const newestFirst = (getConvOrder()==='newest');
       const ordered = newestFirst ? allMsgs.slice().sort((a,b)=>(b.rawDate||'').localeCompare(a.rawDate||'')) : allMsgs.slice().sort((a,b)=>(a.rawDate||'').localeCompare(b.rawDate||''));
       const latestIndex = newestFirst ? 0 : ordered.length - 1;
@@ -3895,8 +4097,11 @@
           </div>`;
         chain.appendChild(div);
       });
+      // Mise à jour du badge de compte
+      const threadEl=document.getElementById('thread-content');
+      const badge = threadEl && threadEl.querySelector('.thread-badge');
+      if(badge){ const n=allMsgs.length; badge.textContent=n; badge.title=n+' messages'; }
       updateThreadToggleButton();
-      buildNewsletterCarousel();
     }
 
     // ====================== Drapeaux / suppression (API) ======================
@@ -4492,7 +4697,7 @@
     let _resizeTimer=null;
     window.addEventListener('resize',()=>{
       clearTimeout(_resizeTimer);
-      _resizeTimer=setTimeout(()=>{ syncHeaderCenterToContent(); updateHeaderOverflow(); },100);
+      _resizeTimer=setTimeout(()=>{ syncHeaderCenterToContent(); updateHeaderOverflow(); buildNewsletterCarousel(); },100);
     });
 
     document.addEventListener('keydown',(e)=>{

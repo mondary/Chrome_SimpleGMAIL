@@ -132,6 +132,53 @@ _GMAIL_CATEGORY_LABELS = {
 }
 
 
+def _gmail_message_labels(mailbox, uid_list) -> dict:
+    """Read X-GM-LABELS for a set of UIDs via a raw IMAP command.
+
+    imap_tools never requests X-GM-LABELS when fetching (its message_parts are
+    only `BODY[...] UID FLAGS RFC822.SIZE`), and MailMessage exposes no
+    `gmail_labels` attribute -- so the per-message label fallback that used to
+    call `getattr(m, 'gmail_labels', None)` always returned None. This issues
+    `UID FETCH <uids> (UID X-GM-LABELS)` directly and parses the parenthesised
+    label list. Returns {uid_str: set(lowercase_label)}; best-effort, {} on
+    any failure (non-Gmail servers will simply return an empty map).
+    """
+    uids = [str(u) for u in (uid_list or []) if u]
+    if not uids:
+        return {}
+    client = getattr(mailbox, "client", None)
+    if client is None:
+        return {}
+    result: dict = {}
+    chunk = 200  # keep commands small enough for any server
+    for i in range(0, len(uids), chunk):
+        batch = uids[i:i + chunk]
+        try:
+            typ, data = client.uid("FETCH", ",".join(batch), "(UID X-GM-LABELS)")
+        except Exception:
+            continue
+        if typ != "OK" or not data:
+            continue
+        for item in data:
+            raw = item[0] if isinstance(item, tuple) else item
+            if not isinstance(raw, (bytes, bytearray)):
+                continue
+            try:
+                text = raw.decode("utf-8", "ignore")
+            except Exception:
+                continue
+            uid_m = re.search(r"UID\s+(\d+)", text)
+            if not uid_m:
+                continue
+            labels = set()
+            lbl_m = re.search(r"X-GM-LABELS\s*\((.*?)\)", text, re.S)
+            if lbl_m:
+                for tok in lbl_m.group(1).split():
+                    labels.add(tok.replace("\\", "").lower())
+            result[uid_m.group(1)] = labels
+    return result
+
+
 # ---------- SQLite persistence (settings, newsletters, labels) ----------
 def _init_db():
     db = sqlite3.connect(str(DB_PATH))
@@ -1568,12 +1615,15 @@ def debug_gmail_labels(account: str = Query(...), folder: str = Query("INBOX"), 
     with open_mailbox(acc) as mailbox:
         mailbox.folder.set(folder)
         msgs = list(mailbox.fetch(AND(all=True), limit=limit, reverse=True, mark_seen=False, bulk=True, headers_only=True))
+        # imap_tools exposes no msg.gmail_labels attribute, so read the real
+        # X-GM-LABELS via a raw FETCH for the diagnostic.
+        labels_by_uid = _gmail_message_labels(mailbox, [str(m.uid) for m in msgs if m.uid])
         for m in msgs:
             result["samples"].append({
                 "uid": str(m.uid),
                 "from": m.from_,
                 "subject": m.subject,
-                "gmail_labels": list(getattr(m, 'gmail_labels', None) or []),
+                "gmail_labels": sorted(labels_by_uid.get(str(m.uid), set())),
             })
         for cat_label in ("category:primary", "category:promotions", "category:social", "category:updates"):
             try:
@@ -1649,19 +1699,27 @@ def list_messages(
 
         if use_gmail_cat:
             target_label = _GMAIL_CATEGORY_LABELS[category]
-            # Tier 1: IMAP-level X-GM-LABELS search
-            label_fetched = list(_do_fetch({"gmail_label": target_label}))
-            if label_fetched:
-                fetched = label_fetched
-            else:
-                # Tier 2: fetch all, filter by per-message gmail_labels attribute
+            target_norm = target_label.lower()
+            # Tier 1: IMAP-level X-GM-LABELS SEARCH (fast, server-side).
+            fetched = list(_do_fetch({"gmail_label": target_label}))
+            if not fetched:
+                # Tier 2: some Gmail backends mis-handle the X-GM-LABELS SEARCH
+                # and return nothing. Fetch the page and filter on the REAL
+                # labels read via a raw UID FETCH -- imap_tools never requests
+                # X-GM-LABELS (it only asks for BODY/UID/FLAGS/RFC822.SIZE) and
+                # exposes no `gmail_labels` attribute, so the old
+                # `getattr(m, 'gmail_labels', None)` filter was dead code that
+                # always fell through to the heuristic.
                 all_fetched = list(_do_fetch({}))
-                label_filtered = [m for m in all_fetched
-                                  if target_label in (getattr(m, 'gmail_labels', None) or [])]
-                if label_filtered:
-                    fetched = label_filtered
-                else:
-                    # Tier 3: heuristic fallback
+                labels_by_uid = _gmail_message_labels(
+                    mailbox, [str(m.uid) for m in all_fetched if m.uid])
+                fetched = [m for m in all_fetched
+                           if target_norm in labels_by_uid.get(str(m.uid), set())]
+                if not fetched:
+                    # Tier 3: last-resort heuristic. _categorize() classifies
+                    # each message individually -- we deliberately do NOT tag
+                    # every fetched message with the requested category, which
+                    # is what previously inflated "primary" to ~241 entries.
                     use_gmail_cat = False
                     fetched = all_fetched
         else:
@@ -1706,6 +1764,27 @@ def list_messages(
             all_messages.append(entry)
             if direct_folder_page and len(all_messages) >= page_size:
                 break
+
+        # Threading: attach thread_id/thread_count so the client can group
+        # messages into conversations. _compute_threads may issue an IMAP
+        # THREAD command (slow/unreliable on some servers, e.g. o2switch
+        # returns sequence numbers); guard so any failure still leaves every
+        # message with a valid per-message thread_id (no crash, no grouping
+        # but messages still display).
+        try:
+            thread_map = _compute_threads(account, mailbox, folder, all_messages) or {}
+        except Exception:
+            thread_map = {}
+        if not thread_map:
+            thread_map = {e["uid"]: e["uid"] for e in all_messages}
+        _thread_counts = {}
+        for _e in all_messages:
+            _tid = thread_map.get(_e["uid"], _e["uid"])
+            _e["thread_id"] = _tid
+            _thread_counts[_tid] = _thread_counts.get(_tid, 0) + 1
+        for _e in all_messages:
+            _e["thread_count"] = _thread_counts.get(_e["thread_id"], 1)
+
         total = folder_total if direct_folder_page else len(all_messages)
         msgs = all_messages if direct_folder_page else all_messages[offset:offset + page_size]
         result = {"messages": msgs, "page": page, "page_size": page_size, "total": total,
@@ -1907,6 +1986,13 @@ def _normalize_subject(subj: str) -> str:
         if new == s:
             break
         s = new
+    # Strip trailing date/time suffixes (e.g. " - 01/07/2026", " - 2026-07-01",
+    # " 23:59") so daily digests whose subject carries the date thread together
+    # across days. Order matters: time first, then the date, so a combined
+    # " - 01-07-26 23:59" tail is fully removed. Supports DD/MM/YYYY and YYYY-MM-DD.
+    s = re.sub(r"\s+\d{1,2}:\d{2}(?::\d{2})?\s*$", "", s)
+    date_tail = r"(?:\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}[/-]\d{1,2}[/-]\d{1,2})"
+    s = re.sub(r"\s*[-\u2013\u2014]\s*" + date_tail + r"\s*$", "", s)
     return " ".join(s.split())
 
 
@@ -2483,8 +2569,7 @@ def _compute_threads(account: str, mailbox, folder: str, messages: list) -> dict
 
     subject_groups = {}
     for message in messages:
-        subject = re.sub(r"(?i)^(?:(?:re|fwd|fw|sv|tr)\s*:\s*)+", "", (message.get("subject") or "").strip())
-        subject = re.sub(r"\s+", " ", subject).strip().lower()
+        subject = _normalize_subject(message.get("subject") or "")
         if subject:
             subject_groups.setdefault(subject, []).append(str(message["uid"]))
     for group in subject_groups.values():
