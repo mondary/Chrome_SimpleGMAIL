@@ -1,4 +1,12 @@
 /* 1) Tout en blanc, police fine */
+@font-face {
+  font-family: 'OpenDyslexic Nerd Font';
+  src: url('https://cdn.jsdelivr.net/gh/Nick2bad4u/nerd-fonts-woff2@v1.0.0/fonts/woff2/OpenDyslexic/OpenDyslexicNerdFont-Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 body,
 .aeF,
 .nH,
@@ -7,7 +15,7 @@ body,
 div.brC-aT5-aOt-Jw {
   background: #fff !important;
   color: #222 !important;
-  font-family: sans-serif !important;
+  font-family: 'Wallpoet', 'OpenDyslexic Nerd Font', 'Poppins', 'Futura', 'Century Gothic', 'Tw Cen MT', 'Inter', system-ui, -apple-system, sans-serif !important;
   font-size: 13px !important;
   line-height: 1.3 !important;
 }

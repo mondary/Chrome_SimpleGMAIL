@@ -6,7 +6,15 @@
     <title>ZenMail - Elite Email Client</title>
     <style>
         /* --- CORE DESIGN SYSTEM (BENCHMARK INSPIRED) --- */
-        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Wallpoet&display=swap');
+        
+        @font-face {
+            font-family: 'OpenDyslexic Nerd Font';
+            src: url('https://cdn.jsdelivr.net/gh/Nick2bad4u/nerd-fonts-woff2@v1.0.0/fonts/woff2/OpenDyslexic/OpenDyslexicNerdFont-Regular.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
         
         :root {
             /* Theme 1: Aero Glass (Inspired by v1) */
@@ -51,7 +59,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body { 
-            font-family: 'Inter', sans-serif; 
+            font-family: 'Wallpoet', 'OpenDyslexic Nerd Font', 'Inter', sans-serif; 
             background-color: #f8fafc;
             color: var(--text-main);
             height: 100vh;
@@ -86,7 +94,7 @@
         }
 
         .logo {
-            font-family: 'Instrument Serif', serif;
+            font-family: 'Wallpoet', 'Instrument Serif', serif;
             font-size: 28px;
             font-style: italic;
             margin-bottom: 40px;
@@ -238,7 +246,7 @@
         .reader-content { display: none; max-width: 720px; margin: 0 auto; }
         .reader-content.active { display: block; }
 
-        .reader-subject { font-family: 'Playfair Display', serif; font-size: 32px; margin-bottom: 24px; line-height: 1.2; }
+        .reader-subject { font-family: 'Wallpoet', 'Playfair Display', serif; font-size: 32px; margin-bottom: 24px; line-height: 1.2; }
         .reader-meta { display: flex; align-items: center; gap: 16px; margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid var(--border-glass); }
         .reader-avatar { width: 44px; height: 44px; border-radius: 12px; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; }
         .reader-body { font-size: 16px; line-height: 1.8; color: var(--text-main); }
@@ -388,7 +396,7 @@
                 <section class="email-reader">
                     <div id="reader-placeholder" class="reader-placeholder">
                         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom: 24px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
-                        <p style="font-family: 'Instrument Serif', serif; font-size: 24px; font-style: italic;">Select a story to read</p>
+                        <p style="font-family: 'Wallpoet', 'Instrument Serif', serif; font-size: 24px; font-style: italic;">Select a story to read</p>
                     </div>
                     <div id="reader-content" class="reader-content">
                         <h1 id="read-subject" class="reader-subject"></h1>

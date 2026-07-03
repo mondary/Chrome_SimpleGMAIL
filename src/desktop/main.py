@@ -6,6 +6,7 @@ import asyncio
 import threading
 import sqlite3
 import hashlib
+import gc
 from contextlib import contextmanager, asynccontextmanager
 from email.message import EmailMessage
 from email.utils import parseaddr, formatdate, make_msgid
@@ -227,6 +228,13 @@ def _init_db():
             PRIMARY KEY (account, folder, uid)
         )
     """)
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS thread_sent_cache (
+            cache_key TEXT PRIMARY KEY,
+            data TEXT NOT NULL,
+            fetched_at REAL NOT NULL
+        )
+    """)
     db.commit()
     db.close()
 
@@ -351,6 +359,8 @@ _reload_env(SECRETS_PATH)
 _MSG_CACHE = {}
 _CACHE_TTL = 300  # 5 min
 _CACHE_MAX = 150
+# TTL du cache des messages liés d'un thread (endpoint /api/thread/.../sent).
+_THREAD_SENT_TTL = 600  # 10 min
 # Nombre maximum d'en-têtes chargés lors d'un filtrage (catégorie/recherche/non-lus).
 # Sans cette borne, on rapatrie toute la boîte en RAM → explosion mémoire.
 _FETCH_FILTER_CAP = 6000
@@ -474,9 +484,54 @@ def _db_cache_cleanup():
             db.execute("DELETE FROM response_cache WHERE fetched_at < ?", (now - 1800,))
             db.execute("DELETE FROM msg_detail_cache WHERE fetched_at < ?", (now - 7 * 86400,))
             db.execute("DELETE FROM newsletter_msg_cache WHERE fetched_at < ?", (now - 7 * 86400,))
+            db.execute("DELETE FROM thread_sent_cache WHERE fetched_at < ?", (now - _THREAD_SENT_TTL))
             db.execute("VACUUM")
             db.commit()
             db.close()
+        except Exception:
+            pass
+
+
+# malloc_trim n'existe que sur Linux/glibc. Sur macOS (libmalloc) et Windows,
+# l'appel n'existe pas : on résout la libc paresseusement et on ignore tout échec.
+_libc_trim = None
+if sys.platform == "linux":
+    try:
+        import ctypes as _ctypes
+        _libc = _ctypes.CDLL("libc.so.6", use_errno=True)
+        _libc_trim = _libc.malloc_trim
+        _libc_trim.restype = _ctypes.c_int
+        _libc_trim.argtypes = [_ctypes.c_size_t]
+    except Exception:
+        _libc_trim = None
+
+
+def _mem_reclaim():
+    """Rend périodiquement la RAM à l'OS.
+
+    CPython (pymalloc) ne restitue pas automatiquement les arènes libérées :
+    après un gros fetch IMAP, le RSS grimpe et ne redescend jamais, même si
+    les objets sont déréférencés. Sur 4 h, ~5 Go peuvent s'accumuler par
+    fragmentation seule.
+
+    Actions toutes les 5 min :
+      - gc.collect()              : libère les cycles (mails, parsers MIME).
+      - malloc_trim(0) (Linux)    : rend les pages libres au noyau.
+      - purge _MSG_CACHE expirés  : le TTL n'était vérifié qu'au get().
+    """
+    while True:
+        time.sleep(300)
+        try:
+            # Purge du cache RAM des messages dont le TTL est expiré.
+            now = time.time()
+            for k in [k for k, (_, ts) in _MSG_CACHE.items() if now - ts >= _CACHE_TTL]:
+                _MSG_CACHE.pop(k, None)
+            gc.collect()
+            if _libc_trim is not None:
+                try:
+                    _libc_trim(0)
+                except Exception:
+                    pass
         except Exception:
             pass
 
@@ -487,6 +542,7 @@ async def lifespan(app):
     _init_db()
     threading.Thread(target=_pool_cleanup, daemon=True, name="imap-pool-cleanup").start()
     threading.Thread(target=_db_cache_cleanup, daemon=True, name="db-cache-cleanup").start()
+    threading.Thread(target=_mem_reclaim, daemon=True, name="mem-reclaim").start()
     MAIN_LOOP = asyncio.get_running_loop()
     if _is_demo():
         print("[DEMO] Mode démo actif — identifiants non configurés. Données fictives.")
@@ -1596,6 +1652,7 @@ def _relocate_message(account: str, uid: str, source_folder: str, destination_fo
     cache_invalidate(account, dest)
     _response_cache_invalidate("messages:" + account)
     _response_cache_invalidate("folders:" + account)
+    _thread_sent_cache_invalidate_account(account)
     return {"ok": True, "account": account, "uid": str(uid), "source_folder": source, "destination_folder": dest, "copied": copy_only}
 
 
@@ -1996,46 +2053,49 @@ def _normalize_subject(subj: str) -> str:
     return " ".join(s.split())
 
 
-def _thread_counts_with_sent(mailbox, folder: str, messages: list, thread_map: dict) -> dict:
-    """Compte les messages reçus et envoyés appartenant aux threads de l'INBOX."""
-    groups = {}
-    for message in messages:
-        thread_id = thread_map.get(message["uid"], message["uid"])
-        group = groups.setdefault(thread_id, {"count": 0, "ids": set(), "subjects": set(), "sent": set()})
-        group["count"] += 1
-        group["ids"].update(re.findall(r"<[^>]+>", " ".join([
-            message.get("message_id") or "",
-            message.get("in_reply_to") or "",
-            message.get("references") or "",
-        ])))
-        subject = _normalize_subject(message.get("subject") or "")
-        if subject:
-            group["subjects"].add(subject)
+def _thread_sent_cache_key(account: str, current_folder: str, message_ids: list, subject: str) -> str:
+    """Clé de cache stable : hash des message-ids + sujet normalisé (croissance bornée)."""
+    mids_h = hashlib.sha1(("|".join(sorted(m for m in message_ids if m))).encode("utf-8", "ignore")).hexdigest()[:16]
+    subj_h = hashlib.sha1(_normalize_subject(subject).encode("utf-8", "ignore")).hexdigest()[:16]
+    return f"{account}:{(current_folder or '').upper()}:{mids_h}:{subj_h}"
 
-    if (folder or "").upper().split(".")[-1] != "INBOX":
-        return {thread_id: group["count"] for thread_id, group in groups.items()}
+
+def _thread_sent_cache_get(key: str):
     try:
-        related_folders = [item.name for item in mailbox.folder.list() if item.name != folder]
-        for related_folder in related_folders:
-            mailbox.folder.set(related_folder)
-            related_messages = mailbox.fetch(AND(all=True), limit=300, reverse=True, mark_seen=False, bulk=True)
-            for related in related_messages:
-                related_id = header_value(related.headers, "message-id")
-                linked_ids = set(re.findall(r"<[^>]+>", " ".join([
-                    related_id,
-                    header_value(related.headers, "in-reply-to"),
-                    header_value(related.headers, "references"),
-                ])))
-                subject = _normalize_subject(related.subject or "")
-                for group in groups.values():
-                    if (linked_ids & group["ids"]) or (subject and subject in group["subjects"]):
-                        key = (related_folder, str(related.uid))
-                        if key not in group["sent"]:
-                            group["sent"].add(key)
-                            group["count"] += 1
+        db = sqlite3.connect(str(DB_PATH))
+        row = db.execute(
+            "SELECT data FROM thread_sent_cache WHERE cache_key=? AND fetched_at > ?",
+            (key, time.time() - _THREAD_SENT_TTL),
+        ).fetchone()
+        db.close()
+        if row:
+            return json.loads(row[0])
     except Exception:
         pass
-    return {thread_id: group["count"] for thread_id, group in groups.items()}
+    return None
+
+
+def _thread_sent_cache_set(key: str, data):
+    try:
+        db = sqlite3.connect(str(DB_PATH))
+        db.execute(
+            "INSERT OR REPLACE INTO thread_sent_cache (cache_key, data, fetched_at) VALUES (?, ?, ?)",
+            (key, json.dumps(data, ensure_ascii=False, default=str), time.time()),
+        )
+        db.commit()
+        db.close()
+    except Exception:
+        pass
+
+
+def _thread_sent_cache_invalidate_account(account: str):
+    try:
+        db = sqlite3.connect(str(DB_PATH))
+        db.execute("DELETE FROM thread_sent_cache WHERE cache_key LIKE ?", (f"{account}:%",))
+        db.commit()
+        db.close()
+    except Exception:
+        pass
 
 
 @app.get("/api/thread/{account}/sent")
@@ -2045,7 +2105,19 @@ def get_thread_sent(
     subject: str = Query(""),
     current_folder: str = Query("INBOX"),
 ):
-    """Récupère les messages liés dans tous les autres dossiers du compte."""
+    """Récupère les messages liés dans tous les autres dossiers du compte.
+
+    Optimisation RAM : fetch en 2 passes.
+      1) headers_only=True, bulk=False sur chaque dossier → identifie les UID
+         dont message-id / in-reply-to / references / subject matchent (≈ 0 RAM,
+         imap_tools ne télécharge que les en-têtes).
+      2) fetch complet UNIQUEMENT pour les UID matchés (en général 1 à 5),
+         sans bulk, pour récupérer text/html/attachments réellement consommés.
+
+    Avant : 1 fetch bulk=True sans headers_only × 300 msgs × ~10 dossiers =
+    ~3000 corps complets parsés par appel (newsletters 50 Ko-2 Mo) → pic RAM
+    gigantesque jamais restitué à l'OS (fragmentation pymalloc).
+    """
     if _is_demo() or _is_demo_account(account):
         return {"messages": []}
     acc = get_account(account)
@@ -2053,14 +2125,26 @@ def get_thread_sent(
     norm_subj = _normalize_subject(subject)
     if not mids and not norm_subj:
         return {"messages": []}
+
+    # Cache SQLite (TTL 10 min) : évite de re-scanner tous les dossiers quand
+    # l'utilisateur rouvre la même conversation ou bascule entre vues.
+    ck = _thread_sent_cache_key(account, current_folder, mids, subject)
+    cached = _thread_sent_cache_get(ck)
+    if cached is not None:
+        return cached
+
     out = []
     try:
         with open_mailbox(acc) as mailbox:
             related_folders = [item.name for item in mailbox.folder.list() if item.name != current_folder]
             for related_folder in related_folders:
                 mailbox.folder.set(related_folder)
-                fetched = mailbox.fetch(AND(all=True), limit=300, reverse=True, mark_seen=False, bulk=True)
-                for msg in fetched:
+                # --- Passe 1 : headers uniquement, pas de bulk (RAM minimale) ---
+                matched_uids = []
+                for msg in mailbox.fetch(
+                    AND(all=True), limit=300, reverse=True,
+                    mark_seen=False, bulk=False, headers_only=True,
+                ):
                     in_reply_to = header_value(msg.headers, "in-reply-to")
                     references = header_value(msg.headers, "references")
                     candidate_message_id = header_value(msg.headers, "message-id")
@@ -2069,7 +2153,14 @@ def get_thread_sent(
                         for mid in mids
                     )
                     subj_match = norm_subj and _normalize_subject(msg.subject or "") == norm_subj
-                    if not header_match and not subj_match:
+                    if header_match or subj_match:
+                        matched_uids.append(str(msg.uid))
+                if not matched_uids:
+                    continue
+                # --- Passe 2 : corps complet UNIQUEMENT pour les UID matchés ---
+                for uid in matched_uids:
+                    msg = _find_message(mailbox, uid)
+                    if msg is None:
                         continue
                     from_name, from_addr = parseaddr(msg.from_)
                     to_addr = header_value(msg.headers, "to")
@@ -2107,9 +2198,13 @@ def get_thread_sent(
                         "attachments": attachments,
                         "is_sent": _folder_simple_key(related_folder) == "SENT",
                     })
+                    # Libère le corps dès que possible : un seul message vivant à la fois.
+                    del msg
     except Exception as e:
         return {"messages": [], "error": str(e)}
-    return {"messages": out}
+    result = {"messages": out}
+    _thread_sent_cache_set(ck, result)
+    return result
 
 
 @app.get("/api/messages/{account}/{uid}/attachment/{index}")
@@ -2221,6 +2316,7 @@ def delete_message(account: str, uid: str, folder: str = Query("INBOX")):
         cache_invalidate(account, dest)
     _response_cache_invalidate("messages:" + account)
     _response_cache_invalidate("folders:" + account)
+    _thread_sent_cache_invalidate_account(account)
     return {"ok": True, "destination_folder": dest}
 
 
@@ -2265,6 +2361,7 @@ def archive_message(account: str, uid: str, folder: str = Query("INBOX")):
         mailbox.move(uid, dest)
     cache_invalidate(account, folder, uid)
     _response_cache_invalidate("messages:" + account)
+    _thread_sent_cache_invalidate_account(account)
     return {"ok": True, "destination_folder": dest}
 
 
@@ -2279,6 +2376,7 @@ def spam_message(account: str, uid: str, folder: str = Query("INBOX")):
         mailbox.move(uid, dest)
     cache_invalidate(account, folder, uid)
     _response_cache_invalidate("messages:" + account)
+    _thread_sent_cache_invalidate_account(account)
     return {"ok": True, "destination_folder": dest}
 
 
@@ -2293,6 +2391,7 @@ def snooze_message(account: str, uid: str, folder: str = Query("INBOX")):
         mailbox.move(uid, dest)
     cache_invalidate(account, folder, uid)
     _response_cache_invalidate("messages:" + account)
+    _thread_sent_cache_invalidate_account(account)
     return {"ok": True, "destination_folder": dest}
 
 
@@ -2352,6 +2451,9 @@ def send_message(body: SendRequest):
                     break
     except Exception as e:
         sent_error = str(e)
+    # Un nouveau message envoyé peut appartenir à un thread existant.
+    _thread_sent_cache_invalidate_account(body.account)
+    _response_cache_invalidate("messages:" + body.account)
     return {
         "ok": True,
         "message_id": msg["Message-ID"],
