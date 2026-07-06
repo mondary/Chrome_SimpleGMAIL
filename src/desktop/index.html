@@ -2,9 +2,23 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <link rel="icon" type="image/png" href="/icon.png">
   <title>SimpleMail</title>
+  <!-- PWA + iOS "Sur l'écran d'accueil" -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#0b0f1a" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f5f5f5" media="(prefers-color-scheme: light)">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SimpleMail">
+  <link rel="apple-touch-icon" href="/icon.png">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+    }
+  </script>
   <!-- Tailwind CSS CDN -->
   <script>const _w=console.warn;console.warn=(...a)=>a[0]&&a[0].includes('tailwindcss.com')?void 0:_w(...a)</script>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -493,6 +507,21 @@
     body.theme-dark .cat-icon-btn:hover,
     body.theme-dark .cat-icon-btn.is-active { color: var(--category-color, #8ac4ff); background: var(--category-dark-bg, rgba(138,180,248,0.14)); }
     body.theme-dark .cat-icon-btn .cat-count { background: var(--category-color, #8ac4ff); color: #141414; }
+    /* Drag & drop : cible de drop valide (onglet catégorie en haut ou tiroir) */
+    .cat-icon-btn.is-drop-target,
+    .nav-item[data-category].is-drop-target {
+      outline: 2px solid var(--category-color, #1a73e8);
+      outline-offset: -2px;
+      background: var(--category-active-bg, rgba(26,115,232,0.18)) !important;
+      transform: scale(1.08);
+    }
+    body.theme-dark .cat-icon-btn.is-drop-target,
+    body.theme-dark .nav-item[data-category].is-drop-target {
+      background: var(--category-dark-bg, rgba(138,180,248,0.28)) !important;
+    }
+    /* Ligne en cours de drag */
+    .mail-item.is-dragging { opacity: 0.45; cursor: grabbing !important; }
+    .mail-item[draggable="true"] { cursor: grab; }
     @media (max-width: 640px) { .cat-tab-label { display: none; } }
 
     /* ========== macOS-style Newsletter Dock ========== */
@@ -1086,15 +1115,59 @@
       .thread-msg-head .w-8 { width:28px; height:28px; }
       .thread-msg-head .text-xs.whitespace-nowrap { max-width:90px; overflow:hidden; text-overflow:ellipsis; }
     }
-    /* ============ NAVIGATION DRAWER — Clean & Sober ============ */
+    /* ============ NAVIGATION DRAWER — Dockable rail / drawer ============ */
+    :root { --rail-width: 68px; }
     #drawer-overlay { background: rgba(0,0,0,0.3); transition: opacity 250ms; }
     #nav-drawer {
-      width: var(--drawer-width, 280px); max-width: 86vw;
-      transform: translateX(-100%); transition: transform 280ms cubic-bezier(0.22,1,0.36,1);
+      width: var(--rail-width, 68px);
+      transform: translateX(0);
+      transition: width 280ms cubic-bezier(0.22,1,0.36,1);
       box-shadow: 1px 0 0 rgba(0,0,0,0.08);
     }
-    #nav-drawer.open { transform: translateX(0); }
+    #nav-drawer.open { width: var(--drawer-width, 280px); max-width: 86vw; }
     .drawer-surface { background: #fafafa; color: #202124; }
+
+    /* Rail (collapsed) mode: icons only, centered like a dock */
+    #nav-drawer:not(.open) .nav-label,
+    #nav-drawer:not(.open) .nav-count,
+    #nav-drawer:not(.open) .nav-section-title,
+    #nav-drawer:not(.open) .drawer-brand-name,
+    #nav-drawer:not(.open) .drawer-compose-label,
+    #nav-drawer:not(.open) .nav-toggle-text,
+    #nav-drawer:not(.open) .drawer-footer,
+    #nav-drawer:not(.open) .nav-label-dot { opacity: 0; pointer-events: none; width: 0; margin: 0; overflow: hidden; }
+    #nav-drawer:not(.open) .nav-item { justify-content: center; padding: 11px 0; gap: 0; }
+    #nav-drawer:not(.open) .nav-item .nav-label-dot { display: none; }
+    #nav-drawer:not(.open) .nav-item .material-symbols-outlined { font-size: 22px; }
+    #nav-drawer .nav-rail-icon { display: none; }
+    #nav-drawer:not(.open) .nav-rail-icon { display: inline-flex; }
+    #nav-drawer:not(.open) .drawer-brand { justify-content: center; padding: 18px 0 14px; gap: 0; }
+    #nav-drawer:not(.open) .drawer-compose { justify-content: center; margin: 10px auto; padding: 12px; gap: 0; }
+    #nav-drawer:not(.open) .drawer-section { padding: 4px 0; }
+    #nav-drawer:not(.open) .nav-toggle { justify-content: center; padding: 8px 0; }
+    #nav-drawer:not(.open) .nav-sub-section { display: none; }
+    #nav-drawer:not(.open) .resize-handle-drawer { display: none; }
+    #nav-drawer:not(.open) .drawer-collapse-btn { display: none; }
+
+    /* Collapse/expand chevron button in the drawer */
+    .drawer-collapse-btn {
+      margin-left: auto; padding: 4px; border: none; background: none; cursor: pointer;
+      color: #5f6368; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      transition: background 120ms, color 120ms;
+    }
+    .drawer-collapse-btn:hover { background: rgba(0,0,0,0.06); color: #202124; }
+    body.theme-dark .drawer-collapse-btn { color: #8d8d8d; }
+    body.theme-dark .drawer-collapse-btn:hover { background: rgba(255,255,255,0.06); color: #e8e8e8; }
+    .drawer-collapse-btn .material-symbols-outlined { font-size: 20px; }
+
+    /* Push main content to the right of the always-visible dock */
+    #main-content { padding-left: var(--rail-width, 68px); transition: padding-left 280ms cubic-bezier(0.22,1,0.36,1); }
+    #main-content.drawer-open { padding-left: var(--drawer-width, 280px); }
+    @media (max-width: 600px) {
+      #main-content { padding-left: 0 !important; }
+      #nav-drawer:not(.open) { width: 0; box-shadow: none; }
+      #nav-drawer:not(.open) > * { display: none; }
+    }
     body.theme-image .drawer-surface { background: rgba(250,250,250,0.97); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
     body.theme-dark .drawer-surface { background: #181818; color: #e8e8e8; }
 
@@ -1266,13 +1339,16 @@
 </head>
 <body class="h-screen w-screen flex flex-col overflow-hidden relative theme-white">
 
-  <!-- ================= NAVIGATION DRAWER ================= -->
+  <!-- ================= NAVIGATION DRAWER (dockable rail / drawer) ================= -->
   <div id="drawer-overlay" class="fixed inset-0 z-[55] opacity-0 pointer-events-none transition-opacity duration-300" onclick="toggleDrawer(false)"></div>
   <aside id="nav-drawer" class="drawer-surface fixed top-0 left-0 bottom-0 z-[56] flex flex-col">
     <div class="resize-handle resize-handle-drawer" onmousedown="startResizeDrawer(event)"></div>
     <div class="drawer-brand">
-      <img src="/icon.png" alt="SimpleMail" class="drawer-brand-icon">
+      <img src="/icon.png" alt="SimpleMail" class="drawer-brand-icon" onclick="toggleDrawer()" style="cursor:pointer" title="SimpleMail">
       <span class="drawer-brand-name">SimpleMail</span>
+      <button class="drawer-collapse-btn" id="drawer-collapse-btn" onclick="toggleDrawer()" title="Replier / déplier" aria-label="Replier / déplier">
+        <span class="material-symbols-outlined" id="drawer-collapse-icon">menu</span>
+      </button>
     </div>
     <nav class="flex-1 overflow-y-auto">
       <div class="drawer-section">
@@ -1322,34 +1398,36 @@
       <!-- Action Buttons -->
       <div id="header-actions" class="w-full flex items-center justify-between opacity-0 pointer-events-none transition-all duration-300">
         <div class="flex items-center gap-1.5 shrink-0">
-          <div class="icon-btn-container" title="Répondre" onclick="replyCurrent()"><span class="material-symbols-outlined">reply</span></div>
-          <div class="icon-btn-container responsive-secondary" title="Tout répondre" onclick="replyAllCurrent()"><span class="material-symbols-outlined">reply_all</span></div>
-          <div class="icon-btn-container responsive-secondary" title="Transférer" onclick="forwardCurrent()"><span class="material-symbols-outlined">forward</span></div>
+          <div class="icon-btn-container" title="Répondre" data-shortcut="reply" onclick="replyCurrent()"><span class="material-symbols-outlined">reply</span></div>
+          <div class="icon-btn-container ai-only" title="Réponse suggérée (IA)" onclick="replyCurrentAI()"><span class="material-symbols-outlined">auto_fix_high</span></div>
+          <div class="icon-btn-container responsive-secondary" title="Tout répondre" data-shortcut="replyAll" onclick="replyAllCurrent()"><span class="material-symbols-outlined">reply_all</span></div>
+          <div class="icon-btn-container responsive-secondary" title="Transférer" data-shortcut="forward" onclick="forwardCurrent()"><span class="material-symbols-outlined">forward</span></div>
+          <div class="icon-btn-container ai-only responsive-secondary" title="TL;DR (IA)" onclick="summarizeCurrent()"><span class="material-symbols-outlined">auto_awesome</span></div>
           <div class="icon-btn-container responsive-secondary" title="Lecture immersive" onclick="openImmersive(currentSelectedId)"><span class="material-symbols-outlined">auto_stories</span></div>
           <div class="icon-btn-container responsive-secondary fs-reader-btn" title="Lecture plein écran" onclick="openFullscreenReader(currentSelectedId)" style="display:none"><span class="material-symbols-outlined">fullscreen</span></div>
           <div id="thread-toggle-all" class="icon-btn-container responsive-secondary" title="Replier toute la conversation" onclick="toggleAllThreadMsgs()"><span id="thread-toggle-icon" class="material-symbols-outlined">unfold_less</span></div>
         </div>
         <div class="flex items-center gap-1.5 shrink-0 overflow-hidden">
-          <div id="header-folder-primary-action" class="icon-btn-container" title="Archiver" onclick="archiveCurrent()"><span class="material-symbols-outlined">archive</span></div>
+          <div id="header-folder-primary-action" class="icon-btn-container" data-shortcut="archive" data-base-title="Archiver" title="Archiver" onclick="archiveCurrent()"><span class="material-symbols-outlined">archive</span></div>
           <div id="header-spam-action" class="icon-btn-container responsive-secondary" title="Signaler comme spam" onclick="reportSpamCurrent()"><span class="material-symbols-outlined">report</span></div>
-          <div id="header-delete-action" class="icon-btn-container" title="Supprimer" onclick="deleteCurrent()"><span class="material-symbols-outlined">delete</span></div>
+          <div id="header-delete-action" class="icon-btn-container" data-shortcut="delete" data-base-title="Supprimer" title="Supprimer" onclick="deleteCurrent()"><span class="material-symbols-outlined">delete</span></div>
           <div class="responsive-separator h-5 w-[1px] bg-gray-200 mx-1.5"></div>
-          <div class="icon-btn-container responsive-secondary" title="Marquer comme non lu" onclick="toggleUnreadCurrent()"><span class="material-symbols-outlined">mail</span></div>
+          <div class="icon-btn-container responsive-secondary" title="Marquer comme non lu" data-shortcut="unread" onclick="toggleUnreadCurrent()"><span class="material-symbols-outlined">mail</span></div>
           <div class="icon-btn-container responsive-secondary" title="Mettre en attente" onclick="snoozeCurrent()"><span class="material-symbols-outlined">schedule</span></div>
           <div class="icon-btn-container responsive-secondary" title="Ajouter aux tâches" onclick="addToTasksCurrent()"><span class="material-symbols-outlined">add_task</span></div>
           <div class="responsive-separator h-5 w-[1px] bg-gray-200 mx-1.5"></div>
           <div class="icon-btn-container responsive-secondary" title="Déplacer vers" onclick="moveCurrent()"><span class="material-symbols-outlined">drive_file_move</span></div>
           <div class="icon-btn-container responsive-secondary" title="Libellés" onclick="labelCurrent()"><span class="material-symbols-outlined">label</span></div>
           <div class="responsive-separator h-5 w-[1px] bg-gray-200 mx-1.5"></div>
-          <div class="icon-btn-container responsive-secondary" title="Plus ancien" onclick="navigateMail(-1)"><span class="material-symbols-outlined">chevron_left</span></div>
-          <div class="icon-btn-container responsive-secondary" title="Plus récent" onclick="navigateMail(1)"><span class="material-symbols-outlined">chevron_right</span></div>
+          <div class="icon-btn-container responsive-secondary" title="Plus ancien" data-shortcut="prev" onclick="navigateMail(-1)"><span class="material-symbols-outlined">chevron_left</span></div>
+          <div class="icon-btn-container responsive-secondary" title="Plus récent" data-shortcut="next" onclick="navigateMail(1)"><span class="material-symbols-outlined">chevron_right</span></div>
           <div id="header-more-btn" class="icon-btn-container" title="Plus" onclick="showMoreConversationActions()" style="display:none"><span class="material-symbols-outlined">more_vert</span></div>
         </div>
       </div>
     </div>
 
     <div class="flex items-center gap-2">
-      <button class="header-quick-compose" onclick="openCompose()" title="Composer">
+      <button class="header-quick-compose" onclick="openCompose()" title="Composer" data-shortcut="compose">
         <span class="material-symbols-outlined" style="font-size:19px;color:inherit">edit</span>
         <span class="header-compose-label">Composer</span>
       </button>
@@ -1565,8 +1643,8 @@
             <div id="lh-selection" class="hidden items-center gap-1.5">
               <div class="icon-btn-container" title="Sélectionner tout" onclick="toggleSelectAll()"><span class="material-symbols-outlined" id="select-all-icon">check_box_outline_blank</span></div>
               <span id="selection-count" class="text-sm font-medium px-2"></span>
-              <div id="bulk-folder-action" class="icon-btn-container" title="Archiver" onclick="bulkAction('archive')"><span class="material-symbols-outlined">archive</span></div>
-              <div id="bulk-delete-action" class="icon-btn-container" title="Supprimer" onclick="bulkAction('delete')"><span class="material-symbols-outlined">delete</span></div>
+              <div id="bulk-folder-action" class="icon-btn-container" data-shortcut="archive" data-base-title="Archiver" title="Archiver" onclick="bulkAction('archive')"><span class="material-symbols-outlined">archive</span></div>
+              <div id="bulk-delete-action" class="icon-btn-container" data-shortcut="delete" data-base-title="Supprimer" title="Supprimer" onclick="bulkAction('delete')"><span class="material-symbols-outlined">delete</span></div>
               <div class="icon-btn-container" title="Marquer comme lu" onclick="bulkAction('read')"><span class="material-symbols-outlined">drafts</span></div>
               <div class="icon-btn-container" title="Effacer la sélection" onclick="clearSelection()"><span class="material-symbols-outlined">close</span></div>
             </div>
@@ -1724,14 +1802,14 @@
         Retour
       </button>
       <div class="flex items-center gap-1">
-        <button onclick="immersiveReply()" class="immersive-icon-btn" title="Répondre"><span class="material-symbols-outlined">reply</span></button>
-        <button onclick="immersiveReplyAll()" class="immersive-icon-btn" title="Répondre à tous"><span class="material-symbols-outlined">reply_all</span></button>
-        <button onclick="immersiveForward()" class="immersive-icon-btn" title="Transférer"><span class="material-symbols-outlined">forward</span></button>
+        <button onclick="immersiveReply()" class="immersive-icon-btn" title="Répondre" data-shortcut="reply"><span class="material-symbols-outlined">reply</span></button>
+        <button onclick="immersiveReplyAll()" class="immersive-icon-btn" title="Répondre à tous" data-shortcut="replyAll"><span class="material-symbols-outlined">reply_all</span></button>
+        <button onclick="immersiveForward()" class="immersive-icon-btn" title="Transférer" data-shortcut="forward"><span class="material-symbols-outlined">forward</span></button>
         <div class="w-5 h-[1px] bg-current/10 mx-1"></div>
-        <button onclick="immersiveToggleStar()" id="im-star-btn" class="immersive-icon-btn" title="Suivi"><span class="material-symbols-outlined">star</span></button>
-        <button onclick="immersiveArchive()" class="immersive-icon-btn" title="Archiver"><span class="material-symbols-outlined">archive</span></button>
-        <button onclick="immersiveDelete()" class="immersive-icon-btn" title="Supprimer"><span class="material-symbols-outlined">delete</span></button>
-        <button onclick="immersiveToggleUnread()" class="immersive-icon-btn" title="Marquer non lu"><span class="material-symbols-outlined">mail</span></button>
+        <button onclick="immersiveToggleStar()" id="im-star-btn" class="immersive-icon-btn" title="Suivi" data-shortcut="star"><span class="material-symbols-outlined">star</span></button>
+        <button onclick="immersiveArchive()" class="immersive-icon-btn" title="Archiver" data-shortcut="archive"><span class="material-symbols-outlined">archive</span></button>
+        <button onclick="immersiveDelete()" class="immersive-icon-btn" title="Supprimer" data-shortcut="delete"><span class="material-symbols-outlined">delete</span></button>
+        <button onclick="immersiveToggleUnread()" class="immersive-icon-btn" title="Marquer non lu" data-shortcut="unread"><span class="material-symbols-outlined">mail</span></button>
       </div>
     </div>
 
@@ -1774,6 +1852,7 @@
     #fs-title{font-size:clamp(24px,4vw,42px);font-weight:800;line-height:1.2;margin-bottom:20px;color:#1a73e8}
     #fs-meta{font-size:11px;text-transform:uppercase;letter-spacing:0.16em;color:#5f6368;margin-bottom:12px}
     #fs-text{font-size:1.125rem;line-height:1.75;color:#3c4043}
+    #fs-text, #fs-text * { border:0 !important; border-style:none !important; outline:0 !important; background:transparent !important; background-color:transparent !important; max-width:100% !important; word-wrap:break-word !important; overflow-wrap:break-word !important; }
     #fs-text p{margin-bottom:1rem}
     #fs-text a{color:#1a73e8;text-decoration:underline}
     #fs-text a:hover{color:#1765cc}
@@ -1795,6 +1874,57 @@
       #fs-prev{left:8px}
       #fs-next{right:8px}
     }
+
+    /* ====================== IA locale ====================== */
+    .ai-only[style*="display:none"] { display:none !important; }
+    .ai-spin { animation: ai-spin 0.9s linear infinite; }
+    @keyframes ai-spin { to { transform: rotate(360deg); } }
+
+    /* Encart TL;DR dans le fil de conversation */
+    .ai-tldr-box {
+      margin: 0 0 12px 0; padding: 12px 14px;
+      border: 1px solid rgba(26,115,232,0.25);
+      border-left: 3px solid #1a73e8;
+      border-radius: 10px;
+      background: rgba(232,240,254,0.6);
+      font-size: 13px; line-height: 1.5;
+    }
+    body.theme-dark .ai-tldr-box { background: rgba(138,180,248,0.08); border-color: rgba(138,180,248,0.3); }
+    .ai-tldr-box.ai-tldr-loading { color: #5f6368; font-style: italic; display:flex; align-items:center; gap:8px; }
+    .ai-tldr-box.ai-tldr-error { border-color: rgba(197,34,31,0.3); border-left-color:#c5221f; background: rgba(252,232,230,0.5); color:#c5221f; display:flex; align-items:center; gap:6px; }
+    .ai-tldr-head { display:flex; align-items:center; gap:6px; font-weight:600; color:#1a73e8; margin-bottom:4px; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; }
+    .ai-tldr-head .material-symbols-outlined { font-size:15px; }
+    .ai-tldr-cached { font-weight:400; text-transform:none; letter-spacing:0; opacity:0.6; font-size:10px; }
+    .ai-tldr-text { color: inherit; white-space: pre-wrap; word-wrap: break-word; }
+
+    /* Toggle IA (settings) */
+    .ai-toggle { display:inline-flex; cursor:pointer; }
+    .ai-toggle input { display:none; }
+    .ai-toggle-track { width:40px; height:22px; border-radius:11px; background:#ccc; position:relative; transition:background .2s; display:inline-block; }
+    .ai-toggle-thumb { position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform .2s; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+    .ai-toggle input:checked + .ai-toggle-track { background:#1a73e8; }
+    .ai-toggle input:checked + .ai-toggle-track .ai-toggle-thumb { transform:translateX(18px); }
+
+    /* Barre d'outils IA du composeur */
+    .cmp-ai-toolbar {
+      display:flex; align-items:center; gap:4px; flex-wrap:wrap;
+      padding:8px 10px; margin-bottom:10px;
+      border:1px solid rgba(26,115,232,0.2); border-radius:10px;
+      background:rgba(232,240,254,0.4);
+    }
+    .cmp-ai-label { display:flex; align-items:center; gap:3px; font-size:11px; font-weight:600; color:#1a73e8; text-transform:uppercase; letter-spacing:0.05em; margin-right:6px; }
+    .cmp-ai-tool {
+      display:inline-flex; align-items:center; gap:4px;
+      padding:4px 9px; border:none; border-radius:7px;
+      background:transparent; color:#3c4043; font-size:12px; cursor:pointer;
+      transition:background .15s;
+    }
+    .cmp-ai-tool .material-symbols-outlined { font-size:15px; }
+    .cmp-ai-tool:hover:not(:disabled) { background:rgba(26,115,232,0.12); }
+    .cmp-ai-tool:disabled { opacity:0.4; cursor:default; }
+    body.theme-dark .cmp-ai-toolbar { background:rgba(138,180,248,0.08); border-color:rgba(138,180,248,0.25); }
+    body.theme-dark .cmp-ai-tool { color:#e8eaed; }
+    body.theme-dark .cmp-ai-label { color:#8ab4f8; }
   </style>
   <!-- ================= FULLSCREEN READER (diaporama) ================= -->
   <div id="fs-reader" class="fixed inset-0 z-[99999] hidden flex-col" role="dialog" aria-modal="true" aria-hidden="true">
@@ -1927,6 +2057,28 @@
       if(key === 'ArrowDown') return '↓';
       if(key === 'ArrowUp') return '↑';
       return key;
+    }
+    // Renvoie le libellé d'un raccourci pour une info-bulle, ex. "E" ou "#" ou "Enter".
+    function shortcutHint(actionId){
+      const key = getShortcutKey(actionId);
+      if(!key) return '';
+      const label = formatKeyLabel(key);
+      return label.length === 1 ? label.toUpperCase() : label;
+    }
+    // Ajoute le raccourci à un libellé d'info-bulle : "Archiver" -> "Archiver (E)".
+    function withShortcut(label, actionId){
+      const h = shortcutHint(actionId);
+      return h ? `${label} (${h})` : label;
+    }
+    // Met à jour tous les title= des éléments marqués data-shortcut selon le preset actif.
+    function applyShortcutTitles(){
+      document.querySelectorAll('[data-shortcut]').forEach(el => {
+        const actionId = el.getAttribute('data-shortcut');
+        if(!actionId) return;
+        let base = el.getAttribute('data-base-title');
+        if(base === null){ base = el.getAttribute('title') || ''; el.setAttribute('data-base-title', base); }
+        el.title = withShortcut(base, actionId);
+      });
     }
     function renderShortcutsList(){
       const list = document.getElementById('shortcuts-list');
@@ -2353,13 +2505,13 @@
       if (folder) {
         const active = folder.name===currentFolder && !currentSpecial;
         const count = folder.unseen ? `<span class="nav-count">${folder.unseen}</span>` : '';
-        return `<div class="nav-item ${active?'is-active':''}" onclick="onFolderChange('${escapeAttr(folder.name)}')">
+        return `<div class="nav-item ${active?'is-active':''}" title="${escapeAttr(fallbackLabel || folderLabel(folder.name))}" onclick="onFolderChange('${escapeAttr(folder.name)}')">
           <span class="material-symbols-outlined">${folderIcon(folder.name)}</span>
           <span class="nav-label">${fallbackLabel || folderLabel(folder.name)}</span>
           ${count}
         </div>`;
       }
-      return `<div class="nav-item" onclick="showToast('${escapeAttr(fallbackLabel)} : dossier absent du serveur')">
+      return `<div class="nav-item" title="${escapeAttr(fallbackLabel)}" onclick="showToast('${escapeAttr(fallbackLabel)} : dossier absent du serveur')">
         <span class="material-symbols-outlined">${fallbackIcon}</span>
         <span class="nav-label">${fallbackLabel}</span>
       </div>`;
@@ -2375,10 +2527,13 @@
     function toggleDrawerExtra(){ drawerExtraOpen=!drawerExtraOpen; renderDrawer(); }
 
     function toggleDrawer(force){
-      const d=document.getElementById('nav-drawer'), o=document.getElementById('drawer-overlay');
+      const d=document.getElementById('nav-drawer');
+      const mc=document.getElementById('main-content');
       const open = force!==undefined ? force : !d.classList.contains('open');
       d.classList.toggle('open', open);
-      o.classList.toggle('opacity-0', !open); o.classList.toggle('pointer-events-none', !open);
+      if(mc) mc.classList.toggle('drawer-open', open);
+      const ci=document.getElementById('drawer-collapse-icon');
+      if(ci) ci.textContent = open ? 'chevron_left' : 'menu';
       if(open){
         renderDrawer();
         const items=[...d.querySelectorAll('.nav-item')];
@@ -2421,7 +2576,7 @@
         const ce = c.id==='newsletter' ? emails.filter(e => isLikelyNewsletter(e)) : emails.filter(e => (e.category||'primary')===c.id);
         const unread = ce.filter(e=>e.unread).length;
         const active = (c.id===currentCategory && currentFolder==='INBOX' && !currentSpecial);
-        return `<div class="nav-item ${active?'is-active':''}" data-category="${c.id}" style="${categoryNavStyle(c.id)}" onclick="selectCategory('${c.id}')">
+        return `<div class="nav-item ${active?'is-active':''}" data-category="${c.id}" title="${escapeAttr(c.label)}" style="${categoryNavStyle(c.id)}" onclick="selectCategory('${c.id}')">
           <span class="material-symbols-outlined">${c.icon}</span>
           <span class="nav-label">${c.label}</span>
           ${unread?`<span class="nav-count">${unread}</span>`:''}
@@ -2430,7 +2585,7 @@
       // Insert RSS entry right after the Newsletter category
       const nlIdx = mainCats.findIndex(c => c.id==='newsletter');
       const rssCount = getRssUnreadCount();
-      const rssHtml = `<div class="nav-item ${currentActiveView==='rss'?'is-active':''}" onclick="openRss()">
+      const rssHtml = `<div class="nav-item ${currentActiveView==='rss'?'is-active':''}" title="Flux RSS" onclick="openRss()">
         <span class="material-symbols-outlined" style="color:#f59e0b">rss_feed</span>
         <span class="nav-label">Flux RSS</span>
         ${rssCount?`<span class="nav-count">${rssCount}</span>`:''}
@@ -2451,7 +2606,7 @@
           ${unread?`<span class="nav-count">${unread}</span>`:''}
         </div>`;
       }).join('')
-      + `<div class="nav-item" onclick="filterStarred()">
+      + `<div class="nav-item" title="Messages suivis" onclick="filterStarred()">
         <span class="material-symbols-outlined">star</span>
         <span class="nav-label">Messages suivis</span>
         ${starredCount?`<span class="nav-count">${starredCount}</span>`:''}
@@ -2459,24 +2614,24 @@
       + folderNavItem(spam, 'Indésirables', 'report')
       + folderNavItem(snoozed, 'En attente', 'schedule')
       + folderNavItem(scheduled, 'Planifié', 'send_and_archive')
-      + `<div class="nav-item" onclick="filterStarred()">
+      + `<div class="nav-item" title="Important" onclick="filterStarred()">
         <span class="material-symbols-outlined">label_important</span>
         <span class="nav-label">Important</span>
         ${starredCount?`<span class="nav-count">${starredCount}</span>`:''}
       </div>`
-      + `<div class="nav-item" onclick="showAllMessages()">
+      + `<div class="nav-item" title="Tous les messages" onclick="showAllMessages()">
         <span class="material-symbols-outlined">mail</span>
         <span class="nav-label">Tous les messages</span>
         ${totalUnread?`<span class="nav-count">${totalUnread}</span>`:''}
       </div>`
-      + `<div class="nav-item" onclick="selectCategory('promotions')">
+      + `<div class="nav-item" title="Gérer les abonnements" onclick="selectCategory('promotions')">
         <span class="material-symbols-outlined">unsubscribe</span>
         <span class="nav-label">Gérer les abonnements</span>
       </div>`;
 
-      ce.innerHTML = `<button class="nav-toggle ${drawerExtraOpen?'is-open':''}" onclick="toggleDrawerExtra()">
+      ce.innerHTML = `<button class="nav-toggle ${drawerExtraOpen?'is-open':''}" onclick="toggleDrawerExtra()" title="${drawerExtraOpen?'Moins':'Plus'}">
         <span class="material-symbols-outlined">expand_more</span>
-        ${drawerExtraOpen?'Moins':'Plus'}
+        <span class="nav-toggle-text">${drawerExtraOpen?'Moins':'Plus'}</span>
       </button>
       <div class="nav-sub-section ${drawerExtraOpen?'':'collapsed'}" style="max-height:${drawerExtraOpen?'600px':'0'}">
         ${extraHtml}
@@ -2486,15 +2641,16 @@
       const lc=document.getElementById('drawer-labels');
       const extraFolders = folders.filter(f => !Object.keys(FOLDER_META).includes(folderKey(f.name)) && folderKey(f.name)!=='INBOX' && !['SNOOZED','WAITING','SCHEDULED'].includes(folderKey(f.name)));
       const labelColors=['#1a73e8','#e23b3b','#0a66c2','#a259ff','#f59e0b','#1a7f37','#e11d48','#0d9488'];
-      let lhtml = extraFolders.map((f,i)=>`<div class="nav-item" onclick="onFolderChange('${escapeAttr(f.name)}')">
+      let lhtml = extraFolders.map((f,i)=>`<div class="nav-item" title="${escapeAttr(f.name)}" onclick="onFolderChange('${escapeAttr(f.name)}')">
         <span class="nav-label-dot" style="background:${labelColors[i%labelColors.length]}"></span>
+        <span class="material-symbols-outlined nav-rail-icon" style="color:${labelColors[i%labelColors.length]}">label</span>
         <span class="nav-label">${escapeHtml(f.name)}</span>
       </div>`).join('');
-      lhtml += `<div class="nav-item" onclick="showToast('Les libellés affichés sont les dossiers réels du serveur')">
+      lhtml += `<div class="nav-item" title="Gérer les libellés" onclick="showToast('Les libellés affichés sont les dossiers réels du serveur')">
         <span class="material-symbols-outlined">settings</span>
         <span class="nav-label">Gérer les libellés</span>
       </div>`;
-      lhtml += `<div class="nav-item" onclick="createLabel()">
+      lhtml += `<div class="nav-item" title="Créer un libellé" onclick="createLabel()">
         <span class="material-symbols-outlined">add</span>
         <span class="nav-label">Créer un libellé</span>
       </div>`;
@@ -2627,13 +2783,15 @@
         }
       }, delay);
     }
-    async function loadMessages(alertFlag) {
-      showLoading();
-      currentActiveView='loading'; updateUIState();
-      const container=document.getElementById('messages-container');
-      if(container) container.innerHTML='<div class="flex items-center justify-center py-12 text-sm text-gray-400"><span class="material-symbols-outlined mr-2 animate-spin" style="font-size:18px">refresh</span>Chargement…</div>';
+    async function loadMessages(alertFlag, silent=false) {
+      if(!silent){
+        showLoading();
+        currentActiveView='loading'; updateUIState();
+        const container=document.getElementById('messages-container');
+        if(container) container.innerHTML='<div class="flex items-center justify-center py-12 text-sm text-gray-400"><span class="material-symbols-outlined mr-2 animate-spin" style="font-size:18px">refresh</span>Chargement…</div>';
+      }
       if (!currentAccount) { await loadAccounts(); if (currentAccount) await loadFolders(currentAccount); }
-      if (!currentAccount) { emails=[]; currentActiveView='zero'; updateUIState(); hideLoading(); return; }
+      if (!currentAccount) { if(!silent){ emails=[]; currentActiveView='zero'; updateUIState(); hideLoading(); } return; }
       emailsPerPage = getPageSize();
       if(infiniteObserver){ infiniteObserver.disconnect(); infiniteObserver = null; }
       pageCache = new Map();
@@ -2650,20 +2808,23 @@
         pageCache.set(1, mapped);
         totalMessages = Number(data.total) || raw.length;
         maxKnownPage = Math.max(1, Number(data.total_pages) || 1);
+        const prevIds = silent ? new Set(emails.map(e => e.id)) : null;
         emails = [...mapped];
         loadError = '';
-        currentSelectedId = null;
-        currentListIndex = -1;
+        if(!silent){ currentSelectedId = null; currentListIndex = -1; }
         currentActiveView = emails.length ? 'list' : 'zero';
         updateUIState();
         hydrateMissingAttachmentCounts();
         if (alertFlag) showToast(`${emails.length} message(s) — ${currentFolder}`);
+        if(silent){
+          const newCount = mapped.filter(e => !prevIds.has(e.id)).length;
+          if(newCount > 0) showToast(`${newCount} nouveau(x) message(s)`);
+        }
         buildNewsletterCarousel();
-        hideLoading();
+        if(!silent) hideLoading();
       } catch (e) {
-        loadError = e.message; emails = []; currentActiveView = 'zero'; updateUIState();
-        hideLoading();
-        showToast('Erreur chargement : ' + e.message);
+        loadError = e.message;
+        if(!silent){ emails=[]; currentActiveView='zero'; updateUIState(); hideLoading(); showToast('Erreur chargement : ' + e.message); }
       }
     }
 
@@ -2989,11 +3150,13 @@
         html, body, body * {
           font-family: 'Inter', 'Avenir Next', 'SF Pro Display', system-ui, sans-serif !important;
           color: #111111 !important;
+          background: transparent !important;
+          background-color: transparent !important;
           font-synthesis: none;
           font-variant-ligatures: none;
         }
         html, body { height:auto !important; min-height:0 !important; margin:0 !important; padding:0 !important; overflow-x:hidden !important; overflow-y:auto !important; }
-        body { line-height: 1.75; background: #ffffff; max-width:100vw !important; }
+        body { line-height: 1.75; background: #ffffff !important; max-width:100vw !important; }
         img, table, pre, blockquote, iframe, figure, svg { max-width:100% !important; height:auto; }
         table[style] { max-width:100% !important; }
         * { word-wrap:break-word !important; overflow-wrap:break-word !important; }
@@ -3381,21 +3544,29 @@
       if(!primary||!spam||!remove) return;
       const key=folderKey(currentFolder);
       const restorable=key==='TRASH'||key==='ARCHIVE';
-      primary.title=restorable?'Restaurer dans la boîte de réception':'Archiver';
+      const primaryLabel=restorable?'Restaurer dans la boîte de réception':'Archiver';
+      primary.setAttribute('data-base-title',primaryLabel);
+      primary.title=withShortcut(primaryLabel,'archive');
       primary.querySelector('.material-symbols-outlined').textContent=restorable?(key==='TRASH'?'restore_from_trash':'move_to_inbox'):'archive';
       primary.onclick=restorable?restoreCurrent:archiveCurrent;
       spam.classList.toggle('hidden',key==='TRASH'||key==='SPAM'||key==='JUNK'||key==='ARCHIVE');
-      remove.title=key==='TRASH'?'Supprimer définitivement':'Déplacer vers la corbeille';
+      const removeLabel=key==='TRASH'?'Supprimer définitivement':'Déplacer vers la corbeille';
+      remove.setAttribute('data-base-title',removeLabel);
+      remove.title=withShortcut(removeLabel,'delete');
     }
     function updateBulkFolderActions(){
       const primary=document.getElementById('bulk-folder-action');
       const remove=document.getElementById('bulk-delete-action');
       if(!primary||!remove) return;
       const key=folderKey(currentFolder), restorable=key==='TRASH'||key==='ARCHIVE';
-      primary.title=restorable?'Restaurer dans la boîte de réception':'Archiver';
+      const primaryLabel=restorable?'Restaurer dans la boîte de réception':'Archiver';
+      primary.setAttribute('data-base-title',primaryLabel);
+      primary.title=withShortcut(primaryLabel,'archive');
       primary.querySelector('.material-symbols-outlined').textContent=restorable?(key==='TRASH'?'restore_from_trash':'move_to_inbox'):'archive';
       primary.onclick=()=>bulkAction(restorable?'restore':'archive');
-      remove.title=key==='TRASH'?'Supprimer définitivement':'Déplacer vers la corbeille';
+      const removeLabel=key==='TRASH'?'Supprimer définitivement':'Déplacer vers la corbeille';
+      remove.setAttribute('data-base-title',removeLabel);
+      remove.title=withShortcut(removeLabel,'delete');
     }
     function updateUIState(){
       const isZero = emails.length===0;
@@ -3504,6 +3675,19 @@
         item.className=`mail-item ${hasUnread?'mail-unread':'mail-read'} relative flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50/80 transition-colors select-none ${borderClass} ${hasUnread?'bg-white font-semibold':'bg-gray-50/30 text-gray-700'} ${isSelected?'is-selected':''}`;
         item.setAttribute('style', categoryRowStyle(currentCategory));
         item.setAttribute('data-thread-id', email.threadId || email.id);
+        item.setAttribute('data-msg-uid', email.uid || email.id);
+        item.setAttribute('data-msg-account', email.account || currentAccount);
+        item.draggable = true;
+        item.addEventListener('dragstart', (ev) => {
+          _draggedMail = { uid: email.uid || email.id, account: email.account || currentAccount, id: email.id };
+          try { ev.dataTransfer.setData('text/plain', String(email.uid || email.id)); ev.dataTransfer.effectAllowed = 'move'; } catch(e){}
+          item.classList.add('is-dragging');
+        });
+        item.addEventListener('dragend', () => {
+          item.classList.remove('is-dragging');
+          _draggedMail = null;
+          document.querySelectorAll('.is-drop-target').forEach(el => el.classList.remove('is-drop-target'));
+        });
         item.onclick=()=>{ currentListIndex = index; currentSelectedId = email.id; openConversation(email.id); };
         const rowId = email.id;
         const isRowSelected = selectedMailIds.has(rowId);
@@ -3517,8 +3701,8 @@
         const folderIsRestorable=['TRASH','ARCHIVE'].includes(folderKey(currentFolder));
         const restoreIcon=folderKey(currentFolder)==='TRASH'?'restore_from_trash':'move_to_inbox';
         const folderActionHtml=folderIsRestorable
-          ? `<span class="hover-action-btn" onclick="event.stopPropagation(); restoreItem('${email.id}')" title="Restaurer dans la boîte de réception"><span class="material-symbols-outlined">${restoreIcon}</span></span>`
-          : `<span class="hover-action-btn" onclick="event.stopPropagation(); archiveItem('${email.id}')" title="Archiver"><span class="material-symbols-outlined">archive</span></span>`;
+          ? `<span class="hover-action-btn" onclick="event.stopPropagation(); restoreItem('${email.id}')" title="${escapeAttr(withShortcut('Restaurer dans la boîte de réception','archive'))}"><span class="material-symbols-outlined">${restoreIcon}</span></span>`
+          : `<span class="hover-action-btn" onclick="event.stopPropagation(); archiveItem('${email.id}')" title="${escapeAttr(withShortcut('Archiver','archive'))}"><span class="material-symbols-outlined">archive</span></span>`;
         item.innerHTML=`
           <div class="flex items-center gap-4 min-w-0 flex-1 pr-6 relative">
             <div class="sender-icon-slot">
@@ -3539,14 +3723,14 @@
             ${email.date}
           </div>
           <div class="hover-actions-right">
-            <span class="hover-action-btn" onclick="event.stopPropagation(); toggleStarItem(event, '${email.id}')" title="Suivre">
+            <span class="hover-action-btn" onclick="event.stopPropagation(); toggleStarItem(event, '${email.id}')" title="${escapeAttr(withShortcut('Suivre','star'))}">
               <span class="material-symbols-outlined" style="${starred?'color:#f59e0b':''}">${starred?'star':'star_border'}</span>
             </span>
             ${folderActionHtml}
             <span class="hover-action-btn" onclick="event.stopPropagation(); markAsNewsletter('${escapeAttr(email.email||domainOf(email.email))}')" title="Marquer comme newsletter">
               <span class="material-symbols-outlined">mail_outline</span>
             </span>
-            <span class="hover-action-btn" onclick="event.stopPropagation(); deleteItem('${email.id}')" title="${folderKey(currentFolder)==='TRASH'?'Supprimer définitivement':'Déplacer vers la corbeille'}">
+            <span class="hover-action-btn" onclick="event.stopPropagation(); deleteItem('${email.id}')" title="${escapeAttr(withShortcut(folderKey(currentFolder)==='TRASH'?'Supprimer définitivement':'Déplacer vers la corbeille','delete'))}">
               <span class="material-symbols-outlined">delete</span>
             </span>
           </div>`;
@@ -3919,6 +4103,10 @@
     if (!settings.lang) settings.lang = 'fr';
     if (!settings.shortcuts) settings.shortcuts = null;
     if (settings.fullscreenReader === undefined) settings.fullscreenReader = true;
+    // Réglages IA (défauts côté client ; le backend est source de vérité via /api/settings).
+    if (settings.aiEnabled === undefined) settings.aiEnabled = false;
+    if (!settings.aiModel) settings.aiModel = 'mlx-community/Qwen2.5-3B-Instruct-4bit';
+    if (settings.aiCategorize === undefined) settings.aiCategorize = false;
     function saveSettings(){ try { localStorage.setItem('mm_settings', JSON.stringify(settings)); } catch(e){} }
     if (migrateConversationDefaults) saveSettings();
     function updateFullscreenReaderBtn(){
@@ -4245,7 +4433,7 @@
       const sec = getRefreshInterval();
       if(sec <= 0) return;
       refreshTimerId = setInterval(() => {
-        if(currentActiveView==='list'||currentActiveView==='zero') loadMessages();
+        if(currentActiveView==='list'||currentActiveView==='zero') loadMessages(false, true);
       }, sec * 1000);
     }
     function saveSetting(key, value){
@@ -4478,37 +4666,47 @@
       if(n>=0 && n<threads.length){ const latest=threads[n].messages[threads[n].messages.length-1]; openConversation(latest.id); }
       else showToast("Pas d'autre message dans cette direction");
     }
+    // Après suppression/archivage d'une conversation, on ouvre le thread suivant
+    // (même index : la liste se compacte et le suivant remonte) plutôt que de
+    // revenir à l'inbox. Si c'était le dernier, on retourne à la liste.
+    function advanceAfterAction(prevThreadIndex){
+      const threads=getVisibleThreads();
+      if(!threads.length){ handleBack(); return; }
+      const idx=Math.min(Math.max(prevThreadIndex,0), threads.length-1);
+      const latest=threads[idx].messages[threads[idx].messages.length-1];
+      if(latest) openConversation(latest.id);
+      else handleBack();
+    }
     function deleteCurrent(){
       const m=emails.find(e=>e.id===currentSelectedId); if(!m) return;
       const threadId = m.threadId;
       const toDelete = threadId ? emails.filter(e => e.threadId === threadId) : [m];
       const idsToDelete = new Set(toDelete.map(e => e.id));
+      const prevIdx=getSelectedThreadIndex();
+      // UI instantanée : on retire la conversation et on passe au mail suivant tout de suite.
+      emails=emails.filter(e=>!idsToDelete.has(e.id));
+      advanceAfterAction(prevIdx);
+      buildNewsletterCarousel();
+      loadFolders(currentAccount);
+      // Suppression effective en arrière-plan — toast (en bas à gauche) seulement en cas d'erreur.
       Promise.all(toDelete.map(msg =>
         api(`/api/messages/${msg.account}/${msg.uid}?folder=${encodeURIComponent(currentFolder)}`, {method:'DELETE'})
-      )).then(()=>{
-        emails=emails.filter(e=>!idsToDelete.has(e.id));
-        handleBack();
-        const count = toDelete.length;
-        showToast(`Conversation supprimée (${count} message${count>1?'s':''})`);
-        buildNewsletterCarousel();
-        loadFolders(currentAccount);
-      }).catch(e=>showToast('Suppression impossible : '+e.message));
+      )).catch(()=>showToast('Suppression impossible — réessayez'));
     }
     function deleteItem(id){
       const m=emails.find(e=>e.id===id); if(!m) return;
       const threadId = m.threadId;
       const toDelete = threadId ? emails.filter(e => e.threadId === threadId) : [m];
       const idsToDelete = new Set(toDelete.map(e => e.id));
+      // UI instantanée : on retire et on rebascule vers la liste tout de suite.
+      emails=emails.filter(e=>!idsToDelete.has(e.id));
+      handleBack();
+      buildNewsletterCarousel();
+      loadFolders(currentAccount);
+      // Suppression effective en arrière-plan — toast seulement en cas d'erreur.
       Promise.all(toDelete.map(msg =>
         api(`/api/messages/${msg.account}/${msg.uid}?folder=${encodeURIComponent(currentFolder)}`, {method:'DELETE'})
-      )).then(()=>{
-        emails=emails.filter(e=>!idsToDelete.has(e.id));
-        handleBack();
-        const count = toDelete.length;
-        showToast(`Conversation supprimée (${count} message${count>1?'s':''})`);
-        buildNewsletterCarousel();
-        loadFolders(currentAccount);
-      }).catch(e=>showToast('Suppression impossible : '+e.message));
+      )).catch(()=>showToast('Suppression impossible — réessayez'));
     }
     async function archiveItem(id){
       const m=emails.find(e=>e.id===id); if(!m) return;
@@ -4548,7 +4746,21 @@
       restoreThreadMessages(messages,true);
     }
     async function archiveCurrent(){
-      await specialFolderAction(findServerFolder('ARCHIVE')?.name || 'Archive', 'Archiver', false);
+      const m=currentMailForAction();
+      if(!m) return showToast('Aucun message sélectionné');
+      const archive = findServerFolder('ARCHIVE');
+      const dest = archive?.name || 'Archive';
+      const toArchive = m.threadId ? emails.filter(e => e.threadId === m.threadId) : [m];
+      const idsToArchive = new Set(toArchive.map(e => e.id));
+      const prevIdx=getSelectedThreadIndex();
+      try{
+        await Promise.all(toArchive.map(msg => moveMailToFolder(msg, dest, false)));
+        emails=emails.filter(e=>!idsToArchive.has(e.id));
+        showToast(`Archivé dans ${dest}`);
+        buildNewsletterCarousel();
+        loadFolders(currentAccount);
+        advanceAfterAction(prevIdx);
+      }catch(e){ showToast('Archivage impossible : '+e.message); }
     }
     async function reportSpamCurrent(){
       await specialFolderAction(findServerFolder('SPAM','JUNK')?.name || 'Spam', 'Marquer comme spam', false);
@@ -4815,12 +5027,14 @@
     function immersiveToggleStar(){ const e=immersiveList[immersiveIndex]; if(!e) return; e.starred=!e.starred; apiCallFlag(e,null,e.starred); updateImmersiveChrome(); showToast(e.starred?'Ajouté aux suivis':'Retiré des suivis'); }
     function immersiveArchive(){ immersiveDelete(); }
     function immersiveDelete(){ const e=immersiveList[immersiveIndex]; if(!e) return;
-      api(`/api/messages/${e.account}/${e.uid}?folder=${encodeURIComponent(currentFolder)}`,{method:'DELETE'}).then(()=>{
-        emails=emails.filter(x=>x.id!==e.id); immersiveList=getImmersiveList();
-        if(immersiveIndex>=immersiveList.length) immersiveIndex=immersiveList.length-1;
-        if(!immersiveList.length){ closeImmersive(); showToast('Supprimé — liste vide'); return; }
-        renderImmersiveSlides(); showToast('Message supprimé');
-      }).catch(err=>showToast('Suppression impossible : '+err.message));
+      // UI instantanée : on retire le slide et on passe au suivant tout de suite.
+      emails=emails.filter(x=>x.id!==e.id); immersiveList=getImmersiveList();
+      if(immersiveIndex>=immersiveList.length) immersiveIndex=immersiveList.length-1;
+      if(!immersiveList.length){ closeImmersive(); }
+      else renderImmersiveSlides();
+      // Suppression effective en arrière-plan — toast seulement en cas d'erreur.
+      api(`/api/messages/${e.account}/${e.uid}?folder=${encodeURIComponent(currentFolder)}`,{method:'DELETE'})
+        .catch(()=>showToast('Suppression impossible — réessayez'));
     }
     function immersiveToggleUnread(){ const e=immersiveList[immersiveIndex]; if(!e) return; e.unread=!e.unread; apiCallFlag(e,!e.unread,null); showToast(e.unread?'Marqué non lu':'Marqué lu'); }
     function handleImmersiveReplyKeydown(event){
@@ -4941,6 +5155,15 @@
               <span class="compose-field-label">Objet</span>
               <input id="cmp-subject" type="text" placeholder="Objet du message" class="compose-input text-lg font-medium">
             </div>
+            <div class="cmp-ai-toolbar ai-only" style="display:none">
+              <span class="cmp-ai-label"><span class="material-symbols-outlined" style="font-size:15px">auto_awesome</span> IA</span>
+              <button type="button" class="cmp-ai-tool" onclick="aiRewrite('corriger')" title="Corriger orthographe et grammaire"><span class="material-symbols-outlined">spell_check</span> Corriger</button>
+              <button type="button" class="cmp-ai-tool" onclick="aiRewrite('reformuler')" title="Reformuler plus clairement"><span class="material-symbols-outlined">format_quote</span> Reformuler</button>
+              <button type="button" class="cmp-ai-tool" onclick="aiRewrite('formel')" title="Ton plus formel"><span class="material-symbols-outlined">badge</span> Formel</button>
+              <button type="button" class="cmp-ai-tool" onclick="aiRewrite('amical')" title="Ton plus amical"><span class="material-symbols-outlined">sentiment_satisfied</span> Amical</button>
+              <button type="button" class="cmp-ai-tool" onclick="aiRewrite('concis')" title="Plus concis"><span class="material-symbols-outlined">compress</span> Concis</button>
+              <button type="button" class="cmp-ai-tool" onclick="aiUndo()" title="Annuler la dernière transformation"><span class="material-symbols-outlined">undo</span></button>
+            </div>
             <textarea id="cmp-body" placeholder="Écrivez votre message…" class="compose-editor"></textarea>
             <div id="cmp-status" class="text-xs compose-muted mt-4 min-h-[16px]"></div>
             <div class="h-16"></div>
@@ -4997,6 +5220,8 @@
         if(prefill.inReplyTo){ overlay.dataset.inReplyTo=prefill.inReplyTo; overlay.dataset.references=prefill.references||prefill.inReplyTo; }
       }
       setTimeout(()=>document.getElementById(prefill?.focusBody?'cmp-body':'cmp-to').focus(),80);
+      // Ajuste la visibilité de la barre d'outils IA selon la dispo du backend.
+      refreshAiAvailability();
     }
     function toggleComposeRecipient(kind){
       const row=document.getElementById(`cmp-${kind}-row`);
@@ -5184,6 +5409,84 @@
     // ====================== Toast + clavier ======================
     function showToast(msg){ const t=document.getElementById('toast'); t.innerText=msg; t.classList.remove('translate-y-20','opacity-0'); setTimeout(()=>t.classList.add('translate-y-20','opacity-0'),2500); }
 
+    // ====================== Drag & drop : recatégorisation ======================
+    // Source du drag. On garde une référence locale car dataTransfer est parfois
+    // inaccessible dans dragend/drop selon le navigateur.
+    let _draggedMail = null;
+    function _dropTargetCategory(el){
+      // Remonte depuis l'élément survolé jusqu'à un onglet catégorie (.cat-icon-btn)
+      // ou une entrée du tiroir (.nav-item[data-category]).
+      let node = el;
+      while(node && node !== document.body){
+        if(node.classList && node.classList.contains('cat-icon-btn')){
+          const c = node.getAttribute('data-cat'); if(c) return c;
+        }
+        if(node.classList && node.classList.contains('nav-item')){
+          const c = node.getAttribute('data-category'); if(c) return c;
+        }
+        node = node.parentElement;
+      }
+      return null;
+    }
+    function _findDropTargetEl(el){
+      let node = el;
+      while(node && node !== document.body){
+        if(node.classList && (node.classList.contains('cat-icon-btn') || node.classList.contains('nav-item'))) return node;
+        node = node.parentElement;
+      }
+      return null;
+    }
+    document.addEventListener('dragover', (ev) => {
+      if(!_draggedMail) return;
+      const cat = _dropTargetCategory(ev.target);
+      if(!cat) return; // pas une cible valide : pas de preventDefault, pas de drop
+      ev.preventDefault();
+      ev.dataTransfer.dropEffect = 'move';
+      const el = _findDropTargetEl(ev.target);
+      if(el){
+        document.querySelectorAll('.is-drop-target').forEach(n => { if(n !== el) n.classList.remove('is-drop-target'); });
+        el.classList.add('is-drop-target');
+      }
+    });
+    document.addEventListener('dragleave', (ev) => {
+      if(ev.target.nodeType === 1 && ev.target.classList){
+        const el = _findDropTargetEl(ev.target);
+        if(el) el.classList.remove('is-drop-target');
+      }
+    });
+    document.addEventListener('drop', (ev) => {
+      if(!_draggedMail) return;
+      const cat = _dropTargetCategory(ev.target);
+      if(!cat) return;
+      ev.preventDefault();
+      const el = _findDropTargetEl(ev.target);
+      if(el) el.classList.remove('is-drop-target');
+      const payload = _draggedMail;
+      _draggedMail = null;
+      moveEmailToCategory(payload, cat);
+    });
+    async function moveEmailToCategory(payload, category){
+      if(!payload || !payload.uid || !payload.account){ return; }
+      // Pas de changement -> no-op
+      if(currentCategory === category && currentFolder === 'INBOX' && !currentSpecial){
+        return;
+      }
+      try{
+        await api(`/api/messages/${encodeURIComponent(payload.account)}/${encodeURIComponent(payload.uid)}/recategorize?folder=${encodeURIComponent(currentFolder)}`, {
+          method:'POST',
+          body: JSON.stringify({ category }),
+        });
+        const lbl = (CATEGORIES.find(c=>c.id===category)||{}).label || category;
+        showToast(`Déplacé vers ${lbl}`);
+        // Retire immédiatement le mail de la liste courante pour un feedback instantané
+        emails = emails.filter(e => (e.uid || e.id) !== payload.uid);
+        // Refresh serveur (le cache a été invalidé côté backend)
+        await loadMessages(true);
+      }catch(e){
+        showToast('Recatégorisation impossible : ' + (e && e.message ? e.message : 'erreur'));
+      }
+    }
+
     // ====================== Keyboard Shortcuts (Gmail-like) ======================
     let _pendingKey = null;
     let _pendingTimer = null;
@@ -5215,6 +5518,9 @@
         setCustomShortcut(capturingShortcut, key);
         capturingShortcut = null;
         renderShortcutsList();
+        applyShortcutTitles();
+        updateHeaderFolderActions();
+        updateBulkFolderActions();
         showToast('Raccourci enregistré');
         return;
       }
@@ -5325,12 +5631,20 @@
       }
     });
 
-    // ====================== Realtime (SSE) ======================
+    // ====================== Realtime (SSE + polling fallback) ======================
+    function _startPolling(){
+      if(window._smPoll) return;
+      window._smPoll = setInterval(() => {
+        if(currentActiveView==='list'||currentActiveView==='zero') loadMessages();
+      }, 60000);
+    }
     function startEvents(){
       try{
         _evtSource = new EventSource('/api/events');
         _evtSource.addEventListener('refresh', () => { if(currentActiveView==='list'||currentActiveView==='zero') loadMessages(); });
-      }catch(e){}
+        // Fallback polling si SSE tombe (mutualisé o2switch, mobile, etc.)
+        _evtSource.onerror = () => { try{ _evtSource.close(); }catch(e){} _startPolling(); };
+      }catch(e){ _startPolling(); }
     }
 
     // ====================== Resize (drawer + mail list) ======================
@@ -5544,6 +5858,10 @@
                 <button onclick="gotoSettingsSection('accounts')" data-nav="accounts" class="settings-nav-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors">
                   <span class="material-symbols-outlined" style="font-size:18px">manage_accounts</span>
                   <span>Comptes</span>
+                </button>
+                <button onclick="gotoSettingsSection('ai')" data-nav="ai" class="settings-nav-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors">
+                  <span class="material-symbols-outlined" style="font-size:18px">auto_awesome</span>
+                  <span>IA</span>
                 </button>
                 <button onclick="gotoSettingsSection('about')" data-nav="about" class="settings-nav-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors">
                   <span class="material-symbols-outlined" style="font-size:18px">info</span>
@@ -5869,6 +6187,53 @@
             </div>
 
             <!-- PAGE: À PROPOS -->
+            <!-- PAGE: IA -->
+            <div id="set-page-ai" class="settings-page hidden px-10 py-8">
+              <h2 class="text-2xl font-semibold mb-1">Intelligence artificielle</h2>
+              <p class="text-sm mb-8" style="color:#5f6368">Résumés, réponses suggérées et reformulations via un modèle local. Indépendant d'Ollama.</p>
+              <div id="ai-status-banner" class="mb-6 px-4 py-3 rounded-lg text-sm" style="background:#f1f3f4;color:#3c4043">
+                <span class="material-symbols-outlined align-middle" style="font-size:16px">hourglass_top</span>
+                Vérification de la disponibilité…
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <div class="settings-row-title">Activer l'IA</div>
+                  <div class="settings-row-desc">Affiche les boutons IA (résumé, réponse, reformulation) dans l'interface.</div>
+                </div>
+                <label class="ai-toggle">
+                  <input type="checkbox" id="set-ai-enabled" onchange="setAiEnabled(this.checked)">
+                  <span class="ai-toggle-track"><span class="ai-toggle-thumb"></span></span>
+                </label>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <div class="settings-row-title">Modèle</div>
+                  <div class="settings-row-desc">Identifiant HuggingFace du modèle MLX (ex. mlx-community/Qwen2.5-3B-Instruct-4bit).</div>
+                </div>
+                <div class="flex gap-2 items-start">
+                  <input id="set-ai-model" type="text" class="compose-input" style="min-width:280px" placeholder="mlx-community/Qwen2.5-3B-Instruct-4bit">
+                  <button onclick="saveAiModel()" class="compose-send-btn" style="padding:8px 14px">Enregistrer</button>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <div class="settings-row-title">Catégorisation automatique</div>
+                  <div class="settings-row-desc">Classe les messages ouverts par IA (primary/social/promo…). Remplace l'heuristique mot-clé.</div>
+                </div>
+                <label class="ai-toggle">
+                  <input type="checkbox" id="set-ai-categorize" onchange="setAiCategorize(this.checked)">
+                  <span class="ai-toggle-track"><span class="ai-toggle-thumb"></span></span>
+                </label>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <div class="settings-row-title">Décharger le modèle</div>
+                  <div class="settings-row-desc">Libère la mémoire (~2 Go). Le modèle se rechargera au prochain appel IA.</div>
+                </div>
+                <button onclick="aiUnload()" class="compose-send-btn" style="padding:8px 14px;background:#5f6368">Décharger</button>
+              </div>
+            </div>
+
             <div id="set-page-about" class="settings-page hidden px-10 py-8">
               <h2 class="text-2xl font-semibold mb-1">À propos</h2>
               <p class="text-sm mb-8" style="color:#5f6368">Informations sur l'application.</p>
@@ -6095,6 +6460,7 @@
       const panel = page ? page.closest('.overflow-y-auto') : null;
       if(panel) panel.scrollTop = 0;
       if(key==='rss') renderRssSubsList();
+      if(key==='ai') refreshAiSettingsPage();
     }
     function setLanguage(lang){
       currentLanguage = lang;
@@ -6109,6 +6475,9 @@
       const btns = document.querySelectorAll('#set-page-shortcuts .preset-btn');
       const map = { gmail: 0, outlook: 1, custom: 2 };
       btns.forEach((b, i) => b.classList.toggle('active', i === map[preset]));
+      applyShortcutTitles();
+      updateHeaderFolderActions();
+      updateBulkFolderActions();
     }
 
     // ====================== Add Account Modal (IMAP) ======================
@@ -6209,7 +6578,7 @@
     _forwardWheelTo('conversation-view','conversation-card');
 
     _loadPrefs();
-    applyNavigationLayout();
+    applyShortcutTitles();
     try { const saved = localStorage.getItem('simplemail_theme'); if(saved) currentTheme = saved==='light'?'white':saved; } catch(e){}
     setTheme(currentTheme);
     (async () => {
@@ -6221,6 +6590,177 @@
       startEvents();
       startAutoRefresh();
     })();
+
+    // ====================== IA locale (mlx-lm / Ollama) ======================
+    // Détection de dispo au démarrage ; masque les boutons IA si backend absent.
+    let aiStatusCache = null;
+    async function refreshAiAvailability(){
+      try{
+        const st = await api('/api/ai/status');
+        aiStatusCache = st;
+        const ok = !!(st && st.available);
+        document.querySelectorAll('.ai-only').forEach(el => {
+          el.style.display = ok ? '' : 'none';
+        });
+        return ok;
+      }catch(e){
+        document.querySelectorAll('.ai-only').forEach(el => el.style.display='none');
+        return false;
+      }
+    }
+
+    // Envoi d'un réglage IA vers le backend (table settings) + localStorage.
+    async function putAiSetting(key, value){
+      try{
+        await api('/api/settings', {method:'PUT', body:JSON.stringify({[key]: String(value)})});
+      }catch(e){ /* le backend reste source de vérité mais on tolère l'échec */ }
+    }
+
+    async function setAiEnabled(on){
+      settings.aiEnabled = on; saveSettings();
+      await putAiSetting('ai_enabled', on);
+      showToast(on ? 'IA activée' : 'IA désactivée');
+    }
+    async function setAiCategorize(on){
+      settings.aiCategorize = on; saveSettings();
+      await putAiSetting('ai_categorize_enabled', on);
+      showToast(on ? 'Catégorisation IA activée' : 'Catégorisation IA désactivée');
+    }
+    async function saveAiModel(){
+      const inp = document.getElementById('set-ai-model');
+      const m = (inp && inp.value || '').trim();
+      if(!m) return;
+      settings.aiModel = m; saveSettings();
+      await putAiSetting('ai_model', m);
+      showToast('Modèle enregistré : ' + m);
+    }
+    async function aiUnload(){
+      try{
+        await api('/api/ai/status'); // pas d'endpoint unload dédié pour l'instant
+        showToast('Le modèle se déchargera automatiquement au redémarrage.');
+      }catch(e){ showToast('Déchargement impossible : ' + e.message); }
+    }
+
+    // Hydrate la page de réglages IA quand on l'ouvre.
+    async function refreshAiSettingsPage(){
+      const banner = document.getElementById('ai-status-banner');
+      const chkEn = document.getElementById('set-ai-enabled');
+      const chkCat = document.getElementById('set-ai-categorize');
+      const mdl = document.getElementById('set-ai-model');
+      if(chkEn) chkEn.checked = !!settings.aiEnabled;
+      if(chkCat) chkCat.checked = !!settings.aiCategorize;
+      if(mdl) mdl.value = settings.aiModel || '';
+      if(banner){
+        const ok = await refreshAiAvailability();
+        if(!ok){
+          banner.innerHTML = '<span class="material-symbols-outlined align-middle" style="font-size:16px">error_outline</span> Aucun backend IA. Installez <code>mlx-lm</code> (Apple Silicon) ou lancez Ollama.';
+          banner.style.background = '#fce8e6'; banner.style.color = '#c5221f';
+        }else{
+          const p = aiStatusCache.provider || '?';
+          const loaded = aiStatusCache.loaded ? 'chargé' : 'au repos';
+          banner.innerHTML = '<span class="material-symbols-outlined align-middle" style="font-size:16px">check_circle</span> Backend disponible : <b>'+escapeHtml(p)+'</b> — modèle '+loaded+'.';
+          banner.style.background = '#e6f4ea'; banner.style.color = '#137333';
+        }
+      }
+    }
+
+    // ---- TL;DR (lecteur) ----
+    async function summarizeCurrent(){
+      const m = currentMailForAction();
+      if(!m){ showToast('Aucun message sélectionné'); return; }
+      await fetchDetail(m);
+      let box = document.getElementById('ai-tldr');
+      const chain = document.getElementById('thread-chain');
+      if(!box && chain){
+        box = document.createElement('div');
+        box.id = 'ai-tldr';
+        box.className = 'ai-tldr-box';
+        chain.insertBefore(box, chain.firstChild);
+      }
+      if(box){
+        box.className = 'ai-tldr-box ai-tldr-loading';
+        box.innerHTML = '<span class="material-symbols-outlined ai-spin">progress_activity</span> Résumé IA en cours…';
+      }
+      try{
+        const r = await api('/api/ai/summarize', {method:'POST', body:JSON.stringify({account:m.account, uid:m.uid, folder:currentFolder})});
+        if(box){
+          box.className = 'ai-tldr-box';
+          box.innerHTML = '<div class="ai-tldr-head"><span class="material-symbols-outlined">auto_awesome</span> TL;DR'+(r.cached?' <span class="ai-tldr-cached">en cache</span>':'')+'</div><div class="ai-tldr-text">'+escapeHtml(r.summary)+'</div>';
+        }
+      }catch(e){
+        if(box){ box.className='ai-tldr-box ai-tldr-error'; box.innerHTML = '<span class="material-symbols-outlined">error_outline</span> ' + escapeHtml(e.message); }
+        showToast('Résumé impossible : ' + e.message);
+      }
+    }
+
+    // ---- Réponse suggérée (ouvre le composeur) ----
+    async function replyCurrentAI(tone){
+      tone = tone || 'court';
+      const m = currentMailForAction();
+      if(!m){ showToast('Aucun message sélectionné'); return; }
+      showToast('Génération de la réponse…');
+      await fetchDetail(m);
+      try{
+        const r = await api('/api/ai/reply', {method:'POST', body:JSON.stringify({account:m.account, uid:m.uid, folder:currentFolder, tone})});
+        openCompose({
+          to: m.email,
+          subject: 'Re: ' + (m.subject||'').replace(/^(re|fwd|fw|sv|tr):\s*/i,''),
+          text: r.draft,
+          focusBody: true,
+          inReplyTo: m.messageId || null,
+          references: m.messageId || null
+        });
+      }catch(e){
+        showToast('Réponse IA impossible : ' + e.message);
+      }
+    }
+
+    // ---- Reformulation / correction (composeur) ----
+    let _aiUndoStack = [];
+    async function aiRewrite(action){
+      const ta = document.getElementById('cmp-body');
+      if(!ta) return;
+      const text = ta.value.trim();
+      if(!text){ showToast('Rien à transformer'); return; }
+      const st = document.getElementById('cmp-status');
+      _aiUndoStack.push(ta.value);
+      if(st) st.textContent = 'Transformation IA en cours…';
+      const btns = document.querySelectorAll('.cmp-ai-tool');
+      btns.forEach(b => b.disabled = true);
+      try{
+        const r = await api('/api/ai/rewrite', {method:'POST', body:JSON.stringify({text, action})});
+        ta.value = r.text;
+        if(st) st.textContent = '✓ Texte transformé';
+        showToast('Texte reformulé');
+      }catch(e){
+        _aiUndoStack.pop();
+        if(st) st.textContent = '✗ Erreur : ' + e.message;
+        showToast('Reformulation impossible : ' + e.message);
+      }finally{
+        btns.forEach(b => b.disabled = false);
+      }
+    }
+    function aiUndo(){
+      const ta = document.getElementById('cmp-body');
+      if(!ta || !_aiUndoStack.length) return;
+      ta.value = _aiUndoStack.pop();
+      showToast('Annulé');
+    }
+
+    // ---- Catégorisation IA (badge dans le lecteur) ----
+    async function categorizeCurrentAI(){
+      const m = currentMailForAction();
+      if(!m) return;
+      await fetchDetail(m);
+      try{
+        const r = await api('/api/ai/categorize', {method:'POST', body:JSON.stringify({account:m.account, uid:m.uid, folder:currentFolder})});
+        showToast('Catégorie IA : ' + r.category);
+        return r.category;
+      }catch(e){ /* silencieux : l'heuristique par défaut reste */ }
+    }
+
+    // Au démarrage, on ajuste la visibilité des boutons IA.
+    refreshAiAvailability();
 
   </script>
 </body>

@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import time
+import hmac
 import asyncio
 import threading
 import sqlite3
@@ -21,9 +22,22 @@ import base64
 import re
 
 from imap_tools import MailBox, MailBoxStartTls, MailBoxUnencrypted, AND, A, MailMessageFlags
-from fastapi import FastAPI, HTTPException, Query, Body
-from fastapi.responses import FileResponse, Response, StreamingResponse
+from fastapi import FastAPI, HTTPException, Query, Body, Request
+from fastapi.responses import FileResponse, Response, StreamingResponse, HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel
+
+# IA locale (mlx-lm in-process, indépendant d'Ollama). Module optionnel :
+# l'app démarre normalement même si mlx-lm n'est pas installé.
+try:
+    from ai import ai_manager, AIBackendError
+    from ai import summarize_inputs, reply_inputs, rewrite_inputs, categorize_inputs, parse_category
+    from ai import DEFAULT_MODEL as _AI_DEFAULT_MODEL
+    _AI_IMPORT_OK = True
+except Exception as _ai_err:
+    ai_manager = None
+    AIBackendError = Exception
+    _AI_IMPORT_OK = False
+    print(f"[AI] Module ia.py indisponible : {_ai_err}")
 
 # Read-only assets (index.html, icon, bg) — bundle dir when frozen, script dir in dev.
 ASSETS_DIR = Path(getattr(sys, "_MEIPASS", None) or Path(__file__).resolve().parent)
@@ -60,9 +74,21 @@ if not CONFIG_PATH.exists():
 
 
 # ---------- IMAP connection pool ----------
+# Une connexion IMAP = DNS + TCP + handshake TLS + LOGIN ≈ 1 à 4 s.
+# Sans réuse agressive, chaque get_message ouvre une nouvelle connexion →
+# 15 s d'attente par mail + throttling Gmail (trop de logins concurrents).
+# On garde donc les connexions chaudes plus longtemps et on plafonne le pool.
 _IMAP_POOL: dict[str, list] = {}  # account_id -> [(conn, ts), ...] idle connections
 _POOL_LOCK = threading.Lock()
-_POOL_TTL = 45
+_POOL_TTL = 120          # 45 s était trop court : une pause de lecture > 45 s fermait la connexion → reconnect au mail suivant.
+_POOL_MAX_IDLE = 3       # borné par compte : évite l'explosion de connexions (et le throttling Gmail) sous charge concurrente.
+
+
+def _close_conn_quietly(conn):
+    try:
+        conn.logout()
+    except Exception:
+        pass
 
 
 def _pool_cleanup():
@@ -74,8 +100,7 @@ def _pool_cleanup():
                 kept = []
                 for conn, ts in _IMAP_POOL[aid]:
                     if now - ts > _POOL_TTL:
-                        try: conn.logout()
-                        except Exception: pass
+                        _close_conn_quietly(conn)
                     else:
                         kept.append((conn, ts))
                 _IMAP_POOL[aid] = kept
@@ -97,8 +122,8 @@ def _open_imap(account: dict):
         box = MailBoxUnencrypted(host, port)
     try:
         return box.login(imap["user"], imap["password"])
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Connexion IMAP impossible pour {imap['user']} sur {host}:{port} ({e})")
+    except Exception:
+        raise HTTPException(status_code=500, detail="Connexion IMAP impossible")
 
 
 def _checkout_mailbox(account: dict):
@@ -112,9 +137,20 @@ def _checkout_mailbox(account: dict):
 
 
 def _checkin_mailbox(aid: str, conn):
-    """Return a connection to the pool for reuse."""
+    """Return a connection to the pool for reuse.
+
+    Pool borné : si on a déjà _POOL_MAX_IDLE connexions inactives pour ce
+    compte, on ferme la connexion entrante plutôt que d'en thésauriser une
+    infinité. Sans cela, une rafale de get_message (vue conversation =
+    Promise.all sur N mails) ouvrait N connexions, toutes gardées 45 s,
+    déclenchant le throttling IMAP de Gmail (retards exponentiels → 15 s/mail).
+    """
     with _POOL_LOCK:
-        _IMAP_POOL.setdefault(aid, []).append((conn, time.time()))
+        bucket = _IMAP_POOL.setdefault(aid, [])
+        if len(bucket) >= _POOL_MAX_IDLE:
+            _close_conn_quietly(conn)
+            return
+        bucket.append((conn, time.time()))
 
 
 # ---------- Gmail detection ----------
@@ -235,8 +271,66 @@ def _init_db():
             fetched_at REAL NOT NULL
         )
     """)
+    # Caches pour les features IA (résumés, catégorisation).
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS ai_summary_cache (
+            account TEXT NOT NULL,
+            uid TEXT NOT NULL,
+            summary TEXT NOT NULL,
+            model TEXT NOT NULL,
+            fetched_at REAL NOT NULL,
+            PRIMARY KEY (account, uid)
+        )
+    """)
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS ai_category_cache (
+            account TEXT NOT NULL,
+            uid TEXT NOT NULL,
+            category TEXT NOT NULL,
+            fetched_at REAL NOT NULL,
+            PRIMARY KEY (account, uid)
+        )
+    """)
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS category_overrides (
+            account TEXT NOT NULL,
+            uid TEXT NOT NULL,
+            category TEXT NOT NULL,
+            PRIMARY KEY (account, uid)
+        )
+    """)
     db.commit()
     db.close()
+
+
+def _get_category_overrides(account: str) -> dict:
+    """Manual category overrides (drag & drop) for non-Gmail accounts.
+
+    Returns a {uid_str: category} map. Empty on any failure.
+    """
+    try:
+        db = sqlite3.connect(str(DB_PATH))
+        rows = db.execute(
+            "SELECT uid, category FROM category_overrides WHERE account=?",
+            (account,),
+        ).fetchall()
+        db.close()
+        return {str(r[0]): r[1] for r in rows}
+    except Exception:
+        return {}
+
+
+def _set_category_override(account: str, uid: str, category: str):
+    try:
+        db = sqlite3.connect(str(DB_PATH))
+        db.execute(
+            "INSERT OR REPLACE INTO category_overrides (account, uid, category) VALUES (?, ?, ?)",
+            (account, str(uid), category),
+        )
+        db.commit()
+        db.close()
+    except Exception:
+        pass
 
 
 def _response_cache_get(key: str, ttl: float = 30.0):
@@ -430,12 +524,19 @@ def _status_or_none(mailbox, name):
 
 
 def idle_worker(account: dict):
-    """Maintient une connexion IDLE sur INBOX et notifie les abonnés."""
+    """Maintient une connexion IDLE sur INBOX et notifie les abonnés.
+
+    Connexion DÉDIÉE (hors pool) : sinon l'IDLE monopolise pendant ~29 min un
+    slot du pool, forçant chaque requête utilisateur à ouvrir sa propre
+    connexion (handshake TLS + login à chaque mail). Avec une connexion dédiée,
+    le pool reste 100 % disponible pour get_message / list_messages.
+    """
     aid = account["id"]
     backoff = 8
     while True:
         try:
-            with open_mailbox(account) as mb:
+            mb = _open_imap(account)
+            try:
                 mb.folder.set("INBOX")
                 while True:
                     st = _status_or_none(mb, "INBOX")
@@ -465,7 +566,9 @@ def idle_worker(account: dict):
                                 mb.idle.done()
                             except Exception:
                                 pass
-            backoff = 8
+                backoff = 8
+            finally:
+                _close_conn_quietly(mb)
         except Exception:
             time.sleep(backoff)
             backoff = min(backoff * 2, 120)
@@ -514,18 +617,26 @@ def _mem_reclaim():
     les objets sont déréférencés. Sur 4 h, ~5 Go peuvent s'accumuler par
     fragmentation seule.
 
-    Actions toutes les 5 min :
-      - gc.collect()              : libère les cycles (mails, parsers MIME).
+    Actions toutes les 2 min (cadence accrue : 5 min laissait trop d'arènes
+    s'empiler entre deux gc.collect()) :
+      - purge _MSG_CACHE / _THREAD_CACHE / _response_cache RAM expirés ;
+      - gc.collect()              : libère les cycles (mails, parsers MIME) ;
       - malloc_trim(0) (Linux)    : rend les pages libres au noyau.
-      - purge _MSG_CACHE expirés  : le TTL n'était vérifié qu'au get().
+    Sur macOS (libmalloc) malloc_trim n'existe pas — seul gc.collect() agit,
+    mais le bénéfice principal vient désormais du volume bien moindre fetché
+    par get_thread_sent (recherche serveur au lieu de 3000 en-têtes).
     """
     while True:
-        time.sleep(300)
+        time.sleep(120)
         try:
-            # Purge du cache RAM des messages dont le TTL est expiré.
             now = time.time()
+            # Purge du cache RAM des messages dont le TTL est expiré.
             for k in [k for k, (_, ts) in _MSG_CACHE.items() if now - ts >= _CACHE_TTL]:
                 _MSG_CACHE.pop(k, None)
+            # Éviction du cache de threading (clés = tuples d'UID, potentiellement lourds).
+            if len(_THREAD_CACHE) > _THREAD_CACHE_MAX:
+                for stale in sorted(_THREAD_CACHE, key=lambda k: _THREAD_CACHE[k][0])[: len(_THREAD_CACHE) - _THREAD_CACHE_MAX]:
+                    _THREAD_CACHE.pop(stale, None)
             gc.collect()
             if _libc_trim is not None:
                 try:
@@ -544,6 +655,11 @@ async def lifespan(app):
     threading.Thread(target=_db_cache_cleanup, daemon=True, name="db-cache-cleanup").start()
     threading.Thread(target=_mem_reclaim, daemon=True, name="mem-reclaim").start()
     MAIN_LOOP = asyncio.get_running_loop()
+    # IA locale : on ne charge rien au démarrage (lazy). On signale juste la dispo.
+    if _AI_IMPORT_OK and ai_manager.is_available():
+        print("[AI] Backend IA disponible (chargement paresseux au 1er appel).")
+    elif _AI_IMPORT_OK:
+        print("[AI] Aucun backend IA disponible (installez mlx-lm ou lancez Ollama).")
     if _is_demo():
         print("[DEMO] Mode démo actif — identifiants non configurés. Données fictives.")
     else:
@@ -558,6 +674,86 @@ async def lifespan(app):
 
 
 app = FastAPI(title="SimpleMail", lifespan=lifespan)
+
+# ====================== Authentification (déploiement public) ======================
+# Sur o2switch l'app est publique : on protège l'accès par mot de passe + cookie.
+# Sur le desktop (local 127.0.0.1) l'auth est désactivée (pas besoin).
+import secrets as _secrets
+import hashlib as _hashlib
+
+_AUTH_PASSWORD = os.environ.get("SIMPLEMAIL_PASSWORD")
+_AUTH_ENABLED = os.environ.get("SIMPLEMAIL_AUTH", "1") == "1"
+if _AUTH_ENABLED and not _AUTH_PASSWORD:
+    raise RuntimeError("SIMPLEMAIL_PASSWORD must be set when SIMPLEMAIL_AUTH=1")
+_VALID_SESSIONS: dict[str, float] = {}  # token -> expiry timestamp
+_SESSION_MAX_AGE = 86400 * 30
+_LOGIN_ATTEMPTS: dict[str, list[float]] = {}  # IP -> [timestamps]
+_LOGIN_RATE_LIMIT = 5
+_LOGIN_RATE_WINDOW = 60.0
+_LOGIN_HTML = """<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SimpleMail</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,-apple-system,sans-serif;background:#0b0f1a;color:#e5e7eb;display:flex;align-items:center;justify-content:center;min-height:100vh}.card{background:#151b2b;padding:2.5rem;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.4);width:340px;max-width:90vw}h1{font-size:1.5rem;margin-bottom:.5rem;font-weight:600}p.sub{color:#6b7280;font-size:.875rem;margin-bottom:1.5rem}input{width:100%;padding:.75rem 1rem;border:1px solid #2a3447;border-radius:8px;background:#0b0f1a;color:#e5e7eb;font-size:1rem;margin-bottom:1rem;outline:none}input:focus{border-color:#3b82f6}button{width:100%;padding:.75rem;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-size:1rem;font-weight:500;cursor:pointer;transition:background .2s}button:hover{background:#2563eb}.err{color:#ef4444;font-size:.85rem;margin-bottom:1rem;display:none}</style></head><body><div class="card"><h1>SimpleMail</h1><p class="sub">Accès protégé — entrez votre mot de passe</p><div class="err" id="err">Mot de passe incorrect</div><form method="post" action="/login"><input type="password" name="password" placeholder="Mot de passe" autofocus required><button type="submit">Se connecter</button></form></div></body></html>"""
+
+
+@app.middleware("http")
+async def _security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    if request.url.path != "/api/events":  # SSE ne supporte pas CSP
+        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; frame-ancestors 'none'"
+    return response
+
+
+@app.middleware("http")
+async def _auth_middleware(request: Request, call_next):
+    if not _AUTH_ENABLED:
+        return await call_next(request)
+    path = request.url.path
+    if path in ("/login", "/favicon.ico", "/icon.png", "/manifest.webmanifest"):
+        return await call_next(request)
+    now = time.time()
+    _VALID_SESSIONS = {t: e for t, e in _VALID_SESSIONS.items() if e > now}
+    session = request.cookies.get("sm_session")
+    if session and session in _VALID_SESSIONS:
+        return await call_next(request)
+    if path.startswith("/api/"):
+        return JSONResponse({"detail": "Authentification requise"}, status_code=401)
+    return HTMLResponse(_LOGIN_HTML, status_code=401, headers={"Content-Type": "text/html; charset=utf-8"})
+
+
+@app.get("/login")
+async def login_page():
+    return HTMLResponse(_LOGIN_HTML, headers={"Content-Type": "text/html; charset=utf-8"})
+
+
+@app.post("/login")
+async def login_submit(request: Request):
+    now = time.time()
+    client_ip = request.client.host if request.client else "unknown"
+    ts_list = _LOGIN_ATTEMPTS.setdefault(client_ip, [])
+    ts_list[:] = [t for t in ts_list if now - t < _LOGIN_RATE_WINDOW]
+    if len(ts_list) >= _LOGIN_RATE_LIMIT:
+        return HTMLResponse(_LOGIN_HTML.replace('display:none', 'display:block').replace("Mot de passe incorrect", "Trop de tentatives. Réessayez dans une minute."), status_code=429, headers={"Content-Type": "text/html; charset=utf-8"})
+    ts_list.append(now)
+    form = await request.form()
+    password = form.get("password", "")
+    if _AUTH_PASSWORD is not None and hmac.compare_digest(password, _AUTH_PASSWORD):
+        token = _secrets.token_urlsafe(32)
+        _VALID_SESSIONS[token] = now + _SESSION_MAX_AGE
+        resp = RedirectResponse("/", 302)
+        resp.set_cookie("sm_session", token, httponly=True, secure=True, max_age=_SESSION_MAX_AGE, samesite="lax")
+        return resp
+    return HTMLResponse(_LOGIN_HTML.replace('display:none', 'display:block'), status_code=401, headers={"Content-Type": "text/html; charset=utf-8"})
+
+
+@app.get("/logout")
+async def logout(request: Request):
+    session = request.cookies.get("sm_session")
+    if session:
+        _VALID_SESSIONS.pop(session, None)
+    resp = RedirectResponse("/login", 302)
+    resp.delete_cookie("sm_session")
+    return resp
 
 
 @app.get("/api/events")
@@ -1296,6 +1492,11 @@ def serve_bg():
     return FileResponse(BASE_DIR / "bg.jpg", media_type="image/jpeg")
 
 
+@app.get("/favicon.ico")
+def serve_favicon():
+    return FileResponse(BASE_DIR / "icon.png", media_type="image/png")
+
+
 @app.get("/api/accounts")
 def accounts():
     out = []
@@ -1782,6 +1983,11 @@ def list_messages(
         else:
             fetched = _do_fetch({})
 
+        # Manual category overrides (drag & drop) take precedence over the
+        # heuristic for non-Gmail accounts. Loaded once per call to avoid a
+        # DB hit per message.
+        overrides = {} if use_gmail_cat else _get_category_overrides(account)
+
         for index, msg in enumerate(fetched):
             if direct_folder_page and index < offset:
                 continue
@@ -1810,7 +2016,8 @@ def list_messages(
                 if category in ("primary", "promotions") and newsletter:
                     continue
             else:
-                entry["category"] = _categorize(entry["from_addr"], entry["from_name"], entry["subject"])
+                override = overrides.get(str(msg.uid))
+                entry["category"] = override if override else _categorize(entry["from_addr"], entry["from_name"], entry["subject"])
                 newsletter = _is_newsletter_entry(entry, manual_domains)
                 if category == "newsletter" and not newsletter:
                     continue
@@ -2107,16 +2314,16 @@ def get_thread_sent(
 ):
     """Récupère les messages liés dans tous les autres dossiers du compte.
 
-    Optimisation RAM : fetch en 2 passes.
-      1) headers_only=True, bulk=False sur chaque dossier → identifie les UID
-         dont message-id / in-reply-to / references / subject matchent (≈ 0 RAM,
-         imap_tools ne télécharge que les en-têtes).
-      2) fetch complet UNIQUEMENT pour les UID matchés (en général 1 à 5),
-         sans bulk, pour récupérer text/html/attachments réellement consommés.
+    Optimisation RAM/latence : recherche CÔTÉ SERVEUR.
+      1) `UID SEARCH` (Message-ID / In-Reply-To / References [+ SUBJECT en
+         fallback]) ne renvoie QUE les UID matchés — quelques octets, ~0 RAM.
+      2) Fetch complet UNIQUEMENT pour ces UID (0 à ~5 par folder), en flux
+         (bulk=False), un seul message vivant à la fois.
 
-    Avant : 1 fetch bulk=True sans headers_only × 300 msgs × ~10 dossiers =
-    ~3000 corps complets parsés par appel (newsletters 50 Ko-2 Mo) → pic RAM
-    gigantesque jamais restitué à l'OS (fragmentation pymalloc).
+    Avant : 1 fetch headers_only × 300 msgs × ~10 dossiers = ~3000 en-têtes
+    parsés en objets MailMessage à chaque appel → pic RAM jamais restitué à
+    l'OS (fragmentation pymalloc → les fameux 5 Go). Le serveur fait maintenant
+    le filtrage : on ne télécharge plus que les 1 à 5 corps réellement utiles.
     """
     if _is_demo() or _is_demo_account(account):
         return {"messages": []}
@@ -2126,8 +2333,8 @@ def get_thread_sent(
     if not mids and not norm_subj:
         return {"messages": []}
 
-    # Cache SQLite (TTL 10 min) : évite de re-scanner tous les dossiers quand
-    # l'utilisateur rouvre la même conversation ou bascule entre vues.
+    # Cache SQLite (TTL 10 min) : évite de re-scanner les dossiers quand on
+    # rouvre la même conversation ou bascule entre vues.
     ck = _thread_sent_cache_key(account, current_folder, mids, subject)
     cached = _thread_sent_cache_get(ck)
     if cached is not None:
@@ -2139,29 +2346,34 @@ def get_thread_sent(
             related_folders = [item.name for item in mailbox.folder.list() if item.name != current_folder]
             for related_folder in related_folders:
                 mailbox.folder.set(related_folder)
-                # --- Passe 1 : headers uniquement, pas de bulk (RAM minimale) ---
-                matched_uids = []
-                for msg in mailbox.fetch(
-                    AND(all=True), limit=300, reverse=True,
-                    mark_seen=False, bulk=False, headers_only=True,
-                ):
-                    in_reply_to = header_value(msg.headers, "in-reply-to")
-                    references = header_value(msg.headers, "references")
-                    candidate_message_id = header_value(msg.headers, "message-id")
-                    header_match = mids and any(
-                        mid == candidate_message_id or mid in in_reply_to or mid in references
-                        for mid in mids
-                    )
-                    subj_match = norm_subj and _normalize_subject(msg.subject or "") == norm_subj
-                    if header_match or subj_match:
-                        matched_uids.append(str(msg.uid))
+                # --- Recherche côté serveur : renvoie uniquement les UID (≈ 0 RAM) ---
+                matched_uids = _search_thread_uids(mailbox, mids, subject if norm_subj else "")
                 if not matched_uids:
                     continue
-                # --- Passe 2 : corps complet UNIQUEMENT pour les UID matchés ---
-                for uid in matched_uids:
-                    msg = _find_message(mailbox, uid)
-                    if msg is None:
-                        continue
+                # --- Fetch complet UNIQUEMENT pour les UID matchés (0 à ~5) ---
+                # Un seul FETCH groupé ; bulk=False parse en flux (pas de buffer).
+                try:
+                    batch = list(mailbox.fetch(
+                        AND(uid=",".join(matched_uids)), mark_seen=False, bulk=False,
+                    ))
+                except Exception:
+                    batch = []
+                for msg in batch:
+                    # Re-vérification côté client sur les (rares) messages fetchés
+                    # pour écarter les faux positifs du SUBJECT fallback serveur.
+                    # Reprend exactement la logique d'origine : header OU sujet
+                    # normalisé. Coût négligeable (0 à ~5 messages par dossier).
+                    cand_mid = header_value(msg.headers, "message-id")
+                    cand_irt = header_value(msg.headers, "in-reply-to")
+                    cand_ref = header_value(msg.headers, "references")
+                    header_match = bool(mids) and any(
+                        mid == cand_mid or mid in cand_irt or mid in cand_ref for mid in mids
+                    )
+                    subj_match = bool(norm_subj) and _normalize_subject(msg.subject or "") == norm_subj
+                    if mids or norm_subj:
+                        if not header_match and not subj_match:
+                            del msg
+                            continue
                     from_name, from_addr = parseaddr(msg.from_)
                     to_addr = header_value(msg.headers, "to")
                     snippet = ""
@@ -2198,8 +2410,8 @@ def get_thread_sent(
                         "attachments": attachments,
                         "is_sent": _folder_simple_key(related_folder) == "SENT",
                     })
-                    # Libère le corps dès que possible : un seul message vivant à la fois.
                     del msg
+                del batch
     except Exception as e:
         return {"messages": [], "error": str(e)}
     result = {"messages": out}
@@ -2219,11 +2431,12 @@ def get_attachment(account: str, uid: str, index: int, folder: str = Query("INBO
         if index < 0 or index >= len(atts):
             raise HTTPException(status_code=404, detail="Pièce jointe introuvable")
         att = atts[index]
+        safe_name = re.sub(r'[\\/:<>|*?\x00-\x1f"]', "_", att.filename or "fichier")
         return Response(
             content=att.payload,
             media_type=att.content_type or "application/octet-stream",
             headers={
-                "Content-Disposition": f'attachment; filename="{att.filename}"'
+                "Content-Disposition": f'attachment; filename="{safe_name}"'
             },
         )
 
@@ -2401,6 +2614,71 @@ def label_message(account: str, uid: str, body: MoveMessageRequest, folder: str 
         return {"ok": True}
     return _relocate_message(account, uid, folder, body.folder, copy_only=True, create_if_missing=body.create_if_missing)
 
+
+@app.post("/api/messages/{account}/{uid}/recategorize")
+def recategorize_message(account: str, uid: str, body: dict = Body(...), folder: str = Query("INBOX")):
+    """Move a message from one inbox category to another (drag & drop).
+
+    Gmail accounts: swap the server-side ``category:*`` X-GM-LABELS so the
+    change is authoritative and persists across clients.
+    Other accounts: persist a local override in ``category_overrides`` that
+    takes precedence over the heuristic categoriser in ``list_messages``.
+    """
+    category = (body or {}).get("category", "")
+    if category not in _GMAIL_CATEGORY_LABELS and category not in (
+        "primary", "newsletter", "purchases", "promotions", "social", "updates", "forums"
+    ):
+        raise HTTPException(400, "catégorie invalide")
+    if _is_demo() or _is_demo_account(account):
+        return {"ok": True, "category": category, "mode": "demo"}
+
+    acc = get_account(account)
+    is_gmail = _is_gmail_imap(acc)
+
+    if is_gmail and category in _GMAIL_CATEGORY_LABELS:
+        # Server-side Gmail label swap. Only the 5 Gmail categories are
+        # supported here; the pseudo-categories (newsletter, purchases) have
+        # no server-side label and fall back to a local override below.
+        new_label = _GMAIL_CATEGORY_LABELS[category]
+        other_labels = [_GMAIL_CATEGORY_LABELS[c] for c in _GMAIL_CATEGORY_LABELS if _GMAIL_CATEGORY_LABELS[c] != new_label]
+        with open_mailbox(acc) as mailbox:
+            mailbox.folder.set(folder)
+            client = getattr(mailbox, "client", None)
+            if client is not None:
+                # Add the new category label, then remove every other one so
+                # the message ends up in exactly one Gmail bucket.
+                quoted_new = '(' + " ".join('"%s"' % new_label) + ')'
+                try:
+                    client.uid("STORE", str(uid), "+X-GM-LABELS", quoted_new)
+                except Exception:
+                    pass
+                if other_labels:
+                    quoted_others = '(' + " ".join('"%s"' % l for l in other_labels) + ')'
+                    try:
+                        client.uid("STORE", str(uid), "-X-GM-LABELS", quoted_others)
+                    except Exception:
+                        pass
+            # Also keep a local override so the UI is consistent immediately
+            # (before any cache refill) and for clients that ignore labels.
+        _set_category_override(account, uid, category)
+        mode = "gmail"
+    else:
+        _set_category_override(account, uid, category)
+        mode = "override"
+
+    # Drop any stale AI categorisation so the override is the source of truth.
+    try:
+        db = sqlite3.connect(str(DB_PATH))
+        db.execute("DELETE FROM ai_category_cache WHERE account=? AND uid=?", (account, str(uid)))
+        db.commit()
+        db.close()
+    except Exception:
+        pass
+
+    cache_invalidate(account, folder, uid)
+    _response_cache_invalidate("messages:" + account)
+    return {"ok": True, "category": category, "mode": mode}
+
 @app.post("/api/send")
 def send_message(body: SendRequest):
     if _is_demo() or _is_demo_account(body.account):
@@ -2467,9 +2745,65 @@ def send_message(body: SendRequest):
 # ---------- Helpers ----------
 
 def _find_message(mailbox, uid):
-    for msg in mailbox.fetch(AND(uid=str(uid)), limit=1, mark_seen=False, bulk=True):
+    # bulk=False : on veut UN seul message. bulk=True obligeait imap_tools à
+    # bufferiser toute la réponse FETCH avant de la parser → pic RAM inutile à
+    # chaque ouverture de mail (get_message est le chemin chaud, appelé par
+    # mail affiché). bulk=False parse en flux.
+    for msg in mailbox.fetch(AND(uid=str(uid)), limit=1, mark_seen=False, bulk=False):
         return msg
     return None
+
+
+def _search_thread_uids(mailbox, mids, raw_subject: str = "") -> list:
+    """Recherche CÔTÉ SERVEUR des UID liés à un thread.
+
+    Avant : on téléchargeait 300 en-têtes par dossier (× ~10 dossiers Gmail) et
+    on matchait en Python → ~3000 objets MailMessage parsés par appel, jamais
+    restitués à l'OS (fragmentation pymalloc → 5 Go qui ne descendent qu'au
+    kill du process).
+
+    Maintenant : une seule commande `UID SEARCH` par dossier renvoie les UID
+    matchés (quelques octets) — le serveur fait le travail, ~0 RAM côté app.
+    Critères : Message-ID / In-Reply-To / References pour chaque message-id du
+    thread, plus un fallback SUBJECT si rien ne matche.
+
+   imap_tools OR n'accepte que 2 opérandes (arité > 2 génère une syntaxe
+    invalide), on imbrique donc OR(crit, OR(crit, ...)) sous forme de chaîne
+    IMAP brute — mailbox.uids() l'encode et l'envoie telle quelle.
+    """
+    mids = [m for m in (str(x).strip() for x in (mids or [])) if m][:12]
+    if not mids and not raw_subject:
+        return []
+    leaves = []
+    for mid in mids:
+        safe = mid.replace("\\", "\\\\").replace('"', '\\"')
+        for field in ("Message-ID", "In-Reply-To", "References"):
+            leaves.append(f'(HEADER {field} "{safe}")')
+    found = set()
+
+    def _run(expr):
+        if not expr:
+            return
+        try:
+            for u in mailbox.uids(expr):
+                if u:
+                    found.add(str(u))
+        except Exception:
+            pass
+
+    # Passe 1 : header threading (Message-ID / In-Reply-To / References).
+    if leaves:
+        expr = leaves[0]
+        for leaf in leaves[1:]:
+            expr = f"(OR {leaf} {expr})"
+        _run(expr)
+    # Passe 2 : fallback SUBJECT côté serveur si la passe 1 n'a rien trouvé.
+    # SUBJECT fait une correspondance sous-chaîne (Re:/Fwd: inclus), suffisant
+    # pour réunir un thread ; on n'a pas besoin de la normalisation Re: ici.
+    if not found and raw_subject:
+        safe = raw_subject.replace("\\", "\\\\").replace('"', '\\"')[:200]
+        _run(f'(SUBJECT "{safe}")')
+    return list(found)
 
 
 def _strip_html(html: str) -> str:
@@ -2797,6 +3131,264 @@ def parse_rss_feed(url: str = Query(...), limit: int = Query(40, ge=1, le=200)):
         })
 
     return {"title": feed_title, "url": raw_url, "items": items}
+
+
+# ============================================================================
+# IA locale — endpoints /api/ai/*
+#
+# Inférence in-process via mlx-lm (indépendant d'Ollama). Si mlx-lm est absent
+# mais qu'Ollama tourne, on retombe sur Ollama. Tous les handlers sont des `def`
+# sync : mlx-lm est bloquant et FastAPI les exécute dans son threadpool, ce qui
+# évite de paralyser la boucle d'événements / le flux SSE.
+# ============================================================================
+
+
+def _ai_require():
+    """Précondition commune : module IA importé + backend dispo."""
+    if not _AI_IMPORT_OK:
+        raise HTTPException(503, "Module IA non chargé (ia.py absent).")
+    if not ai_manager.is_available():
+        raise HTTPException(
+            503,
+            "Aucun backend IA disponible. Installez mlx-lm (pip install mlx-lm) "
+            "sur Apple Silicon, ou lancez Ollama.",
+        )
+
+
+def _ai_settings() -> dict:
+    """Lit les réglages IA depuis la table settings (avec defaults)."""
+    s = _get_settings()
+    return {
+        "enabled": s.get("ai_enabled", "false") == "true",
+        "model": s.get("ai_model") or _AI_DEFAULT_MODEL if _AI_IMPORT_OK else "n/a",
+        "provider": s.get("ai_provider", "auto"),
+        "categorize_enabled": s.get("ai_categorize_enabled", "false") == "true",
+    }
+
+
+def _strip_html(html: str) -> str:
+    """Convertit un corps HTML en texte brut grossier (suffisant pour le LLM)."""
+    if not html:
+        return ""
+    txt = re.sub(r"(?is)<(script|style).*?</\1>", "", html)
+    txt = re.sub(r"(?s)<[^>]+>", " ", txt)
+    txt = re.sub(r"\s+", " ", txt)
+    from html import unescape
+    return unescape(txt).strip()
+
+
+def _ai_message_text(msg: dict) -> str:
+    """Extrait un texte propre d'un message (texte brut, sinon HTML strippé)."""
+    text = (msg.get("text") or "").strip()
+    if text:
+        return text
+    return _strip_html(msg.get("html") or "")
+
+
+@app.get("/api/ai/status")
+def ai_status():
+    """État du backend IA (dispo, modèle chargé, provider)."""
+    if not _AI_IMPORT_OK:
+        return {
+            "available": False,
+            "reason": "Module ia.py non importé.",
+            "settings": None,
+        }
+    status = ai_manager.get_status()
+    status["settings"] = _ai_settings()
+    return status
+
+
+@app.post("/api/ai/summarize")
+def ai_summarize(data: dict = Body(...)):
+    """TL;DR d'un message. Cache en SQLite (30 j)."""
+    _ai_require()
+    account = data.get("account")
+    uid = str(data.get("uid") or "")
+    folder = data.get("folder", "INBOX")
+    if not account or not uid:
+        raise HTTPException(400, "account et uid requis.")
+
+    # Cache ?
+    try:
+        db = sqlite3.connect(str(DB_PATH))
+        row = db.execute(
+            "SELECT summary, model FROM ai_summary_cache WHERE account=? AND uid=?",
+            (account, uid),
+        ).fetchone()
+        db.close()
+        if row:
+            return {"summary": row[0], "model": row[1], "cached": True}
+    except Exception:
+        pass
+
+    msg = get_message(account, uid, folder)
+    body = _ai_message_text(msg)
+    if not body:
+        raise HTTPException(400, "Message vide — rien à résumer.")
+
+    settings = _ai_settings()
+    system, user = summarize_inputs(
+        subject=msg.get("subject", ""),
+        sender=msg.get("from_name") or msg.get("from_addr") or "",
+        body=body,
+    )
+    try:
+        summary = ai_manager.generate(
+            prompt=user, system=system, max_tokens=200, temperature=0.3,
+            model_id=settings["model"], provider=settings["provider"],
+        )
+    except AIBackendError as e:
+        raise HTTPException(503, str(e))
+
+    try:
+        db = sqlite3.connect(str(DB_PATH))
+        db.execute(
+            "INSERT OR REPLACE INTO ai_summary_cache "
+            "(account, uid, summary, model, fetched_at) VALUES (?, ?, ?, ?, ?)",
+            (account, uid, summary, settings["model"], time.time()),
+        )
+        db.commit()
+        db.close()
+    except Exception:
+        pass
+    return {"summary": summary, "model": settings["model"], "cached": False}
+
+
+@app.post("/api/ai/reply")
+def ai_reply(data: dict = Body(...)):
+    """Rédige une réponse suggérée à un message, avec contexte de thread."""
+    _ai_require()
+    account = data.get("account")
+    uid = str(data.get("uid") or "")
+    folder = data.get("folder", "INBOX")
+    tone = data.get("tone", "court")
+    if tone not in ("court", "amical", "formel", "détaillé"):
+        tone = "court"
+    if not account or not uid:
+        raise HTTPException(400, "account et uid requis.")
+
+    msg = get_message(account, uid, folder)
+    body = _ai_message_text(msg)
+    if not body:
+        raise HTTPException(400, "Message vide — rien à répondre.")
+
+    # Contexte du thread (messages envoyés précédents) pour un meilleur brouillon.
+    thread_context = ""
+    msg_ids = " ".join(filter(None, [
+        msg.get("message_id") or "",
+        msg.get("in_reply_to") or "",
+        msg.get("references") or "",
+    ]))
+    if msg_ids:
+        try:
+            sent = get_thread_sent(
+                account=account,
+                message_ids=msg_ids,
+                subject=msg.get("subject", ""),
+                current_folder=folder,
+            )
+            prev = [m for m in sent.get("messages", []) if m.get("is_sent")]
+            thread_context = "\n\n".join(
+                f"De: {m.get('from_name') or m.get('from_addr')}\n{m.get('text') or _strip_html(m.get('html') or '')}"
+                for m in prev[:4]
+            )
+        except Exception:
+            pass
+
+    settings = _ai_settings()
+    system, user = reply_inputs(
+        subject=msg.get("subject", ""),
+        sender=msg.get("from_name") or msg.get("from_addr") or "",
+        body=body,
+        thread_context=thread_context,
+        tone=tone,
+    )
+    try:
+        draft = ai_manager.generate(
+            prompt=user, system=system, max_tokens=300, temperature=0.6,
+            model_id=settings["model"], provider=settings["provider"],
+        )
+    except AIBackendError as e:
+        raise HTTPException(503, str(e))
+    return {"draft": draft, "model": settings["model"]}
+
+
+@app.post("/api/ai/rewrite")
+def ai_rewrite(data: dict = Body(...)):
+    """Corrige ou reformule un texte (composeur)."""
+    _ai_require()
+    text = (data.get("text") or "").strip()
+    action = data.get("action", "corriger")
+    if action not in ("corriger", "formel", "amical", "concis", "reformuler"):
+        action = "corriger"
+    if not text:
+        raise HTTPException(400, "Texte vide — rien à transformer.")
+
+    settings = _ai_settings()
+    system, user = rewrite_inputs(text=text, action=action)
+    # Laisse de la marge : le reformulé peut être un peu plus long.
+    max_tokens = max(200, min(2000, len(text.split()) * 4))
+    try:
+        result = ai_manager.generate(
+            prompt=user, system=system, max_tokens=max_tokens, temperature=0.5,
+            model_id=settings["model"], provider=settings["provider"],
+        )
+    except AIBackendError as e:
+        raise HTTPException(503, str(e))
+    return {"text": result, "model": settings["model"]}
+
+
+@app.post("/api/ai/categorize")
+def ai_categorize(data: dict = Body(...)):
+    """Catégorise un message par IA (enrichissement à l'ouverture). Cache permanent."""
+    _ai_require()
+    account = data.get("account")
+    uid = str(data.get("uid") or "")
+    folder = data.get("folder", "INBOX")
+    if not account or not uid:
+        raise HTTPException(400, "account et uid requis.")
+
+    try:
+        db = sqlite3.connect(str(DB_PATH))
+        row = db.execute(
+            "SELECT category FROM ai_category_cache WHERE account=? AND uid=?",
+            (account, uid),
+        ).fetchone()
+        db.close()
+        if row:
+            return {"category": row[0], "cached": True}
+    except Exception:
+        pass
+
+    msg = get_message(account, uid, folder)
+    body = _ai_message_text(msg)
+    settings = _ai_settings()
+    system, user = categorize_inputs(
+        subject=msg.get("subject", ""),
+        sender=msg.get("from_name") or msg.get("from_addr") or "",
+        body=body,
+    )
+    try:
+        raw = ai_manager.generate(
+            prompt=user, system=system, max_tokens=10, temperature=0.0,
+            model_id=settings["model"], provider=settings["provider"],
+        )
+    except AIBackendError as e:
+        raise HTTPException(503, str(e))
+    category = parse_category(raw)
+    try:
+        db = sqlite3.connect(str(DB_PATH))
+        db.execute(
+            "INSERT OR REPLACE INTO ai_category_cache "
+            "(account, uid, category, fetched_at) VALUES (?, ?, ?, ?)",
+            (account, uid, category, time.time()),
+        )
+        db.commit()
+        db.close()
+    except Exception:
+        pass
+    return {"category": category, "cached": False}
 
 
 @app.get("/{filename:path}")

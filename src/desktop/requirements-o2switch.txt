@@ -1,0 +1,8 @@
+# Dépendances Python pour le déploiement o2switch (Setup Python App).
+# uvicorn n'est pas requis ici (Passenger/LSAPI sert l'app en WSGI via
+# passenger_wsgi.py + a2wsgi) mais on le garde pour compat import.
+fastapi>=0.110
+uvicorn>=0.29
+imap_tools>=1.7
+python-multipart>=0.0.9
+a2wsgi>=1.0

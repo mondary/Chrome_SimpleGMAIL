@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SimpleMail</title>
+  <style>body{margin:0;background:#0b0f1a;color:#fff;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh}</style>
+</head>
+<body>
+  <div>
+    <h2>SimpleMail</h2>
+    <p id="msg">Connexion au serveur…</p>
+  </div>
+  <script>
+    // En mode natif (Capacitor), server.url charge directement le backend.
+    // Ce shell n'est affiché qu'en fallback (server injoignable).
+    fetch('/').then(r => { if (!r.ok) throw 0; location.reload(); }).catch(() => {
+      document.getElementById('msg').textContent = 'Serveur injoignable. Vérifiez votre connexion.';
+    });
+  </script>
+</body>
+</html>

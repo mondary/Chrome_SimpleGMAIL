@@ -2,3 +2,6 @@ fastapi>=0.110
 uvicorn[standard]>=0.29
 imap_tools>=1.7
 python-multipart>=0.0.9
+# IA locale — OPTIONNEL (Apple Silicon uniquement). L'app démarre sans.
+# pip install mlx-lm   →  inférence in-process, indépendante d'Ollama
+mlx-lm>=0.22; platform_system == "Darwin" and platform_machine == "arm64"

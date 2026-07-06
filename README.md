@@ -92,6 +92,67 @@ Le backend maîtrise sa consommation mémoire :
 
 Pour tout transférer vers une autre machine : **Réglages → Comptes → Exporter**, puis **Importer** sur l'autre machine.
 
+## Déploiement web (o2switch / PWA)
+
+L'application peut être déployée sur un hébergement mutualisé o2switch via
+**cPanel → Setup Python App**. Le backend FastAPI tourne en Python, le frontend
+est servi comme PWA (installable sur iPhone/Android sans App Store).
+
+```
+https://mail.mondary.design/
+```
+
+**Documentation complète** : [`src/desktop/DEPLOIEMENT_O2SWITCH.md`](src/desktop/DEPLOIEMENT_O2SWITCH.md)
+
+### Prérequis déploiement
+- Sous-domaine dédié (ex. `mail.votredomaine.fr`)
+- SSL Let's Encrypt (gratuit, activé via cPanel)
+- Setup Python App : Python 3.11, `passenger_wsgi.py`, entry point `application`
+
+### Fichiers à déployer
+- **App root** (Python) : `passenger_wsgi.py`, `main.py`, `config.json`, `secrets/`, `.htaccess`
+- **Document root** (statique) : `index.html`, `manifest.webmanifest`, `sw.js`, `icon.png`, `bg.jpg`
+
+## Sécurité
+
+### Authentification web (déploiement public)
+
+Quand l'app est exposée sur Internet, l'authentification est **obligatoire** et
+**activée par défaut** (`SIMPLEMAIL_AUTH=1`). Configurez un mot de passe :
+
+```bash
+# Variable d'environnement (cPanel → Setup Python App → Environment variables)
+SIMPLEMAIL_PASSWORD=votre_mot_de_passe
+```
+
+Le mot de passe est vérifié via une session cookie (`sm_session`) :
+- Cookie `httponly` + `secure` + `samesite=lax` (30 jours)
+- Token généré via `secrets.token_urlsafe(32)` (256 bits)
+- Rate limiting : 5 tentatives/minute par IP
+- Nettoyage automatique des sessions expirées
+
+### Protection des fichiers sensibles
+
+| Fichier | Protégé par |
+|---------|-------------|
+| `config.json` (identifiants en `${VAR}`) | `.htaccess` + hors du document root |
+| `secrets/mail.env` (mots de passe) | `.htaccess` + hors du document root |
+| `*.db` (cache email) | `.htaccess` |
+| Variables d'environnement | cPanel (pas dans le webroot) |
+
+### Headers de sécurité
+- `Content-Security-Policy` (CSP) : limite les sources autorisées
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+
+### Recommandations
+1. **Ne stockez jamais** les mots de passe directement dans `config.json` — utilisez les variables d'environnement (`${MAIL_PASSWORD}`)
+2. **Activez l'authentification** sur tout déploiement public (`SIMPLEMAIL_AUTH=1`)
+3. **Utilisez HTTPS** (Let's Encrypt dans cPanel)
+4. **Surveillez** les logs cPanel pour détecter les tentatives suspectes
+5. **Faites tourner** les mots de passe IMAP régulièrement, surtout après un déploiement
+
 ## Build
 
 ### macOS
