@@ -47,6 +47,7 @@ jobs:
           npx cap sync android
           sed -i "s/versionCode [0-9][0-9]*/versionCode ${{ steps.version.outputs.code }}/" android/app/build.gradle
           sed -i "s/versionName \"[^\"]*\"/versionName \"${{ steps.version.outputs.name }}\"/" android/app/build.gradle
+          cp android-template/MainActivity.java android/app/src/main/java/fr/simplemail/app/MainActivity.java
 
       - name: Setup Java
         uses: actions/setup-java@v4
