@@ -30,6 +30,14 @@ jobs:
           cache: npm
           cache-dependency-path: src/mobile/package-lock.json
 
+      - name: Read app version
+        id: version
+        run: |
+          version="$(node -p 'require("./package.json").version')"
+          code="$(node -p 'const [major, minor, patch] = require("./package.json").version.split(".").map(Number); console.log(major * 10000 + minor * 100 + patch)')"
+          echo "name=$version" >> "$GITHUB_OUTPUT"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+
       - name: Install mobile deps
         run: npm ci
 
@@ -37,6 +45,8 @@ jobs:
         run: |
           npx cap add android
           npx cap sync android
+          sed -i "s/versionCode [0-9][0-9]*/versionCode ${{ steps.version.outputs.code }}/" android/app/build.gradle
+          sed -i "s/versionName \"[^\"]*\"/versionName \"${{ steps.version.outputs.name }}\"/" android/app/build.gradle
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -61,12 +71,15 @@ jobs:
 
       - name: Publish APK in repository
         working-directory: .
+        env:
+          APP_VERSION: ${{ steps.version.outputs.name }}
         run: |
           mkdir -p releases/android
-          cp src/mobile/android/app/build/outputs/apk/debug/app-debug.apk releases/android/SimpleMail-debug.apk
+          cp src/mobile/android/app/build/outputs/apk/debug/app-debug.apk "releases/android/SimpleMail-${APP_VERSION}.apk"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f releases/android/SimpleMail-debug.apk
+          git rm -f --ignore-unmatch releases/android/SimpleMail-debug.apk
+          git add -f "releases/android/SimpleMail-${APP_VERSION}.apk"
           if git diff --cached --quiet; then
             echo "APK already up to date"
           else
@@ -77,6 +90,6 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: simplemail-debug-apk
+          name: simplemail-${{ steps.version.outputs.name }}-apk
           path: src/mobile/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error

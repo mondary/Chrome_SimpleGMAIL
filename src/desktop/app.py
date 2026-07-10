@@ -37,6 +37,14 @@ def load_env_file(path):
             os.environ.setdefault(key, val)
 
 
+def app_version(base):
+    try:
+        with open(os.path.join(base, "VERSION"), "r", encoding="utf-8") as fh:
+            return fh.read().strip() or "dev"
+    except OSError:
+        return "dev"
+
+
 def find_free_port(start=8000, end=8030):
     for port in range(start, end + 1):
         try:
@@ -85,7 +93,7 @@ def main():
 
     import webview
     webview.create_window(
-        "SimpleMail", url, width=1280, height=840, min_size=(960, 620),
+        f"SimpleMail {app_version(base)}", url, width=1280, height=840, min_size=(960, 620),
     )
     webview.start()
     server.should_exit = True
