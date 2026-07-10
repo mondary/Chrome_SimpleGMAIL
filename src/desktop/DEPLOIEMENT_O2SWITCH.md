@@ -110,6 +110,16 @@ Consulte `logs/simplemail.log` si besoin.
 
 Ouvre `https://mail.tondomaine.fr/` → l'app se charge.
 
+### Important après mise à jour frontend
+
+- Vide le cache du service worker si une ancienne version a déjà été ouverte :
+  Safari/Chrome mobile peut garder un shell PWA obsolète.
+- Fais au minimum un rechargement complet de `index.html` + `sw.js`.
+- Le frontend résout maintenant ses URLs API relativement à son URL courante :
+  déploiement OK à la racine (`https://mail.domaine.fr/`) comme en sous-dossier
+  (`https://domaine.fr/mail/`), à condition que le backend soit monté sur la
+  même base URL.
+
 ## 8. Distribution mobile
 
 ### iPhone (zéro compte, zéro App Store) — PWA

@@ -1,7 +1,14 @@
 // Service Worker SimpleMail — installable PWA, offline shell.
 // Stratégie : network-first pour l'app shell, network-only pour l'API.
 const CACHE = 'simplemail-v1';
-const SHELL = ['/', '/index.html', '/icon.png', '/manifest.webmanifest'];
+const SCOPE_URL = new URL(self.registration.scope);
+const APP_ROOT = SCOPE_URL.pathname.endsWith('/') ? SCOPE_URL.pathname : `${SCOPE_URL.pathname}/`;
+const SHELL = [
+  new URL('./', SCOPE_URL).toString(),
+  new URL('./index.html', SCOPE_URL).toString(),
+  new URL('./icon.png', SCOPE_URL).toString(),
+  new URL('./manifest.webmanifest', SCOPE_URL).toString(),
+];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).catch(() => {}));
@@ -18,8 +25,12 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
+  // Les ressources cross-origin (Google Fonts, Tailwind CDN, favicons externes)
+  // doivent passer en réseau natif ; les intercepter ici déclenche la CSP
+  // `connect-src 'self'` dans le contexte service worker.
+  if (url.origin !== self.location.origin) return;
   // API : toujours réseau (jamais de cache pour les mails).
-  if (url.pathname.startsWith('/api/')) return;
+  if (url.pathname.startsWith(`${APP_ROOT}api/`)) return;
   // App shell : network-first, fallback cache (offline).
   e.respondWith(
     fetch(e.request)
@@ -30,6 +41,6 @@ self.addEventListener('fetch', (e) => {
         }
         return resp;
       })
-      .catch(() => caches.match(e.request).then((r) => r || caches.match('/')))
+      .catch(() => caches.match(e.request).then((r) => r || caches.match(new URL('./', SCOPE_URL).toString())))
   );
 });

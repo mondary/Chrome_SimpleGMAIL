@@ -82,6 +82,7 @@ _IMAP_POOL: dict[str, list] = {}  # account_id -> [(conn, ts), ...] idle connect
 _POOL_LOCK = threading.Lock()
 _POOL_TTL = 120          # 45 s était trop court : une pause de lecture > 45 s fermait la connexion → reconnect au mail suivant.
 _POOL_MAX_IDLE = 3       # borné par compte : évite l'explosion de connexions (et le throttling Gmail) sous charge concurrente.
+_IMAP_TIMEOUT = 12       # Un serveur/DNS défaillant ne doit jamais monopoliser un worker Passenger pendant des minutes.
 
 
 def _close_conn_quietly(conn):
@@ -115,11 +116,11 @@ def _open_imap(account: dict):
     if not imap.get("password"):
         raise HTTPException(status_code=500, detail=f"Mot de passe IMAP manquant pour {imap['user']}")
     if starttls:
-        box = MailBoxStartTls(host, port)
+        box = MailBoxStartTls(host, port, timeout=_IMAP_TIMEOUT)
     elif ssl:
-        box = MailBox(host, port)
+        box = MailBox(host, port, timeout=_IMAP_TIMEOUT)
     else:
-        box = MailBoxUnencrypted(host, port)
+        box = MailBoxUnencrypted(host, port, timeout=_IMAP_TIMEOUT)
     try:
         return box.login(imap["user"], imap["password"])
     except Exception:
@@ -458,6 +459,10 @@ _THREAD_SENT_TTL = 600  # 10 min
 # Nombre maximum d'en-têtes chargés lors d'un filtrage (catégorie/recherche/non-lus).
 # Sans cette borne, on rapatrie toute la boîte en RAM → explosion mémoire.
 _FETCH_FILTER_CAP = 6000
+# Une liste IMAP n'est pas un écran qui doit attendre le réseau. On sert le
+# dernier instantané local, puis le navigateur demande une synchronisation en
+# arrière-plan. C'est le même principe que le cache local de Gmail.
+_INBOX_SNAPSHOT_TTL = 24 * 60 * 60
 
 
 def _cache_key(account, folder, uid):
@@ -695,7 +700,10 @@ _LOGIN_HTML = """<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="vi
 
 @app.middleware("http")
 async def _security_headers(request: Request, call_next):
+    started = time.perf_counter()
     response = await call_next(request)
+    if request.url.path.startswith("/api/") and request.url.path != "/api/events":
+        response.headers["Server-Timing"] = f"app;dur={(time.perf_counter() - started) * 1000:.1f}"
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
@@ -712,7 +720,9 @@ async def _auth_middleware(request: Request, call_next):
     if path in ("/login", "/favicon.ico", "/icon.png", "/manifest.webmanifest"):
         return await call_next(request)
     now = time.time()
-    _VALID_SESSIONS = {t: e for t, e in _VALID_SESSIONS.items() if e > now}
+    expired = [t for t, e in _VALID_SESSIONS.items() if e <= now]
+    for t in expired:
+        _VALID_SESSIONS.pop(t, None)
     session = request.cookies.get("sm_session")
     if session and session in _VALID_SESSIONS:
         return await call_next(request)
@@ -1924,9 +1934,9 @@ def list_messages(
                 "total": total, "total_pages": max(1, (total + page_size - 1) // page_size)}
     cache_key = f"messages:{account}:{folder}:{category}:{page}:{page_size}"
     if not q and not unseen and not no_cache:
-        cached = _response_cache_get(cache_key, ttl=30.0)
+        cached = _response_cache_get(cache_key, ttl=_INBOX_SNAPSHOT_TTL)
         if cached:
-            return cached
+            return {**cached, "cache_state": "hit"}
     acc = get_account(account)
     is_gmail = _is_gmail_imap(acc)
     use_gmail_cat = is_gmail and category in _GMAIL_CATEGORY_LABELS
@@ -2052,7 +2062,8 @@ def list_messages(
         total = folder_total if direct_folder_page else len(all_messages)
         msgs = all_messages if direct_folder_page else all_messages[offset:offset + page_size]
         result = {"messages": msgs, "page": page, "page_size": page_size, "total": total,
-                  "total_pages": max(1, (total + page_size - 1) // page_size)}
+                  "total_pages": max(1, (total + page_size - 1) // page_size),
+                  "cache_state": "miss"}
     if not q and not unseen:
         _response_cache_set(cache_key, result)
     return result
