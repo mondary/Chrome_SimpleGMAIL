@@ -33,8 +33,10 @@ jobs:
       - name: Install mobile deps
         run: npm ci
 
-      - name: Sync Capacitor Android project
-        run: npx cap sync android
+      - name: Create and sync Capacitor Android project
+        run: |
+          npx cap add android
+          npx cap sync android
 
       - name: Setup Java
         uses: actions/setup-java@v4
