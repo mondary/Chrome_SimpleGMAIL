@@ -74,6 +74,11 @@ def main():
         sys.path.insert(0, base)
     load_env_file(os.path.join(base, "secrets", "mail.env"))
 
+    # The packaged desktop app only binds to 127.0.0.1. Do not require a
+    # deployment password when Finder launches it; an explicit mail.env value
+    # still takes precedence.
+    os.environ.setdefault("SIMPLEMAIL_AUTH", "0")
+
     import uvicorn
     from main import app
 
