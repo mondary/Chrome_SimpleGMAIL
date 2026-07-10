@@ -6606,7 +6606,7 @@
           <form id="addaccount-form" class="flex-1 overflow-y-auto px-6 py-5 space-y-4 text-sm" onsubmit="submitAddAccount(event)">
             <div class="grid grid-cols-2 gap-4">
               <div><label class="field-label">Nom</label><input id="aa-name" type="text" required class="field-input" placeholder="Clement"></div>
-              <div><label class="field-label">Email</label><input id="aa-email" type="email" required class="field-input" placeholder="vous@exemple.com"></div>
+              <div><label class="field-label">Email</label><input id="aa-email" type="email" required class="field-input" placeholder="vous@gmail.com" oninput="applyAccountServerPreset()"></div>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div><label class="field-label">IMAP Host</label><input id="aa-imap-host" type="text" required class="field-input" placeholder="imap.gmail.com"></div>
@@ -6616,7 +6616,7 @@
               <div><label class="field-label">SMTP Host</label><input id="aa-smtp-host" type="text" required class="field-input" placeholder="smtp.gmail.com"></div>
               <div><label class="field-label">SMTP Port</label><input id="aa-smtp-port" type="number" value="465" class="field-input"></div>
             </div>
-            <div><label class="field-label">Mot de passe</label><input id="aa-password" type="password" required class="field-input" placeholder="••••••••"></div>
+            <div><label class="field-label">Mot de passe d'application</label><input id="aa-password" type="password" required class="field-input" placeholder="16 caractères pour Gmail"><p id="aa-password-help" class="mt-1 text-xs text-gray-500">Gmail refuse le mot de passe habituel : créez un mot de passe d'application dans votre compte Google.</p></div>
             <div id="aa-error" class="text-xs" style="color:#d93025;display:none"></div>
             <div id="aa-success" class="text-xs" style="color:#0d904f;display:none"></div>
             <div class="flex justify-end gap-2 pt-2">
@@ -6634,6 +6634,18 @@
       setTimeout(()=>document.getElementById('aa-name').focus(),100);
     }
     function closeAddAccountModal(){ const o=document.getElementById('addaccount-overlay'); if(!o) return; o.classList.add('opacity-0'); setTimeout(()=>o.remove(),200); }
+    function applyAccountServerPreset(){
+      const email=document.getElementById('aa-email')?.value.trim().toLowerCase()||'';
+      const gmail=email.endsWith('@gmail.com')||email.endsWith('@googlemail.com');
+      const imap=document.getElementById('aa-imap-host');
+      const smtp=document.getElementById('aa-smtp-host');
+      const help=document.getElementById('aa-password-help');
+      if(gmail){
+        if(imap && (!imap.value || imap.value==='imap.gmail.com')) imap.value='imap.gmail.com';
+        if(smtp && (!smtp.value || smtp.value==='smtp.gmail.com')) smtp.value='smtp.gmail.com';
+      }
+      if(help) help.style.display=gmail?'block':'none';
+    }
     async function submitAddAccount(e){
       e.preventDefault();
       const errEl=document.getElementById('aa-error');
@@ -6644,11 +6656,12 @@
       const body={
         name:document.getElementById('aa-name').value.trim(),
         email:document.getElementById('aa-email').value.trim(),
-        imapHost:document.getElementById('aa-imap-host').value.trim(),
-        imapPort:parseInt(document.getElementById('aa-imap-port').value)||993,
-        smtpHost:document.getElementById('aa-smtp-host').value.trim(),
-        smtpPort:parseInt(document.getElementById('aa-smtp-port').value)||465,
-        password:document.getElementById('aa-password').value
+        imap_host:document.getElementById('aa-imap-host').value.trim(),
+        imap_port:parseInt(document.getElementById('aa-imap-port').value)||993,
+        imap_password:document.getElementById('aa-password').value,
+        smtp_host:document.getElementById('aa-smtp-host').value.trim(),
+        smtp_port:parseInt(document.getElementById('aa-smtp-port').value)||465,
+        smtp_password:document.getElementById('aa-password').value
       };
       try{
         const r=await fetch(appUrl('/api/accounts'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
