@@ -34,7 +34,7 @@ jobs:
         id: version
         run: |
           version="$(node -p 'require("./package.json").version')"
-          code="$(node -p 'const [major, minor, patch] = require("./package.json").version.split(".").map(Number); console.log(major * 10000 + minor * 100 + patch)')"
+          code="$(node -e 'const [major, minor, patch] = require("./package.json").version.split(".").map(Number); process.stdout.write(String(major * 10000 + minor * 100 + patch))')"
           echo "name=$version" >> "$GITHUB_OUTPUT"
           echo "code=$code" >> "$GITHUB_OUTPUT"
 
