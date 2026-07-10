@@ -20,13 +20,26 @@ npm install
 
 ## Android (.apk)
 
+### Option la plus légère
+
+Si tu ne veux rien installer sur ton Mac, utilise **GitHub Actions** :
+
+1. pousse une modification dans `src/mobile/` sur GitHub
+2. GitHub compile automatiquement l’APK
+3. l’APK est ajouté au dépôt dans `releases/android/SimpleMail-debug.apk`
+4. récupère-le localement avec `git pull`
+
+L’artefact `simplemail-debug-apk` reste aussi disponible dans l’onglet **Actions**.
+
+### Build local
+
 ```bash
 npm run add:android     # crée src/mobile/android/ (1ère fois)
 npm run sync            # synchronise la config
 npm run open:android    # ouvre Android Studio → Build > Build APK
 ```
 
-Prérequis : [Android Studio](https://developer.android.com/studio) (SDK + NDK inclus).
+Prérequis local : [Android Studio](https://developer.android.com/studio) (SDK + NDK inclus).
 
 Sortie : `android/app/build/outputs/apk/debug/app-debug.apk`.
 Pour un `.apk` signé release : Android Studio → Build > Generate Signed Bundle/APK.
