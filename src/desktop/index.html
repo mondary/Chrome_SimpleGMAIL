@@ -149,6 +149,44 @@
       font-size: 13px; color: inherit; cursor: pointer; outline: none; transition: border-color 150ms;
     }
     .settings-select:focus { border-color: #1a73e8; }
+
+    /* ===== Settings : responsive (mobile / tablette) ===== */
+    @media (max-width: 768px) {
+      #settings-screen .settings-page { padding-left: 24px !important; padding-right: 24px !important; }
+      #settings-screen .settings-page h2 { font-size: 1.25rem !important; }
+    }
+    @media (max-width: 640px) {
+      /* Header compact */
+      #settings-screen > .flex.items-center.gap-3 { padding-left: 12px !important; padding-right: 12px !important; height: 52px !important; }
+      #settings-screen > .flex.items-center.gap-3 h1 { font-size: 1.05rem !important; }
+      /* Stack vertical : sidebar passe en barre horizontale en haut */
+      #settings-screen > .flex-1.flex.overflow-hidden { flex-direction: column !important; }
+      #settings-screen .w-60 {
+        width: 100% !important; height: auto !important; flex-shrink: 0 !important;
+        border-right: none !important; border-bottom: 1px solid rgba(0,0,0,0.08); overflow: visible;
+      }
+      body.theme-dark #settings-screen .w-60 { border-bottom-color: rgba(255,255,255,0.08); }
+      #settings-screen .w-60 > .p-4 { padding: 8px 10px !important; }
+      #settings-screen .w-60 > .p-4 > h3 { display: none; }
+      #settings-nav { display: flex !important; flex-direction: row; gap: 4px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; padding-bottom: 4px; }
+      #settings-nav::-webkit-scrollbar { display: none; }
+      #settings-nav .settings-nav-item {
+        width: auto !important; flex-shrink: 0; white-space: nowrap; padding: 8px 12px !important;
+        gap: 6px !important;
+      }
+      #settings-nav .settings-nav-item .material-symbols-outlined { font-size: 16px !important; }
+      /* Contenu : padding réduit */
+      #settings-screen .settings-page { padding: 16px !important; max-width: 100% !important; }
+      /* Raccourcis : 1 seule colonne au lieu de 2 */
+      #shortcuts-list { grid-template-columns: 1fr !important; gap: 0 !important; }
+      /* Lignes de réglage : empilent verticalement quand contrôle trop large */
+      #settings-screen .settings-row { flex-wrap: wrap; gap: 8px !important; }
+      #settings-screen .settings-row > div:not(.settings-row-label) { width: 100%; }
+      #settings-screen .settings-select { min-width: 0; width: 100%; }
+      #settings-screen .theme-btn { padding: 6px 10px; font-size: 12px; }
+      /* Grilles 2 colonnes des pages comptes/IA -> 1 colonne */
+      #settings-screen .grid.grid-cols-2 { grid-template-columns: 1fr !important; }
+    }
     /* Toggle switch (macOS-style) */
     .toggle-wrapper { position: relative; display: inline-flex; flex-shrink: 0; cursor: pointer; }
     .toggle-wrapper input { position: absolute; opacity: 0; width: 0; height: 0; }
@@ -6350,7 +6388,7 @@
                   <div class="settings-row-title">SimpleMail</div>
                   <div class="settings-row-desc">Client mail IMAP/SMTP pour Chrome.</div>
                 </div>
-                <span class="text-sm font-medium" style="color:#5f6368">v22</span>
+                <span class="text-sm font-medium" style="color:#5f6368">v__APP_VERSION__</span>
               </div>
             </div>
 

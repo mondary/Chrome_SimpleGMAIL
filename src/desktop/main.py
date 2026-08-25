@@ -1489,7 +1489,17 @@ def _demo_messages(account, folder):
 
 @app.get("/")
 def index():
-    return FileResponse(BASE_DIR / "index.html")
+    html_path = ASSETS_DIR / "index.html"
+    try:
+        html = html_path.read_text(encoding="utf-8")
+    except OSError:
+        return HTMLResponse("<h1>index.html introuvable</h1>", status_code=500)
+    try:
+        version = (ASSETS_DIR / "VERSION").read_text(encoding="utf-8").strip() or "dev"
+    except OSError:
+        version = "dev"
+    html = html.replace("__APP_VERSION__", version)
+    return HTMLResponse(html)
 
 
 @app.get("/icon.png")
