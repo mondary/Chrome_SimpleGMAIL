@@ -8,16 +8,16 @@ Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla
 
 ## Fonctionnalités
 
-- Vue liste + conversation avec colonne redimensionnable (largeur responsives en % sur grands écrans)
+- Interface blanche immersive sans cartes, responsive du mobile aux grands écrans
 - Newsletters : carrousel multicartes (grille adaptative 4→8 colonnes selon la place), dock animé, détail hero avec vraies images
-- Catégories Gmail (icônes + badges)
+- Catégories et libellés Gmail visibles sur chaque mail, avec sélecteur de classement et recherche
 - Raccourcis clavier entièrement configurables
 - Page Paramètres plein écran (polices, thème, format date, newsletters, langues, comptes, à propos)
 - Thème light/dark/fond photo
 - Mode sélection avec actions groupées
 - Recherche centrée avec compteur
 - Favicon expéditeur avec fallback initiales
-- Mode lecture immersive
+- Lecture immersive éditoriale par défaut, navigation `J` / `K` et HTML sandboxé
 - Composeur plein écran
 - Import/export des comptes (JSON : config + mots de passe + base SQLite + réglages localStorage)
 - Flux RSS intégré
@@ -30,7 +30,7 @@ Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla
 ```bash
 cd src/desktop
 source secrets/mail.env  # ou export des variables
-python3 main.py
+SIMPLEMAIL_AUTH=0 python3 main.py
 # http://0.0.0.0:8000
 ```
 
@@ -79,6 +79,8 @@ Contenu :
 
 Le backend maîtrise sa consommation mémoire :
 - Caches en RAM bornés (LRU) : threads (40 entrées), corps de messages (150 entrées, TTL 5 min)
+- Instantané SQLite servi immédiatement, puis synchronisation Gmail silencieuse en arrière-plan
+- Connexions IMAP réutilisées et chargement des dossiers limité aux statuts système utiles
 - Plafond de 6000 en-têtes par filtrage (catégorie/recherche) — évite de charger toute la boîte en RAM
 - Thread de purge automatique des caches SQLite toutes les 10 min (`response_cache`, `msg_detail_cache`, `newsletter_msg_cache`)
 
@@ -88,7 +90,7 @@ Le backend maîtrise sa consommation mémoire :
 2. `cd src/desktop`
 3. Copier `config.example.json` → `config.json`, renseigner vos comptes
 4. Créer `secrets/mail.env` avec les mots de passe
-5. Lancer `python3 main.py`
+5. Lancer `SIMPLEMAIL_AUTH=0 python3 main.py`
 
 Pour tout transférer vers une autre machine : **Réglages → Comptes → Exporter**, puis **Importer** sur l'autre machine.
 

@@ -8,7 +8,7 @@
   <!-- PWA + iOS "Sur l'écran d'accueil" -->
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#0b0f1a" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#f5f5f5" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1424,6 +1424,145 @@
     .skel-card     { width: 100%; min-width: 0; height: 13rem; border-radius: 12px; }
     .skel-iconbtn  { width: 40px; height: 40px; border-radius: 50%; flex: 0 0 40px; }
     .skel-catbtn   { width: 34px; height: 34px; border-radius: 8px; flex: 0 0 34px; }
+
+    /* ===== V27: white focus interface ===== */
+    body.theme-white {
+      --font-primary: 'Outfit', 'Avenir Next', system-ui, sans-serif;
+      --rail-width: 64px;
+      --list-max-w: min(92rem, 100%);
+      --conv-max-w: 76rem;
+      background: #fff;
+      color: #171717;
+    }
+    body.theme-white #main-header {
+      height: 68px; padding-inline: 18px !important; gap: 10px !important;
+      background: rgba(255,255,255,.96); border-bottom: 1px solid #efefec;
+    }
+    body.theme-white #main-header .material-symbols-outlined { color: #777773; }
+    body.theme-white #main-header .icon-btn-container:hover { background: #f4f4f1; }
+    body.theme-white #header-search-bar {
+      height: 42px; padding-inline: 14px; border-radius: 12px;
+      background: #f7f7f4; border: 1px solid #efefeb; color: #262624;
+      box-shadow: none;
+    }
+    body.theme-white #header-search-bar:focus-within { background: #fff; border-color: #c9c9c3; }
+    body.theme-white .header-quick-compose {
+      height: 40px; padding-inline: 14px; border: 1px solid #e8e8e4;
+      border-radius: 11px; background: #171717; color: #fff; box-shadow: none;
+    }
+    body.theme-white .header-quick-compose:hover { background: #30302e; }
+    body.theme-white #nav-drawer { box-shadow: 1px 0 #efefec; }
+    body.theme-white .drawer-surface { background: #fff; }
+    body.theme-white #nav-drawer:not(.open) .drawer-brand { padding-block: 15px 13px; border: 0; }
+    body.theme-white #nav-drawer:not(.open) .drawer-brand-icon { width: 34px; height: 34px; border-radius: 10px; box-shadow: none; }
+    body.theme-white #nav-drawer:not(.open) .nav-item {
+      width: 42px; height: 42px; min-height: 42px; margin-bottom: 3px; border-radius: 11px;
+    }
+    body.theme-white #nav-drawer:not(.open) .nav-item:hover { background: #f5f5f2; }
+    body.theme-white #nav-drawer:not(.open) .nav-item.is-active {
+      color: #171717; background: #eeeeea; box-shadow: none;
+    }
+    body.theme-white #nav-drawer.open { border-right: 1px solid #ecece8; }
+    body.theme-white #nav-drawer.open .drawer-brand { padding: 17px 18px; }
+    body.theme-white #nav-drawer.open .nav-item { margin-inline: 10px; padding-inline: 12px; border-radius: 10px; }
+    body.theme-white #nav-drawer.open .nav-item.is-active { background: #f0f0ed; color: #171717; }
+    body.theme-white #nav-drawer.open .drawer-section + .drawer-section { border: 0; }
+    body.theme-white #nav-drawer.open .nav-section-title { color: #aaa9a3; font-size: 10px; letter-spacing: .09em; }
+    body.theme-white #inbox-list-view,
+    body.theme-white #inbox-loading-view { padding: 0 !important; }
+    body.theme-white #mail-list-container,
+    body.theme-white #inbox-loading-view > div {
+      max-width: 92rem !important; border-radius: 0; border-inline: 1px solid #f1f1ee;
+      background: #fff; box-shadow: none !important;
+    }
+    body.theme-white #nl-section,
+    body.theme-white #skel-nl-section { display: none; }
+    body.theme-white #list-header-bar {
+      height: 50px; padding-inline: 18px; border-color: #efefec; background: rgba(255,255,255,.94);
+      backdrop-filter: blur(14px);
+    }
+    body.theme-white #list-header-bar .icon-btn-container { width: 34px; height: 34px; }
+    body.theme-white .cat-icon-btn { width: 32px; height: 32px; border-radius: 9px; }
+    body.theme-white .mail-item {
+      min-height: 68px; padding: 12px 18px !important; border-color: #f0f0ed !important;
+      background: #fff !important; font-family: var(--font-primary);
+      transition: background-color 140ms ease, box-shadow 140ms ease;
+    }
+    body.theme-white .mail-item.mail-read { background: #fdfdfc !important; color: #777773; }
+    body.theme-white .mail-item:hover { background: #f7f7f4 !important; }
+    body.theme-white .mail-item.is-selected,
+    body.theme-white .mail-item.is-row-selected {
+      background: #f2f2ee !important; box-shadow: inset 2px 0 0 var(--row-accent, #171717);
+    }
+    body.theme-white .sender-fallback {
+      width: 22px; height: 22px; border-radius: 7px; background: #ecece7; color: #62625e;
+      font-size: 10px; font-weight: 600;
+    }
+    body.theme-white .sender-icon-slot { width: 22px; height: 22px; flex-basis: 22px; }
+    .mail-labels { display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0; }
+    .mail-label {
+      display: inline-flex; align-items: center; gap: 5px; color: #8a8983;
+      font-size: 10px; font-weight: 500; line-height: 1; white-space: nowrap;
+    }
+    .mail-label i { width: 5px; height: 5px; border-radius: 50%; background: var(--row-accent, #b3b3ad); }
+    body.theme-white .hover-actions-right { right: 16px; background: linear-gradient(90deg, transparent, var(--mail-actions-bg) 46%); }
+    body.theme-white .hover-action-btn { width: 30px; height: 30px; border-radius: 8px; }
+    body.theme-white #conversation-view { padding: 0 !important; }
+    body.theme-white #conversation-card {
+      max-width: 76rem !important; padding: 52px clamp(28px,7vw,96px) 96px !important;
+      border-radius: 0; background: #fff; box-shadow: none;
+    }
+    body.theme-white #thread-content > div:first-child { margin-bottom: 42px; }
+    body.theme-white #thread-content h1 { font-size: clamp(24px,3vw,42px); line-height: 1.12; letter-spacing: -.035em; color: #171717; }
+    body.theme-white .thread-msg { border-color: #eeeee9; }
+    body.theme-white .thread-msg-body { max-width: 48rem; margin-inline: auto; }
+    body.theme-white .immersive-surface { background: #fff; color: #171717; }
+    body.theme-white .immersive-surface > div:first-child { min-height: 60px; padding: 10px 22px; }
+    body.theme-white .immersive-surface > div:last-child { min-height: 66px; padding: 10px 22px; }
+    body.theme-white .im-title { font-family: var(--font-primary); font-size: clamp(30px,4vw,58px); font-weight: 500; letter-spacing: -.045em; line-height: 1.04; }
+    body.theme-white .im-thread-message { padding-block: 38px; }
+    body.theme-white .im-article { font-family: var(--font-primary); font-size: 17px; line-height: 1.8; color: #353532; }
+    .label-menu-backdrop { position: fixed; inset: 0; z-index: 89; background: rgba(20,20,18,.16); backdrop-filter: blur(2px); }
+    .label-menu-panel {
+      position: fixed; z-index: 90; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      width: min(360px, calc(100vw - 32px)); max-height: min(560px, calc(100vh - 48px)); overflow: hidden;
+      border: 1px solid #e8e8e3; border-radius: 16px; background: #fff; box-shadow: 0 24px 80px rgba(20,20,18,.16);
+    }
+    .label-menu-title { height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; font-size: 15px; font-weight: 600; }
+    .label-menu-title button { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; }
+    .label-menu-title button:hover { background: #f3f3ef; }
+    .label-menu-search { margin: 0 12px 10px; height: 42px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-radius: 10px; background: #f6f6f3; }
+    .label-menu-search .material-symbols-outlined { font-size: 18px; color: #92918b; }
+    .label-menu-search input { min-width: 0; flex: 1; outline: 0; background: transparent; font-size: 13px; }
+    .label-menu-options { max-height: 390px; overflow-y: auto; padding: 4px 8px 10px; }
+    .label-menu-options button { width: 100%; min-height: 42px; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 9px; font-size: 13px; text-align: left; }
+    .label-menu-options button:hover { background: #f5f5f2; }
+    .label-menu-options button > span:nth-child(2) { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+    .label-menu-options .material-symbols-outlined { font-size: 17px; color: #171717; }
+    .label-menu-dot { width: 7px; height: 7px; border-radius: 50%; background: #b4b3ad; flex: none; }
+    :where(button,[role="button"],input,a):focus-visible { outline: 2px solid #171717; outline-offset: 2px; }
+    @media (max-width: 760px) {
+      body.theme-white #main-header { height: 60px; padding-inline: 8px !important; }
+      body.theme-white #header-search-bar { height: 40px; }
+      body.theme-white .header-quick-compose { width: 38px; padding: 0; }
+      body.theme-white .mail-item { min-height: 76px; padding: 11px 12px !important; }
+      body.theme-white .mail-item > div:first-child { display: grid; grid-template-columns: 22px minmax(0,1fr); column-gap: 10px; row-gap: 3px; padding-right: 46px !important; }
+      body.theme-white .mail-item .sender-icon-slot { grid-row: 1 / 3; }
+      body.theme-white .mail-item .w-44 { width: auto; grid-column: 2; font-size: 12px; }
+      body.theme-white .mail-item .w-44 + div { grid-column: 2; font-size: 13px; }
+      body.theme-white .mail-item > div:nth-child(2) { position: absolute; top: 12px; right: 12px; font-size: 10px; }
+      .mail-labels { display: none; }
+      body.theme-white #cat-icons { max-width: 58vw; overflow-x: auto; scrollbar-width: none; }
+      body.theme-white #conversation-card { padding: 28px 18px 72px !important; }
+      body.theme-white .im-title { font-size: 32px; }
+      body.theme-white .immersive-surface > div:first-child { padding-inline: 12px; }
+      body.theme-white .immersive-surface > div:first-child button:nth-of-type(2),
+      body.theme-white .immersive-surface > div:first-child button:nth-of-type(3),
+      body.theme-white .immersive-surface > div:first-child button:nth-of-type(4) { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
   </style>
 </head>
 <body class="h-screen w-screen flex flex-col overflow-hidden relative theme-white">
@@ -2399,6 +2538,7 @@
         date: fmtDate(m.date), time: fmtTime(m.date), rawDate: m.date, longDate: fmtLong(m.date),
         starred: !!m.flagged, unread: !m.seen,
         category: m.category || 'primary',
+        labels: Array.isArray(m.labels) ? m.labels : [],
         threadId: m.thread_id ? (m.account + ':' + m.thread_id) : (m.account + ':' + m.uid),
         threadCount: Number(m.thread_count) || 1,
         snippet: m.snippet || '',
@@ -2406,6 +2546,11 @@
         attachmentCount: m.attachment_count || 0,
         html: null, text: null, attachments: null, _detail: false,
       };
+    }
+    function mailLabelsHtml(message){
+      const fallback=(CATEGORIES.find(category=>category.id===message.category)||{}).label||'Principal';
+      const labels=(message.labels&&message.labels.length?message.labels:[fallback]).slice(0,3);
+      return `<span class="mail-labels">${labels.map(label=>`<span class="mail-label"><i></i>${escapeHtml(label)}</span>`).join('')}</span>`;
     }
 
     function domainOf(addr) { return (addr || '').split('@').pop().toLowerCase(); }
@@ -2570,6 +2715,8 @@
     }
     function onAccountChange(id) {
       currentAccount = id;
+      currentFolder = 'INBOX';
+      folders = [];
       try { localStorage.setItem('simplemail_last_account', id); } catch(e){}
       currentSelectedId = null;
       currentListIndex = -1;
@@ -2580,6 +2727,7 @@
       currentActiveView = 'loading';
       updateUIState();
       updateAccountIdentity();
+      loadFolders(id);
       loadMessages().then(() => {
         setAvatarLoading(false);
       }).catch(err => {
@@ -2589,8 +2737,11 @@
       });
     }
     async function loadFolders(account) {
-      try { folders = await api(`/api/accounts/${account}/folders`); }
-      catch (e) { folders = []; }
+      let result=[];
+      try { result = await api(`/api/accounts/${account}/folders`); }
+      catch (e) {}
+      if(account!==currentAccount) return;
+      folders=result;
       if (folders.length && !folders.some(f => f.name === currentFolder)) currentFolder = 'INBOX';
       if (!folders.some(f => f.name === currentFolder)) currentFolder = (folders[0] && folders[0].name) || 'INBOX';
       renderDrawer();
@@ -2690,7 +2841,7 @@
       const sent=findServerFolder('SENT');
       const drafts=findServerFolder('DRAFTS');
       const spam=findServerFolder('SPAM','JUNK');
-      const archive=findServerFolder('ARCHIVE');
+      const archive=findServerFolder('ARCHIVE')||findServerFolder('ALL MAIL');
       const trash=findServerFolder('TRASH');
 
       // --- Dossiers principaux ---
@@ -2895,6 +3046,8 @@
 
     // ====================== Messages ======================
     let _loadingStart = 0;
+    let _messagesRequest = 0;
+    let _messagesController = null;
     function showLoading(){
       const useSearch = settings.loadingStyle === 'search';
       if(useSearch){
@@ -2921,6 +3074,9 @@
       }, delay);
     }
     async function loadMessages(alertFlag, silent=false, forceNetwork=false) {
+      const requestId = ++_messagesRequest;
+      if(_messagesController) _messagesController.abort();
+      _messagesController = new AbortController();
       if(!silent){
         showLoading();
         currentActiveView='loading'; updateUIState();
@@ -2943,7 +3099,8 @@
         if (searchText.trim()) qs.set('q', searchText.trim());
         if(currentFolder==='INBOX') qs.set('category', currentCategory);
         if(forceNetwork) qs.set('no_cache', 'true');
-        const data = await api('/api/messages?' + qs.toString());
+        const data = await api('/api/messages?' + qs.toString(), {signal:_messagesController.signal});
+        if(requestId !== _messagesRequest) return;
         const raw = data.messages || [];
         const mapped = raw.map(mapMessage);
         _mergePriorDetails(mapped);
@@ -2970,6 +3127,7 @@
         if (!folders.length) loadFolders(currentAccount).catch(() => {});
         if(!silent) hideLoading();
       } catch (e) {
+        if(requestId !== _messagesRequest) return;
         loadError = e.message;
         if(!silent){ emails=[]; currentActiveView='zero'; updateUIState(); hideLoading(); showToast('Erreur chargement : ' + e.message); }
       }
@@ -3099,9 +3257,8 @@
     function escapeHtml(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
     function escapeAttr(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
     function stripHtmlTags(html){
-      const div = document.createElement('div');
-      div.innerHTML = html || '';
-      return (div.textContent || div.innerText || '').replace(/\u00a0/g, ' ').trim();
+      const doc = new DOMParser().parseFromString(html || '', 'text/html');
+      return (doc.body.textContent || '').replace(/\u00a0/g, ' ').trim();
     }
     function cleanHtmlForImmersive(e){
       if(!e.html) return '';
@@ -3211,10 +3368,7 @@
       button.setAttribute('aria-expanded',String(show));
     }
     function simplifiedMessageProse(e){
-      if(e.html){
-        const cleaned=cleanHtmlForImmersive(e);
-        return `<div class="mail-body-copy" style="max-width:100%">${cleaned}</div>`;
-      }
+      if(e.html) return htmlMailBlock(e);
       const plain = (e.text && e.text.trim()) ? e.text : (e.snippet || '');
       const {visible,quoted}=splitQuotedPlainText(plain);
       const quoteId=`quoted-history-${++quotedHistorySequence}`;
@@ -3858,6 +4012,7 @@
             <div class="truncate text-sm flex items-center gap-2 min-w-0">
               <span class="${hasUnread?'text-gray-900 font-bold':'text-gray-800'} truncate">${escapeHtml(email.subject)}</span>
               ${threadSize>1?`<span class="thread-badge shrink-0" title="${threadSize} messages dans la conversation">${threadSize}</span>`:''}
+              ${mailLabelsHtml(email)}
               <span class="text-gray-400 text-xs font-normal opacity-80 truncate hidden lg:inline">- ${escapeHtml((email.snippet||'')).slice(0,60)}</span>
             </div>
           </div>
@@ -3870,8 +4025,8 @@
               <span class="material-symbols-outlined" style="${starred?'color:#f59e0b':''}">${starred?'star':'star_border'}</span>
             </span>
             ${folderActionHtml}
-            <span class="hover-action-btn" onclick="event.stopPropagation(); markAsNewsletter('${escapeAttr(email.email||domainOf(email.email))}')" title="Marquer comme newsletter">
-              <span class="material-symbols-outlined">mail_outline</span>
+            <span class="hover-action-btn" onclick="event.stopPropagation(); labelCurrent(emails.find(message=>message.id==='${escapeAttr(email.id)}'))" title="Ajouter un libellé">
+              <span class="material-symbols-outlined">label</span>
             </span>
             <span class="hover-action-btn" onclick="event.stopPropagation(); deleteItem('${email.id}')" title="${escapeAttr(withShortcut(folderKey(currentFolder)==='TRASH'?'Supprimer définitivement':'Déplacer vers la corbeille','delete'))}">
               <span class="material-symbols-outlined">delete</span>
@@ -4206,7 +4361,7 @@
     // ===== Settings persistés (localStorage) =====
     let settings = {};
     try { settings = JSON.parse(localStorage.getItem('mm_settings') || '{}'); } catch(e) { settings = {}; }
-    const migrateConversationDefaults = settings.conversationDefaultsVersion !== 4;
+    const migrateConversationDefaults = settings.conversationDefaultsVersion !== 5;
     if (migrateConversationDefaults) {
       if (settings.conversationDefaultsVersion !== 2) {
         settings.convOrder = 'oldest';
@@ -4215,7 +4370,11 @@
       if (settings.conversationDefaultsVersion !== 3) {
         settings.readMode = 'classic';
       }
-      settings.conversationDefaultsVersion = 4;
+      if (settings.conversationDefaultsVersion !== 5) {
+        settings.readMode = 'simplified';
+        settings.fullscreenReader = false;
+      }
+      settings.conversationDefaultsVersion = 5;
     }
     if (!settings.convOrder) settings.convOrder = 'oldest';
     if (!settings.threadExpansion) settings.threadExpansion = 'all';
@@ -4637,6 +4796,7 @@
         category:'primary', threadId:`related:${message.message_id||message.uid}`, snippet:message.snippet||'',
         hasAttachments:!!message.has_attachments, attachmentCount:message.attachment_count||0,
         html:message.html||null, text:message.text||'', messageId:message.message_id||'',
+        labels:Array.isArray(message.labels)?message.labels:[],
         attachments:(message.attachments||[]).map(attachment=>({
           name:attachment.filename||'fichier', size:humanSize(attachment.size), type:guessType(attachment), index:attachment.index,
           url:appUrl(`/api/messages/${message.account}/${message.uid}/attachment/${attachment.index}?folder=${encodeURIComponent(folder)}`),
@@ -4858,7 +5018,7 @@
     }
     async function archiveItem(id){
       const m=emails.find(e=>e.id===id); if(!m) return;
-      const archive = findServerFolder('ARCHIVE');
+      const archive = findServerFolder('ARCHIVE')||findServerFolder('ALL MAIL');
       const dest = archive?.name || 'Archive';
       try{
         await moveMailToFolder(m, dest, false);
@@ -4896,7 +5056,7 @@
     async function archiveCurrent(){
       const m=currentMailForAction();
       if(!m) return showToast('Aucun message sélectionné');
-      const archive = findServerFolder('ARCHIVE');
+      const archive = findServerFolder('ARCHIVE')||findServerFolder('ALL MAIL');
       const dest = archive?.name || 'Archive';
       const toArchive = m.threadId ? emails.filter(e => e.threadId === m.threadId) : [m];
       const idsToArchive = new Set(toArchive.map(e => e.id));
@@ -4922,7 +5082,7 @@
     async function moveCurrent(){
       const m=currentMailForAction();
       if(!m) return showToast('Aucun message sélectionné');
-      const dest = prompt('Déplacer vers quel dossier ?', findServerFolder('ARCHIVE')?.name || 'Archive');
+      const dest = prompt('Déplacer vers quel dossier ?', (findServerFolder('ARCHIVE')||findServerFolder('ALL MAIL'))?.name || 'Archive');
       if(!dest) return;
       try{
         await moveMailToFolder(m, dest.trim(), false);
@@ -4932,18 +5092,31 @@
         showToast(`Déplacement impossible : ${e.message}`);
       }
     }
-    async function labelCurrent(){
-      const m=currentMailForAction();
-      if(!m) return showToast('Aucun message sélectionné');
-      const dest = prompt('Copier comme libellé vers quel dossier ?', 'Label');
-      if(!dest) return;
+    let labelTarget=null;
+    function closeLabelMenu(){ document.getElementById('label-menu')?.remove(); labelTarget=null; }
+    async function applyLabel(folder){
+      const m=labelTarget; if(!m) return;
       try{
-        await moveMailToFolder(m, dest.trim(), true);
-        showToast(`Libellé ajouté: ${dest.trim()}`);
-        await loadMessages(true);
-      }catch(e){
-        showToast(`Libellé impossible : ${e.message}`);
-      }
+        await moveMailToFolder(m,folder,true);
+        m.labels=[...new Set([...(m.labels||[]),folder])];
+        closeLabelMenu(); renderInboxList();
+        showToast(`Libellé ajouté : ${folder}`);
+      }catch(e){ showToast(`Libellé impossible : ${e.message}`); }
+    }
+    function filterLabelMenu(value){
+      const query=value.trim().toLowerCase();
+      document.querySelectorAll('#label-menu [data-label]').forEach(button=>button.classList.toggle('hidden',!button.dataset.label.toLowerCase().includes(query)));
+    }
+    async function labelCurrent(target){
+      const m=target||currentMailForAction();
+      if(!m) return showToast('Aucun message sélectionné');
+      closeLabelMenu(); labelTarget=m;
+      const excluded=new Set(['INBOX','SENT','DRAFTS','TRASH','SPAM','JUNK','ARCHIVE','ALL MAIL']);
+      const labels=folders.filter(folder=>!excluded.has(folderKey(folder.name))).map(folder=>folder.name);
+      if(!labels.length) return showToast('Créez d’abord un libellé dans le menu latéral');
+      const menu=document.createElement('div'); menu.id='label-menu';
+      menu.innerHTML=`<div class="label-menu-backdrop" onclick="closeLabelMenu()"></div><div class="label-menu-panel" role="dialog" aria-modal="true" aria-label="Ajouter un libellé"><div class="label-menu-title"><span>Classer ce mail</span><button onclick="closeLabelMenu()" aria-label="Fermer"><span class="material-symbols-outlined">close</span></button></div><div class="label-menu-search"><span class="material-symbols-outlined">search</span><input autofocus placeholder="Rechercher un libellé" oninput="filterLabelMenu(this.value)"></div><div class="label-menu-options">${labels.map(label=>`<button data-label="${escapeAttr(label)}" onclick="applyLabel(this.dataset.label)"><span class="label-menu-dot"></span><span>${escapeHtml(label)}</span>${(m.labels||[]).includes(label)?'<span class="material-symbols-outlined">check</span>':''}</button>`).join('')}</div></div>`;
+      document.body.appendChild(menu); menu.querySelector('input').focus();
     }
     async function moreMessageActions(){ await showMoreConversationActions(); }
     function closeConversationMoreMenu(){ document.getElementById('conversation-more-menu')?.remove(); }
@@ -5046,20 +5219,23 @@
     async function bulkAction(action){
       const n = selectedMailIds.size;
       if(n === 0) return;
+      const messages=emails.filter(message=>selectedMailIds.has(message.id));
       if(action === 'restore'){
-        const messages=emails.filter(message=>selectedMailIds.has(message.id));
         selectedMailIds.clear();
         await restoreThreadMessages(messages,false);
       } else if(action === 'delete'){
-        selectedMailIds.forEach(id => {
-          const m = emails.find(e => e.id === id);
-          if(m) api(`/api/messages/${m.account}/${m.uid}?folder=${encodeURIComponent(currentFolder)}`, {method:'DELETE'}).catch(()=>{});
-        });
-        emails = emails.filter(e => !selectedMailIds.has(e.id));
-        showToast(`${n} email${n>1?'s':''} supprimé${n>1?'s':''}`);
+        try{
+          await Promise.all(messages.map(m=>api(`/api/messages/${m.account}/${m.uid}?folder=${encodeURIComponent(currentFolder)}`, {method:'DELETE'})));
+          emails = emails.filter(e => !selectedMailIds.has(e.id));
+          showToast(`${n} email${n>1?'s':''} supprimé${n>1?'s':''}`);
+        }catch(error){ showToast('Suppression impossible : '+error.message); return; }
       } else if(action === 'archive'){
-        showToast(`${n} email${n>1?'s':''} archivé${n>1?'s':''}`);
-        emails = emails.filter(e => !selectedMailIds.has(e.id));
+        const dest=findServerFolder('ARCHIVE')?.name||findServerFolder('ALL MAIL')?.name||'Archive';
+        try{
+          await Promise.all(messages.map(message=>moveMailToFolder(message,dest,false)));
+          emails = emails.filter(e => !selectedMailIds.has(e.id));
+          showToast(`${n} email${n>1?'s':''} archivé${n>1?'s':''}`);
+        }catch(error){ showToast('Archivage impossible : '+error.message); return; }
       } else if(action === 'read'){
         selectedMailIds.forEach(id => {
           const m = emails.find(e => e.id === id);
@@ -5173,7 +5349,17 @@
       sb.classList.toggle('immersive-star-on', !!(e&&e.starred));
     }
     function immersiveToggleStar(){ const e=immersiveList[immersiveIndex]; if(!e) return; e.starred=!e.starred; apiCallFlag(e,null,e.starred); updateImmersiveChrome(); showToast(e.starred?'Ajouté aux suivis':'Retiré des suivis'); }
-    function immersiveArchive(){ immersiveDelete(); }
+    async function immersiveArchive(){
+      const e=immersiveList[immersiveIndex]; if(!e) return;
+      const dest=findServerFolder('ARCHIVE')?.name||findServerFolder('ALL MAIL')?.name||'Archive';
+      try{
+        await moveMailToFolder(e,dest,false);
+        emails=emails.filter(x=>x.id!==e.id); immersiveList=getImmersiveList();
+        if(immersiveIndex>=immersiveList.length) immersiveIndex=immersiveList.length-1;
+        if(!immersiveList.length) closeImmersive(); else renderImmersiveSlides();
+        showToast(`Archivé dans ${dest}`);
+      }catch(error){ showToast('Archivage impossible : '+error.message); }
+    }
     function immersiveDelete(){ const e=immersiveList[immersiveIndex]; if(!e) return;
       // UI instantanée : on retire le slide et on passe au suivant tout de suite.
       emails=emails.filter(x=>x.id!==e.id); immersiveList=getImmersiveList();
@@ -5478,15 +5664,9 @@
       }, 200);
       document.getElementById('fs-meta').textContent = (e.date || '') + (e.sender ? '   ·   ' + e.sender : '');
       document.getElementById('fs-title').textContent = e.subject || '';
-      let html = '';
-      const parsed = await getParsedMessage(e);
-      if (parsed && parsed.body) {
-        html = parsed.body.innerHTML;
-      }
-      if (!html && e.text) {
-        html = '<p>' + e.text.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
-      }
-      document.getElementById('fs-text').innerHTML = html;
+      await getParsedMessage(e);
+      const safeText=(e.text&&e.text.trim())?e.text:stripHtmlTags(e.html||'');
+      document.getElementById('fs-text').innerHTML=proseParagraphs(safeText);
       const webmailLink = document.getElementById('header-webmail-link');
       const href = webmailLink ? webmailLink.getAttribute('href') : '#';
       document.getElementById('fs-readmore').setAttribute('href', href || '#');
@@ -5718,6 +5898,7 @@
       // --- ESC : retour progressif → drawer ---
       if(e.key==='Escape'){
         e.preventDefault();
+        if(document.getElementById('label-menu')){ closeLabelMenu(); return; }
         if(selectedMailIds.size > 0){ clearSelection(); return; }
         if(newsletterCarouselExpanded){ toggleNewsletterCarousel(); return; }
         if(currentActiveView==='conversation'||currentActiveView==='newsletter'){ handleBack(); return; }
@@ -5732,13 +5913,14 @@
       }
       // --- Two-key sequences (G+I, G+S, etc.) ---
       if(_pendingKey){
-        clearTimeout(_pendingTimer); _pendingKey=null;
-        const combo=_pendingKey+'+'+e.key;
+        clearTimeout(_pendingTimer);
+        const combo=_pendingKey+'+'+e.key.toLowerCase();
+        _pendingKey=null;
         if(combo==='g+i'){ e.preventDefault(); onFolderChange(findServerFolder('INBOX')?.name||'INBOX'); }
         else if(combo==='g+s'){ e.preventDefault(); filterStarred(); }
         else if(combo==='g+t'){ e.preventDefault(); onFolderChange(findServerFolder('TRASH')?.name||'TRASH'); }
         else if(combo==='g+d'){ e.preventDefault(); onFolderChange(findServerFolder('DRAFTS')?.name||'DRAFTS'); }
-        else if(combo==='g+a'){ e.preventDefault(); onFolderChange(findServerFolder('ARCHIVE')?.name||'ARCHIVE'); }
+        else if(combo==='g+a'){ e.preventDefault(); onFolderChange((findServerFolder('ARCHIVE')||findServerFolder('ALL MAIL'))?.name||'ARCHIVE'); }
         else if(combo==='g+n'){ e.preventDefault(); onFolderChange(findServerFolder('SENT')?.name||'SENT'); }
         return;
       }

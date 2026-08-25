@@ -170,6 +170,21 @@ _GMAIL_CATEGORY_LABELS = {
 }
 
 
+def _decode_imap_utf7(value: str) -> str:
+    def decode(match):
+        encoded = match.group(1)
+        if not encoded:
+            return "&"
+        encoded = encoded.replace(",", "/")
+        encoded += "=" * (-len(encoded) % 4)
+        try:
+            return base64.b64decode(encoded).decode("utf-16-be")
+        except Exception:
+            return match.group(0)
+
+    return re.sub(r"&([A-Za-z0-9+,/]*)-", decode, value)
+
+
 def _gmail_message_labels(mailbox, uid_list) -> dict:
     """Read X-GM-LABELS for a set of UIDs via a raw IMAP command.
 
@@ -178,7 +193,7 @@ def _gmail_message_labels(mailbox, uid_list) -> dict:
     `gmail_labels` attribute -- so the per-message label fallback that used to
     call `getattr(m, 'gmail_labels', None)` always returned None. This issues
     `UID FETCH <uids> (UID X-GM-LABELS)` directly and parses the parenthesised
-    label list. Returns {uid_str: set(lowercase_label)}; best-effort, {} on
+    label list. Returns {uid_str: set(decoded_label)}; best-effort, {} on
     any failure (non-Gmail servers will simply return an empty map).
     """
     uids = [str(u) for u in (uid_list or []) if u]
@@ -211,8 +226,9 @@ def _gmail_message_labels(mailbox, uid_list) -> dict:
             labels = set()
             lbl_m = re.search(r"X-GM-LABELS\s*\((.*?)\)", text, re.S)
             if lbl_m:
-                for tok in lbl_m.group(1).split():
-                    labels.add(tok.replace("\\", "").lower())
+                for quoted, atom in re.findall(r'"((?:\\.|[^"])*)"|([^\s]+)', lbl_m.group(1)):
+                    token = (quoted or atom).replace(r'\"', '"').replace(r"\\", "\\")
+                    labels.add(_decode_imap_utf7(token))
             result[uid_m.group(1)] = labels
     return result
 
@@ -249,12 +265,25 @@ def _init_db():
     db.execute("""
         CREATE TABLE IF NOT EXISTS msg_detail_cache (
             account TEXT NOT NULL,
+            folder TEXT NOT NULL,
             uid TEXT NOT NULL,
             data TEXT NOT NULL,
             fetched_at REAL NOT NULL,
-            PRIMARY KEY (account, uid)
+            PRIMARY KEY (account, folder, uid)
         )
     """)
+    if "folder" not in {row[1] for row in db.execute("PRAGMA table_info(msg_detail_cache)")}:
+        db.execute("DROP TABLE msg_detail_cache")
+        db.execute("""
+            CREATE TABLE msg_detail_cache (
+                account TEXT NOT NULL,
+                folder TEXT NOT NULL,
+                uid TEXT NOT NULL,
+                data TEXT NOT NULL,
+                fetched_at REAL NOT NULL,
+                PRIMARY KEY (account, folder, uid)
+            )
+        """)
     db.execute("""
         CREATE TABLE IF NOT EXISTS newsletter_msg_cache (
             account TEXT NOT NULL,
@@ -487,10 +516,25 @@ def cache_set(key, data):
 def cache_invalidate(account, folder=None, uid=None):
     if uid is not None:
         _MSG_CACHE.pop(_cache_key(account, folder or "", uid), None)
-        return
-    for k in list(_MSG_CACHE.keys()):
-        if k.startswith(f"{account}:{folder}:" if folder else f"{account}:"):
-            _MSG_CACHE.pop(k, None)
+    else:
+        for k in list(_MSG_CACHE.keys()):
+            if k.startswith(f"{account}:{folder}:" if folder else f"{account}:"):
+                _MSG_CACHE.pop(k, None)
+    try:
+        db = sqlite3.connect(str(DB_PATH))
+        query = "DELETE FROM msg_detail_cache WHERE account=?"
+        params = [account]
+        if folder is not None:
+            query += " AND folder=?"
+            params.append(folder)
+        if uid is not None:
+            query += " AND uid=?"
+            params.append(str(uid))
+        db.execute(query, params)
+        db.commit()
+        db.close()
+    except Exception:
+        pass
 
 
 # ---------- Realtime (IMAP IDLE -> SSE) ----------
@@ -593,7 +637,6 @@ def _db_cache_cleanup():
             db.execute("DELETE FROM msg_detail_cache WHERE fetched_at < ?", (now - 7 * 86400,))
             db.execute("DELETE FROM newsletter_msg_cache WHERE fetched_at < ?", (now - 7 * 86400,))
             db.execute("DELETE FROM thread_sent_cache WHERE fetched_at < ?", (now - _THREAD_SENT_TTL))
-            db.execute("VACUUM")
             db.commit()
             db.close()
         except Exception:
@@ -776,7 +819,7 @@ async def events():
             while True:
                 try:
                     ev = await asyncio.wait_for(q.get(), timeout=25)
-                    yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
+                    yield f"event: {ev.get('type', 'message')}\ndata: {json.dumps(ev, ensure_ascii=False)}\n\n"
                 except asyncio.TimeoutError:
                     yield ": ping\n\n"
         finally:
@@ -934,12 +977,19 @@ DEMO_FOLDERS = {
         {"name": "Drafts", "unseen": 0, "total": 3},
         {"name": "Trash", "unseen": 0, "total": 5},
         {"name": "Junk", "unseen": 0, "total": 4},
+        {"name": "Archive", "unseen": 0, "total": 35},
+        {"name": "Clients", "unseen": 0, "total": 18},
+        {"name": "À lire", "unseen": 0, "total": 12},
+        {"name": "Suivi", "unseen": 0, "total": 8},
     ],
     "pro": [
         {"name": "INBOX", "unseen": 5, "total": 20},
         {"name": "Sent", "unseen": 0, "total": 18},
         {"name": "Drafts", "unseen": 0, "total": 2},
         {"name": "Archive", "unseen": 0, "total": 35},
+        {"name": "Clients", "unseen": 0, "total": 18},
+        {"name": "À lire", "unseen": 0, "total": 12},
+        {"name": "Suivi", "unseen": 0, "total": 8},
     ],
     "demo": [
         {"name": "INBOX", "unseen": 14, "total": 69},
@@ -948,6 +998,9 @@ DEMO_FOLDERS = {
         {"name": "Trash", "unseen": 0, "total": 5},
         {"name": "Junk", "unseen": 0, "total": 4},
         {"name": "Archive", "unseen": 0, "total": 35},
+        {"name": "Clients", "unseen": 0, "total": 18},
+        {"name": "À lire", "unseen": 0, "total": 12},
+        {"name": "Suivi", "unseen": 0, "total": 8},
     ],
 }
 
@@ -1803,13 +1856,13 @@ def folders(account_id: str):
     with open_mailbox(account) as mailbox:
         result = []
         order = ["INBOX", "Sent", "Drafts", "Trash", "Junk", "Spam", "Archive"]
-        priority = {"inbox", "sent", "drafts", "trash", "junk", "spam", "archive",
-                     "[gmail]/all mail", "[gmail]/starred", "[gmail]/important", "[gmail]/spam"}
+        priority = {"inbox", "sent", "sent mail", "drafts", "trash", "junk", "spam", "archive",
+                     "all mail", "starred", "important"}
         for folder in mailbox.folder.list():
             name = folder.name
             key = name.lower().split("/").pop().strip()
             # Only fetch STATUS for key folders — skip the rest for speed
-            if key in priority or "/" not in name:
+            if key in priority:
                 try:
                     status = mailbox.folder.status(name)
                     result.append({"name": name, "unseen": status.get("UNSEEN", 0), "total": status.get("MESSAGES", 0)})
@@ -1834,6 +1887,7 @@ def create_folder(account_id: str, body: FolderCreateRequest):
         if mailbox.folder.exists(name):
             raise HTTPException(status_code=409, detail=f"Le libellé '{name}' existe déjà")
         mailbox.folder.create(name)
+    _response_cache_invalidate("folders:" + account_id)
     return {"ok": True, "name": name}
 
 
@@ -1938,6 +1992,13 @@ def list_messages(
                 msgs = [m for m in msgs if m.get("category") == "promotions" and not _is_newsletter_entry(m, manual_domains)]
             else:
                 msgs = [m for m in msgs if m.get("category", "primary") == category and not _is_newsletter_entry(m, manual_domains)]
+        demo_labels = {
+            "primary": ["Clients"], "social": ["Réseaux"],
+            "promotions": ["À lire"], "updates": ["Suivi"],
+            "forums": ["Communautés"],
+        }
+        for message in msgs:
+            message["labels"] = demo_labels.get(message.get("category"), [])
         total = len(msgs)
         start = (page - 1) * page_size
         return {"messages": msgs[start:start + page_size], "page": page, "page_size": page_size,
@@ -1992,7 +2053,7 @@ def list_messages(
                 labels_by_uid = _gmail_message_labels(
                     mailbox, [str(m.uid) for m in all_fetched if m.uid])
                 fetched = [m for m in all_fetched
-                           if target_norm in labels_by_uid.get(str(m.uid), set())]
+                           if target_norm in {label.lower() for label in labels_by_uid.get(str(m.uid), set())}]
                 if not fetched:
                     # Tier 3: last-resort heuristic. _categorize() classifies
                     # each message individually -- we deliberately do NOT tag
@@ -2071,6 +2132,13 @@ def list_messages(
 
         total = folder_total if direct_folder_page else len(all_messages)
         msgs = all_messages if direct_folder_page else all_messages[offset:offset + page_size]
+        if is_gmail and msgs:
+            labels_by_uid = _gmail_message_labels(mailbox, [entry["uid"] for entry in msgs])
+            for entry in msgs:
+                entry["labels"] = sorted(
+                    label for label in labels_by_uid.get(entry["uid"], set())
+                    if not label.startswith("\\") and not label.startswith("category:")
+                )
         result = {"messages": msgs, "page": page, "page_size": page_size, "total": total,
                   "total_pages": max(1, (total + page_size - 1) // page_size),
                   "cache_state": "miss"}
@@ -2195,8 +2263,8 @@ def get_message(account: str, uid: str, folder: str = Query("INBOX")):
     try:
         db = sqlite3.connect(str(DB_PATH))
         row = db.execute(
-            "SELECT data FROM msg_detail_cache WHERE account=? AND uid=?",
-            (account, uid),
+            "SELECT data FROM msg_detail_cache WHERE account=? AND folder=? AND uid=?",
+            (account, folder, uid),
         ).fetchone()
         db.close()
         if row:
@@ -2243,8 +2311,8 @@ def get_message(account: str, uid: str, folder: str = Query("INBOX")):
         try:
             db = sqlite3.connect(str(DB_PATH))
             db.execute(
-                "INSERT OR REPLACE INTO msg_detail_cache (account, uid, data, fetched_at) VALUES (?, ?, ?, ?)",
-                (account, uid, json.dumps(result, ensure_ascii=False, default=str), time.time()),
+                "INSERT OR REPLACE INTO msg_detail_cache (account, folder, uid, data, fetched_at) VALUES (?, ?, ?, ?, ?)",
+                (account, folder, uid, json.dumps(result, ensure_ascii=False, default=str), time.time()),
             )
             db.commit()
             db.close()
@@ -2254,12 +2322,13 @@ def get_message(account: str, uid: str, folder: str = Query("INBOX")):
 
 
 def _find_sent_folder(mailbox):
-    for sent_name in ("Sent", "INBOX.Sent", "Sent Items", "Boîte d'envoi", "Éléments envoyés"):
-        try:
-            if mailbox.folder.exists(sent_name):
-                return sent_name
-        except Exception:
-            continue
+    keys = {"SENT", "SENT ITEMS", "SENT MAIL", "BOÎTE D'ENVOI", "ÉLÉMENTS ENVOYÉS"}
+    try:
+        for folder in mailbox.folder.list():
+            if _folder_simple_key(folder.name) in keys:
+                return folder.name
+    except Exception:
+        pass
     return None
 
 
@@ -2572,6 +2641,7 @@ def _folder_candidates(mailbox, preferred: str, aliases: list[str]):
     existing = {}
     for f in mailbox.folder.list():
         existing[f.name.lower()] = f.name
+        existing.setdefault(_folder_simple_key(f.name).lower(), f.name)
     for name in [preferred, *aliases]:
         real = existing.get(name.lower())
         if real:
@@ -2591,7 +2661,7 @@ def archive_message(account: str, uid: str, folder: str = Query("INBOX")):
     acc = get_account(account)
     with open_mailbox(acc) as mailbox:
         mailbox.folder.set(folder)
-        dest = _folder_candidates(mailbox, "Archive", ["INBOX.Archive", "Archived", "Archives"])
+        dest = _folder_candidates(mailbox, "Archive", ["INBOX.Archive", "Archived", "Archives", "All Mail"])
         mailbox.move(uid, dest)
     cache_invalidate(account, folder, uid)
     _response_cache_invalidate("messages:" + account)

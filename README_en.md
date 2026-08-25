@@ -8,16 +8,16 @@ Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Package
 
 ## Features
 
-- Resizable message list + conversation split (responsive %-based width on large screens)
+- Immersive cardless white interface, responsive from mobile to large displays
 - Newsletters: adaptive multi-card carousel (4→8 columns depending on space), animated dock, hero detail with real images
-- Gmail categories (icons + badges)
+- Gmail categories and labels visible on every message, with a searchable filing picker
 - Fully configurable keyboard shortcuts
 - Full-screen Settings (fonts, theme, date format, newsletters, language, accounts, about)
 - Light/dark/photo background theme
 - Selection mode with bulk actions
 - Centered search with counter
 - Sender favicon with initials fallback
-- Immersive reading mode
+- Editorial immersive reader by default, `J` / `K` navigation and sandboxed HTML
 - Fullscreen composer
 - Account import/export (JSON: config + passwords + SQLite DB + localStorage settings)
 - Built-in RSS reader
@@ -30,7 +30,7 @@ Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Package
 ```bash
 cd src/desktop
 source secrets/mail.env
-python3 main.py
+SIMPLEMAIL_AUTH=0 python3 main.py
 # http://0.0.0.0:8000
 ```
 
@@ -79,6 +79,8 @@ Contents:
 
 The backend keeps its memory footprint bounded:
 - Bounded in-RAM LRU caches: threads (40 entries), message bodies (150 entries, 5 min TTL)
+- Immediate SQLite snapshot followed by a silent Gmail sync in the background
+- Reused IMAP connections and folder loading limited to useful system statuses
 - 6000-header cap per filtered fetch (category/search) — prevents loading the whole mailbox into RAM
 - Background thread purges SQLite caches every 10 min (`response_cache`, `msg_detail_cache`, `newsletter_msg_cache`)
 
@@ -88,7 +90,7 @@ The backend keeps its memory footprint bounded:
 2. `cd src/desktop`
 3. Copy `config.example.json` → `config.json`, fill your accounts
 4. Create `secrets/mail.env` with your passwords
-5. Run `python3 main.py`
+5. Run `SIMPLEMAIL_AUTH=0 python3 main.py`
 
 To migrate to another machine: **Settings → Accounts → Export**, then **Import** on the target machine.
 

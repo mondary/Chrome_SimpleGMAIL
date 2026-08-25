@@ -1,0 +1,37 @@
+import os
+import sqlite3
+import tempfile
+import unittest
+from pathlib import Path
+
+os.environ["SIMPLEMAIL_AUTH"] = "0"
+os.environ["DEMO"] = "1"
+
+import main
+
+
+class SmokeTests(unittest.TestCase):
+    def test_message_cache_is_folder_scoped(self):
+        original = main.DB_PATH
+        with tempfile.TemporaryDirectory() as directory:
+            main.DB_PATH = Path(directory) / "simplemail.db"
+            main._init_db()
+            db = sqlite3.connect(main.DB_PATH)
+            columns = [row[1] for row in db.execute("PRAGMA table_info(msg_detail_cache)")]
+            primary_key = [row[1] for row in db.execute("PRAGMA table_info(msg_detail_cache)") if row[5]]
+            db.close()
+        main.DB_PATH = original
+        self.assertEqual(columns, ["account", "folder", "uid", "data", "fetched_at"])
+        self.assertEqual(primary_key, ["account", "folder", "uid"])
+
+    def test_gmail_system_folder_keys(self):
+        self.assertEqual(main._folder_simple_key("[Gmail]/All Mail"), "ALL MAIL")
+        self.assertEqual(main._folder_simple_key("[Gmail]/Sent Mail"), "SENT MAIL")
+
+    def test_imap_utf7_label_decoding(self):
+        self.assertEqual(main._decode_imap_utf7("Projets/&AMk-t&AOk-"), "Projets/Été")
+        self.assertEqual(main._decode_imap_utf7("R&D"), "R&D")
+
+
+if __name__ == "__main__":
+    unittest.main()
