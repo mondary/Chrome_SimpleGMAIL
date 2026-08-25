@@ -1556,9 +1556,13 @@ def index():
 
 
 # Lab V2 : prototypes de themes branches sur la meme API que l'app.
+# dev : src/lab (voisin de src/desktop) ; serveur : lab/ dans le dossier de l'app.
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 
-_lab_dir = BASE_DIR.parent / "lab"
+_lab_dir = next(
+    (d for d in (BASE_DIR / "lab", BASE_DIR.parent / "lab") if d.is_dir()),
+    BASE_DIR / "lab",
+)
 if _lab_dir.is_dir():
     app.mount("/lab", StaticFiles(directory=str(_lab_dir), html=True), name="lab")
 
