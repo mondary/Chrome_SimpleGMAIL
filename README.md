@@ -9,6 +9,9 @@ Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla
 ## Fonctionnalités
 
 - Interface blanche immersive sans cartes, responsive du mobile aux grands écrans
+- Interface V2 à trois thèmes, avec retour vers l'interface classique depuis les réglages
+- Installation au choix : PWA, application Android native ou extension Chrome
+- Mails envoyés à soi-même affichés en post-its configurables
 - Newsletters : carrousel multicartes (grille adaptative 4→8 colonnes selon la place), dock animé, détail hero avec vraies images
 - Catégories et libellés Gmail visibles sur chaque mail, avec sélecteur de classement et recherche
 - Raccourcis clavier entièrement configurables
@@ -81,7 +84,7 @@ Le backend maîtrise sa consommation mémoire :
 - Caches en RAM bornés (LRU) : threads (40 entrées), corps de messages (150 entrées, TTL 5 min)
 - Instantané SQLite servi immédiatement, puis synchronisation Gmail silencieuse en arrière-plan
 - Connexions IMAP réutilisées et chargement des dossiers limité aux statuts système utiles
-- Plafond de 6000 en-têtes par filtrage (catégorie/recherche) — évite de charger toute la boîte en RAM
+- Fenêtre récente bornée pour les catégories et newsletters; les recherches générales restent plafonnées
 - Thread de purge automatique des caches SQLite toutes les 10 min (`response_cache`, `msg_detail_cache`, `newsletter_msg_cache`)
 
 ## Installation

@@ -1,8 +1,9 @@
 # SimpleMail Mobile (Android + iOS)
 
 Wrapper **Capacitor** qui génère un `.apk` Android et un `.ipa` iOS.
-L'app native est une WebView qui charge le backend SimpleMail hébergé
-(`server.url` dans `capacitor.config.json`).
+L'app native est une WebView qui charge le Lab V2 depuis le backend SimpleMail
+hébergé (`server.url` dans `capacitor.config.json`). L'interface classique reste
+accessible depuis les réglages du Lab.
 
 ## Prérequis (une seule fois)
 

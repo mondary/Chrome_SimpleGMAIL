@@ -1,6 +1,6 @@
 {
   "name": "simplemail-mobile",
-  "version": "1.0.3",
+  "version": "2026.08.01",
   "private": true,
   "description": "Wrapper natif Capacitor pour SimpleMail (Android .apk + iOS .ipa)",
   "scripts": {

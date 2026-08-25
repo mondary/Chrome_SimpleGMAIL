@@ -1,0 +1,20 @@
+# Changelog
+
+Historique des versions de SimpleMail.
+
+## Releases
+
+### [2026.08.01] - 2026-08-26
+
+#### Added
+- Interface Lab V2 avec trois thèmes et retour vers l'interface classique.
+- Catégories Gmail, previews newsletters et mémos personnels en post-its.
+- Installation PWA, Android natif et extension Chrome depuis la même interface.
+- Preset de raccourcis Gmail officiel configurable.
+
+#### Changed
+- Chargements Gmail bornés et Canvas limité aux éléments visibles.
+- Lecture Canvas dans un drawer bas plutôt qu'une popup.
+
+### [1.0.4] — pré-CalVer
+- Interface classique archivée dans `archive/v1.0.4` et disponible dans le Tester.

@@ -1555,6 +1555,14 @@ def index():
     return HTMLResponse(html)
 
 
+# Lab V2 : prototypes de themes branches sur la meme API que l'app.
+from fastapi.staticfiles import StaticFiles  # noqa: E402
+
+_lab_dir = BASE_DIR.parent / "lab"
+if _lab_dir.is_dir():
+    app.mount("/lab", StaticFiles(directory=str(_lab_dir), html=True), name="lab")
+
+
 @app.get("/icon.png")
 def serve_icon():
     return FileResponse(BASE_DIR / "icon.png", media_type="image/png")
@@ -1975,6 +1983,7 @@ def list_messages(
     page_size: int = Query(100, ge=1, le=500),
     unseen: bool = Query(False),
     category: str = Query(""),
+    fast: bool = Query(False),
     no_cache: bool = Query(False),
 ):
     if _is_demo() or _is_demo_account(account):
@@ -2003,7 +2012,7 @@ def list_messages(
         start = (page - 1) * page_size
         return {"messages": msgs[start:start + page_size], "page": page, "page_size": page_size,
                 "total": total, "total_pages": max(1, (total + page_size - 1) // page_size)}
-    cache_key = f"messages:{account}:{folder}:{category}:{page}:{page_size}"
+    cache_key = f"messages:{account}:{folder}:{category}:{page}:{page_size}:{int(fast)}"
     if not q and not unseen and not no_cache:
         cached = _response_cache_get(cache_key, ttl=_INBOX_SNAPSHOT_TTL)
         if cached:
@@ -2022,7 +2031,7 @@ def list_messages(
             status = _status_or_none(mailbox, folder) or {}
             folder_total = int(status.get("MESSAGES", 0) or 0)
 
-        def _do_fetch(extra_kwargs):
+        def _do_fetch(extra_kwargs, limit_override=None):
             kw = {}
             if q: kw["text"] = q
             if unseen: kw["seen"] = False
@@ -2032,7 +2041,7 @@ def list_messages(
             # dossier en RAM lors d'un filtrage par catégorie/recherche, ce qui
             # faisait exploser la mémoire sur les grosses boîtes (jusqu'à 50 Go+).
             # On plafonne à 6000 en-têtes (le filtre catégorie se fait ensuite).
-            limit = (offset + page_size) if direct_folder_page else _FETCH_FILTER_CAP
+            limit = limit_override or ((offset + page_size) if direct_folder_page else _FETCH_FILTER_CAP)
             return mailbox.fetch(crit, limit=limit,
                                   reverse=True, mark_seen=False, bulk=True, headers_only=True)
 
@@ -2049,7 +2058,9 @@ def list_messages(
                 # exposes no `gmail_labels` attribute, so the old
                 # `getattr(m, 'gmail_labels', None)` filter was dead code that
                 # always fell through to the heuristic.
-                all_fetched = list(_do_fetch({}))
+                # Une catégorie Gmail mal gérée par le serveur ne doit jamais
+                # déclencher le scan historique de 6000 en-têtes.
+                all_fetched = list(_do_fetch({}, max(120, offset + page_size * 3)))
                 labels_by_uid = _gmail_message_labels(
                     mailbox, [str(m.uid) for m in all_fetched if m.uid])
                 fetched = [m for m in all_fetched
@@ -2116,10 +2127,13 @@ def list_messages(
         # returns sequence numbers); guard so any failure still leaves every
         # message with a valid per-message thread_id (no crash, no grouping
         # but messages still display).
-        try:
-            thread_map = _compute_threads(account, mailbox, folder, all_messages) or {}
-        except Exception:
+        if fast:
             thread_map = {}
+        else:
+            try:
+                thread_map = _compute_threads(account, mailbox, folder, all_messages) or {}
+            except Exception:
+                thread_map = {}
         if not thread_map:
             thread_map = {e["uid"]: e["uid"] for e in all_messages}
         _thread_counts = {}
@@ -2194,7 +2208,10 @@ def list_newsletter_messages(
         mailbox.folder.set(folder)
         fetched = mailbox.fetch(
             AND(all=True),
-            limit=min(max(target_end * 6, 600), 5000),
+            # Fenêtre récente volontairement bornée : le client peut rappeler
+            # l'endpoint pour la suite, mais l'ouverture ne scanne jamais des
+            # milliers d'en-têtes IMAP.
+            limit=min(max(target_end * 3, 80), 600),
             reverse=True,
             mark_seen=False,
             bulk=True,
