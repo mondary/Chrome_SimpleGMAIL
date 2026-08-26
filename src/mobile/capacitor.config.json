@@ -1,6 +1,6 @@
 {
-  "appId": "fr.simplemail.app",
-  "appName": "SimpleMail",
+  "appId": "fr.pkmail.app",
+  "appName": "PKMail",
   "webDir": "web",
   "android": {
     "allowMixedContent": false,

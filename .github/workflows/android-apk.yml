@@ -36,9 +36,8 @@ jobs:
       - name: Install mobile deps
         run: npm ci
 
-      - name: Create and sync Capacitor Android project
+      - name: Sync Capacitor Android project
         run: |
-          npx cap add android
           npx cap sync android
           sed -i "s/versionCode [0-9][0-9]*/versionCode ${{ steps.version.outputs.code }}/" android/app/build.gradle
           sed -i "s/versionName \"[^\"]*\"/versionName \"${{ steps.version.outputs.name }}\"/" android/app/build.gradle
@@ -71,11 +70,13 @@ jobs:
           APP_VERSION: ${{ steps.version.outputs.name }}
         run: |
           mkdir -p releases/android
-          cp src/mobile/android/app/build/outputs/apk/debug/app-debug.apk "releases/android/SimpleMail-${APP_VERSION}.apk"
+          cp src/mobile/android/app/build/outputs/apk/debug/app-debug.apk "releases/android/PKMail-${APP_VERSION}.apk"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git rm -f --ignore-unmatch releases/android/SimpleMail-debug.apk
-          git add -f "releases/android/SimpleMail-${APP_VERSION}.apk"
+          git rm -f --ignore-unmatch releases/android/SimpleMail-${APP_VERSION}.apk
+          git rm -f --ignore-unmatch releases/android/PKMail-${APP_VERSION}.apk
+          git add -f "releases/android/PKMail-${APP_VERSION}.apk"
           if git diff --cached --quiet; then
             echo "APK already up to date"
           else

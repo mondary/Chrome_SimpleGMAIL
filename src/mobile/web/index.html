@@ -1,15 +1,1224 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SimpleMail</title>
-  <style>body{margin:0;background:#fff;color:#17181c;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center}div{max-width:320px;padding:24px}p{color:#71757c;line-height:1.5}</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SimpleMail Lab — V2</title>
+<meta name="theme-color" content="#ffffff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-512.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9993;</text></svg>">
+<style>
+@font-face{font-family:'JSM NF';src:url('fonts/JetBrainsMonoNerdFont-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:'JSM NF';src:url('fonts/JetBrainsMonoNerdFont-SemiBold.ttf') format('truetype');font-weight:600;font-display:swap}
+:root{
+  --bg:#FFFFFF;
+  --paper:#FAF9F5;
+  --ink:#17181C;
+  --muted:#71757C;
+  --faint:#A6A9AE;
+  --hair:#E9E9E4;
+  --hair2:#F1F1EC;
+  --accent:#C64A12;
+  --world:#1A73E8;
+  --memo:#FFFBEA;
+  --font-ui:'JSM NF',ui-monospace,'SF Mono',Menlo,monospace;
+}
+body[data-theme="1"]{--accent:#C64A12}
+body[data-theme="2"]{--accent:#2E6B4E}
+body[data-theme="3"]{--accent:#96662B}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:14px;
+  -webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.g{font-family:var(--font-ui)}
+
+.hud{position:fixed;top:0;left:0;right:0;height:44px;display:flex;align-items:center;gap:16px;
+  padding:0 18px;border-bottom:1px solid var(--hair);background:var(--bg);z-index:40;font-size:12px}
+.hud-mark{font-weight:600;letter-spacing:.14em;color:var(--faint);font-size:11px}
+.hud-title{color:var(--ink);font-size:11px;letter-spacing:.06em}
+.hud-title b{color:var(--accent);font-weight:600}
+.hud-live{font-size:9px;letter-spacing:.1em;padding:3px 7px;border:1px solid var(--hair);border-radius:3px;color:var(--muted)}
+.hud-live.on{border-color:#2E6B4E;color:#2E6B4E}
+.hud-right{margin-left:auto;display:flex;gap:16px;color:var(--muted);font-size:11px;align-items:center}
+.hud-right .n{color:var(--ink);font-weight:600}
+.hud-key{color:var(--faint)}
+kbd{font:inherit;font-size:10px;border:1px solid var(--hair);border-bottom-width:2px;border-radius:3px;
+  padding:1px 5px;background:#FBFBF9;color:var(--muted);white-space:nowrap}
+
+#world-canvas{position:fixed;inset:44px 0 0;width:100%;height:calc(100% - 44px);pointer-events:none;z-index:0;opacity:.72}
+.world-nav{position:fixed;top:44px;left:0;right:0;height:104px;display:grid;grid-template-columns:minmax(150px,1fr) auto minmax(150px,1fr);
+  align-items:center;padding:0 28px;z-index:39;border-bottom:1px solid color-mix(in srgb,var(--world) 16%,var(--hair));
+  background:linear-gradient(180deg,color-mix(in srgb,var(--world) 7%,white),rgba(255,255,255,.9) 76%,rgba(255,255,255,.72));
+  backdrop-filter:blur(14px);transition:border-color .35s,background .35s}
+.world-arrow{display:flex;align-items:center;gap:12px;width:max-content;max-width:100%;color:var(--muted);padding:14px 0;text-align:left}
+.world-arrow.next{justify-self:end;text-align:right;flex-direction:row-reverse}
+.world-arrow .arr{width:38px;height:38px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--world) 26%,var(--hair));
+  border-radius:50%;font-size:18px;background:rgba(255,255,255,.72);transition:transform .16s,border-color .16s,color .16s}
+.world-arrow:hover .arr{transform:translateX(-3px);border-color:var(--world);color:var(--world)}
+.world-arrow.next:hover .arr{transform:translateX(3px)}
+.world-arrow small{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--faint)}
+.world-center{text-align:center;min-width:260px}
+.world-kicker{display:block;font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+.world-name{font-size:21px;line-height:1.05;font-weight:600;letter-spacing:-.03em;color:var(--ink)}
+.world-track{display:flex;justify-content:center;gap:5px;margin-top:13px}
+.cat-icon{height:24px;background:color-mix(in srgb,var(--cat) 14%,var(--hair));border-radius:12px;display:inline-flex;align-items:center;gap:4px;padding:0 8px;font-size:9px;letter-spacing:.06em;color:var(--muted);overflow:hidden;white-space:nowrap;transition:width .2s,background .2s,color .2s;max-width:32px}
+.cat-icon:hover{background:color-mix(in srgb,var(--cat) 24%,var(--hair));color:var(--ink)}
+.cat-icon.on{max-width:80px;background:var(--cat);color:#fff}
+.cat-icon i{font-style:normal;font-size:11px;flex:none}
+.stage{position:absolute;inset:148px 0 0 0;z-index:2;transition:opacity .18s,transform .32s cubic-bezier(.2,.8,.2,1),filter .22s}
+.stage.world-exit-left{opacity:0;transform:translateX(-7vw);filter:blur(4px)}
+.stage.world-exit-right{opacity:0;transform:translateX(7vw);filter:blur(4px)}
+.stage.world-enter{animation:world-enter .42s cubic-bezier(.2,.8,.2,1)}
+@keyframes world-enter{from{opacity:0;transform:translateX(var(--world-enter,6vw));filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+.theme{position:absolute;inset:0}
+.theme[hidden]{display:none}
+.cmd{position:absolute;left:0;right:0;bottom:0;display:flex;flex-wrap:wrap;justify-content:center;gap:4px 18px;
+  padding:10px 16px;border-top:1px solid var(--hair);background:var(--bg);z-index:30;font-size:11px;color:var(--muted)}
+.cmd span{display:inline-flex;align-items:center;gap:6px}
+
+/* sender icons */
+.fav{width:20px;height:20px;border-radius:4px;flex:none;object-fit:contain;background:#F3F3EE;padding:2px}
+.fav.big{width:34px;height:34px;border-radius:6px;padding:3px}
+.fav-off{display:none}
+
+/* listes */
+#f-list-view,#p-list-view,#f-read-view,#p-read-view{position:absolute;inset:0 0 42px 0}
+#f-list-view[hidden],#p-list-view[hidden],#f-read-view[hidden],#p-read-view[hidden]{display:none}
+.lst-wrap{position:absolute;inset:0;overflow-y:auto;display:flex;justify-content:center}
+.lst{width:min(900px,94vw);padding:26px 0 30px}
+.lst-head{display:flex;align-items:baseline;gap:10px;font-size:11px;color:var(--faint);
+  letter-spacing:.1em;text-transform:uppercase;padding:0 14px 10px;border-bottom:1px solid var(--hair)}
+.lst-head .n{color:var(--ink)}
+.lst-head .z{margin-left:auto;color:var(--world)}
+.row{width:100%;display:flex;align-items:center;gap:10px;text-align:left;padding:7px 14px;font-size:13px;
+  border-bottom:1px solid var(--hair2)}
+.row .idx{color:var(--faint);font-size:11px;width:22px;flex:none}
+.row .from{width:150px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.row .subj{flex:0 1 auto;max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .snip{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--faint);font-size:12px}
+.row .tags{flex:none;display:flex;gap:5px;font-size:9px;color:var(--faint);max-width:180px;overflow:hidden}
+.row .tags i{font-style:normal;white-space:nowrap;background:var(--hair2);border-radius:3px;padding:1px 5px;line-height:1.6}
+.row .att-i{flex:none;font-size:10px;color:var(--faint)}
+.row .date{flex:none;color:var(--faint);font-size:11px;text-align:right;min-width:60px}
+.row .dot{flex:none;color:var(--accent);font-size:8px;width:8px}
+.row:hover{background:var(--hair2)}
+.day-head{display:flex;align-items:center;gap:10px;padding:18px 14px 6px;font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--faint)}
+.day-head::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--world)}
+.day-head::after{content:'';flex:1;height:1px;background:color-mix(in srgb,var(--world) 14%,var(--hair2))}
+.load-more-wrap{display:flex;justify-content:center;padding:22px 0 30px}
+.load-more{font-size:11px;color:var(--muted);border:1px solid var(--hair);padding:9px 18px}
+.load-more:hover{border-color:var(--faint);color:var(--ink)}
+.row.sel{background:var(--ink);color:#fff}
+.row.sel .subj,.row.sel .date,.row.sel .idx,.row.sel .tags{color:rgba(255,255,255,.72)}
+.row.sel .tags i{background:rgba(255,255,255,.18);color:#fff}
+.row.sel .from{color:#fff}
+.row.sel .fav{background:rgba(255,255,255,.12)}
+.row.unread{background:#FAFAF7}
+.row.unread .from,.row.unread .subj{color:var(--ink);font-weight:600}
+.row.unread .dot{display:none}
+.row.unread.sel{background:var(--ink);color:#fff}
+.row.unread.sel .from,.row.unread.sel .subj{color:#fff}
+/* post-its : papier carre PKbrain (banana), coin plie, grille de notes collees */
+.memo-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;padding:6px 14px 30px}
+.postit{position:relative;display:flex;flex-direction:column;text-align:left;aspect-ratio:1/1;
+  background:#FFF3B0;border-radius:2px;padding:16px 22px 14px 14px;
+  box-shadow:0 1px 2px rgba(23,24,28,.15),5px 7px 12px rgba(23,24,28,.12);
+  transform:rotate(-.6deg);transition:transform .15s ease,box-shadow .15s ease}
+.postit:nth-child(even){transform:rotate(.7deg)}
+.postit:nth-child(3n){transform:rotate(-.2deg)}
+.postit:hover{transform:rotate(0) scale(1.02);box-shadow:0 2px 4px rgba(23,24,28,.18),9px 12px 18px rgba(23,24,28,.15)}
+.postit:focus-visible{transform:rotate(0);outline:2px solid var(--ink)}
+.postit::after{content:'';position:absolute;top:0;right:0;border-style:solid;
+  border-width:0 20px 20px 0;border-color:var(--bg) rgba(23,24,28,.18) transparent transparent;
+  box-shadow:-2px 2px 3px rgba(23,24,28,.08)}
+.postit .ph{display:flex;align-items:baseline;gap:6px;margin-bottom:8px}
+.postit .pwho{font-weight:600;font-size:11px;color:#5A4300;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.postit .pwhen{margin-left:auto;flex:none;font-size:8px;color:#8A7430;letter-spacing:.04em}
+.postit .psubj{font-size:12.5px;font-weight:600;color:#3E3608;line-height:1.4;flex:0 0 auto;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.postit .psnip{margin-top:auto;padding-top:8px;font-size:10px;line-height:1.55;color:#6E621E;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;border-top:1px solid rgba(90,67,0,.14)}
+.postit.sel{outline:2px solid var(--ink);outline-offset:1px}
+.row.memo{position:relative;background:#FFF3B0;border:0;box-shadow:2px 3px 0 rgba(23,24,28,.12)}
+.row.memo::after{content:'';position:absolute;right:0;top:0;border-style:solid;border-width:0 13px 13px 0;
+  border-color:transparent rgba(23,24,28,.15) transparent transparent}
+.row.memo .memo-ic{flex:none;font-size:12px;color:#8A7430}
+.row.memo.sel{color:var(--ink);outline:2px solid var(--ink);outline-offset:0}
+.row.memo.sel .subj,.row.memo.sel .date,.row.memo.sel .snip{color:#3E3608}
+.row.newsletter-row{min-height:58px}
+.nl-thumb{width:72px;height:42px;flex:none;display:grid;place-items:center;overflow:hidden;background:var(--hair2)}
+.nl-thumb img{width:100%;height:100%;object-fit:cover}
+.nl-thumb .fav{width:24px;height:24px}
+.zero{min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.zero .big{font-size:44px;color:var(--accent)}
+.zero h2{font-size:16px;font-weight:600}
+.zero p{font-size:11px;color:var(--muted)}
+
+/* theme 1 */
+#f-progress{position:absolute;top:0;left:0;right:0;height:2px;background:var(--hair2);z-index:5}
+#f-progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+.f-wrap{position:absolute;inset:0;overflow-y:auto;display:flex;justify-content:center}
+.f-col{width:min(720px,92vw);padding:44px 0 36px}
+.f-count{font-size:11px;color:var(--faint);margin-bottom:22px}
+.f-count b{color:var(--accent);font-weight:600}
+.f-subject{font-size:23px;line-height:1.28;font-weight:600;margin:12px 0 20px;animation:fin .16s ease-out}
+@keyframes fin{from{opacity:0;transform:translateY(5px)}}
+.f-meta{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--muted);
+  padding-bottom:16px;border-bottom:1px solid var(--hair);margin-bottom:18px}
+.f-meta .who{color:var(--ink);font-weight:600}
+.f-meta .date{margin-left:auto;color:var(--faint);text-align:right}
+.f-body{font-size:14px;line-height:1.75;color:#2B2D33}
+.f-body p+p{margin-top:13px}
+.f-actions{display:flex;gap:8px;margin-top:26px;flex-wrap:wrap}
+.f-btn{font-size:12px;border:1px solid var(--hair);padding:8px 13px}
+.f-btn:hover{border-color:var(--faint)}
+.f-btn.key{border-color:var(--ink);background:var(--ink);color:#fff}
+
+/* theme 2 */
+#cv-wrap{position:absolute;inset:0 0 42px 0;overflow-x:auto;overflow-y:hidden;scroll-behavior:smooth}
+#cv-cols{display:flex;gap:20px;height:100%;padding:20px 24px 16px}
+.cv-col{width:300px;flex:none;display:flex;flex-direction:column;min-height:0}
+.cv-head{display:flex;align-items:baseline;gap:8px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  padding:0 10px 8px;border-bottom:1px solid var(--hair);margin-bottom:6px;color:var(--ink)}
+.cv-head .n{color:var(--faint);margin-left:auto;letter-spacing:0}
+.cv-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;padding-bottom:8px}
+.cv-row{text-align:left;padding:8px 10px;font-size:12px;border-left:2px solid transparent;display:block;min-width:0;overflow:hidden}
+.cv-row:hover{background:var(--hair2)}
+.cv-row.sel{background:var(--ink);color:#fff;border-left-color:var(--accent)}
+.cv-top{display:flex;align-items:center;gap:8px;min-width:0}
+.cv-from{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;text-align:left}
+.cv-dot{color:var(--accent);font-size:8px;flex:none}
+.cv-date{color:var(--faint);font-size:10px;flex:none}
+.cv-sub{display:block;max-width:100%;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;text-align:left}
+.cv-row.sel .cv-sub,.cv-row.sel .cv-date{color:rgba(255,255,255,.72)}
+.cv-row .fav{width:16px;height:16px}
+.cv-row.unread{background:#FAFAF7}
+.cv-row.unread .cv-from,.cv-row.unread .cv-sub{color:var(--ink);font-weight:600}
+.cv-row.unread .cv-dot{display:none}
+.cv-row.unread.sel{background:var(--ink);color:#fff}
+.cv-row.unread.sel .cv-from,.cv-row.unread.sel .cv-sub{color:#fff}
+.cv-row.memo{margin:3px 6px;background:var(--memo);box-shadow:2px 2px 0 rgba(23,24,28,.1)}
+.cv-row.memo .cv-top::before{content:'\F249';color:#8A7430;font-size:11px}
+.cv-row.memo.sel{color:var(--ink);outline:2px solid var(--ink)}
+.cv-row.memo.sel .cv-sub,.cv-row.memo.sel .cv-date{color:#555044}
+.cv-empty{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--accent);font-size:11px}
+
+/* theme 3 */
+body[data-theme="3"]{background:var(--paper)}
+body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
+#p-view{position:absolute;inset:0 0 122px 0;overflow-y:auto;display:flex;justify-content:center}
+#p-art{width:min(680px,90vw);padding:48px 0 36px;animation:pin .18s ease-out}
+@keyframes pin{from{opacity:0;transform:translateY(6px)}}
+#p-art .p-meta{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  display:flex;align-items:center;gap:8px}
+#p-art .p-meta b{color:var(--accent);font-weight:600}
+#p-art h2{font-size:27px;line-height:1.22;font-weight:600;margin:14px 0 24px}
+#p-art .p-body{font-size:16px;line-height:1.85;color:#2A2924}
+#p-art .p-body p+p{margin-top:15px}
+#p-strip{position:absolute;left:0;right:0;bottom:42px;height:80px;padding:9px 18px;overflow-x:auto;display:flex;gap:2px;
+  border-top:1px solid #ECEAE2;background:var(--paper)}
+.p-card{position:relative;flex:none;width:210px;height:62px;min-width:0;overflow:hidden;text-align:left;
+  border-left:1px solid #DEDCD3;padding:7px 12px 7px 30px;font-size:10px;display:block}
+.p-card:hover{background:#F1EFE7}
+.p-card.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
+.p-card .p-no{position:absolute;left:9px;top:9px;color:var(--faint);font-size:9px}
+.p-card .c1{display:flex;min-width:0;gap:6px;align-items:center;color:var(--muted);font-weight:600}
+.p-card.sel .c1{color:rgba(255,255,255,.8)}
+.p-card.sel .p-no{color:rgba(255,255,255,.5)}
+.p-card .c1 span.nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p-card .c2{display:-webkit-box;margin-top:4px;max-width:100%;overflow:hidden;-webkit-box-orient:vertical;
+  -webkit-line-clamp:2;line-height:1.35;color:inherit}
+.p-card .fav{width:14px;height:14px}
+.p-card.unread{background:#FAFAF7;font-weight:600}
+.p-card.unread.sel{background:var(--ink);color:#fff}
+.p-card.memo{background:var(--memo);color:var(--ink)}
+.p-card.memo .p-no{font-size:0}
+.p-card.memo .p-no::before{content:'\F249';font-size:10px;color:#8A7430}
+.p-card.memo.sel{outline:2px solid var(--ink);outline-offset:-2px}
+
+/* corps de mail html */
+.mail-frame{width:100%;border:none;display:block;margin-top:6px}
+.att-row{display:flex;gap:8px;align-items:center;font-size:11px;color:var(--muted);
+  border:1px solid var(--hair);border-radius:6px;padding:7px 10px;margin-top:10px;width:fit-content}
+.loading{font-size:11px;color:var(--faint);padding:24px 0;display:flex;gap:10px;align-items:center}
+.spin{width:12px;height:12px;border:2px solid var(--hair);border-top-color:var(--accent);border-radius:50%;
+  animation:sp 1s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* overlays */
+.ov{position:fixed;inset:0;background:rgba(23,24,28,.32);display:grid;place-items:center;z-index:60;padding:20px}
+.ov[hidden]{display:none}
+.panel{background:#fff;border:1px solid var(--hair);border-radius:10px;box-shadow:0 24px 60px rgba(20,20,25,.18);
+  width:min(560px,94vw);max-height:82vh;overflow:auto;padding:20px 22px;animation:pin .15s ease-out}
+.panel h3{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:14px}
+.pal-input{width:100%;font-family:inherit;font-size:14px;padding:10px 12px;border:1px solid var(--hair);background:#fff}
+.pal-input:focus{outline:none;border-color:var(--ink)}
+.pal-list{margin-top:12px;display:flex;flex-direction:column;gap:1px}
+.pal-item{text-align:left;font-size:13px;padding:8px 10px;display:flex;align-items:center;gap:10px}
+.pal-item .tag{margin-left:auto;font-size:10px;color:var(--faint)}
+.pal-item[aria-selected="true"]{background:var(--ink);color:#fff}
+.pal-item[aria-selected="true"] .tag{color:rgba(255,255,255,.6)}
+.pal-empty{padding:12px 10px;font-size:11px;color:var(--faint)}
+.ov-foot{margin-top:14px;padding-top:10px;border-top:1px solid var(--hair2);display:flex;gap:16px;font-size:10px;color:var(--muted)}
+.ov-foot span{display:inline-flex;gap:6px;align-items:center}
+
+.set-theme{width:100%;text-align:left;border:1px solid var(--hair);padding:12px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:center}
+.set-theme:hover{border-color:var(--faint)}
+.set-theme.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.set-theme .sw{width:10px;height:10px;flex:none;border-radius:1px}
+.set-theme .nm{font-weight:600;font-size:13px}
+.set-theme .ds{color:var(--muted);font-size:11px;margin-top:2px}
+.set-theme .st{margin-left:auto;font-size:10px;color:var(--accent)}
+.set-row{display:flex;align-items:center;gap:10px;padding:10px 2px;font-size:11px;color:var(--muted);border-top:1px solid var(--hair2);margin-top:12px}
+.set-row .v{margin-left:auto;color:var(--ink)}
+.set-row input[type="color"]{margin-left:auto;width:32px;height:24px;padding:0;border:1px solid var(--hair);background:none}
+
+/* fullscreen settings */
+#ov-set{display:flex;align-items:stretch;justify-content:center;padding:0;background:rgba(23,24,28,.25)}
+#ov-set[hidden]{display:none}
+#ov-set .panel{width:100%;max-width:none;height:100%;max-height:none;border:0;border-radius:0;display:flex;flex-direction:column;animation:none}
+.set-fs-head{display:flex;align-items:center;gap:14px;padding:16px 24px;border-bottom:1px solid var(--hair);flex:none}
+.set-fs-head h3{font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--ink);text-transform:none}
+.set-fs-close{margin-left:auto;width:30px;height:30px;border:1px solid var(--hair);border-radius:50%;color:var(--muted);display:grid;place-items:center}
+.set-fs-close:hover{color:var(--ink);border-color:var(--faint)}
+.set-fs-body{display:flex;flex:1;min-height:0}
+.set-fs-nav{width:200px;flex:none;border-right:1px solid var(--hair);padding:12px 0;overflow-y:auto}
+.set-fs-nav button{text-align:left;width:100%;padding:10px 20px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.set-fs-nav button:hover{background:var(--hair2)}
+.set-fs-nav button.on{color:var(--ink);font-weight:600;background:var(--hair2)}
+.set-fs-nav button i{font-style:normal;font-size:13px;width:20px;text-align:center;flex:none}
+.set-fs-content{flex:1;overflow-y:auto;padding:24px 28px}
+.set-fs-content h4{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:14px}
+.set-fs-content .set-row{margin-top:0;padding:12px 0}
+
+.help-grid{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:8px 14px;align-items:center;font-size:12px}
+.rp-to{font-size:11px;color:var(--muted);margin-bottom:10px}
+.rp-body{width:100%;min-height:140px;font-family:inherit;font-size:13px;line-height:1.6;border:1px solid var(--hair);
+  padding:10px 12px;resize:vertical;background:#fff}
+.rp-body:focus{outline:none;border-color:var(--ink)}
+.rp-actions{margin-top:12px;display:flex;align-items:center;gap:10px}
+.rp-send{font-size:12px;background:var(--ink);color:#fff;padding:9px 16px}
+.rd-meta{font-size:11px;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.rd-sub{font-size:20px;font-weight:600;margin:8px 0 16px}
+.rd-body{font-size:14px;line-height:1.7;color:#2B2D33}
+.rd-body p+p{margin-top:12px}
+.rd-tags{font-size:10px;color:var(--faint);margin-bottom:6px}
+
+/* lecture Canvas : tiroir bas, pas une modale flottante */
+#ov-read{display:flex;align-items:flex-end;justify-content:center;padding:0;background:rgba(23,24,28,.18)}
+#ov-read[hidden]{display:none}
+.read-drawer{position:relative;width:min(980px,100%);height:min(86vh,880px);max-height:none;padding:0;
+  overflow:hidden;border-radius:14px 14px 0 0;border-bottom:0;animation:drawer-up .22s cubic-bezier(.2,.8,.2,1)}
+.drawer-grip{position:absolute;top:8px;left:50%;width:42px;height:3px;transform:translateX(-50%);
+  border-radius:3px;background:#D8D8D2;z-index:2}
+.drawer-close{position:absolute;top:16px;right:20px;width:30px;height:30px;border:1px solid var(--hair);
+  border-radius:50%;background:#fff;color:var(--muted);z-index:2}
+.drawer-close:hover{color:var(--ink);border-color:var(--faint)}
+#rd-body{height:calc(100% - 42px);overflow:auto;padding:46px max(28px,calc((100% - 720px)/2)) 28px}
+#rd-body .rd-body-content{min-width:0;overflow:hidden}
+.read-drawer>.ov-foot{height:42px;margin:0;padding:10px 20px;border-top:1px solid var(--hair);background:#fff}
+@keyframes drawer-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+
+.load-screen{position:fixed;inset:0;z-index:120;display:grid;place-items:center;background:var(--bg)}
+.load-screen[hidden]{display:none}
+.load-mark{text-align:center;color:var(--faint);font-size:10px;letter-spacing:.16em;text-transform:uppercase}
+.load-mark b{display:block;margin-bottom:16px;color:var(--ink);font-size:13px;letter-spacing:.12em}
+.load-line{width:120px;height:1px;margin:18px auto 0;background:var(--hair);overflow:hidden}
+.load-line::after{content:'';display:block;width:42px;height:100%;background:var(--world);animation:load-slide 1s ease-in-out infinite}
+@keyframes load-slide{from{transform:translateX(-42px)}to{transform:translateX(120px)}}
+
+/* recherche globale */
+#ov-search{align-items:flex-start;justify-content:center;padding:8vh 20px 20px;background:rgba(23,24,28,.18)}
+.search-panel{width:min(680px,100%);max-height:78vh;display:flex;flex-direction:column;background:#fff;
+  border:1px solid var(--hair);border-radius:10px;box-shadow:0 24px 60px rgba(20,20,25,.18);overflow:hidden;
+  animation:pin .15s ease-out}
+.search-bar{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--hair2)}
+.search-bar .g{color:var(--faint);font-size:14px}
+.search-input{flex:1;border:0;background:none;font:inherit;font-size:15px;outline:none}
+.search-input::placeholder{color:var(--faint)}
+.search-results{overflow-y:auto;padding:6px 0}
+.search-row{width:100%;display:flex;align-items:center;gap:10px;text-align:left;padding:8px 16px;font-size:12px}
+.search-row:hover,.search-row.sel{background:var(--hair2)}
+.search-row .from{width:130px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.search-row .subj{flex:0 1 auto;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.search-row .snip{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--faint);font-size:11px}
+.search-row .date{flex:none;color:var(--faint);font-size:10px}
+.search-empty{padding:24px 16px;font-size:11px;color:var(--faint);text-align:center}
+
+#toast{position:fixed;left:50%;bottom:60px;transform:translate(-50%,10px);background:var(--ink);color:#fff;
+  font-size:11px;padding:10px 14px;opacity:0;pointer-events:none;transition:all .18s;z-index:80}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}#world-canvas{display:none}}
+@media (max-width:760px){.row .from{width:110px}.row .snip{display:none}.row .subj{max-width:none}.hud-right{display:none}
+  .world-nav{height:92px;grid-template-columns:52px 1fr 52px;padding:0 10px}.world-arrow small{display:none}.world-arrow .arr{width:36px;height:36px}
+  .world-center{min-width:0}.world-name{font-size:18px}.world-track{margin-top:11px}.cat-icon{max-width:24px;padding:0 4px;font-size:0}.cat-icon i{font-size:10px}.cat-icon.on{max-width:60px;font-size:9px;padding:0 8px}
+  .stage{inset:136px 0 0}.memo-board{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .read-drawer{height:calc(100vh - 44px);border-radius:0}
+  #rd-body{padding:46px 18px 24px}
+  .p-card{width:180px}
+  .set-fs-nav{width:56px}.set-fs-nav button span,.set-fs-nav button{font-size:0}.set-fs-nav button i{font-size:16px}.set-fs-content{padding:16px}}
+</style>
 </head>
-<body>
-  <div>
-    <h2>SimpleMail</h2>
-    <p>Mode local actif. L'application mobile est en pause car le backend Gmail reste privé sur votre ordinateur.</p>
+<body data-theme="1">
+
+<canvas id="world-canvas" aria-hidden="true"></canvas>
+
+<header class="hud">
+  <span class="hud-mark"><img src="icon-192.png" alt="" style="height:20px;width:20px;border-radius:4px;vertical-align:middle;margin-right:6px">PKMAIL</span>
+  <span class="hud-title" id="hud-title">THEME <b>01 / FOCUS OS</b></span>
+  <span class="hud-live" id="hud-live">…</span>
+  <div class="hud-right">
+    <span><span class="n" id="hud-inbox">–</span> messages</span>
+    <span><span class="g">&#xF187;</span> <span class="n" id="hud-arch">0</span></span>
+    <button class="hud-key" data-open-search aria-label="Rechercher"><span class="g">&#xF002;</span> <kbd>/</kbd></button>
+    <span class="hud-key">réglages <kbd>,</kbd></span>
   </div>
+</header>
+
+<nav class="world-nav" id="categories" aria-label="Changer de catégorie Gmail"></nav>
+
+<main class="stage">
+
+  <section class="theme" id="c1" aria-label="Thème Focus OS">
+    <div id="f-list-view">
+      <div class="lst-wrap"><div class="lst" id="f-list"></div></div>
+    </div>
+    <div id="f-read-view" hidden>
+      <div id="f-progress" aria-hidden="true"><i></i></div>
+      <div class="f-wrap"><div class="f-col" id="f-mount"></div></div>
+    </div>
+    <div class="cmd" id="f-cmd" aria-hidden="true"></div>
+  </section>
+
+  <section class="theme" id="c2" hidden aria-label="Thème Label Canvas">
+    <div id="cv-wrap"><div id="cv-cols"></div></div>
+    <div class="cmd" aria-hidden="true">
+      <span><kbd>H</kbd><kbd>L</kbd> colonne</span><span><kbd>&#x2190;</kbd><kbd>&#x2192;</kbd> catégorie</span><span><kbd>&#x2191;</kbd><kbd>&#x2193;</kbd> message</span>
+      <span><kbd>Entrée</kbd> lire</span><span><kbd data-key="archive">E</kbd> archiver</span>
+      <span><kbd>/</kbd> rechercher</span><span><kbd>Z</kbd> recharger</span><span><kbd>?</kbd> aide</span>
+    </div>
+  </section>
+
+  <section class="theme" id="c3" hidden aria-label="Thème Paper Reader">
+    <div id="p-list-view">
+      <div class="lst-wrap"><div class="lst" id="p-list"></div></div>
+    </div>
+    <div id="p-read-view" hidden>
+      <div id="p-view"><article id="p-art"></article></div>
+      <div id="p-strip" aria-label="File d'attente"></div>
+    </div>
+    <div class="cmd" id="p-cmd" aria-hidden="true"></div>
+  </section>
+
+</main>
+
+<div class="ov" id="ov-set" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="set-title">
+    <div class="set-fs-head">
+      <h3 id="set-title">Réglages</h3>
+      <button class="set-fs-close" id="set-close" aria-label="Fermer">×</button>
+    </div>
+    <div class="set-fs-body">
+      <nav class="set-fs-nav" id="set-nav"></nav>
+      <div class="set-fs-content" id="set-content"></div>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="ov-pal" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="pal-title">
+    <h3 id="pal-title">Libellés</h3>
+    <input class="pal-input" id="pal-input" data-autofocus aria-label="Filtrer" autocomplete="off" spellcheck="false">
+    <div class="pal-list" id="pal-list" role="listbox"></div>
+    <div class="ov-foot"><span><kbd>&#x2191;</kbd><kbd>&#x2193;</kbd> naviguer</span><span><kbd>Entrée</kbd> choisir</span><span><kbd>Échap</kbd> fermer</span></div>
+  </div>
+</div>
+
+<div class="ov" id="ov-read" hidden>
+  <div class="panel read-drawer" role="dialog" aria-modal="true" aria-labelledby="rd-sub" id="rd-panel">
+    <span class="drawer-grip" aria-hidden="true"></span>
+    <button class="drawer-close" id="rd-close" aria-label="Fermer la lecture">×</button>
+    <div id="rd-body"></div>
+    <div class="ov-foot"><span><kbd data-key="archive">E</kbd> archiver</span><span><kbd>Échap</kbd> fermer</span></div>
+  </div>
+</div>
+
+<div class="ov" id="ov-reply" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="rp-title">
+    <h3 id="rp-title">Répondre</h3>
+    <div class="rp-to" id="rp-to"></div>
+    <textarea class="rp-body" id="rp-body" data-autofocus aria-label="Votre réponse" placeholder="Écrire la réponse…"></textarea>
+    <div class="rp-actions">
+      <button class="rp-send" id="rp-send">Envoyer</button>
+      <span style="font-size:10px;color:var(--muted)"><kbd>Ctrl</kbd>+<kbd>Entrée</kbd> envoyer · <kbd>Échap</kbd> fermer</span>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="ov-help" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <h3 id="help-title">Raccourcis</h3>
+    <div class="help-grid" id="help-body"></div>
+    <div class="ov-foot"><span><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> thème</span><span><kbd>,</kbd> réglages</span><span><kbd>Échap</kbd> fermer</span></div>
+  </div>
+</div>
+
+<div class="ov" id="ov-search" hidden>
+  <div class="search-panel" role="dialog" aria-modal="true" aria-label="Rechercher">
+    <div class="search-bar">
+      <span class="g">&#xF002;</span>
+      <input class="search-input" id="search-input" data-autofocus autocomplete="off" spellcheck="false"
+        placeholder="Rechercher dans Gmail…" aria-label="Rechercher">
+      <span style="font-size:10px;color:var(--faint)"><kbd>Échap</kbd></span>
+    </div>
+    <div class="search-results" id="search-results" role="listbox"></div>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<div class="load-screen" id="load-screen" role="status" aria-live="polite">
+  <div class="load-mark"><img src="icon-512.png" alt="" style="width:64px;height:64px;border-radius:14px;margin-bottom:16px;box-shadow:0 4px 20px rgba(0,0,0,.12)"><b>PKMAIL</b><span id="load-label">Connexion à Gmail</span><div class="load-line"></div></div>
+</div>
+
+<script src="three.min.js"></script>
+<script>
+const I={check:'\uF00C',inbox:'\uF01C',tag:'\uF02B',folder:'\uF07B',reply:'\uF112',
+  archive:'\uF187',plane:'\uF1D8',dot:'\uF111',envelope:'\uF0E0',clip:'\uF0C6'};
+const THEMES=[
+ {id:1,name:'Focus OS',desc:'Liste compacte, un message actif à la fois, progression vers zéro.',color:'#C64A12'},
+ {id:2,name:'Label Canvas',desc:'Colonnes spatiales par libellé, Inbox Zero par zone.',color:'#2E6B4E'},
+ {id:3,name:'Paper Reader',desc:'Liste du jour puis lecture plein écran, file en bandeau.',color:'#96662B'}];
+const DEMO_LABELS=['Travail','Factures','Perso','Newsletters','Notifications'];
+const CATEGORIES=[
+  ['primary','Principale','\uF0E0','#1A73E8'],
+  ['promotions','Promotions','\uF02B','#F9C440'],
+  ['social','Réseaux','\uF0C0','#E753B9'],
+  ['updates','Notifications','\uF0F3','#28BCA3'],
+  ['forums','Forums','\uF086','#9B6BE8'],
+   ['newsletter','Newsletters','\uF1EA','#FF8C1A'],
+  ['memos','Mémos','\uF249','#8A7430']];
+
+/* Atmosphère Three.js : profondeur et transitions seulement, jamais le contenu. */
+const WORLD={renderer:null,scene:null,camera:null,points:null,rings:null,color:null,target:null,kick:0};
+function initWorldScene(){
+  if(RM||!window.THREE)return;
+  const canvas=$('#world-canvas'),renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:false,powerPreference:'high-performance'});
+  const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(42,1,.1,30);camera.position.z=6;
+  const geometry=new THREE.BufferGeometry(),positions=[];
+  for(let i=0;i<150;i++)positions.push((Math.random()-.5)*12,(Math.random()-.5)*7,(Math.random()-.5)*5);
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  const color=new THREE.Color(CATEGORIES[0][3]),material=new THREE.PointsMaterial({color,size:.035,transparent:true,opacity:.23,sizeAttenuation:true});
+  const points=new THREE.Points(geometry,material);scene.add(points);
+  const rings=new THREE.Group();
+  for(let i=0;i<3;i++){
+    const ring=new THREE.Mesh(new THREE.RingGeometry(1.35+i*.72,1.37+i*.72,96),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.035,side:THREE.DoubleSide}));
+    ring.position.set(4.2-i*.35,-.3+i*.24,-1.5-i*.5);ring.rotation.x=.2+i*.12;rings.add(ring)}
+  scene.add(rings);Object.assign(WORLD,{renderer,scene,camera,points,rings,color,target:color.clone()});
+  const resize=()=>{const w=innerWidth,h=Math.max(1,innerHeight-44);renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()};
+  addEventListener('resize',resize,{passive:true});resize();
+  let last=0;const tick=time=>{requestAnimationFrame(tick);if(document.hidden||time-last<32)return;last=time;
+    color.lerp(WORLD.target,.035);points.material.color.copy(color);rings.children.forEach(r=>r.material.color.copy(color));
+    WORLD.kick*=.92;points.rotation.y+=.0007+WORLD.kick*.008;points.position.x*=.91;rings.rotation.z+=.00025;rings.position.x*=.9;
+    renderer.render(scene,camera)};requestAnimationFrame(tick)}
+function setWorldVisual(key,direction=0){
+  const category=CATEGORIES.find(([k])=>k===key)||CATEGORIES[0],color=category[3];
+  document.documentElement.style.setProperty('--world',color);document.body.dataset.category=key;
+  if(WORLD.target){WORLD.target.set(color);WORLD.kick=Math.abs(direction);WORLD.points.position.x=direction*1.8;WORLD.rings.position.x=direction*.8}}
+function beginWorldTransition(direction){
+  if(!direction||RM)return;
+  const stage=$('.stage'),exit=direction>0?'world-exit-left':'world-exit-right';stage.classList.add(exit);
+  setTimeout(()=>{stage.classList.remove(exit);stage.style.setProperty('--world-enter',direction>0?'6vw':'-6vw');stage.classList.add('world-enter');
+    setTimeout(()=>stage.classList.remove('world-enter'),430)},170)}
+const DEMO_MAIL=[
+{id:1,from:{name:'Camille Durand',email:'camille@atelier-nord.fr'},subject:'Compte rendu — réunion de cadrage lundi',date:'09:42',labels:['Travail'],unread:true,thread:3,body:['Bonjour, voici le compte rendu de la réunion de lundi. Points clés : périmètre validé pour la phase 1, livraison intermédiaire le 15, revue design la semaine prochaine.','Peux-tu valider le planning côté intégration avant vendredi ?','Camille']},
+{id:2,from:{name:'OVHcloud',email:'noreply@ovhcloud.net'},subject:'Facture FR-2026-0812 disponible',date:'08:15',labels:['Factures'],unread:false,body:['Votre facture de 24,90 € HT est disponible dans votre espace client.','Le montant sera prélevé le 5 du mois prochain.']},
+{id:3,from:{name:'Marc Lejeune',email:'marc.lejeune@gmail.com'},subject:'BBQ samedi — tu viens ?',date:'hier 21:07',labels:['Perso'],unread:true,body:['Salut ! On organise un barbecue samedi à partir de 18h au jardin. Emma et Sofiane viennent.','Tu peux ramener ton tabouret pliant ? On est un peu justes niveau assises.']},
+{id:4,from:{name:'Hebdo TypeScript',email:'hello@hebdo-ts.dev'},subject:'Édition #214 — decorators et Node 26',date:'hier 19:30',labels:['Newsletters'],unread:false,body:['Cette semaine : les decorators franchissent un cap au TC39, Node 26 passe en LTS, et un dossier sur les bundlers sans configuration.']},
+{id:5,from:{name:'Emma Rousseau',email:'emma.rousse@studio-flux.fr'},subject:'Maquette v3 — retours attendus',date:'hier 17:12',labels:['Travail'],unread:false,thread:2,body:['La v3 des écrans d\'onboarding est dans Figma.','J\'ai simplifié la première étape et retiré la demande de téléphone.']},
+{id:6,from:{name:'La Banque Postale',email:'securite@labanquepostale.fr'},subject:'Connexion depuis un nouvel appareil',date:'hier 14:03',labels:['Notifications'],unread:false,body:['Une connexion à votre espace client a été détectée depuis un nouvel appareil (macOS, Lyon).']},
+{id:7,from:{name:'Lucas Ferrand',email:'lucas@ferrand-cie.com'},subject:'Devis rénovation — validation',date:'hier 11:26',labels:['Travail','Factures'],unread:false,body:['Le devis révisé est en pièce jointe : 4 320 € TTC, délai trois semaines.']},
+{id:8,from:{name:'Nina Kowalski',email:'nina.kowalski@pixelform.fr'},subject:'Contrat freelance — signature électronique',date:'lun 16:54',labels:['Travail'],unread:true,body:['Le contrat est prêt sur notre plateforme de signature (valable 15 jours).']}];
+
+const $=s=>document.querySelector(s);
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+/* ============ couche données : Gmail via API V1, sinon démo ============ */
+const LIVE={on:false,account:null,folder:'INBOX',name:'',email:''};
+let MAILBOX=[];   // shape: {id,from{name,email},subject,date,labels[],unread,thread,html,text,detail:bool,attachments[]}
+let TOTAL=0;
+let ARCHIVED_COUNT=0;
+let activeCategory='primary',categoryRequest=0;
+const CATEGORY_CACHE=new Map(),PREVIEW_CACHE=new Map();
+let PREFS={memoPostits:true,memoColor:'#FFFBEA',shortcutPreset:'gmail'};
+try{PREFS={...PREFS,...JSON.parse(localStorage.getItem('simplemail_lab_prefs')||'{}')}}catch(e){}
+if(PREFS.memoColor==='#FFF0A6'||PREFS.memoColor==='#FFF8D8')PREFS.memoColor='#FFFBEA';
+document.documentElement.style.setProperty('--memo',PREFS.memoColor);
+const isMemo=m=>PREFS.memoPostits&&LIVE.email&&m.from.email.toLowerCase()===LIVE.email.toLowerCase();
+function savePrefs(){localStorage.setItem('simplemail_lab_prefs',JSON.stringify(PREFS));document.documentElement.style.setProperty('--memo',PREFS.memoColor);render()}
+const shortcut=(action,key)=>PREFS.shortcutPreset==='gmail'?key==={archive:'e',labels:'l'}[action]:key==={archive:'a',labels:'v'}[action];
+function renderShortcutKeys(){document.querySelectorAll('[data-key="archive"]').forEach(k=>k.textContent=PREFS.shortcutPreset==='gmail'?'E':'A');
+  document.querySelectorAll('[data-key="labels"]').forEach(k=>k.textContent=PREFS.shortcutPreset==='gmail'?'L':'V')}
+
+const MOIS=['jan','fév','mar','avr','mai','juin','juil','aoû','sep','oct','nov','déc'];
+function fmtDate(iso){
+  if(!iso)return'';
+  if(typeof iso!=='string'||/^(hier|lun|mar|mer|jeu|ven|sam|dim)/.test(iso))return iso;
+  const d=new Date(iso);if(isNaN(d))return iso;
+  const now=new Date();
+  const hm=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  if(d.toDateString()===now.toDateString())return hm;
+  const s=d.getDate()+' '+MOIS[d.getMonth()];
+  return d.getFullYear()===now.getFullYear()?s:s+' '+String(d.getFullYear()).slice(2)}
+
+const domainOf=m=>(m.from.email.split('@')[1]||'').toLowerCase();
+function favImg(m,big){
+  const d=domainOf(m);if(!d)return'';
+  const u=`https://www.google.com/s2/favicons?domain=${encodeURIComponent(d)}&sz=64`;
+  return`<img class="fav${big?' big':''}" src="${u}" alt="" loading="lazy"
+    onload="this.classList.remove('fav-off')" onerror="this.remove()">`}
+function wireFavicons(){}  /* inline handlers suffisent */
+function newsletterThumb(m){
+  if(activeCategory!=='newsletter')return favImg(m);
+  return`<span class="nl-thumb" data-preview="${esc(m.id)}">${m.newsletterImage?`<img src="${esc(m.newsletterImage)}" alt="">`:favImg(m)}</span>`}
+
+async function hydrateNewsletterPreviews(){
+  const mails=MAILBOX.slice(0,6),next=async m=>{
+    let image=m.newsletterImage;
+    if(!image){
+      await loadDetail(m);
+      if(m.html){
+        const doc=new DOMParser().parseFromString(m.html,'text/html'),candidates=[];
+        doc.querySelectorAll('img').forEach((img,index)=>{
+          let src=img.getAttribute('src')||'';
+          if(src.startsWith('cid:'))src=`/api/messages/${encodeURIComponent(LIVE.account)}/${encodeURIComponent(m.id)}/cid/${encodeURIComponent(src.slice(4))}?folder=${LIVE.folder}`;
+          else if(src.startsWith('//'))src='https:'+src;
+          if(!/^(https?:|data:image\/|\/api\/)/i.test(src))return;
+          const w=parseInt(img.getAttribute('width')||img.style.width||'0',10)||0;
+          const h=parseInt(img.getAttribute('height')||img.style.height||'0',10)||0;
+          const hint=(src+' '+(img.alt||'')+' '+(img.className||'')).toLowerCase();
+          if((w&&w<=3)||(h&&h<=3)||/(tracking|pixel|spacer|open\.gif)/.test(hint))return;
+          let score=(w&&h?w*h:10000)-index;
+          if(/(hero|banner|header|cover|feature)/.test(hint))score+=500000;
+          if(/(logo|avatar|icon)/.test(hint))score-=200000;
+          candidates.push({src,score})});
+        candidates.sort((a,b)=>b.score-a.score);image=candidates[0]?.src||''}
+      if(!image){const domain=domainOf(m);if(domain){
+        if(!PREVIEW_CACHE.has(domain))PREVIEW_CACHE.set(domain,j(`/api/og-image?domain=${encodeURIComponent(domain)}`).then(r=>r.image||'').catch(()=>' '));
+        image=(await PREVIEW_CACHE.get(domain)).trim()}}}
+    if(activeCategory!=='newsletter')return;
+    m.newsletterImage=image||'';
+    document.querySelectorAll(`[data-preview="${CSS.escape(m.id)}"]`).forEach(el=>{
+      if(image)el.innerHTML=`<img src="${esc(image)}" alt="">`})};
+  let cursor=0;await Promise.all(Array.from({length:2},async()=>{while(cursor<mails.length)await next(mails[cursor++])}))}
+
+async function j(url,opts){const r=await fetch(url,opts);if(!r.ok)throw new Error(r.status+' '+url);return r.json()}
+
+const normalizeMessages=messages=>(messages||[]).map(e=>({
+  id:String(e.uid),
+  from:{name:e.from_name||e.from_addr||'?',email:e.from_addr||''},
+  subject:e.subject||'(sans objet)',date:fmtDate(e.date),labels:e.labels||[],unread:!e.seen,
+  thread:e.thread_count>1?e.thread_count:0,snippet:e.snippet||'',
+  attachments:(e.has_attachments?1:0),newsletterImage:e.newsletterImage||'',
+  html:null,text:null,detail:false}));
+
+const snapshotKey=key=>`simplemail_lab_snapshot:${LIVE.account}:${key}`;
+function readSnapshot(key){
+  try{const data=JSON.parse(localStorage.getItem(snapshotKey(key))||'null');
+    return data&&Date.now()-data.savedAt<7*864e5&&Array.isArray(data.messages)?data.messages:null}
+  catch(e){return null}}
+function saveSnapshot(key,messages){
+  try{localStorage.setItem(snapshotKey(key),JSON.stringify({savedAt:Date.now(),messages}))}catch(e){}}
+function displayCategory(messages,reset=true){
+  MAILBOX=messages;TOTAL=messages.length;
+  if(reset){S[1]=fresh();S[2]=fresh();S[3]=fresh()}
+  $('#hud-live').textContent=LIVE.on?'GMAIL · '+LIVE.name.toUpperCase():'DÉMO';
+  renderCategories();render()}
+
+function renderCategories(){
+  const index=CATEGORIES.findIndex(([key])=>key===activeCategory),current=CATEGORIES[index];
+  const prev=CATEGORIES[(index-1+CATEGORIES.length)%CATEGORIES.length],next=CATEGORIES[(index+1)%CATEGORIES.length];
+  setWorldVisual(activeCategory);
+  $('#categories').innerHTML=`
+    <button class="world-arrow prev" data-cycle="-1" aria-label="Catégorie précédente : ${prev[1]}"><span class="arr">←</span><small>${prev[1]}</small></button>
+    <div class="world-center"><span class="world-kicker">Catégorie ${String(index+1).padStart(2,'0')} / ${String(CATEGORIES.length).padStart(2,'0')}</span><h1 class="world-name">${current[1]}</h1>
+      <div class="world-track">${CATEGORIES.map(([key,label,icon,color])=>`<button class="cat-icon${key===activeCategory?' on':''}" data-category="${key}" aria-label="${label}" title="${label}" style="--cat:${color}"><i>${icon}</i>${label}</button>`).join('')}</div></div>
+    <button class="world-arrow next" data-cycle="1" aria-label="Catégorie suivante : ${next[1]}"><span class="arr">→</span><small>${next[1]}</small></button>`}
+
+async function fetchCategory(key,page=1){
+  if(!LIVE.on){
+    if(key==='memos')return DEMO_MAIL.filter(m=>isMemo(m));
+    const demo=DEMO_MAIL.filter(m=>key==='newsletter'?m.labels.includes('Newsletters'):(m.category||'primary')===key);
+    return demo.length?demo:DEMO_MAIL}
+  if(key==='memos'){
+    const res=await j(`/api/messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&category=primary&page=${page}&page_size=80&fast=true`);
+    return normalizeMessages(res.messages).filter(m=>isMemo(m))}
+  if(key==='newsletter'){
+    let res=await j(`/api/newsletter-messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&cached=${page===1?1:0}&page=${page}&page_size=20`);
+    if(!(res.messages||[]).length&&page===1)res=await j(`/api/newsletter-messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&page=1&page_size=20`);
+    return normalizeMessages(res.messages)}
+  const res=await j(`/api/messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&category=${key}&page=${page}&page_size=80&fast=true`);
+  return normalizeMessages(res.messages)}
+
+const CAT_PAGE=new Map(),CAT_DONE=new Map();
+async function loadMore(){
+  const key=activeCategory;
+  if(loadMore._busy||CAT_DONE.get(key)||!LIVE.on)return;
+  loadMore._busy=true;
+  const btn=document.querySelector('[data-more]');
+  if(btn)btn.textContent='Chargement…';
+  try{
+    const page=(CAT_PAGE.get(key)||1)+1;
+    const extra=await fetchCategory(key,page);
+    if(extra.length){
+      CAT_PAGE.set(key,page);
+      const ids=new Set(MAILBOX.map(m=>m.id));
+      MAILBOX=MAILBOX.concat(extra.filter(m=>!ids.has(m.id)));
+      CATEGORY_CACHE.set(key,MAILBOX);saveSnapshot(key,MAILBOX);
+      TOTAL=MAILBOX.length;render()}
+    else{CAT_DONE.set(key,true);render();toast('Fin de la catégorie')}}
+  catch(e){toast('Chargement impossible')}
+  loadMore._busy=false}
+
+/* préchauffe silencieuse : les autres catégories se remplent en tâche de fond */
+async function warmCategories(){
+  if(!LIVE.on)return;
+  for(const [key] of CATEGORIES){
+    if(key===activeCategory||key==='memos'||CATEGORY_CACHE.has(key))continue;
+    try{const mails=await fetchCategory(key);CATEGORY_CACHE.set(key,mails);saveSnapshot(key,mails);renderCategories()}
+    catch(e){}
+    await new Promise(r=>setTimeout(r,1500))}}
+
+async function fetchArchivedCount(){
+  if(!LIVE.on)return;
+  try{const folders=await j(`/api/accounts/${encodeURIComponent(LIVE.account)}/folders`);
+    const allMail=folders.find(f=>/all mail|tous les messages|archive/i.test(f.name));
+    if(allMail&&allMail.total>0)ARCHIVED_COUNT=allMail.total;hud()}
+  catch(e){}}
+
+async function switchCategory(key,force=false,direction=0){
+  if(!CATEGORIES.some(([k])=>k===key))return;
+  if(key===activeCategory&&!force)return;
+  beginWorldTransition(direction);
+  activeCategory=key;renderCategories();
+  setWorldVisual(key,direction);
+  const request=++categoryRequest;
+  const memory=CATEGORY_CACHE.get(key),snapshot=memory||readSnapshot(key);
+  if(snapshot){
+    CATEGORY_CACHE.set(key,snapshot);setLoading(false);displayCategory(snapshot);
+    if(key==='newsletter')hydrateNewsletterPreviews();
+    if(memory&&!force)return;
+    fetchCategory(key).then(fresh=>{
+      CATEGORY_CACHE.set(key,fresh);saveSnapshot(key,fresh);
+      if(request===categoryRequest&&activeCategory===key){displayCategory(fresh,false);if(key==='newsletter')hydrateNewsletterPreviews()}
+    }).catch(()=>{});
+    return}
+  setLoading(true,'Chargement · '+(CATEGORIES.find(([k])=>k===key)?.[1]||key));
+  $('#hud-live').textContent='CHARGEMENT…';
+  try{const fresh=await fetchCategory(key);CATEGORY_CACHE.set(key,fresh);saveSnapshot(key,fresh);MAILBOX=fresh}
+  catch(e){MAILBOX=[];toast('Catégorie Gmail indisponible')}
+  if(request!==categoryRequest)return;
+  setLoading(false);displayCategory(MAILBOX);
+  if(key==='newsletter')hydrateNewsletterPreviews();
+  warmCategories()}
+
+async function bootLive(){
+  try{
+    const accs=await j('/api/accounts/all');
+    const list=accs.accounts||accs||[];
+    const ok=a=>a.imap&&a.imap.password_configured;
+    const cands=[...list.filter(a=>a.id==='gmail'&&ok(a)),...list.filter(a=>a.id!=='gmail'&&ok(a))];
+    const acc=cands[0];if(!acc)throw new Error('aucun compte joignable');
+    LIVE.on=true;LIVE.account=acc.id;LIVE.name=acc.name||acc.id;LIVE.email=acc.email||acc.imap?.user||'';
+  }catch(e){
+    LIVE.on=false;
+    MAILBOX=DEMO_MAIL.map(m=>({...m,html:null,text:null,detail:false}));CATEGORY_CACHE.set('primary',MAILBOX);
+  }
+  try{
+  const badge=$('#hud-live');
+  badge.textContent=LIVE.on?'GMAIL · '+LIVE.name.toUpperCase():'DÉMO';
+  badge.classList.toggle('on',LIVE.on);
+  const srcEl=$('#set-src');if(srcEl)srcEl.textContent=LIVE.on?LIVE.name+' (boîte de réception réelle)':'données fictives (backend V1 non joignable)';
+  renderCategories();await switchCategory('primary',true);fetchArchivedCount()
+  }catch(e){console.error('bootLive render error',e);setLoading(false)}}
+
+async function loadDetail(m){
+  if(m.detail||!LIVE.on)return m;
+  try{
+    const d=await j(`/api/messages/${encodeURIComponent(LIVE.account)}/${encodeURIComponent(m.id)}?folder=${LIVE.folder}`);
+    m.html=d.html||null;m.text=d.text||null;
+    m.attachments=(d.attachments||[]).map(a=>a.filename);
+    m.detail=true;
+  }catch(e){m.detail=true;m.text=(m.text||m.snippet||'')}
+  return m}
+
+async function archiveRemote(m){
+  if(!LIVE.on)return;
+  try{await fetch(`/api/messages/${encodeURIComponent(LIVE.account)}/${encodeURIComponent(m.id)}/archive?folder=${LIVE.folder}`,{method:'POST'})}
+  catch(e){toast('Archive IMAP en échec (mail retiré du lab uniquement)')}}
+
+/* rendu du corps : iframe sandbox pour le HTML, paragraphes sinon.
+   ponytail: le renderer Chrome crashe si on réinjecte le même innerHTML avec
+   une iframe srcdoc volumineuse (double render après loadDetail). On garde une
+   iframe vivante par mail et on ne remplace que son srcdoc. */
+const _framePool=new Map();
+function bodyHtml(m){
+  if(m.detail&&(m.html||m.text)){
+    if(m.html){
+      const fid='fr'+m.id;
+      const doc='<!doctype html><html><head><meta charset="utf-8">'+
+        '<base target="_blank">'+
+        '<style>body{margin:0;padding:2px;font-family:-apple-system,system-ui,sans-serif;'+
+        'font-size:14px;line-height:1.6;color:#222;overflow-wrap:anywhere}img,table{max-width:100%!important;height:auto}'+
+        'pre{white-space:pre-wrap}td{overflow-wrap:anywhere}'+
+        'a{color:#0b57d0}</style></head><body>'+m.html+'</body></html>';
+      let fr=document.getElementById(fid);
+      if(fr){_framePool.delete(fid);fr.remove()}
+      fr=document.createElement('iframe');
+      fr.id=fid;fr.className='mail-frame';fr.title='Corps du message';
+      fr.setAttribute('sandbox','allow-same-origin allow-popups');
+      fr.height='120';fr.style.minHeight='80px';
+      const load=()=>{try{const h=fr.contentDocument.documentElement.scrollHeight;fr.height=Math.max(80,h+16)}catch(e){}};
+      fr.addEventListener('load',load);
+      setTimeout(()=>{fr.srcdoc=doc;setTimeout(load,400);setTimeout(load,1500)},0);
+      _framePool.set(fid,fr);
+      return{__frame:fr}}
+    return m.text.split(/\n{2,}/).map(p=>`<p>${esc(p)}</p>`).join('')}
+  return`<div class="loading"><span class="spin"></span> chargement du message…</div>`}
+function mountBody(el,m){const r=bodyHtml(m);
+  if(r&&r.__frame){el.innerHTML='';el.appendChild(r.__frame)}
+  else el.innerHTML=r}
+const dayOf=d=>/^\d{1,2}:\d{2}/.test(d)?"Aujourd'hui":(/^hier/.test(d)?'Hier':d.split(' ').slice(0,2).join(' '));
+function listRows(mails,st,scope){
+  let out='',day='';
+  mails.forEach((m)=>{
+    const d=dayOf(m.date||'');
+    if(d!==day){day=d;out+=`<div class="day-head">${esc(d)}</div>`}
+    const tags=m.labels&&m.labels.length?`<span class="tags">${m.labels.slice(0,2).map(l=>`<i>${esc(l)}</i>`).join('')}</span>`:'';
+    const att=m.attachments?`<span class="att-i g">${I.clip}</span>`:'';
+    out+=`<button class="row${activeCategory==='newsletter'?' newsletter-row':''}${m.unread?' unread':''}${mails.indexOf(m)===st.i?' sel':''}" data-i="${mails.indexOf(m)}">
+      ${newsletterThumb(m)}
+      <span class="from">${esc(m.from.name)}</span>
+      <span class="subj">${esc(m.subject)}</span>
+      <span class="snip">${esc(m.snippet||'')}</span>
+      ${tags}${att}
+      <span class="date">${esc(m.date)}</span>
+    </button>`});
+  if(!CAT_DONE.get(activeCategory)&&mails.length)out+=`<div class="load-more-wrap"><button class="load-more" data-more>Charger plus</button></div>`;
+  return out}
+const attachments=m=>(m.attachments&&m.attachments.length)
+  ?`<div class="att-row"><span class="g">${I.clip}</span> ${m.attachments.map(esc).join(' · ')}</div>`:'';
+
+const fresh=()=>({i:0,col:0,row:0,archived:0,mode:'list'});
+const S={1:fresh(),2:fresh(),3:fresh()};
+let active=1,overlay=null,lastFocus=null;
+let installPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e});
+
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2400)}
+function setLoading(show,label='Connexion à Gmail'){const el=$('#load-screen');$('#load-label').textContent=label;el.hidden=!show}
+function openOv(id){lastFocus=document.activeElement;overlay=id;const el=$(id);el.hidden=false;
+  const f=el.querySelector('[data-autofocus]')||el.querySelector('button,input,textarea');if(f)f.focus()}
+function closeOv(){if(!overlay)return;const el=$(overlay);
+  if(el.contains(document.activeElement))document.activeElement.blur();
+  el.hidden=true;overlay=null;
+  if(lastFocus&&lastFocus.focus&&document.contains(lastFocus))lastFocus.focus();render()}
+function panelTrap(e){const p=e.target.closest('.panel');if(!p)return;
+  const f=[...p.querySelectorAll('button,input,textarea,[tabindex]')].filter(x=>!x.disabled);
+  if(e.key==='Tab'){e.preventDefault();const i=f.indexOf(document.activeElement);
+    f[(i+(e.shiftKey?-1:1)+f.length)%f.length].focus()}}
+
+function hud(){$('#hud-inbox').textContent=S[active].mails===undefined?MAILBOX.length:mailboxFor().length;
+  $('#hud-arch').textContent=ARCHIVED_COUNT>0?ARCHIVED_COUNT.toLocaleString('fr'):'—';
+  $('#hud-title').innerHTML=`THEME <b>0${active} / ${THEMES[active-1].name.toUpperCase()}</b>`}
+function mailboxFor(){return MAILBOX}
+
+/* ---------- THEME 1 ---------- */
+const F_CMD_LIST=`<span><kbd>J</kbd><kbd>K</kbd> naviguer</span><span><kbd>Entrée</kbd> ouvrir</span>
+ <span><kbd data-key="archive">E</kbd> archiver</span><span><kbd data-key="labels">L</kbd> libellés</span>
+ <span><kbd>/</kbd> rechercher</span><span><kbd>R</kbd> répondre</span><span><kbd>?</kbd> aide</span>`;
+const F_CMD_READ=`<span><kbd>J</kbd><kbd>K</kbd> suivant / précédent</span><span><kbd data-key="archive">E</kbd> archiver</span>
+ <span><kbd>Échap</kbd> retour liste</span><span><kbd data-key="labels">L</kbd> libellés</span>
+ <span><kbd>R</kbd> répondre</span><span><kbd>?</kbd> aide</span>`;
+function renderFocus(){const st=S[1];
+  $('#f-cmd').innerHTML=st.mode==='list'?F_CMD_LIST:F_CMD_READ;
+  $('#f-list-view').hidden=st.mode!=='list';$('#f-read-view').hidden=st.mode!=='read';
+  const mails=mailboxFor();
+  if(st.mode==='list'){
+    if(!mails.length){$('#f-list').innerHTML=`<div class="zero"><span class="big g">${I.check}</span><h2>${activeCategory==='memos'?'Aucun mémo — envoyez un mail à vous-même':'Boîte de réception — zéro.'}</h2><p>${st.archived} messages traités · Z recharge</p></div>`;return}
+    if(st.i>=mails.length)st.i=mails.length-1;
+    $('#f-list').innerHTML=`<div class="lst-head"><span class="g">${activeCategory==='memos'?I.tag:I.inbox}</span> ${CATEGORIES.find(([k])=>k===activeCategory)?.[1]||'Boîte de réception'} <span class="n">${mails.length}</span><span class="z">${st.archived} archivés</span></div>`+
+    listRows(mails,st);
+    const sel=$('#f-list .row.sel,#f-list .postit.sel');if(sel)sel.scrollIntoView({block:'nearest'});
+    return}
+  const m=mails[st.i];
+  $('#f-progress i').style.width=(st.archived/Math.max(1,TOTAL)*100)+'%';
+  if(!m){$('#f-mount').innerHTML=`<div class="zero"><span class="big g">${I.check}</span><h2>Boîte de réception — zéro.</h2><p>Z recharge</p></div>`;return}
+  m.unread=false;
+  $('#f-mount').innerHTML=`
+  <div class="f-count">MESSAGE <b>${String(st.i+1).padStart(2,'0')}</b> / ${mails.length}</div>
+  <div style="font-size:10px;color:var(--faint)">${m.labels.map(l=>`${I.tag} ${esc(l)}`).join(' · ')}</div>
+  <h1 class="f-subject">${esc(m.subject)}</h1>
+  <div class="f-meta">
+    ${favImg(m,true)}
+    <span class="who">${esc(m.from.name)}</span>
+    <span>&lt;${esc(m.from.email)}&gt;</span>
+    <span class="date">${esc(m.date)}${m.thread?` · fil de ${m.thread}`:''}</span>
+  </div>
+  <div class="f-body"></div>
+  ${attachments(m)}
+  <div class="f-actions">
+    <button class="f-btn key" data-act="archive">Archiver · A</button>
+    <button class="f-btn" data-act="reply">Répondre</button>
+    <button class="f-btn" data-act="labels">Libellés</button>
+    <button class="f-btn" data-act="back">Retour liste · Échap</button>
+  </div>`;
+  mountBody($('#f-mount .f-body'),m);
+  if(!m.detail)loadDetail(m).then(()=>{if(S[1].mode==='read'&&mailboxFor()[S[1].i]===m)renderFocus()})}
+
+/* ---------- THEME 2 ---------- */
+function cvCols(){const byLabel=l=>MAILBOX.filter(m=>m.labels.includes(l)).slice(0,12);
+  return[{name:CATEGORIES.find(([k])=>k===activeCategory)?.[1]||'Boîte de réception',mails:MAILBOX.slice(0,30)}]
+    .concat(labelPool().slice(0,4).map(l=>({name:l,mails:byLabel(l)})))}
+function labelPool(){
+  if(!LIVE.on)return DEMO_LABELS;
+  const s=new Set();MAILBOX.forEach(m=>m.labels.forEach(l=>s.add(l)));
+  return[...s].sort()}
+function renderCanvas(){const st=S[2],cols=cvCols(),wrap=$('#cv-cols');
+  if(st.col>=cols.length)st.col=cols.length-1;
+  const col=cols[st.col];if(st.row>=(col?col.mails.length:0))st.row=Math.max(0,(col?col.mails.length:0)-1);
+  wrap.innerHTML=cols.map((c,ci)=>{
+    const rows=c.mails.map((m,ri)=>`
+    <button class="cv-row${m.unread?' unread':''}${isMemo(m)?' memo':''}${ci===st.col&&ri===st.row?' sel':''}" data-col="${ci}" data-row="${ri}">
+      <span class="cv-top">${favImg(m)}<span class="cv-from">${esc(m.from.name)}</span>
+      ${m.unread?`<span class="cv-dot g">${I.dot}</span>`:''}
+      <span class="cv-date">${esc(m.date)}</span></span>
+      <span class="cv-sub">${esc(m.subject)}</span>
+    </button>`).join('');
+    const inner=rows||`<div class="cv-empty"><span class="g">${I.check}</span> zéro</div>`;
+    return`<div class="cv-col" data-col="${ci}"><div class="cv-head"><span>${esc(c.name)}</span><span class="n">${c.mails.length}</span></div><div class="cv-list">${inner}</div></div>`}).join('');
+  const colEl=wrap.querySelector(`.cv-col[data-col="${st.col}"]`);
+  if(colEl){const c=$('#cv-wrap');c.scrollTo({left:colEl.offsetLeft-(c.clientWidth-colEl.offsetWidth)/2,behavior:RM?'auto':'smooth'});
+    const sel=colEl.querySelector('.cv-row.sel');
+    if(sel){const list=colEl.querySelector('.cv-list');list.scrollTo({top:sel.offsetTop-list.clientHeight/2+sel.offsetHeight/2,behavior:RM?'auto':'smooth'})}}}
+
+/* ---------- THEME 3 ---------- */
+const P_CMD_LIST=`<span><kbd>J</kbd><kbd>K</kbd> naviguer</span><span><kbd>Entrée</kbd> lire</span>
+ <span><kbd data-key="archive">E</kbd> archiver</span><span><kbd>/</kbd> rechercher</span>
+ <span><kbd>Z</kbd> recharger</span><span><kbd>?</kbd> aide</span>`;
+const P_CMD_READ=`<span><kbd>J</kbd><kbd>K</kbd> suivant / précédent</span><span><kbd data-key="archive">E</kbd> archiver et avancer</span>
+ <span><kbd>Échap</kbd> retour liste</span><span><kbd>R</kbd> répondre</span><span><kbd>?</kbd> aide</span>`;
+function renderPaper(){const st=S[3];
+  $('#p-cmd').innerHTML=st.mode==='list'?P_CMD_LIST:P_CMD_READ;
+  $('#p-list-view').hidden=st.mode!=='list';$('#p-read-view').hidden=st.mode!=='read';
+  const mails=mailboxFor();
+  if(st.mode==='list'){
+    if(!mails.length){$('#p-list').innerHTML=`<div class="zero"><span class="big g">${I.check}</span><h2>File du jour — terminée.</h2><p>${st.archived} messages traités · Z recharge</p></div>`;return}
+    if(st.i>=mails.length)st.i=mails.length-1;
+    $('#p-list').innerHTML=`<div class="lst-head"><span class="g">${I.envelope}</span> File du jour <span class="n">${mails.length}</span><span class="z">${st.archived} archivés</span></div>`+
+    listRows(mails,st);
+    const sel=$('#p-list .row.sel');if(sel)sel.scrollIntoView({block:'nearest'});
+    return}
+  const m=mails[st.i],art=$('#p-art'),strip=$('#p-strip');
+  if(!m){art.innerHTML=`<div class="zero"><span class="big g">${I.check}</span><h2>File terminée.</h2><p>Z recharge</p></div>`;strip.innerHTML='';return}
+  m.unread=false;
+  art.innerHTML=`<div class="p-meta">${favImg(m)}<b>${String(st.i+1).padStart(2,'0')} / ${mails.length}</b> — ${esc(m.from.name)} · ${esc(m.date)}</div>
+  <h2>${esc(m.subject)}</h2><div class="p-body"></div>${attachments(m)}`;
+  mountBody(art.querySelector('.p-body'),m);
+  strip.innerHTML=mails.map((mm,i)=>`
+    <button class="p-card${mm.unread?' unread':''}${isMemo(mm)?' memo':''}${i===st.i?' sel':''}" data-i="${i}" aria-label="${esc(mm.from.name)} — ${esc(mm.subject)}">
+      <span class="p-no">${String(i+1).padStart(2,'0')}</span>
+      <span class="c1">${favImg(mm)}<span class="nm">${esc(mm.from.name)}</span>
+      ${mm.unread?`<span class="g" style="color:var(--accent)">${I.dot}</span>`:''}</span>
+      <span class="c2">${esc(mm.subject)}</span>
+    </button>`).join('');
+  if(!m.detail)loadDetail(m).then(()=>{if(S[3].mode==='read'&&mailboxFor()[S[3].i]===m)renderPaper()});
+  const sel=strip.querySelector('.p-card.sel');
+  if(sel)strip.scrollTo({left:sel.offsetLeft-(strip.clientWidth-sel.offsetWidth)/2,behavior:RM?'auto':'smooth'})}
+
+const RENDER={1:renderFocus,2:renderCanvas,3:renderPaper};
+function render(){hud();RENDER[active]();renderShortcutKeys()}
+
+/* ---------- communs ---------- */
+function currentMail(){const st=S[active];
+  if(active===2){const cols=cvCols();return(cols[st.col]||{mails:[]}).mails[st.row]}
+  return mailboxFor()[st.i]}
+async function archiveActive(){const m=currentMail();if(!m)return;
+  S[active].archived++;
+  await archiveRemote(m);
+  MAILBOX=MAILBOX.filter(x=>x!==m);
+  if(active!==2){const st=S[active];if(st.i>=MAILBOX.length)st.i=Math.max(0,MAILBOX.length-1)}
+  else{const st=S[2];const nc=cvCols()[st.col]||{mails:[]};st.row=Math.min(st.row,Math.max(0,nc.mails.length-1))}
+  render()}
+
+let pal={items:[],idx:0,onPick:null};
+function openPalette(mode){const m=currentMail();
+  if(mode==='label'){$('#pal-title').textContent='Libellés du message';
+    pal.items=labelPool().map(l=>({label:l,tag:m&&m.labels.includes(l)?'retirer':'ajouter'}));
+    pal.onPick=i=>{const mail=currentMail();if(!mail)return;const name=pal.items[i].label;
+      const x=mail.labels.indexOf(name);
+      if(x>-1)mail.labels.splice(x,1);else mail.labels.push(name);
+      if(LIVE.on)fetch(`/api/messages/${encodeURIComponent(LIVE.account)}/${encodeURIComponent(mail.id)}/label?folder=${LIVE.folder}`,
+        {method:'POST',headers:{'Content-Type':'application/json'},
+         body:JSON.stringify({folder:name,create_if_missing:true})}).catch(()=>{});
+      closeOv()}}
+  else{$('#pal-title').textContent='Aller au dossier';
+    pal.items=(LIVE.on?['Boîte de réception','Reportés','Envoyés','Brouillons','Archive','Corbeille']:DEMO_LABELS)
+      .map(f=>({label:f,tag:LIVE.on?'démo':'démo'}));
+    pal.onPick=i=>{closeOv();toast('Démo — ouverture de « '+pal.items[i].label+' »')}}
+  pal.idx=0;openOv('#ov-pal');$('#pal-input').value='';drawPalette()}
+function drawPalette(){const q=$('#pal-input').value.toLowerCase();
+  const list=pal.items.filter(it=>it.label.toLowerCase().includes(q));
+  const box=$('#pal-list');
+  if(!list.length){box.innerHTML='<div class="pal-empty">Aucun résultat</div>';box._vis=[];return}
+  if(pal.idx>=list.length)pal.idx=list.length-1;
+  box.innerHTML=list.map((it,i)=>`<button class="pal-item" role="option" aria-selected="${i===pal.idx}" data-i="${i}">${esc(it.label)}<span class="tag">${esc(it.tag)}</span></button>`).join('');
+  box._vis=list.map(it=>pal.items.indexOf(it))}
+function paletteKey(e){const box=$('#pal-list'),vis=box._vis||[];
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!vis.length)return;
+    pal.idx=(pal.idx+(e.key==='ArrowDown'?1:-1)+vis.length)%vis.length;drawPalette()}
+  else if(e.key==='Enter'){e.preventDefault();if(vis[pal.idx]!==undefined)pal.onPick(vis[pal.idx])}}
+
+function openReply(){const m=currentMail();if(!m)return;
+  $('#rp-to').textContent='À : '+m.from.name+' <'+m.from.email+'> — Re : '+m.subject;
+  openOv('#ov-reply');$('#rp-body').value=''}
+function sendReply(){closeOv();toast(I.plane+' Réponse envoyée (démo)')}
+
+/* ---------- recherche globale ---------- */
+let searchState={q:'',results:[],sel:0,timer:null};
+function openSearch(){openOv('#ov-search');const i=$('#search-input');i.value='';searchState={q:'',results:[],sel:0,timer:null};drawSearch()}
+function drawSearch(){
+  const box=$('#search-results'),{results,sel}=searchState;
+  if(!searchState.q){box.innerHTML=`<div class="search-empty">Rechercher expéditeur, objet ou contenu — <kbd>Entrée</kbd> ouvre le premier résultat</div>`;return}
+  if(!results.length){box.innerHTML=`<div class="search-empty">Aucun résultat</div>`;return}
+  box.innerHTML=results.map((m,i)=>`<button class="search-row${i===sel?' sel':''}" data-sr="${i}" role="option" aria-selected="${i===sel}">
+    ${favImg(m)}
+    <span class="from">${esc(m.from.name)}</span>
+    <span class="subj">${esc(m.subject)}</span>
+    <span class="snip">${esc(m.snippet||'')}</span>
+    <span class="date">${esc(m.date)}</span>
+  </button>`).join('')}
+function runSearch(q){
+  searchState.q=q;searchState.sel=0;
+  if(q.trim().length<2){searchState.results=[];drawSearch();return}
+  const url=`/api/messages?account=${encodeURIComponent(LIVE.account)}&folder=${LIVE.folder}&q=${encodeURIComponent(q)}&page_size=15`;
+  j(url).then(res=>{
+    if(searchState.q!==q)return;
+    searchState.results=normalizeMessages(res.messages||[]);
+    if(!LIVE.on)searchState.results=DEMO_MAIL.filter(m=>(m.subject+m.from.name+(m.body||'').join(' ')).toLowerCase().includes(q.toLowerCase())).map(m=>({...m,html:null,text:null,detail:false}));
+    drawSearch()})
+  .catch(()=>{searchState.results=[];drawSearch()})}
+function openSearchResult(i){
+  const m=searchState.results[i];if(!m)return;
+  closeOv();loadDetail(m).then(()=>openRead(m))}
+
+function openRead(mail){const m=mail||currentMail();if(!m)return;
+  $('#rd-body').innerHTML=`<div class="rd-meta">${favImg(m)} ${esc(m.from.name)} · ${esc(m.date)}</div>
+  <div class="rd-tags">${m.labels.map(l=>`${I.tag} ${esc(l)}`).join(' · ')}</div>
+  <h2 class="rd-sub" id="rd-sub">${esc(m.subject)}</h2><div class="rd-body-content"></div>`;
+  mountBody($('#rd-body .rd-body-content'),m);
+  m.unread=false;openOv('#ov-read');renderCanvas();
+  if(!m.detail)loadDetail(m).then(()=>{if(overlay==='#ov-read'){
+    mountBody($('#rd-body .rd-body-content'),m)}})}
+
+function renderSettings(){
+  const tabs=[
+    {id:'theme',icon:'\uF013',label:'Thème'},
+    {id:'memos',icon:'\uF249',label:'Mémos'},
+    {id:'shortcuts',icon:'\uF11C',label:'Raccourcis'},
+    {id:'about',icon:'\uF059',label:'À propos'}
+  ];
+  const activeTab=settingsTab||'theme';
+  $('#set-nav').innerHTML=tabs.map(t=>`<button class="set-tab${t.id===activeTab?' on':''}" data-settab="${t.id}"><i>${t.icon}</i>${t.label}</button>`).join('');
+  const c=$('#set-content');
+  if(activeTab==='theme'){
+    c.innerHTML=`<h4>Thème de lecture</h4>`+THEMES.map(t=>`
+      <button class="set-theme${t.id===active?' on':''}" data-th="${t.id}">
+        <span class="sw" style="background:${t.color}"></span>
+        <span><span class="nm">0${t.id} · ${t.name}</span><div class="ds">${t.desc}</div></span>
+        ${t.id===active?`<span class="st g">${I.check} actif</span>`:''}
+      </button>`).join('')+`<button class="set-theme" data-interface="classic">
+        <span class="sw" style="background:#1a73e8"></span>
+        <span><span class="nm">Interface classique</span><div class="ds">Retrouver l'interface V1 complète et ses réglages.</div></span>
+      </button><button class="set-theme" data-install>
+        <span class="sw" style="background:#2E6B4E"></span>
+        <span><span class="nm">Installer SimpleMail</span><div class="ds">Ajouter la PWA à l'écran d'accueil.</div></span>
+      </button>`}
+  else if(activeTab==='memos'){
+    c.innerHTML=`<h4>Mémos & post-its</h4>
+      <label class="set-row"><span>Afficher les mémos envoyés à soi-même</span><input id="set-memos" type="checkbox"${PREFS.memoPostits?' checked':''}></label>
+      <label class="set-row"><span>Couleur des post-its</span><input id="set-memo-color" type="color" value="${PREFS.memoColor}"></label>
+      <div class="set-row"><span>Les mémos apparaissent dans la catégorie « Mémos » du navigateur de mondes.</span></div>`}
+  else if(activeTab==='shortcuts'){
+    c.innerHTML=`<h4>Raccourcis clavier</h4>
+      <label class="set-row"><span>Présset de raccourcis</span><select id="set-shortcuts"><option value="gmail"${PREFS.shortcutPreset==='gmail'?' selected':''}>Gmail officiel</option><option value="simplemail"${PREFS.shortcutPreset==='simplemail'?' selected':''}>SimpleMail</option></select></label>`}
+  else if(activeTab==='about'){
+    c.innerHTML=`<h4>À propos</h4>
+      <div class="set-row"><span>Application</span><span class="v">PKMail Lab V2</span></div>
+      <div class="set-row"><span>Source</span><span class="v" id="set-src">…</span></div>
+      <div class="set-row"><span>Police</span><span class="v">JetBrains Mono Nerd Font</span></div>`}
+  /* wire new controls */
+  const memosCb=$('#set-memos');if(memosCb)memosCb.addEventListener('change',e=>{PREFS.memoPostits=e.target.checked;savePrefs()});
+  const memosColor=$('#set-memo-color');if(memosColor)memosColor.addEventListener('input',e=>{PREFS.memoColor=e.target.value;savePrefs()});
+  const shortcutsSel=$('#set-shortcuts');if(shortcutsSel)shortcutsSel.addEventListener('change',e=>{PREFS.shortcutPreset=e.target.value;savePrefs()});
+  /* sidebar nav */
+  $$('#set-nav .set-tab').forEach(btn=>btn.addEventListener('click',()=>{settingsTab=btn.dataset.settab;renderSettings()}));
+  /* close button */
+  const closeBtn=$('#set-close');if(closeBtn)closeBtn.addEventListener('click',closeOv);
+  /* update source label */
+  const srcEl=$('#set-src');if(srcEl)srcEl.textContent=LIVE.on?LIVE.name+' (boîte de réception réelle)':'données fictives (backend V1 non joignable)';
+}
+let settingsTab='theme';
+function openSettings(){settingsTab='theme';renderSettings();openOv('#ov-set')}
+
+const HELP={
+ 1:[['← →','changer de catégorie'],['J / ↓ · K / ↑','naviguer dans la liste'],['Entrée','ouvrir le message'],['A','archiver'],['R','répondre'],['V','libellés'],['Échap','retour à la liste'],[',','réglages']],
+ 2:[['← →','changer de catégorie'],['H / L','changer de colonne'],['↑ ↓ · J K','message dans la colonne'],['Entrée','lire le message'],['A','archiver (toutes colonnes)'],['Échap','fermer la lecture'],[',','réglages'],['','']],
+ 3:[['← →','changer de catégorie'],['J / ↓ · K / ↑','naviguer dans la file'],['Entrée','passer en lecture'],['A','archiver (et avancer)'],['R','répondre'],['Échap','retour à la file'],[',','réglages'],['Z','recharger']]};
+function openHelp(){$('#help-body').innerHTML=HELP[active].map(([k,l])=>`<kbd>${k.replace('A',PREFS.shortcutPreset==='gmail'?'E':'A').replace('V',PREFS.shortcutPreset==='gmail'?'L':'V')}</kbd><div>${l}</div>`).join('');openOv('#ov-help')}
+
+function switchTheme(n){if(n===active)return;active=n;document.body.dataset.theme=n;
+  ['1','2','3'].forEach(k=>{$('#c'+k).hidden=k!==String(n)});
+  render();toast('Thème 0'+n+' — '+THEMES[n-1].name)}
+function resetTheme(){bootLive();toast(LIVE.on?'Rechargement depuis Gmail…':'Données réinitialisées')}
+
+window.navigateMail=direction=>{
+  const st=S[active],delta=direction>0?1:-1;
+  if(active===2){const c=cvCols()[st.col];st.row=Math.max(0,Math.min(st.row+delta,(c?.mails.length||1)-1));renderCanvas();if(overlay==='#ov-read')openRead()}
+  else{st.i=Math.max(0,Math.min(st.i+delta,MAILBOX.length-1));active===1?renderFocus():renderPaper()}}
+
+/* ---------- clavier ---------- */
+function cycleCategory(dir){
+  const idx=CATEGORIES.findIndex(([k])=>k===activeCategory);
+  const next=CATEGORIES[(idx+dir+CATEGORIES.length)%CATEGORIES.length];
+  switchCategory(next[0],false,dir)}
+function conceptKey(e){
+  const k=e.key.toLowerCase(),st=S[active];
+  // ← → : changer de categorie (tous themes, pas d'overlay)
+  if(e.key==='ArrowLeft'){cycleCategory(-1);return}
+  if(e.key==='ArrowRight'){cycleCategory(1);return}
+  if(active===1){
+    if(st.mode==='list'){
+      if(k==='j'||e.key==='ArrowDown'){st.i=Math.min(st.i+1,MAILBOX.length-1);renderFocus()}
+      else if(k==='k'||e.key==='ArrowUp'){st.i=Math.max(st.i-1,0);renderFocus()}
+      else if(e.key==='Enter'&&MAILBOX.length){st.mode='read';renderFocus()}
+      else if(shortcut('archive',k))archiveActive();
+      else if(k==='r')openReply();
+      else if(shortcut('labels',k))openPalette('label')}
+    else{
+      if(k==='j'||e.key==='ArrowDown'){st.i=Math.min(st.i+1,MAILBOX.length-1);renderFocus()}
+      else if(k==='k'||e.key==='ArrowUp'){st.i=Math.max(st.i-1,0);renderFocus()}
+      else if(shortcut('archive',k))archiveActive();
+      else if(e.key==='Escape'||k==='u'){st.mode='list';renderFocus()}
+      else if(k==='r')openReply();
+      else if(shortcut('labels',k))openPalette('label')}}
+  else if(active===2){
+    if(k==='h'){st.col=Math.max(0,st.col-1);st.row=0;renderCanvas()}
+    else if(k==='l'){st.col=Math.min(cvCols().length-1,st.col+1);st.row=0;renderCanvas()}
+    else if(e.key==='ArrowDown'||k==='j'){const c=cvCols()[st.col];st.row=Math.min(st.row+1,(c?c.mails.length:1)-1);renderCanvas()}
+    else if(e.key==='ArrowUp'||k==='k'){st.row=Math.max(0,st.row-1);renderCanvas()}
+    else if(e.key==='Enter')openRead();
+    else if(shortcut('archive',k))archiveActive()}
+  else{
+    if(st.mode==='list'){
+      if(k==='j'||e.key==='ArrowDown'){st.i=Math.min(st.i+1,MAILBOX.length-1);renderPaper()}
+      else if(k==='k'||e.key==='ArrowUp'){st.i=Math.max(st.i-1,0);renderPaper()}
+      else if(e.key==='Enter'&&MAILBOX.length){st.mode='read';renderPaper()}
+      else if(shortcut('archive',k))archiveActive()}
+    else{
+      if(k==='j'){st.i=Math.min(st.i+1,MAILBOX.length-1);renderPaper()}
+      else if(k==='k'){st.i=Math.max(st.i-1,0);renderPaper()}
+      else if(shortcut('archive',k))archiveActive();
+      else if(e.key==='Escape'||k==='u'){st.mode='list';renderPaper()}
+      else if(k==='r')openReply()}}}
+
+document.addEventListener('keydown',e=>{
+  if(e.metaKey||e.ctrlKey||e.altKey){
+    if(overlay==='#ov-reply'&&(e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();sendReply()}
+    return}
+  if(e.key==='Tab'&&overlay){panelTrap(e);return}
+  if(e.key==='Escape'){
+    if(overlay){closeOv();return}
+    const st=S[active];
+    if((active===1||active===3)&&st.mode==='read'){st.mode='list';render();return}
+    return}
+  const typing=e.target.matches('input,textarea');
+  if(overlay){
+    if(overlay==='#ov-pal'){
+      if(typing&&!['ArrowDown','ArrowUp','Enter'].includes(e.key))return;
+      paletteKey(e);return}
+    if(overlay==='#ov-search'){
+      if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();
+        const n=searchState.results.length;if(!n)return;
+        searchState.sel=(searchState.sel+(e.key==='ArrowDown'?1:-1)+n)%n;drawSearch();
+        document.querySelector('.search-row.sel')?.scrollIntoView({block:'nearest'})}
+      else if(e.key==='Enter'){e.preventDefault();openSearchResult(searchState.sel)}
+      return}
+    if(overlay==='#ov-read'){if(shortcut('archive',e.key.toLowerCase())){archiveActive().then(closeOv)}return}
+    if(overlay==='#ov-reply'){if((e.metaKey||e.ctrlKey)&&e.key==='Enter')sendReply();return}
+    if(overlay==='#ov-set'){
+      if(['1','2','3'].includes(e.key)){closeOv();switchTheme(+e.key)}
+      return}
+    return}
+  if(typing)return;
+  if(e.key==='/'){e.preventDefault();openSearch();return}
+  if(['1','2','3'].includes(e.key)){switchTheme(+e.key);return}
+  if(e.key===','){openSettings();return}
+  if(e.key==='?'){openHelp();return}
+  if(e.key.toLowerCase()==='z'){resetTheme();return}
+  conceptKey(e)});
+
+document.addEventListener('click',e=>{
+  const act=e.target.closest('[data-act]');
+  if(act){const st=S[1];
+    if(act.dataset.act==='archive')archiveActive();
+    else if(act.dataset.act==='reply')openReply();
+    else if(act.dataset.act==='labels')openPalette('label');
+    else if(act.dataset.act==='back'){st.mode='list';renderFocus()}
+    return}
+  if(e.target.closest('[data-interface="classic"]')){location.href='/';return}
+  if(e.target.closest('[data-install]')){if(installPrompt){installPrompt.prompt();installPrompt=null}else toast('Chrome : menu ⋮ · Installer — iOS : Partager · Sur l’écran d’accueil');return}
+  const cycle=e.target.closest('[data-cycle]');
+  if(cycle){cycleCategory(+cycle.dataset.cycle);return}
+  const th=e.target.closest('.set-theme');
+  if(th){closeOv();switchTheme(+th.dataset.th);return}
+  const category=e.target.closest('.cat-icon');
+  if(category){const from=CATEGORIES.findIndex(([k])=>k===activeCategory),to=CATEGORIES.findIndex(([k])=>k===category.dataset.category);
+    switchCategory(category.dataset.category,false,to>from?1:-1);return}
+  const row=e.target.closest('#f-list .row,#p-list .row,#f-list .postit');
+  if(row){const key=row.closest('#f-list')?'1':'3';const st=S[key];
+    st.i=+row.dataset.i;st.mode='read';render();return}
+  const cvrow=e.target.closest('.cv-row');
+  if(cvrow){S[2].col=+cvrow.dataset.col;S[2].row=+cvrow.dataset.row;renderCanvas();return}
+  const card=e.target.closest('.p-card');
+  if(card){S[3].i=+card.dataset.i;renderPaper();return}
+  const pi=e.target.closest('.pal-item');
+  if(pi&&overlay==='#ov-pal'){const vis=$('#pal-list')._vis||[];const v=vis[+pi.dataset.i];if(v!==undefined)pal.onPick(v);return}
+  const sr=e.target.closest('.search-row');
+  if(sr&&overlay==='#ov-search'){openSearchResult(+sr.dataset.sr);return}
+  if(e.target.closest('[data-more]')){loadMore();return}
+  if(e.target.closest('[data-open-search]')){openSearch();return}
+  if(e.target.closest('#rp-send')){sendReply();return}
+  if(e.target.closest('#rd-close')){closeOv();return}
+  if(e.target.classList.contains('ov'))closeOv()});
+
+$('#pal-input').addEventListener('input',()=>{pal.idx=0;drawPalette()});
+$('#search-input').addEventListener('input',e=>{clearTimeout(searchState.timer);searchState.timer=setTimeout(()=>runSearch(e.target.value.trim()),280)});
+document.querySelectorAll('.lst-wrap').forEach(el=>el.addEventListener('scroll',()=>{
+  if(el.scrollTop+el.clientHeight>el.scrollHeight-180)loadMore()},{passive:true}));
+let swipeX=0,swipeY=0;
+$('.stage').addEventListener('touchstart',e=>{swipeX=e.changedTouches[0].clientX;swipeY=e.changedTouches[0].clientY},{passive:true});
+$('.stage').addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-swipeX,dy=e.changedTouches[0].clientY-swipeY;
+  if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.4)cycleCategory(dx<0?1:-1)},{passive:true});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+initWorldScene();
+bootLive();
+</script>
 </body>
 </html>

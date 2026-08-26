@@ -1,4 +1,4 @@
-package fr.simplemail.app;
+package fr.pkmail.app;
 
 import android.os.Bundle;
 import android.view.MotionEvent;
