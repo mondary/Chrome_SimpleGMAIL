@@ -4,6 +4,13 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+### [2026.08.03] - 2026-08-26
+
+#### Fixed
+- Catégories Principale, Promotions, Réseaux, Notifications et Forums alignées sur les résultats natifs Gmail via `X-GM-RAW`.
+- Réglages plein écran réparés et raccourci Gmail `#` relié à la suppression vers la corbeille.
+- Ajout et retrait des libellés Gmail, noms courts après le dernier `/` et couleurs personnalisables.
+
 ### [2026.08.01] - 2026-08-26
 
 #### Added

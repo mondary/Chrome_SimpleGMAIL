@@ -170,6 +170,12 @@ _GMAIL_CATEGORY_LABELS = {
 }
 
 
+def _gmail_category_query(category: str) -> str:
+    if category not in _GMAIL_CATEGORY_LABELS:
+        raise ValueError(f"unsupported Gmail category: {category}")
+    return f'X-GM-RAW "category:{category}"'
+
+
 def _decode_imap_utf7(value: str) -> str:
     def decode(match):
         encoded = match.group(1)
@@ -941,6 +947,7 @@ class FlagUpdate(BaseModel):
 class MoveMessageRequest(BaseModel):
     folder: str
     create_if_missing: bool = True
+    remove: bool = False
 
 
 class FolderCreateRequest(BaseModel):
@@ -2052,12 +2059,12 @@ def list_messages(
             status = _status_or_none(mailbox, folder) or {}
             folder_total = int(status.get("MESSAGES", 0) or 0)
 
-        def _do_fetch(extra_kwargs, limit_override=None):
+        def _do_fetch(extra_kwargs, limit_override=None, raw=""):
             kw = {}
             if q: kw["text"] = q
             if unseen: kw["seen"] = False
             kw.update(extra_kwargs)
-            crit = AND(**kw) if kw else AND(all=True)
+            crit = AND(raw, **kw) if raw else (AND(**kw) if kw else AND(all=True))
             # Borne de sécurité : sans limite, on chargeait TOUS les messages du
             # dossier en RAM lors d'un filtrage par catégorie/recherche, ce qui
             # faisait exploser la mémoire sur les grosses boîtes (jusqu'à 50 Go+).
@@ -2069,32 +2076,9 @@ def list_messages(
                                   reverse=True, mark_seen=False, bulk=True, headers_only=True)
 
         if use_gmail_cat:
-            target_label = _GMAIL_CATEGORY_LABELS[category]
-            target_norm = target_label.lower()
-            # Tier 1: IMAP-level X-GM-LABELS SEARCH (fast, server-side).
-            fetched = list(_do_fetch({"gmail_label": target_label}))
-            if not fetched:
-                # Tier 2: some Gmail backends mis-handle the X-GM-LABELS SEARCH
-                # and return nothing. Fetch the page and filter on the REAL
-                # labels read via a raw UID FETCH -- imap_tools never requests
-                # X-GM-LABELS (it only asks for BODY/UID/FLAGS/RFC822.SIZE) and
-                # exposes no `gmail_labels` attribute, so the old
-                # `getattr(m, 'gmail_labels', None)` filter was dead code that
-                # always fell through to the heuristic.
-                # Une catégorie Gmail mal gérée par le serveur ne doit jamais
-                # déclencher le scan historique de 6000 en-têtes.
-                all_fetched = list(_do_fetch({}, max(120, offset + page_size * 3)))
-                labels_by_uid = _gmail_message_labels(
-                    mailbox, [str(m.uid) for m in all_fetched if m.uid])
-                fetched = [m for m in all_fetched
-                           if target_norm in {label.lower() for label in labels_by_uid.get(str(m.uid), set())}]
-                if not fetched:
-                    # Tier 3: last-resort heuristic. _categorize() classifies
-                    # each message individually -- we deliberately do NOT tag
-                    # every fetched message with the requested category, which
-                    # is what previously inflated "primary" to ~241 entries.
-                    use_gmail_cat = False
-                    fetched = all_fetched
+            # Gmail categories are search operators, not ordinary X-GM-LABELS.
+            # Query Gmail itself so PKMail exactly matches the Gmail inbox tabs.
+            fetched = list(_do_fetch({}, offset + page_size, _gmail_category_query(category)))
         else:
             fetched = _do_fetch({})
 
@@ -2127,9 +2111,6 @@ def list_messages(
             }
             if use_gmail_cat:
                 entry["category"] = category
-                newsletter = _is_newsletter_entry(entry, manual_domains)
-                if category in ("primary", "promotions") and newsletter:
-                    continue
             else:
                 override = overrides.get(str(msg.uid))
                 entry["category"] = override if override else _categorize(entry["from_addr"], entry["from_name"], entry["subject"])
@@ -2743,6 +2724,21 @@ def snooze_message(account: str, uid: str, folder: str = Query("INBOX")):
 def label_message(account: str, uid: str, body: MoveMessageRequest, folder: str = Query("INBOX")):
     if _is_demo() or _is_demo_account(account):
         return {"ok": True}
+    acc = get_account(account)
+    if _is_gmail_imap(acc):
+        with open_mailbox(acc) as mailbox:
+            mailbox.folder.set(folder)
+            client = getattr(mailbox, "client", None)
+            if client is None:
+                raise HTTPException(503, "connexion IMAP indisponible")
+            label = body.folder.replace("\\", "\\\\").replace('"', '\\"')
+            operation = "-X-GM-LABELS" if body.remove else "+X-GM-LABELS"
+            status, _ = client.uid("STORE", str(uid), operation, f'("{label}")')
+            if status != "OK":
+                raise HTTPException(502, "mise à jour du libellé refusée par Gmail")
+        cache_invalidate(account, folder, uid)
+        _response_cache_invalidate("messages:" + account)
+        return {"ok": True, "removed": body.remove}
     return _relocate_message(account, uid, folder, body.folder, copy_only=True, create_if_missing=body.create_if_missing)
 
 

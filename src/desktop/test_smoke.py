@@ -32,6 +32,9 @@ class SmokeTests(unittest.TestCase):
         self.assertEqual(main._decode_imap_utf7("Projets/&AMk-t&AOk-"), "Projets/Été")
         self.assertEqual(main._decode_imap_utf7("R&D"), "R&D")
 
+    def test_gmail_categories_use_native_search(self):
+        self.assertEqual(main._gmail_category_query("primary"), 'X-GM-RAW "category:primary"')
+
 
 if __name__ == "__main__":
     unittest.main()
