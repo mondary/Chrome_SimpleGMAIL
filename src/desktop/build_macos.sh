@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Build the SimpleMail macOS .app via PyInstaller + pywebview.
-# Output: <repo>/releases/macos/SimpleMail.app
+# Build the PKMail macOS .app via PyInstaller + pywebview.
+# Output: <repo>/releases/macos/PKMail.app
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"            # src/desktop
@@ -11,6 +11,7 @@ WORK="$HERE/build"
 SPEC="$HERE/build"
 APP_NAME="PKMail"
 INSTALL="/Applications/$APP_NAME.app"
+VERSION="$(tr -d '[:space:]' < "$SRC/VERSION")"
 
 mkdir -p "$OUT" "$WORK"
 
@@ -47,6 +48,11 @@ python3 -m PyInstaller \
   --hidden-import "webview.platforms.cocoa" \
   app.py
 
+PLIST="$OUT/$APP_NAME.app/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$PLIST" 2>/dev/null || \
+  /usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string $VERSION" "$PLIST"
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSION" "$PLIST" 2>/dev/null || \
+  /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string $VERSION" "$PLIST"
 codesign --force --deep --sign - "$OUT/$APP_NAME.app"
 rm -rf "$INSTALL"
 ditto "$OUT/$APP_NAME.app" "$INSTALL"

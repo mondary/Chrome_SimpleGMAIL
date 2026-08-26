@@ -10,6 +10,7 @@ Historique des versions de SimpleMail.
 - Catégories Principale, Promotions, Réseaux, Notifications et Forums alignées sur les résultats natifs Gmail via `X-GM-RAW`.
 - Réglages plein écran réparés et raccourci Gmail `#` relié à la suppression vers la corbeille.
 - Ajout et retrait des libellés Gmail, noms courts après le dernier `/` et couleurs personnalisables.
+- Version CalVer injectée dans les métadonnées du bundle macOS.
 
 ### [2026.08.01] - 2026-08-26
 
