@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Build the SimpleMail macOS .app via PyInstaller + pywebview.
-# Output: <repo>/releases/macos/SimpleMail-<version>.app
+# Output: <repo>/releases/macos/SimpleMail.app
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"            # src/desktop
@@ -9,8 +9,7 @@ REPO="$(cd "$HERE/../.." && pwd)"
 OUT="$REPO/releases/macos"
 WORK="$HERE/build"
 SPEC="$HERE/build"
-VERSION="$(tr -d '[:space:]' < "$SRC/VERSION")"
-APP_NAME="SimpleMail-$VERSION"
+APP_NAME="SimpleMail"
 
 mkdir -p "$OUT" "$WORK"
 
@@ -32,16 +31,22 @@ echo "→ Building $APP_NAME.app (this can take 1-2 min)…"
 python3 -m PyInstaller \
   --noconfirm --clean --windowed \
   --name "$APP_NAME" \
+  --osx-bundle-identifier "fr.simplemail.app" \
   --icon "$ICON_ICNS" \
   --distpath "$OUT" --workpath "$WORK" --specpath "$SPEC" \
   --add-data "$SRC/index.html:." \
   --add-data "$SRC/config.example.json:." \
   --add-data "$SRC/bg.jpg:." \
   --add-data "$SRC/icon.png:." \
+  --add-data "$SRC/manifest.webmanifest:." \
+  --add-data "$SRC/sw.js:." \
+  --add-data "$REPO/src/lab:lab" \
   --add-data "$SRC/VERSION:." \
   --collect-all uvicorn --collect-all fastapi --collect-all starlette --collect-all pydantic \
   --hidden-import "webview.platforms.cocoa" \
   app.py
+
+codesign --force --deep --sign - "$OUT/$APP_NAME.app"
 
 echo ""
 echo "✓ Built: $OUT/$APP_NAME.app"

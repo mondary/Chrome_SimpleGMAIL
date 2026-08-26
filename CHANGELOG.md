@@ -12,6 +12,7 @@ Historique des versions de SimpleMail.
 - Installation PWA, Android natif et extension Chrome depuis la même interface.
 - Preset de raccourcis Gmail officiel configurable.
 - Navigation Mail Worlds plein écran, transitions Three.js et swipe entre catégories, sans menu latéral.
+- Application macOS autonome `SimpleMail.app`, signée localement et ouvrant directement Mail Worlds.
 
 #### Changed
 - Chargements Gmail bornés et Canvas limité aux éléments visibles.

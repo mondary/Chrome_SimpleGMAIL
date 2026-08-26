@@ -89,7 +89,7 @@ def main():
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
 
-    url = f"http://127.0.0.1:{port}/"
+    url = f"http://127.0.0.1:{port}/lab/"
     if not wait_for_port("127.0.0.1", port):
         # Backend didn't come up — fall back to the default browser.
         import webbrowser
