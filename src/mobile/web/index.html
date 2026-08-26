@@ -66,10 +66,15 @@ kbd{font:inherit;font-size:10px;border:1px solid var(--hair);border-bottom-width
 .world-kicker{display:block;font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
 .world-name{font-size:21px;line-height:1.05;font-weight:600;letter-spacing:-.03em;color:var(--ink)}
 .world-track{display:flex;justify-content:center;gap:5px;margin-top:13px}
-.cat-icon{height:24px;background:color-mix(in srgb,var(--cat) 14%,var(--hair));border-radius:12px;display:inline-flex;align-items:center;gap:4px;padding:0 8px;font-size:9px;letter-spacing:.06em;color:var(--muted);overflow:hidden;white-space:nowrap;transition:width .2s,background .2s,color .2s;max-width:32px}
-.cat-icon:hover{background:color-mix(in srgb,var(--cat) 24%,var(--hair));color:var(--ink)}
-.cat-icon.on{max-width:80px;background:var(--cat);color:#fff}
-.cat-icon i{font-style:normal;font-size:11px;flex:none}
+.cat-icon{height:30px;background:color-mix(in srgb,var(--cat) 8%,var(--bg));border:1px solid color-mix(in srgb,var(--cat) 18%,var(--hair));border-radius:15px;display:inline-flex;align-items:center;gap:5px;padding:0 14px;font-size:11px;letter-spacing:.03em;color:var(--muted);white-space:nowrap;transition:all .2s;cursor:pointer}
+.cat-icon:hover{background:color-mix(in srgb,var(--cat) 16%,var(--bg));border-color:var(--cat);color:var(--ink)}
+.cat-icon.on{background:var(--cat);border-color:var(--cat);color:#fff;font-weight:600;box-shadow:0 2px 8px color-mix(in srgb,var(--cat) 30%,transparent)}
+.cat-icon i{font-style:normal;font-size:12px;flex:none}
+.label-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:500;white-space:nowrap;transition:all .15s;cursor:default}
+.search-filters{display:flex;gap:6px;padding:8px 16px;border-bottom:1px solid var(--hair2);flex-wrap:wrap}
+.search-filter{height:26px;border-radius:13px;padding:0 10px;font-size:10px;border:1px solid var(--hair);color:var(--muted);display:inline-flex;align-items:center;gap:4px;transition:all .15s}
+.search-filter:hover{border-color:var(--faint);color:var(--ink)}
+.search-filter.on{border-color:var(--ink);background:var(--ink);color:#fff}
 .stage{position:absolute;inset:148px 0 0 0;z-index:2;transition:opacity .18s,transform .32s cubic-bezier(.2,.8,.2,1),filter .22s}
 .stage.world-exit-left{opacity:0;transform:translateX(-7vw);filter:blur(4px)}
 .stage.world-exit-right{opacity:0;transform:translateX(7vw);filter:blur(4px)}
@@ -357,7 +362,7 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}#world-canvas{display:none}}
 @media (max-width:760px){.row .from{width:110px}.row .snip{display:none}.row .subj{max-width:none}.hud-right{display:none}
   .world-nav{height:92px;grid-template-columns:52px 1fr 52px;padding:0 10px}.world-arrow small{display:none}.world-arrow .arr{width:36px;height:36px}
-  .world-center{min-width:0}.world-name{font-size:18px}.world-track{margin-top:11px}.cat-icon{max-width:24px;padding:0 4px;font-size:0}.cat-icon i{font-size:10px}.cat-icon.on{max-width:60px;font-size:9px;padding:0 8px}
+  .world-center{min-width:0}.world-name{font-size:18px}  .world-track{margin-top:11px}.cat-icon{padding:0 10px;font-size:10px;height:26px}.cat-icon i{font-size:10px}
   .stage{inset:136px 0 0}.memo-board{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .read-drawer{height:calc(100vh - 44px);border-radius:0}
   #rd-body{padding:46px 18px 24px}
@@ -377,7 +382,8 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
     <span><span class="n" id="hud-inbox">–</span> messages</span>
     <span><span class="g">&#xF187;</span> <span class="n" id="hud-arch">0</span></span>
     <button class="hud-key" data-open-search aria-label="Rechercher"><span class="g">&#xF002;</span> <kbd>/</kbd></button>
-    <span class="hud-key">réglages <kbd>,</kbd></span>
+    <button class="hud-key" data-open-settings aria-label="Réglages">réglages <kbd>,</kbd></button>
+    <button class="hud-key" data-reload aria-label="Recharger" title="Recharger l'interface"><span class="g">&#xF2F1;</span> <kbd>Z</kbd></button>
   </div>
 </header>
 
@@ -477,6 +483,7 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
         placeholder="Rechercher dans Gmail…" aria-label="Rechercher">
       <span style="font-size:10px;color:var(--faint)"><kbd>Échap</kbd></span>
     </div>
+    <div class="search-filters" id="search-filters"></div>
     <div class="search-results" id="search-results" role="listbox"></div>
   </div>
 </div>
@@ -562,6 +569,12 @@ if(PREFS.memoColor==='#FFF0A6'||PREFS.memoColor==='#FFF8D8')PREFS.memoColor='#FF
 document.documentElement.style.setProperty('--memo',PREFS.memoColor);
 const isMemo=m=>PREFS.memoPostits&&LIVE.email&&m.from.email.toLowerCase()===LIVE.email.toLowerCase();
 function savePrefs(){localStorage.setItem('simplemail_lab_prefs',JSON.stringify(PREFS));document.documentElement.style.setProperty('--memo',PREFS.memoColor);render()}
+const DEFAULT_LABEL_COLORS={Travail:'#1A73E8',Factures:'#E74C3C',Perso:'#2E6B4E',Newsletters:'#FF8C1A',Notifications:'#28BCA3',Forums:'#9B6BE8'};
+let LABEL_COLORS={...DEFAULT_LABEL_COLORS};
+try{LABEL_COLORS={...LABEL_COLORS,...JSON.parse(localStorage.getItem('simplemail_lab_label_colors')||'{}')}}catch(e){}
+function saveLabelColors(){localStorage.setItem('simplemail_lab_label_colors',JSON.stringify(LABEL_COLORS));render()}
+function labelColor(name){return LABEL_COLORS[name]||'#71757C'}
+function labelPill(name){const c=labelColor(name);return`<span class="label-pill" style="background:${c}18;color:${c};border:1px solid ${c}30">${esc(name)}</span>`}
 const shortcut=(action,key)=>PREFS.shortcutPreset==='gmail'?key==={archive:'e',labels:'l'}[action]:key==={archive:'a',labels:'v'}[action];
 function renderShortcutKeys(){document.querySelectorAll('[data-key="archive"]').forEach(k=>k.textContent=PREFS.shortcutPreset==='gmail'?'E':'A');
   document.querySelectorAll('[data-key="labels"]').forEach(k=>k.textContent=PREFS.shortcutPreset==='gmail'?'L':'V')}
@@ -800,7 +813,7 @@ function listRows(mails,st,scope){
   mails.forEach((m)=>{
     const d=dayOf(m.date||'');
     if(d!==day){day=d;out+=`<div class="day-head">${esc(d)}</div>`}
-    const tags=m.labels&&m.labels.length?`<span class="tags">${m.labels.slice(0,2).map(l=>`<i>${esc(l)}</i>`).join('')}</span>`:'';
+    const tags=m.labels&&m.labels.length?`<span class="tags">${m.labels.slice(0,2).map(l=>`<i style="background:${labelColor(l)}18;color:${labelColor(l)}">${esc(l)}</i>`).join('')}</span>`:'';
     const att=m.attachments?`<span class="att-i g">${I.clip}</span>`:'';
     out+=`<button class="row${activeCategory==='newsletter'?' newsletter-row':''}${m.unread?' unread':''}${mails.indexOf(m)===st.i?' sel':''}" data-i="${mails.indexOf(m)}">
       ${newsletterThumb(m)}
@@ -863,7 +876,7 @@ function renderFocus(){const st=S[1];
   m.unread=false;
   $('#f-mount').innerHTML=`
   <div class="f-count">MESSAGE <b>${String(st.i+1).padStart(2,'0')}</b> / ${mails.length}</div>
-  <div style="font-size:10px;color:var(--faint)">${m.labels.map(l=>`${I.tag} ${esc(l)}`).join(' · ')}</div>
+  <div style="font-size:10px;color:var(--faint)">${m.labels.map(l=>labelPill(l)).join(' ')}</div>
   <h1 class="f-subject">${esc(m.subject)}</h1>
   <div class="f-meta">
     ${favImg(m,true)}
@@ -991,36 +1004,49 @@ function openReply(){const m=currentMail();if(!m)return;
 function sendReply(){closeOv();toast(I.plane+' Réponse envoyée (démo)')}
 
 /* ---------- recherche globale ---------- */
-let searchState={q:'',results:[],sel:0,timer:null};
-function openSearch(){openOv('#ov-search');const i=$('#search-input');i.value='';searchState={q:'',results:[],sel:0,timer:null};drawSearch()}
+let searchState={q:'',results:[],sel:0,timer:null,labelFilter:null};
+function openSearch(){openOv('#ov-search');const i=$('#search-input');i.value='';searchState={q:'',results:[],sel:0,timer:null,labelFilter:null};renderSearchFilters();drawSearch()}
+function renderSearchFilters(){
+  const box=$('#search-filters');if(!box)return;
+  const labels=labelPool();
+  box.innerHTML=`<button class="search-filter${!searchState.labelFilter?' on':''}" data-sfilter="">Tous</button>`+
+    labels.map(l=>`<button class="search-filter${searchState.labelFilter===l?' on':''}" data-sfilter="${esc(l)}">${esc(l)}</button>`).join('')}
 function drawSearch(){
-  const box=$('#search-results'),{results,sel}=searchState;
+  const box=$('#search-results'),{results,sel,labelFilter}=searchState;
+  const filtered=labelFilter?results.filter(m=>m.labels&&m.labels.includes(labelFilter)):results;
   if(!searchState.q){box.innerHTML=`<div class="search-empty">Rechercher expéditeur, objet ou contenu — <kbd>Entrée</kbd> ouvre le premier résultat</div>`;return}
-  if(!results.length){box.innerHTML=`<div class="search-empty">Aucun résultat</div>`;return}
-  box.innerHTML=results.map((m,i)=>`<button class="search-row${i===sel?' sel':''}" data-sr="${i}" role="option" aria-selected="${i===sel}">
+  if(!filtered.length){box.innerHTML=`<div class="search-empty">${labelFilter?'Aucun résultat pour « '+esc(labelFilter)+' »':'Aucun résultat'}</div>`;return}
+  box.innerHTML=filtered.map((m,i)=>`<button class="search-row${i===sel?' sel':''}" data-sr="${i}" role="option" aria-selected="${i===sel}">
     ${favImg(m)}
     <span class="from">${esc(m.from.name)}</span>
     <span class="subj">${esc(m.subject)}</span>
     <span class="snip">${esc(m.snippet||'')}</span>
+    ${m.labels?.length?`<span class="tags">${m.labels.slice(0,2).map(l=>`<i style="background:${labelColor(l)}18;color:${labelColor(l)}">${esc(l)}</i>`).join('')}</span>`:''}
     <span class="date">${esc(m.date)}</span>
   </button>`).join('')}
 function runSearch(q){
   searchState.q=q;searchState.sel=0;
   if(q.trim().length<2){searchState.results=[];drawSearch();return}
+  if(!LIVE.on){
+    searchState.results=DEMO_MAIL.filter(m=>(m.subject+m.from.name+(m.body||[]).join(' ')).toLowerCase().includes(q.toLowerCase())).map(m=>({...m,html:null,text:null,detail:false}));
+    drawSearch();return}
   const url=`/api/messages?account=${encodeURIComponent(LIVE.account)}&folder=${LIVE.folder}&q=${encodeURIComponent(q)}&page_size=15`;
   j(url).then(res=>{
     if(searchState.q!==q)return;
     searchState.results=normalizeMessages(res.messages||[]);
-    if(!LIVE.on)searchState.results=DEMO_MAIL.filter(m=>(m.subject+m.from.name+(m.body||'').join(' ')).toLowerCase().includes(q.toLowerCase())).map(m=>({...m,html:null,text:null,detail:false}));
     drawSearch()})
-  .catch(()=>{searchState.results=[];drawSearch()})}
+  .catch(()=>{
+    if(searchState.q!==q)return;
+    searchState.results=DEMO_MAIL.filter(m=>(m.subject+m.from.name+(m.body||[]).join(' ')).toLowerCase().includes(q.toLowerCase())).map(m=>({...m,html:null,text:null,detail:false}));
+    drawSearch()})}
 function openSearchResult(i){
-  const m=searchState.results[i];if(!m)return;
+  const filtered=searchState.labelFilter?searchState.results.filter(m=>m.labels&&m.labels.includes(searchState.labelFilter)):searchState.results;
+  const m=filtered[i];if(!m)return;
   closeOv();loadDetail(m).then(()=>openRead(m))}
 
 function openRead(mail){const m=mail||currentMail();if(!m)return;
   $('#rd-body').innerHTML=`<div class="rd-meta">${favImg(m)} ${esc(m.from.name)} · ${esc(m.date)}</div>
-  <div class="rd-tags">${m.labels.map(l=>`${I.tag} ${esc(l)}`).join(' · ')}</div>
+  <div class="rd-tags">${m.labels.map(l=>labelPill(l)).join(' ')}</div>
   <h2 class="rd-sub" id="rd-sub">${esc(m.subject)}</h2><div class="rd-body-content"></div>`;
   mountBody($('#rd-body .rd-body-content'),m);
   m.unread=false;openOv('#ov-read');renderCanvas();
@@ -1031,6 +1057,7 @@ function renderSettings(){
   const tabs=[
     {id:'theme',icon:'\uF013',label:'Thème'},
     {id:'memos',icon:'\uF249',label:'Mémos'},
+    {id:'labels',icon:'\uF02B',label:'Libellés'},
     {id:'shortcuts',icon:'\uF11C',label:'Raccourcis'},
     {id:'about',icon:'\uF059',label:'À propos'}
   ];
@@ -1048,25 +1075,33 @@ function renderSettings(){
         <span><span class="nm">Interface classique</span><div class="ds">Retrouver l'interface V1 complète et ses réglages.</div></span>
       </button><button class="set-theme" data-install>
         <span class="sw" style="background:#2E6B4E"></span>
-        <span><span class="nm">Installer SimpleMail</span><div class="ds">Ajouter la PWA à l'écran d'accueil.</div></span>
+        <span><span class="nm">Installer PKMail</span><div class="ds">Ajouter la PWA à l'écran d'accueil.</div></span>
       </button>`}
   else if(activeTab==='memos'){
     c.innerHTML=`<h4>Mémos & post-its</h4>
       <label class="set-row"><span>Afficher les mémos envoyés à soi-même</span><input id="set-memos" type="checkbox"${PREFS.memoPostits?' checked':''}></label>
       <label class="set-row"><span>Couleur des post-its</span><input id="set-memo-color" type="color" value="${PREFS.memoColor}"></label>
       <div class="set-row"><span>Les mémos apparaissent dans la catégorie « Mémos » du navigateur de mondes.</span></div>`}
+  else if(activeTab==='labels'){
+    const allLabels=[...new Set([...Object.keys(LABEL_COLORS),...labelPool()])].sort();
+    c.innerHTML=`<h4>Couleurs des libellés</h4>`+
+      allLabels.map(l=>`<div class="set-row"><span>${esc(l)}</span><input type="color" data-label-color="${esc(l)}" value="${labelColor(l)}" style="margin-left:auto;width:32px;height:24px;padding:0;border:1px solid var(--hair);background:none"></div>`).join('')+
+      `<div class="set-row"><button id="reset-label-colors" style="font-size:11px;color:var(--muted);border:1px solid var(--hair);padding:6px 12px">Réinitialiser les couleurs</button></div>`}
   else if(activeTab==='shortcuts'){
     c.innerHTML=`<h4>Raccourcis clavier</h4>
       <label class="set-row"><span>Présset de raccourcis</span><select id="set-shortcuts"><option value="gmail"${PREFS.shortcutPreset==='gmail'?' selected':''}>Gmail officiel</option><option value="simplemail"${PREFS.shortcutPreset==='simplemail'?' selected':''}>SimpleMail</option></select></label>`}
   else if(activeTab==='about'){
     c.innerHTML=`<h4>À propos</h4>
       <div class="set-row"><span>Application</span><span class="v">PKMail Lab V2</span></div>
+      <div class="set-row"><span>Version</span><span class="v">2026.08.02</span></div>
       <div class="set-row"><span>Source</span><span class="v" id="set-src">…</span></div>
       <div class="set-row"><span>Police</span><span class="v">JetBrains Mono Nerd Font</span></div>`}
   /* wire new controls */
   const memosCb=$('#set-memos');if(memosCb)memosCb.addEventListener('change',e=>{PREFS.memoPostits=e.target.checked;savePrefs()});
   const memosColor=$('#set-memo-color');if(memosColor)memosColor.addEventListener('input',e=>{PREFS.memoColor=e.target.value;savePrefs()});
   const shortcutsSel=$('#set-shortcuts');if(shortcutsSel)shortcutsSel.addEventListener('change',e=>{PREFS.shortcutPreset=e.target.value;savePrefs()});
+  document.querySelectorAll('[data-label-color]').forEach(inp=>inp.addEventListener('input',e=>{LABEL_COLORS[e.target.dataset.labelColor]=e.target.value;saveLabelColors()}));
+  const resetBtn=$('#reset-label-colors');if(resetBtn)resetBtn.addEventListener('click',()=>{LABEL_COLORS={...DEFAULT_LABEL_COLORS};saveLabelColors();renderSettings()});
   /* sidebar nav */
   $$('#set-nav .set-tab').forEach(btn=>btn.addEventListener('click',()=>{settingsTab=btn.dataset.settab;renderSettings()}));
   /* close button */
@@ -1183,7 +1218,11 @@ document.addEventListener('click',e=>{
     else if(act.dataset.act==='back'){st.mode='list';renderFocus()}
     return}
   if(e.target.closest('[data-interface="classic"]')){location.href='/';return}
-  if(e.target.closest('[data-install]')){if(installPrompt){installPrompt.prompt();installPrompt=null}else toast('Chrome : menu ⋮ · Installer — iOS : Partager · Sur l’écran d’accueil');return}
+  if(e.target.closest('[data-install]')){if(installPrompt){installPrompt.prompt();installPrompt=null}else toast('Chrome : menu · Installer');return}
+  if(e.target.closest('[data-open-settings]')){openSettings();return}
+  if(e.target.closest('[data-reload]')){resetTheme();return}
+  const sfilter=e.target.closest('[data-sfilter]');
+  if(sfilter){searchState.labelFilter=sfilter.dataset.sfilter||null;searchState.sel=0;renderSearchFilters();drawSearch();return}
   const cycle=e.target.closest('[data-cycle]');
   if(cycle){cycleCategory(+cycle.dataset.cycle);return}
   const th=e.target.closest('.set-theme');
