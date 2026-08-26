@@ -483,7 +483,7 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
 
 <div id="toast" role="status" aria-live="polite"></div>
 <div class="load-screen" id="load-screen" role="status" aria-live="polite">
-  <div class="load-mark"><b>SIMPLEMAIL</b><span id="load-label">Connexion à Gmail</span><div class="load-line"></div></div>
+  <div class="load-mark"><b>PKMAIL</b><span id="load-label">Connexion à Gmail</span><div class="load-line"></div></div>
 </div>
 
 <script src="three.min.js"></script>
@@ -647,7 +647,7 @@ function renderCategories(){
   setWorldVisual(activeCategory);
   $('#categories').innerHTML=`
     <button class="world-arrow prev" data-cycle="-1" aria-label="Catégorie précédente : ${prev[1]}"><span class="arr">←</span><small>${prev[1]}</small></button>
-    <div class="world-center"><span class="world-kicker">Catégorie ${String(index+1).padStart(2,'0')} / 06</span><h1 class="world-name">${current[1]}</h1>
+    <div class="world-center"><span class="world-kicker">Catégorie ${String(index+1).padStart(2,'0')} / ${String(CATEGORIES.length).padStart(2,'0')}</span><h1 class="world-name">${current[1]}</h1>
       <div class="world-track">${CATEGORIES.map(([key,label,icon,color])=>`<button class="cat-icon${key===activeCategory?' on':''}" data-category="${key}" aria-label="${label}" title="${label}" style="--cat:${color}"><i>${icon}</i>${label}</button>`).join('')}</div></div>
     <button class="world-arrow next" data-cycle="1" aria-label="Catégorie suivante : ${next[1]}"><span class="arr">→</span><small>${next[1]}</small></button>`}
 
@@ -690,7 +690,7 @@ async function loadMore(){
 async function warmCategories(){
   if(!LIVE.on)return;
   for(const [key] of CATEGORIES){
-    if(key===activeCategory||CATEGORY_CACHE.has(key))continue;
+    if(key===activeCategory||key==='memos'||CATEGORY_CACHE.has(key))continue;
     try{const mails=await fetchCategory(key);CATEGORY_CACHE.set(key,mails);saveSnapshot(key,mails);renderCategories()}
     catch(e){}
     await new Promise(r=>setTimeout(r,1500))}}
@@ -740,11 +740,13 @@ async function bootLive(){
     LIVE.on=false;
     MAILBOX=DEMO_MAIL.map(m=>({...m,html:null,text:null,detail:false}));CATEGORY_CACHE.set('primary',MAILBOX);
   }
+  try{
   const badge=$('#hud-live');
   badge.textContent=LIVE.on?'GMAIL · '+LIVE.name.toUpperCase():'DÉMO';
   badge.classList.toggle('on',LIVE.on);
-  $('#set-src').textContent=LIVE.on?LIVE.name+' (boîte de réception réelle)':'données fictives (backend V1 non joignable)';
-  renderCategories();await switchCategory('primary',true);fetchArchivedCount()}
+  const srcEl=$('#set-src');if(srcEl)srcEl.textContent=LIVE.on?LIVE.name+' (boîte de réception réelle)':'données fictives (backend V1 non joignable)';
+  renderCategories();await switchCategory('primary',true);fetchArchivedCount()
+  }catch(e){console.error('bootLive render error',e);setLoading(false)}}
 
 async function loadDetail(m){
   if(m.detail||!LIVE.on)return m;
