@@ -22,6 +22,7 @@
   --hair:#E9E9E4;
   --hair2:#F1F1EC;
   --accent:#C64A12;
+  --world:#1A73E8;
   --memo:#FFFBEA;
   --font-ui:'JSM NF',ui-monospace,'SF Mono',Menlo,monospace;
 }
@@ -49,13 +50,30 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 kbd{font:inherit;font-size:10px;border:1px solid var(--hair);border-bottom-width:2px;border-radius:3px;
   padding:1px 5px;background:#FBFBF9;color:var(--muted);white-space:nowrap}
 
-.categories{position:fixed;top:44px;left:0;right:0;height:38px;display:flex;align-items:center;gap:3px;
-  padding:0 18px;border-bottom:1px solid var(--hair);background:var(--bg);z-index:39}
-.cat-icon{position:relative;width:36px;height:30px;display:grid;place-items:center;border-radius:4px;color:var(--faint);font-size:14px;transition:color .12s}
-.cat-icon:hover{color:var(--cat);background:color-mix(in srgb,var(--cat) 10%,white)}
-.cat-icon.on{color:var(--cat);background:color-mix(in srgb,var(--cat) 9%,white)}
-.cat-icon.on::after{content:'';position:absolute;left:10px;right:10px;bottom:-4px;height:2px;background:var(--cat)}
-.stage{position:absolute;inset:82px 0 0 0}
+#world-canvas{position:fixed;inset:44px 0 0;width:100%;height:calc(100% - 44px);pointer-events:none;z-index:0;opacity:.72}
+.world-nav{position:fixed;top:44px;left:0;right:0;height:104px;display:grid;grid-template-columns:minmax(150px,1fr) auto minmax(150px,1fr);
+  align-items:center;padding:0 28px;z-index:39;border-bottom:1px solid color-mix(in srgb,var(--world) 16%,var(--hair));
+  background:linear-gradient(180deg,color-mix(in srgb,var(--world) 7%,white),rgba(255,255,255,.9) 76%,rgba(255,255,255,.72));
+  backdrop-filter:blur(14px);transition:border-color .35s,background .35s}
+.world-arrow{display:flex;align-items:center;gap:12px;width:max-content;max-width:100%;color:var(--muted);padding:14px 0;text-align:left}
+.world-arrow.next{justify-self:end;text-align:right;flex-direction:row-reverse}
+.world-arrow .arr{width:38px;height:38px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--world) 26%,var(--hair));
+  border-radius:50%;font-size:18px;background:rgba(255,255,255,.72);transition:transform .16s,border-color .16s,color .16s}
+.world-arrow:hover .arr{transform:translateX(-3px);border-color:var(--world);color:var(--world)}
+.world-arrow.next:hover .arr{transform:translateX(3px)}
+.world-arrow small{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--faint)}
+.world-center{text-align:center;min-width:260px}
+.world-kicker{display:block;font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+.world-name{font-size:21px;line-height:1.05;font-weight:600;letter-spacing:-.03em;color:var(--ink)}
+.world-track{display:flex;justify-content:center;gap:5px;margin-top:13px}
+.cat-icon{width:26px;height:3px;background:color-mix(in srgb,var(--cat) 30%,var(--hair));overflow:hidden;text-indent:-999px;transition:width .2s,background .2s}
+.cat-icon:hover{background:var(--cat)}
+.cat-icon.on{width:52px;background:var(--cat)}
+.stage{position:absolute;inset:148px 0 0 0;z-index:2;transition:opacity .18s,transform .32s cubic-bezier(.2,.8,.2,1),filter .22s}
+.stage.world-exit-left{opacity:0;transform:translateX(-7vw);filter:blur(4px)}
+.stage.world-exit-right{opacity:0;transform:translateX(7vw);filter:blur(4px)}
+.stage.world-enter{animation:world-enter .42s cubic-bezier(.2,.8,.2,1)}
+@keyframes world-enter{from{opacity:0;transform:translateX(var(--world-enter,6vw));filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
 .theme{position:absolute;inset:0}
 .theme[hidden]{display:none}
 .cmd{position:absolute;left:0;right:0;bottom:0;display:flex;flex-wrap:wrap;justify-content:center;gap:4px 18px;
@@ -75,7 +93,7 @@ kbd{font:inherit;font-size:10px;border:1px solid var(--hair);border-bottom-width
 .lst-head{display:flex;align-items:baseline;gap:10px;font-size:11px;color:var(--faint);
   letter-spacing:.1em;text-transform:uppercase;padding:0 14px 10px;border-bottom:1px solid var(--hair)}
 .lst-head .n{color:var(--ink)}
-.lst-head .z{margin-left:auto;color:var(--accent)}
+.lst-head .z{margin-left:auto;color:var(--world)}
 .row{width:100%;display:flex;align-items:center;gap:10px;text-align:left;padding:7px 14px;font-size:13px;
   border-bottom:1px solid var(--hair2)}
 .row .idx{color:var(--faint);font-size:11px;width:22px;flex:none}
@@ -90,7 +108,8 @@ kbd{font:inherit;font-size:10px;border:1px solid var(--hair);border-bottom-width
 .row:hover{background:var(--hair2)}
 .day-head{display:flex;align-items:center;gap:10px;padding:18px 14px 6px;font-size:10px;letter-spacing:.12em;
   text-transform:uppercase;color:var(--faint)}
-.day-head::after{content:'';flex:1;height:1px;background:var(--hair2)}
+.day-head::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--world)}
+.day-head::after{content:'';flex:1;height:1px;background:color-mix(in srgb,var(--world) 14%,var(--hair2))}
 .load-more-wrap{display:flex;justify-content:center;padding:22px 0 30px}
 .load-more{font-size:11px;color:var(--muted);border:1px solid var(--hair);padding:9px 18px}
 .load-more:hover{border-color:var(--faint);color:var(--ink)}
@@ -291,7 +310,7 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
 .load-mark{text-align:center;color:var(--faint);font-size:10px;letter-spacing:.16em;text-transform:uppercase}
 .load-mark b{display:block;margin-bottom:16px;color:var(--ink);font-size:13px;letter-spacing:.12em}
 .load-line{width:120px;height:1px;margin:18px auto 0;background:var(--hair);overflow:hidden}
-.load-line::after{content:'';display:block;width:42px;height:100%;background:var(--accent);animation:load-slide 1s ease-in-out infinite}
+.load-line::after{content:'';display:block;width:42px;height:100%;background:var(--world);animation:load-slide 1s ease-in-out infinite}
 @keyframes load-slide{from{transform:translateX(-42px)}to{transform:translateX(120px)}}
 
 /* recherche globale */
@@ -315,15 +334,19 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
 #toast{position:fixed;left:50%;bottom:60px;transform:translate(-50%,10px);background:var(--ink);color:#fff;
   font-size:11px;padding:10px 14px;opacity:0;pointer-events:none;transition:all .18s;z-index:80}
 #toast.show{opacity:1;transform:translate(-50%,0)}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}#world-canvas{display:none}}
 @media (max-width:760px){.row .from{width:110px}.row .snip{display:none}.row .subj{max-width:none}.hud-right{display:none}
-  .categories{padding:0 8px;justify-content:space-around}.cat-icon{width:34px}
+  .world-nav{height:92px;grid-template-columns:52px 1fr 52px;padding:0 10px}.world-arrow small{display:none}.world-arrow .arr{width:36px;height:36px}
+  .world-center{min-width:0}.world-name{font-size:18px}.world-track{margin-top:11px}.cat-icon{width:18px}.cat-icon.on{width:34px}
+  .stage{inset:136px 0 0}.memo-board{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .read-drawer{height:calc(100vh - 44px);border-radius:0}
   #rd-body{padding:46px 18px 24px}
   .p-card{width:180px}}
 </style>
 </head>
 <body data-theme="1">
+
+<canvas id="world-canvas" aria-hidden="true"></canvas>
 
 <header class="hud">
   <span class="hud-mark">SIMPLEMAIL·LAB</span>
@@ -337,7 +360,7 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
   </div>
 </header>
 
-<nav class="categories" id="categories" aria-label="Catégories Gmail"></nav>
+<nav class="world-nav" id="categories" aria-label="Changer de catégorie Gmail"></nav>
 
 <main class="stage">
 
@@ -355,7 +378,7 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
   <section class="theme" id="c2" hidden aria-label="Thème Label Canvas">
     <div id="cv-wrap"><div id="cv-cols"></div></div>
     <div class="cmd" aria-hidden="true">
-      <span><kbd>&#x2190;</kbd><kbd>&#x2192;</kbd> colonne</span><span><kbd>&#x2191;</kbd><kbd>&#x2193;</kbd> message</span>
+      <span><kbd>H</kbd><kbd>L</kbd> colonne</span><span><kbd>&#x2190;</kbd><kbd>&#x2192;</kbd> catégorie</span><span><kbd>&#x2191;</kbd><kbd>&#x2193;</kbd> message</span>
       <span><kbd>Entrée</kbd> lire</span><span><kbd data-key="archive">E</kbd> archiver</span>
       <span><kbd>/</kbd> rechercher</span><span><kbd>Z</kbd> recharger</span><span><kbd>?</kbd> aide</span>
     </div>
@@ -442,6 +465,7 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
   <div class="load-mark"><b>SIMPLEMAIL</b><span id="load-label">Connexion à Gmail</span><div class="load-line"></div></div>
 </div>
 
+<script src="three.min.js"></script>
 <script>
 const I={check:'\uF00C',inbox:'\uF01C',tag:'\uF02B',folder:'\uF07B',reply:'\uF112',
   archive:'\uF187',plane:'\uF1D8',dot:'\uF111',envelope:'\uF0E0',clip:'\uF0C6'};
@@ -457,6 +481,38 @@ const CATEGORIES=[
   ['updates','Notifications','\uF0F3','#28BCA3'],
   ['forums','Forums','\uF086','#9B6BE8'],
   ['newsletter','Newsletters','\uF1EA','#FF8C1A']];
+
+/* Atmosphère Three.js : profondeur et transitions seulement, jamais le contenu. */
+const WORLD={renderer:null,scene:null,camera:null,points:null,rings:null,color:null,target:null,kick:0};
+function initWorldScene(){
+  if(RM||!window.THREE)return;
+  const canvas=$('#world-canvas'),renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:false,powerPreference:'high-performance'});
+  const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(42,1,.1,30);camera.position.z=6;
+  const geometry=new THREE.BufferGeometry(),positions=[];
+  for(let i=0;i<150;i++)positions.push((Math.random()-.5)*12,(Math.random()-.5)*7,(Math.random()-.5)*5);
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  const color=new THREE.Color(CATEGORIES[0][3]),material=new THREE.PointsMaterial({color,size:.035,transparent:true,opacity:.23,sizeAttenuation:true});
+  const points=new THREE.Points(geometry,material);scene.add(points);
+  const rings=new THREE.Group();
+  for(let i=0;i<3;i++){
+    const ring=new THREE.Mesh(new THREE.RingGeometry(1.35+i*.72,1.37+i*.72,96),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.035,side:THREE.DoubleSide}));
+    ring.position.set(4.2-i*.35,-.3+i*.24,-1.5-i*.5);ring.rotation.x=.2+i*.12;rings.add(ring)}
+  scene.add(rings);Object.assign(WORLD,{renderer,scene,camera,points,rings,color,target:color.clone()});
+  const resize=()=>{const w=innerWidth,h=Math.max(1,innerHeight-44);renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()};
+  addEventListener('resize',resize,{passive:true});resize();
+  let last=0;const tick=time=>{requestAnimationFrame(tick);if(document.hidden||time-last<32)return;last=time;
+    color.lerp(WORLD.target,.035);points.material.color.copy(color);rings.children.forEach(r=>r.material.color.copy(color));
+    WORLD.kick*=.92;points.rotation.y+=.0007+WORLD.kick*.008;points.position.x*=.91;rings.rotation.z+=.00025;rings.position.x*=.9;
+    renderer.render(scene,camera)};requestAnimationFrame(tick)}
+function setWorldVisual(key,direction=0){
+  const category=CATEGORIES.find(([k])=>k===key)||CATEGORIES[0],color=category[3];
+  document.documentElement.style.setProperty('--world',color);document.body.dataset.category=key;
+  if(WORLD.target){WORLD.target.set(color);WORLD.kick=Math.abs(direction);WORLD.points.position.x=direction*1.8;WORLD.rings.position.x=direction*.8}}
+function beginWorldTransition(direction){
+  if(!direction||RM)return;
+  const stage=$('.stage'),exit=direction>0?'world-exit-left':'world-exit-right';stage.classList.add(exit);
+  setTimeout(()=>{stage.classList.remove(exit);stage.style.setProperty('--world-enter',direction>0?'6vw':'-6vw');stage.classList.add('world-enter');
+    setTimeout(()=>stage.classList.remove('world-enter'),430)},170)}
 const DEMO_MAIL=[
 {id:1,from:{name:'Camille Durand',email:'camille@atelier-nord.fr'},subject:'Compte rendu — réunion de cadrage lundi',date:'09:42',labels:['Travail'],unread:true,thread:3,body:['Bonjour, voici le compte rendu de la réunion de lundi. Points clés : périmètre validé pour la phase 1, livraison intermédiaire le 15, revue design la semaine prochaine.','Peux-tu valider le planning côté intégration avant vendredi ?','Camille']},
 {id:2,from:{name:'OVHcloud',email:'noreply@ovhcloud.net'},subject:'Facture FR-2026-0812 disponible',date:'08:15',labels:['Factures'],unread:false,body:['Votre facture de 24,90 € HT est disponible dans votre espace client.','Le montant sera prélevé le 5 du mois prochain.']},
@@ -564,7 +620,14 @@ function displayCategory(messages,reset=true){
   renderCategories();render()}
 
 function renderCategories(){
-  $('#categories').innerHTML=CATEGORIES.map(([key,label,icon,color])=>`<button class="cat-icon g${key===activeCategory?' on':''}" data-category="${key}" aria-label="${label}" title="${label}" style="--cat:${color}">${icon}</button>`).join('')}
+  const index=CATEGORIES.findIndex(([key])=>key===activeCategory),current=CATEGORIES[index];
+  const prev=CATEGORIES[(index-1+CATEGORIES.length)%CATEGORIES.length],next=CATEGORIES[(index+1)%CATEGORIES.length];
+  setWorldVisual(activeCategory);
+  $('#categories').innerHTML=`
+    <button class="world-arrow prev" data-cycle="-1" aria-label="Catégorie précédente : ${prev[1]}"><span class="arr">←</span><small>${prev[1]}</small></button>
+    <div class="world-center"><span class="world-kicker">Catégorie ${String(index+1).padStart(2,'0')} / 06</span><h1 class="world-name">${current[1]}</h1>
+      <div class="world-track">${CATEGORIES.map(([key,label,icon,color])=>`<button class="cat-icon${key===activeCategory?' on':''}" data-category="${key}" aria-label="${label}" title="${label}" style="--cat:${color}">${label}</button>`).join('')}</div></div>
+    <button class="world-arrow next" data-cycle="1" aria-label="Catégorie suivante : ${next[1]}"><span class="arr">→</span><small>${next[1]}</small></button>`}
 
 async function fetchCategory(key,page=1){
   if(!LIVE.on){
@@ -613,9 +676,12 @@ async function fetchArchivedCount(){
     if(allMail&&allMail.total>0)ARCHIVED_COUNT=allMail.total;hud()}
   catch(e){}}
 
-async function switchCategory(key,force=false){
+async function switchCategory(key,force=false,direction=0){
   if(!CATEGORIES.some(([k])=>k===key))return;
+  if(key===activeCategory&&!force)return;
+  beginWorldTransition(direction);
   activeCategory=key;renderCategories();
+  setWorldVisual(key,direction);
   const request=++categoryRequest;
   const memory=CATEGORY_CACHE.get(key),snapshot=memory||readSnapshot(key);
   if(snapshot){
@@ -957,9 +1023,9 @@ function renderSettings(){$('#set-list').innerHTML=THEMES.map(t=>`
 function openSettings(){renderSettings();$('#set-memos').checked=PREFS.memoPostits;$('#set-memo-color').value=PREFS.memoColor;$('#set-shortcuts').value=PREFS.shortcutPreset;openOv('#ov-set')}
 
 const HELP={
- 1:[['J / ↓ · K / ↑','naviguer dans la liste'],['Entrée','ouvrir le message'],['A','archiver'],['R','répondre'],['V','libellés'],['Échap','retour à la liste'],[',','réglages'],['Z','recharger']],
- 2:[['← →','changer de colonne'],['↑ ↓ · J K','message dans la colonne'],['Entrée','lire le message'],['A','archiver (toutes colonnes)'],['Échap','fermer la lecture'],[',','réglages'],['',''],['','']],
- 3:[['J / ↓ · K / ↑','naviguer dans la file'],['Entrée','passer en lecture'],['A','archiver (et avancer)'],['R','répondre'],['Échap','retour à la file'],[',','réglages'],['Z','recharger'],['','']]};
+ 1:[['← →','changer de catégorie'],['J / ↓ · K / ↑','naviguer dans la liste'],['Entrée','ouvrir le message'],['A','archiver'],['R','répondre'],['V','libellés'],['Échap','retour à la liste'],[',','réglages']],
+ 2:[['← →','changer de catégorie'],['H / L','changer de colonne'],['↑ ↓ · J K','message dans la colonne'],['Entrée','lire le message'],['A','archiver (toutes colonnes)'],['Échap','fermer la lecture'],[',','réglages'],['','']],
+ 3:[['← →','changer de catégorie'],['J / ↓ · K / ↑','naviguer dans la file'],['Entrée','passer en lecture'],['A','archiver (et avancer)'],['R','répondre'],['Échap','retour à la file'],[',','réglages'],['Z','recharger']]};
 function openHelp(){$('#help-body').innerHTML=HELP[active].map(([k,l])=>`<kbd>${k.replace('A',PREFS.shortcutPreset==='gmail'?'E':'A').replace('V',PREFS.shortcutPreset==='gmail'?'L':'V')}</kbd><div>${l}</div>`).join('');openOv('#ov-help')}
 
 function switchTheme(n){if(n===active)return;active=n;document.body.dataset.theme=n;
@@ -976,7 +1042,7 @@ window.navigateMail=direction=>{
 function cycleCategory(dir){
   const idx=CATEGORIES.findIndex(([k])=>k===activeCategory);
   const next=CATEGORIES[(idx+dir+CATEGORIES.length)%CATEGORIES.length];
-  switchCategory(next[0])}
+  switchCategory(next[0],false,dir)}
 function conceptKey(e){
   const k=e.key.toLowerCase(),st=S[active];
   // ← → : changer de categorie (tous themes, pas d'overlay)
@@ -1063,10 +1129,13 @@ document.addEventListener('click',e=>{
     return}
   if(e.target.closest('[data-interface="classic"]')){location.href='/';return}
   if(e.target.closest('[data-install]')){if(installPrompt){installPrompt.prompt();installPrompt=null}else toast('Chrome : menu ⋮ · Installer — iOS : Partager · Sur l’écran d’accueil');return}
+  const cycle=e.target.closest('[data-cycle]');
+  if(cycle){cycleCategory(+cycle.dataset.cycle);return}
   const th=e.target.closest('.set-theme');
   if(th){closeOv();switchTheme(+th.dataset.th);return}
   const category=e.target.closest('.cat-icon');
-  if(category){switchCategory(category.dataset.category);return}
+  if(category){const from=CATEGORIES.findIndex(([k])=>k===activeCategory),to=CATEGORIES.findIndex(([k])=>k===category.dataset.category);
+    switchCategory(category.dataset.category,false,to>from?1:-1);return}
   const row=e.target.closest('#f-list .row,#p-list .row,#f-list .postit');
   if(row){const key=row.closest('#f-list')?'1':'3';const st=S[key];
     st.i=+row.dataset.i;st.mode='read';render();return}
@@ -1088,10 +1157,15 @@ $('#pal-input').addEventListener('input',()=>{pal.idx=0;drawPalette()});
 $('#search-input').addEventListener('input',e=>{clearTimeout(searchState.timer);searchState.timer=setTimeout(()=>runSearch(e.target.value.trim()),280)});
 document.querySelectorAll('.lst-wrap').forEach(el=>el.addEventListener('scroll',()=>{
   if(el.scrollTop+el.clientHeight>el.scrollHeight-180)loadMore()},{passive:true}));
+let swipeX=0,swipeY=0;
+$('.stage').addEventListener('touchstart',e=>{swipeX=e.changedTouches[0].clientX;swipeY=e.changedTouches[0].clientY},{passive:true});
+$('.stage').addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-swipeX,dy=e.changedTouches[0].clientY-swipeY;
+  if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.4)cycleCategory(dx<0?1:-1)},{passive:true});
 $('#set-memos').addEventListener('change',e=>{PREFS.memoPostits=e.target.checked;savePrefs()});
 $('#set-memo-color').addEventListener('input',e=>{PREFS.memoColor=e.target.value;savePrefs()});
 $('#set-shortcuts').addEventListener('change',e=>{PREFS.shortcutPreset=e.target.value;savePrefs()});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+initWorldScene();
 bootLive();
 </script>
 </body>

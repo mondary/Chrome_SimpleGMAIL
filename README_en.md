@@ -11,6 +11,7 @@ Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Package
 ### V2 interface — Lab (3 concepts)
 - **Three themes**: Focus OS (dense one-line queue), Label Canvas (columns by label), Paper Reader (paper queue)
 - **Gmail categories**: 6 categories with dedicated icon and color (Primary, Promotions, Social, Updates, Forums, Newsletters)
+- **Mail Worlds**: each category fills the screen, with neighboring categories at the edges and atmospheric Three.js transitions (no sidebar)
 - **Arrow navigation**: `←` / `→` switch category, `↑` / `↓` (or `J`/`K`) move between messages
 - **Gmail search**: `/` opens a fullscreen overlay, server-side IMAP search (sender, subject, body), keyboard-driven results
 - **Sticky notes**: self-sent emails displayed as real square sticky notes (banana paper, folded corner, alternating rotation) on a dedicated wall; toggleable, configurable color

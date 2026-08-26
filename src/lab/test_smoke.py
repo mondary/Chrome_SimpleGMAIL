@@ -30,7 +30,8 @@ def main():
     assert "/api/messages" in HTML, "couche gmail absente"
     assert "JetBrainsMonoNerdFont-Regular.ttf" in HTML, "nerd font locale absente"
     assert "ov-set" in HTML, "réglages absents"
-    for marker in ("manifest.json", "serviceWorker", "CATEGORIES", "memoPostits", "shortcutPreset"):
+    for marker in ("manifest.json", "serviceWorker", "CATEGORIES", "memoPostits", "shortcutPreset",
+                   "three.min.js", "world-canvas", "cycleCategory"):
         assert marker in HTML, f"fonction V2 absente: {marker}"
     for uid in ("#ov-pal", "#ov-reply", "#ov-help", "#ov-read", "#ov-set", "#toast",
                 "cv-cols", "p-strip", "f-mount", "f-list", "p-list", "hud-live"):

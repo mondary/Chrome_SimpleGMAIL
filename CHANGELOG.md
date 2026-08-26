@@ -11,6 +11,7 @@ Historique des versions de SimpleMail.
 - Catégories Gmail, previews newsletters et mémos personnels en post-its.
 - Installation PWA, Android natif et extension Chrome depuis la même interface.
 - Preset de raccourcis Gmail officiel configurable.
+- Navigation Mail Worlds plein écran, transitions Three.js et swipe entre catégories, sans menu latéral.
 
 #### Changed
 - Chargements Gmail bornés et Canvas limité aux éléments visibles.

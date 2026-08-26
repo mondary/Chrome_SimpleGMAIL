@@ -11,6 +11,7 @@ Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla
 ### Interface V2 — Lab (3 concepts)
 - **Trois thèmes** : Focus OS (file une-ligne dense), Label Canvas (colonnes par libellé), Paper Reader (file papier)
 - **Catégories Gmail** : 6 catégories avec icône et couleur dédiée (Principale, Promotions, Réseaux, Notifications, Forums, Newsletters)
+- **Mail Worlds** : chaque catégorie occupe tout l'écran, avec catégories voisines aux bords et transitions atmosphériques Three.js (aucun menu latéral)
 - **Navigation flèches** : `←` / `→` changent de catégorie, `↑` / `↓` (ou `J`/`K`) naviguent de mail en mail
 - **Recherche Gmail** : `/` ouvre un overlay plein écran, recherche IMAP côté serveur (expéditeur, objet, contenu), navigation clavier des résultats
 - **Post-its** : mails envoyés à soi-même affichés en vrais post-its carrés (papier banana, coin plié, rotation alternée) sur un mur dédié ; activable/désactivable, couleur configurable
