@@ -4,6 +4,15 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+### [2026.08.04] - 2026-08-26
+
+#### Fixed
+- Icône PKMail appliquée au launcher Android natif.
+- Actualisation Gmail forcée au lancement, manuellement et toutes les 60 secondes.
+- Cache de la boîte de réception ramené de 24 heures à 60 secondes.
+- Réglages enrichis avec raccourcis configurables, palettes de post-its et aperçus des layouts.
+- Activation et désactivation des comptes mail, avec navigation complète des réglages au clavier.
+
 ### [2026.08.03] - 2026-08-26
 
 #### Fixed

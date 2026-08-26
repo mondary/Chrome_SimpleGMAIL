@@ -43,6 +43,12 @@ jobs:
           sed -i "s/versionCode [0-9][0-9]*/versionCode ${{ steps.version.outputs.code }}/" android/app/build.gradle
           sed -i "s/versionName \"[^\"]*\"/versionName \"${{ steps.version.outputs.name }}\"/" android/app/build.gradle
           cp android-template/MainActivity.java android/app/src/main/java/fr/pkmail/app/MainActivity.java
+          rm -f android/app/src/main/res/mipmap-*/ic_launcher*.png \
+            android/app/src/main/res/mipmap-*/ic_launcher*.webp \
+            android/app/src/main/res/mipmap-*/ic_launcher*.xml
+          mkdir -p android/app/src/main/res/mipmap-nodpi
+          cp ../desktop/icon.png android/app/src/main/res/mipmap-nodpi/ic_launcher.png
+          cp ../desktop/icon.png android/app/src/main/res/mipmap-nodpi/ic_launcher_round.png
 
       - name: Setup Java
         uses: actions/setup-java@v4

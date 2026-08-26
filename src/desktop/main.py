@@ -510,7 +510,7 @@ _FETCH_FILTER_CAP = 6000
 # Une liste IMAP n'est pas un écran qui doit attendre le réseau. On sert le
 # dernier instantané local, puis le navigateur demande une synchronisation en
 # arrière-plan. C'est le même principe que le cache local de Gmail.
-_INBOX_SNAPSHOT_TTL = 24 * 60 * 60
+_INBOX_SNAPSHOT_TTL = 60
 
 
 def _cache_key(account, folder, uid):
@@ -560,6 +560,7 @@ def cache_invalidate(account, folder=None, uid=None):
 SUBSCRIBERS = []
 MAIN_LOOP = None
 _IDLE_LAST = {}
+_IDLE_STOPS = {}
 
 
 def broadcast(event: dict):
@@ -591,7 +592,7 @@ def _status_or_none(mailbox, name):
         return None
 
 
-def idle_worker(account: dict):
+def idle_worker(account: dict, stop: threading.Event):
     """Maintient une connexion IDLE sur INBOX et notifie les abonnés.
 
     Connexion DÉDIÉE (hors pool) : sinon l'IDLE monopolise pendant ~29 min un
@@ -601,12 +602,12 @@ def idle_worker(account: dict):
     """
     aid = account["id"]
     backoff = 8
-    while True:
+    while not stop.is_set():
         try:
             mb = _open_imap(account)
             try:
                 mb.folder.set("INBOX")
-                while True:
+                while not stop.is_set():
                     st = _status_or_none(mb, "INBOX")
                     if st is not None:
                         unseen = int(st.get("UNSEEN", 0) or 0)
@@ -625,7 +626,7 @@ def idle_worker(account: dict):
                     try:
                         mb.idle.start()
                         started = True
-                        mb.idle.wait(timeout_seconds=1740)  # ~29 min (re-IDLE avant timeout serveur)
+                        mb.idle.wait(timeout_seconds=60)
                     except Exception:
                         pass
                     finally:
@@ -638,8 +639,28 @@ def idle_worker(account: dict):
             finally:
                 _close_conn_quietly(mb)
         except Exception:
-            time.sleep(backoff)
+            stop.wait(backoff)
             backoff = min(backoff * 2, 120)
+
+
+def _start_idle_worker(account: dict):
+    aid = account["id"]
+    current = _IDLE_STOPS.get(aid)
+    if current and not current.is_set():
+        return
+    stop = threading.Event()
+    _IDLE_STOPS[aid] = stop
+    threading.Thread(target=idle_worker, args=(account, stop), daemon=True, name=f"idle-{aid}").start()
+
+
+def _stop_account(account_id: str):
+    stop = _IDLE_STOPS.get(account_id)
+    if stop:
+        stop.set()
+    with _POOL_LOCK:
+        pooled = _IMAP_POOL.pop(account_id, [])
+    for conn, _ in pooled:
+        _close_conn_quietly(conn)
 
 
 def _db_cache_cleanup():
@@ -734,9 +755,7 @@ async def lifespan(app):
         if not accounts:
             print("[CONFIG] Aucun compte mail actif. Configurez secrets/mail.env.")
         for acc in accounts:
-            threading.Thread(
-                target=idle_worker, args=(acc,), daemon=True, name=f"idle-{acc['id']}"
-            ).start()
+            _start_idle_worker(acc)
     yield
 
 
@@ -863,7 +882,7 @@ def load_config(configured_only: bool = False):
     data = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
     data = _expand_env_values(data)
     if configured_only:
-        data["accounts"] = [a for a in data.get("accounts", []) if _account_is_configured(a)]
+        data["accounts"] = [a for a in data.get("accounts", []) if a.get("enabled", True) and _account_is_configured(a)]
     return data
 
 
@@ -1647,6 +1666,7 @@ def accounts_all():
             "name": a.get("name", a["id"]),
             "email": a["imap"]["user"],
             "connected": connected,
+            "enabled": raw.get("enabled", True),
             "imap": public_server("imap"),
             "smtp": public_server("smtp"),
         })
@@ -1679,6 +1699,10 @@ class UpdateAccountRequest(BaseModel):
     smtp_port: int = 465
     smtp_ssl: bool = True
     smtp_password: str = ""
+
+
+class AccountEnabledRequest(BaseModel):
+    enabled: bool
 
 
 def _raw_config():
@@ -1749,6 +1773,7 @@ def create_account(body: CreateAccountRequest):
     new_account = {
         "id": aid,
         "name": body.name,
+        "enabled": True,
         "imap": {
             "host": body.imap_host,
             "port": body.imap_port,
@@ -1767,9 +1792,7 @@ def create_account(body: CreateAccountRequest):
     cfg["accounts"].append(new_account)
     CONFIG_PATH.write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
-    threading.Thread(
-        target=idle_worker, args=(get_account(aid),), daemon=True, name=f"idle-{aid}"
-    ).start()
+    _start_idle_worker(get_account(aid))
 
     return {"ok": True, "id": aid, "connected": True}
 
@@ -1802,6 +1825,24 @@ def update_account(account_id: str, body: UpdateAccountRequest):
     CONFIG_PATH.write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     expanded = next(item for item in load_config(False)["accounts"] if item.get("id") == account_id)
     return {"ok": True, "id": account_id, "connected": _account_is_configured(expanded)}
+
+
+@app.patch("/api/accounts/{account_id}/enabled")
+def set_account_enabled(account_id: str, body: AccountEnabledRequest):
+    cfg = _raw_config()
+    account = next((item for item in cfg.get("accounts", []) if item.get("id") == account_id), None)
+    if account is None:
+        raise HTTPException(status_code=404, detail=f"Compte '{account_id}' inconnu")
+    expanded = next(item for item in load_config(False)["accounts"] if item.get("id") == account_id)
+    if body.enabled and not _account_is_configured(expanded):
+        raise HTTPException(status_code=400, detail="Identifiants du compte incomplets")
+    account["enabled"] = body.enabled
+    CONFIG_PATH.write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    if body.enabled:
+        _start_idle_worker(get_account(account_id))
+    else:
+        _stop_account(account_id)
+    return {"ok": True, "id": account_id, "enabled": body.enabled}
 
 @app.delete("/api/accounts/{account_id}")
 def delete_account(account_id: str):
@@ -2172,6 +2213,7 @@ def list_newsletter_messages(
     page: int = Query(1, ge=1),
     page_size: int = Query(200, ge=20, le=500),
     cached: int = Query(0, ge=0, le=1),
+    no_cache: bool = Query(False),
 ):
     """Return a page of newsletter candidates independently from the active inbox category."""
     manual_domains = set(_get_newsletter_domains())
@@ -2186,7 +2228,7 @@ def list_newsletter_messages(
         return {"messages": batch, "page": page, "has_more": start + len(batch) < len(candidates)}
 
     # Fast path: return ALL cached newsletter messages from SQLite instantly
-    if cached:
+    if cached and not no_cache:
         try:
             db = sqlite3.connect(str(DB_PATH))
             rows = db.execute(
@@ -2200,9 +2242,9 @@ def list_newsletter_messages(
             pass
 
     cache_key = f"newsletter-messages:{account}:{folder}:{page}:{page_size}"
-    cached = _response_cache_get(cache_key, ttl=60.0)
-    if cached:
-        return cached
+    snapshot = None if no_cache else _response_cache_get(cache_key, ttl=60.0)
+    if snapshot:
+        return snapshot
 
     acc = get_account(account)
     target_start = (page - 1) * page_size

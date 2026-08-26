@@ -9,17 +9,18 @@ Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla
 ## Fonctionnalités
 
 ### Interface V2 — Lab (3 concepts)
-- **Trois thèmes** : Focus OS (file une-ligne dense), Label Canvas (colonnes par libellé), Paper Reader (file papier)
+- **Trois thèmes avec aperçu** : Focus OS (file une-ligne dense), Label Canvas (colonnes par libellé), Paper Reader (file papier)
 - **Catégories Gmail** : 6 catégories avec icône et couleur dédiée (Principale, Promotions, Réseaux, Notifications, Forums, Newsletters)
 - **Mail Worlds** : chaque catégorie occupe tout l'écran, avec catégories voisines aux bords et transitions atmosphériques Three.js (aucun menu latéral)
 - **Navigation flèches** : `←` / `→` changent de catégorie, `↑` / `↓` (ou `J`/`K`) naviguent de mail en mail
 - **Recherche Gmail** : `/` ouvre un overlay plein écran, recherche IMAP côté serveur (expéditeur, objet, contenu), navigation clavier des résultats
-- **Post-its** : mails envoyés à soi-même affichés en vrais post-its carrés (papier banana, coin plié, rotation alternée) sur un mur dédié ; activable/désactivable, couleur configurable
+- **Post-its** : mails envoyés à soi-même affichés en vrais post-its carrés sur un mur dédié ; activables et personnalisables avec une palette de huit couleurs ou une couleur libre
 - **Newsletters** : carrousel multicartes (grille adaptative 4→8 colonnes), previews avec vraies images (hero + og:image), détail hero
 - **Libellés et pièces jointes inline** : tags courts + icône trombone sur chaque ligne de liste
 - **Compteur d'archives réel** : total `[Gmail]/Tous les messages` (fallback EXAMINE si STATUS renvoie 0)
 - **Raccourcis Gmail officiels** : preset `E` archiver / `L` libellés (ou preset SimpleMail), entièrement configurables
-- **Snapshots locaux** : affichage instantané au chargement (localStorage, TTL 7 jours), puis refresh silencieux
+- **Actualisation Gmail** : bouton toujours visible, mise à jour forcée au lancement, au retour dans l'app et toutes les 60 secondes
+- **Comptes** : activation ou désactivation individuelle dans les réglages, navigables entièrement au clavier
 - **Préchargement** : les autres catégories se chargent en tâche de fond
 - **Pagination** : scroll infini + bouton « Charger plus » par catégorie
 - **Regroupement par jour** : Aujourd'hui / Hier / date

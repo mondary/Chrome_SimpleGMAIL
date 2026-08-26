@@ -1,4 +1,5 @@
 import os
+import json
 import sqlite3
 import tempfile
 import unittest
@@ -34,6 +35,22 @@ class SmokeTests(unittest.TestCase):
 
     def test_gmail_categories_use_native_search(self):
         self.assertEqual(main._gmail_category_query("primary"), 'X-GM-RAW "category:primary"')
+
+    def test_inbox_snapshot_expires_within_refresh_interval(self):
+        self.assertLessEqual(main._INBOX_SNAPSHOT_TTL, 60)
+
+    def test_disabled_accounts_are_not_connected(self):
+        original = main.CONFIG_PATH
+        try:
+            with tempfile.TemporaryDirectory() as directory:
+                main.CONFIG_PATH = Path(directory) / "config.json"
+                main.CONFIG_PATH.write_text(json.dumps({"accounts": [{
+                    "id": "off", "enabled": False,
+                    "imap": {"password": "secret"}, "smtp": {"password": "secret"},
+                }]}), encoding="utf-8")
+                self.assertEqual(main.load_config(configured_only=True)["accounts"], [])
+        finally:
+            main.CONFIG_PATH = original
 
 
 if __name__ == "__main__":

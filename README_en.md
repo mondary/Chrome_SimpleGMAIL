@@ -9,17 +9,18 @@ Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Package
 ## Features
 
 ### V2 interface — Lab (3 concepts)
-- **Three themes**: Focus OS (dense one-line queue), Label Canvas (columns by label), Paper Reader (paper queue)
+- **Three themes with previews**: Focus OS (dense one-line queue), Label Canvas (columns by label), Paper Reader (paper queue)
 - **Gmail categories**: 6 categories with dedicated icon and color (Primary, Promotions, Social, Updates, Forums, Newsletters)
 - **Mail Worlds**: each category fills the screen, with neighboring categories at the edges and atmospheric Three.js transitions (no sidebar)
 - **Arrow navigation**: `←` / `→` switch category, `↑` / `↓` (or `J`/`K`) move between messages
 - **Gmail search**: `/` opens a fullscreen overlay, server-side IMAP search (sender, subject, body), keyboard-driven results
-- **Sticky notes**: self-sent emails displayed as real square sticky notes (banana paper, folded corner, alternating rotation) on a dedicated wall; toggleable, configurable color
+- **Sticky notes**: self-sent emails displayed as square sticky notes on a dedicated wall; toggleable with eight preset colors or a custom color
 - **Newsletters**: adaptive multi-card carousel (4→8 columns), previews with real images (hero + og:image), hero detail
 - **Inline labels and attachments**: short tags + paperclip icon on each list row
 - **Real archive counter**: `[Gmail]/All Mail` total (EXAMINE fallback when STATUS returns 0)
 - **Official Gmail shortcuts**: `E` archive / `L` labels preset (or SimpleMail preset), fully configurable
-- **Local snapshots**: instant display on load (localStorage, 7-day TTL), then silent refresh
+- **Gmail refresh**: always-visible button, forced update on launch, app resume, and every 60 seconds
+- **Accounts**: enable or disable each account in fully keyboard-navigable settings
 - **Preloading**: other categories load in the background
 - **Pagination**: infinite scroll + "Load more" button per category
 - **Day grouping**: Today / Yesterday / date

@@ -47,6 +47,8 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .hud-right{margin-left:auto;display:flex;gap:16px;color:var(--muted);font-size:11px;align-items:center}
 .hud-right .n{color:var(--ink);font-weight:600}
 .hud-key{color:var(--faint)}
+.hud-refresh{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid var(--hair);border-radius:4px;color:var(--ink);font-size:10px}
+.hud-refresh:disabled{cursor:wait;opacity:.55}
 kbd{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;border:1px solid var(--hair);border-bottom-width:2px;border-radius:3px;
   padding:1px 5px;background:#FBFBF9;color:var(--muted);white-space:nowrap}
 
@@ -273,13 +275,21 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
 .ov-foot{margin-top:14px;padding-top:10px;border-top:1px solid var(--hair2);display:flex;gap:16px;font-size:10px;color:var(--muted)}
 .ov-foot span{display:inline-flex;gap:6px;align-items:center}
 
-.set-theme{width:100%;text-align:left;border:1px solid var(--hair);padding:12px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:center}
+.set-theme{width:100%;text-align:left;border:1px solid var(--hair);padding:10px;margin-bottom:10px;display:grid;grid-template-columns:128px 1fr auto;gap:14px;align-items:center}
 .set-theme:hover{border-color:var(--faint)}
 .set-theme.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 .set-theme .sw{width:10px;height:10px;flex:none;border-radius:1px}
 .set-theme .nm{font-weight:600;font-size:13px}
 .set-theme .ds{color:var(--muted);font-size:11px;margin-top:2px}
 .set-theme .st{margin-left:auto;font-size:10px;color:var(--accent)}
+.theme-preview{height:76px;border:1px solid var(--hair);background:#f8f7f3;padding:7px;display:flex;gap:5px;overflow:hidden}
+.theme-preview i{display:block;background:#d9d6ce;border-radius:1px}.theme-preview.focus{flex-direction:column}.theme-preview.focus i{height:8px}.theme-preview.focus i:first-child{height:30px;background:#c5d6e9}
+.theme-preview.canvas{align-items:stretch}.theme-preview.canvas i{flex:1}.theme-preview.canvas i:nth-child(2){background:#d7e5d8}.theme-preview.canvas i:nth-child(3){background:#eadfc7}
+.theme-preview.paper{align-items:center}.theme-preview.paper i{width:25%;height:48px;background:#eadfc7}.theme-preview.paper i:first-child{width:48%;height:60px;background:#fff;border:1px solid #d9d6ce}
+.memo-palette{display:flex;flex-wrap:wrap;gap:8px}.memo-swatch{width:34px;height:34px;border:1px solid rgba(0,0,0,.16);border-radius:50%}.memo-swatch.on{box-shadow:0 0 0 2px var(--ink)}
+.shortcut-grid{display:grid;grid-template-columns:minmax(150px,1fr) 74px;gap:1px;background:var(--hair2);border:1px solid var(--hair2)}
+.shortcut-grid label{display:contents}.shortcut-grid span,.shortcut-grid input{padding:9px 10px;background:#fff;font-size:11px}.shortcut-grid input{width:100%;border:0;text-align:center;color:var(--ink);font:600 12px var(--mono)}
+.account-state{margin-left:auto;color:var(--faint);font-size:10px}
 .set-row{display:flex;align-items:center;gap:10px;padding:10px 2px;font-size:11px;color:var(--muted);border-top:1px solid var(--hair2);margin-top:12px}
 .set-row .v{margin-left:auto;color:var(--ink)}
 .set-row input[type="color"]{margin-left:auto;width:32px;height:24px;padding:0;border:1px solid var(--hair);background:none}
@@ -367,7 +377,7 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
   .read-drawer{height:calc(100vh - 44px);border-radius:0}
   #rd-body{padding:46px 18px 24px}
   .p-card{width:180px}
-  .set-fs-nav{width:56px}.set-fs-nav button span,.set-fs-nav button{font-size:0}.set-fs-nav button i{font-size:16px}.set-fs-content{padding:16px}}
+  .set-fs-nav{width:56px}.set-fs-nav button span,.set-fs-nav button{font-size:0}.set-fs-nav button i{font-size:16px}.set-fs-content{padding:16px}.set-theme{grid-template-columns:92px 1fr}.set-theme .st{display:none}.theme-preview{height:58px}}
 </style>
 </head>
 <body data-theme="1">
@@ -378,12 +388,12 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
   <span class="hud-mark"><img src="icon-192.png" alt="" style="height:20px;width:20px;border-radius:4px;vertical-align:middle;margin-right:6px">PKMAIL</span>
   <span class="hud-title" id="hud-title">THEME <b>01 / FOCUS OS</b></span>
   <span class="hud-live" id="hud-live">…</span>
+  <button class="hud-refresh" data-reload aria-label="Actualiser les mails" title="Actualiser les mails depuis Gmail"><span class="g">&#xF2F1;</span> <span id="refresh-label">Actualiser</span> <kbd data-key="refresh">Z</kbd></button>
   <div class="hud-right">
     <span><span class="n" id="hud-inbox">–</span> messages</span>
     <span><span class="g">&#xF187;</span> <span class="n" id="hud-arch">0</span></span>
-    <button class="hud-key" data-open-search aria-label="Rechercher"><span class="g">&#xF002;</span> <kbd>/</kbd></button>
-    <button class="hud-key" data-open-settings aria-label="Réglages">réglages <kbd>,</kbd></button>
-    <button class="hud-key" data-reload aria-label="Recharger" title="Recharger l'interface"><span class="g">&#xF2F1;</span> <kbd>Z</kbd></button>
+    <button class="hud-key" data-open-search aria-label="Rechercher"><span class="g">&#xF002;</span> <kbd data-key="search">/</kbd></button>
+    <button class="hud-key" data-open-settings aria-label="Réglages">réglages <kbd data-key="settings">,</kbd></button>
   </div>
 </header>
 
@@ -407,7 +417,7 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
     <div class="cmd" aria-hidden="true">
       <span><kbd>H</kbd><kbd>L</kbd> colonne</span><span><kbd>&#x2190;</kbd><kbd>&#x2192;</kbd> catégorie</span><span><kbd>&#x2191;</kbd><kbd>&#x2193;</kbd> message</span>
       <span><kbd>Entrée</kbd> lire</span><span><kbd data-key="archive">E</kbd> archiver</span>
-      <span><kbd>/</kbd> rechercher</span><span><kbd>Z</kbd> recharger</span><span><kbd>?</kbd> aide</span>
+      <span><kbd data-key="search">/</kbd> rechercher</span><span><kbd data-key="refresh">Z</kbd> recharger</span><span><kbd data-key="help">?</kbd> aide</span>
     </div>
   </section>
 
@@ -563,10 +573,15 @@ let MAILBOX=[];   // shape: {id,from{name,email},subject,date,labels[],unread,th
 let TOTAL=0;
 let ARCHIVED_COUNT=0;
 let ALL_LABELS=[];
+let ACCOUNT_LIST=[];
 let activeCategory='primary',categoryRequest=0;
 const CATEGORY_CACHE=new Map(),PREVIEW_CACHE=new Map();
-let PREFS={memoPostits:true,memoColor:'#FFFBEA',shortcutPreset:'gmail'};
+const SHORTCUT_PRESETS={gmail:{archive:'e',delete:'#',labels:'l',search:'/',next:'j',previous:'k',reply:'r',refresh:'z',settings:',',help:'?'},simplemail:{archive:'a',delete:'#',labels:'v',search:'/',next:'j',previous:'k',reply:'r',refresh:'z',settings:',',help:'?'}};
+const SHORTCUT_LABELS={archive:'Archiver',delete:'Supprimer',labels:'Libellés',search:'Rechercher',next:'Message suivant',previous:'Message précédent',reply:'Répondre',refresh:'Actualiser',settings:'Réglages',help:'Aide'};
+const MEMO_COLORS=['#FFF4A8','#FFD9A8','#FFC8C8','#E7C9FF','#C9DEFF','#C8F0E0','#E2E6EA','#FFFBEA'];
+let PREFS={memoPostits:true,memoColor:'#FFFBEA',shortcutPreset:'gmail',shortcuts:{...SHORTCUT_PRESETS.gmail}};
 try{PREFS={...PREFS,...JSON.parse(localStorage.getItem('simplemail_lab_prefs')||'{}')}}catch(e){}
+PREFS.shortcuts={...(SHORTCUT_PRESETS[PREFS.shortcutPreset]||SHORTCUT_PRESETS.gmail),...PREFS.shortcuts};
 if(PREFS.memoColor==='#FFF0A6'||PREFS.memoColor==='#FFF8D8')PREFS.memoColor='#FFFBEA';
 document.documentElement.style.setProperty('--memo',PREFS.memoColor);
 const isMemo=m=>PREFS.memoPostits&&LIVE.email&&m.from.email.toLowerCase()===LIVE.email.toLowerCase();
@@ -578,9 +593,9 @@ function saveLabelColors(){localStorage.setItem('simplemail_lab_label_colors',JS
 function labelColor(name){return LABEL_COLORS[name]||'#71757C'}
 function shortLabel(name){return String(name||'').split('/').filter(Boolean).pop()||String(name||'')}
 function labelPill(name){const c=labelColor(name);return`<span class="label-pill" title="${esc(name)}" style="background:${c}18;color:${c};border:1px solid ${c}30">${esc(shortLabel(name))}</span>`}
-const shortcut=(action,key)=>PREFS.shortcutPreset==='gmail'?key==={archive:'e',labels:'l'}[action]:key==={archive:'a',labels:'v'}[action];
-function renderShortcutKeys(){document.querySelectorAll('[data-key="archive"]').forEach(k=>k.textContent=PREFS.shortcutPreset==='gmail'?'E':'A');
-  document.querySelectorAll('[data-key="labels"]').forEach(k=>k.textContent=PREFS.shortcutPreset==='gmail'?'L':'V')}
+const shortcut=(action,key)=>String(key).toLowerCase()===String(PREFS.shortcuts[action]||'').toLowerCase();
+const keyName=action=>(PREFS.shortcuts[action]||'').toUpperCase();
+function renderShortcutKeys(){document.querySelectorAll('[data-key]').forEach(k=>k.textContent=keyName(k.dataset.key))}
 
 const MOIS=['jan','fév','mar','avr','mai','juin','juil','aoû','sep','oct','nov','déc'];
 function fmtDate(iso){
@@ -667,19 +682,19 @@ function renderCategories(){
       <div class="world-track">${CATEGORIES.map(([key,label,icon,color])=>`<button class="cat-icon${key===activeCategory?' on':''}" data-category="${key}" aria-label="${label}" title="${label}" style="--cat:${color}"><i>${icon}</i>${label}</button>`).join('')}</div></div>
     <button class="world-arrow next" data-cycle="1" aria-label="Catégorie suivante : ${next[1]}"><span class="arr">→</span><small>${next[1]}</small></button>`}
 
-async function fetchCategory(key,page=1){
+async function fetchCategory(key,page=1,noCache=false){
   if(!LIVE.on){
     if(key==='memos')return DEMO_MAIL.filter(m=>isMemo(m));
     const demo=DEMO_MAIL.filter(m=>key==='newsletter'?m.labels.includes('Newsletters'):(m.category||'primary')===key);
     return demo.length?demo:DEMO_MAIL}
   if(key==='memos'){
-    const res=await j(`/api/messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&category=primary&page=${page}&page_size=80&fast=true`);
+    const res=await j(`/api/messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&category=primary&page=${page}&page_size=80&fast=true${noCache?'&no_cache=true':''}`);
     return normalizeMessages(res.messages).filter(m=>isMemo(m))}
   if(key==='newsletter'){
-    let res=await j(`/api/newsletter-messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&cached=${page===1?1:0}&page=${page}&page_size=20`);
+    let res=await j(`/api/newsletter-messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&cached=${noCache?0:page===1?1:0}&page=${page}&page_size=20${noCache?'&no_cache=true':''}`);
     if(!(res.messages||[]).length&&page===1)res=await j(`/api/newsletter-messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&page=1&page_size=20`);
     return normalizeMessages(res.messages)}
-  const res=await j(`/api/messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&category=${key}&page=${page}&page_size=80&fast=true`);
+  const res=await j(`/api/messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&category=${key}&page=${page}&page_size=80&fast=true${noCache?'&no_cache=true':''}`);
   return normalizeMessages(res.messages)}
 
 const CAT_PAGE=new Map(),CAT_DONE=new Map();
@@ -731,15 +746,14 @@ async function switchCategory(key,force=false,direction=0){
   if(snapshot){
     CATEGORY_CACHE.set(key,snapshot);setLoading(false);displayCategory(snapshot);
     if(key==='newsletter')hydrateNewsletterPreviews();
-    if(memory&&!force)return;
-    fetchCategory(key).then(fresh=>{
+    fetchCategory(key,1,force).then(fresh=>{
       CATEGORY_CACHE.set(key,fresh);saveSnapshot(key,fresh);
       if(request===categoryRequest&&activeCategory===key){displayCategory(fresh,false);if(key==='newsletter')hydrateNewsletterPreviews()}
     }).catch(()=>{});
     return}
   setLoading(true,'Chargement · '+(CATEGORIES.find(([k])=>k===key)?.[1]||key));
   $('#hud-live').textContent='CHARGEMENT…';
-  try{const fresh=await fetchCategory(key);CATEGORY_CACHE.set(key,fresh);saveSnapshot(key,fresh);MAILBOX=fresh}
+  try{const fresh=await fetchCategory(key,1,force);CATEGORY_CACHE.set(key,fresh);saveSnapshot(key,fresh);MAILBOX=fresh}
   catch(e){MAILBOX=[];toast('Catégorie Gmail indisponible')}
   if(request!==categoryRequest)return;
   setLoading(false);displayCategory(MAILBOX);
@@ -749,9 +763,9 @@ async function switchCategory(key,force=false,direction=0){
 async function bootLive(){
   try{
     const accs=await j('/api/accounts/all');
-    const list=accs.accounts||accs||[];
+    const list=accs.accounts||accs||[];ACCOUNT_LIST=list;
     const ok=a=>a.imap&&a.imap.password_configured;
-    const cands=[...list.filter(a=>a.id==='gmail'&&ok(a)),...list.filter(a=>a.id!=='gmail'&&ok(a))];
+    const cands=[...list.filter(a=>a.enabled!==false&&a.id==='gmail'&&ok(a)),...list.filter(a=>a.enabled!==false&&a.id!=='gmail'&&ok(a))];
     const acc=cands[0];if(!acc)throw new Error('aucun compte joignable');
     LIVE.on=true;LIVE.account=acc.id;LIVE.name=acc.name||acc.id;LIVE.email=acc.email||acc.imap?.user||'';
   }catch(e){
@@ -765,6 +779,20 @@ async function bootLive(){
   const srcEl=$('#set-src');if(srcEl)srcEl.textContent=LIVE.on?LIVE.name+' (boîte de réception réelle)':'données fictives (backend V1 non joignable)';
   renderCategories();await switchCategory('primary',true);fetchArchivedCount()
   }catch(e){console.error('bootLive render error',e);setLoading(false)}}
+
+async function refreshMail(notify=false){
+  if(!LIVE.on||refreshMail.busy)return;
+  refreshMail.busy=true;
+  const button=document.querySelector('[data-reload]'),label=$('#refresh-label');
+  if(button)button.disabled=true;if(label)label.textContent='Actualisation…';
+  const key=activeCategory,request=++categoryRequest;
+  try{
+    const fresh=await fetchCategory(key,1,true);
+    CATEGORY_CACHE.set(key,fresh);saveSnapshot(key,fresh);CAT_PAGE.set(key,1);CAT_DONE.delete(key);
+    if(request===categoryRequest&&key===activeCategory){displayCategory(fresh,false);if(key==='newsletter')hydrateNewsletterPreviews()}
+    if(notify)toast('Mails actualisés')
+  }catch(e){if(notify)toast('Actualisation Gmail impossible')}
+  finally{refreshMail.busy=false;if(button)button.disabled=false;if(label)label.textContent='Actualiser'}}
 
 async function loadDetail(m){
   if(m.detail||!LIVE.on)return m;
@@ -862,12 +890,12 @@ function hud(){$('#hud-inbox').textContent=S[active].mails===undefined?MAILBOX.l
 function mailboxFor(){return MAILBOX}
 
 /* ---------- THEME 1 ---------- */
-const F_CMD_LIST=`<span><kbd>J</kbd><kbd>K</kbd> naviguer</span><span><kbd>Entrée</kbd> ouvrir</span>
+const F_CMD_LIST=`<span><kbd data-key="next">J</kbd><kbd data-key="previous">K</kbd> naviguer</span><span><kbd>Entrée</kbd> ouvrir</span>
  <span><kbd data-key="archive">E</kbd> archiver</span><span><kbd data-key="labels">L</kbd> libellés</span>
- <span><kbd>#</kbd> supprimer</span><span><kbd>/</kbd> rechercher</span><span><kbd>R</kbd> répondre</span><span><kbd>?</kbd> aide</span>`;
-const F_CMD_READ=`<span><kbd>J</kbd><kbd>K</kbd> suivant / précédent</span><span><kbd data-key="archive">E</kbd> archiver</span>
- <span><kbd>#</kbd> supprimer</span><span><kbd>Échap</kbd> retour liste</span><span><kbd data-key="labels">L</kbd> libellés</span>
- <span><kbd>R</kbd> répondre</span><span><kbd>?</kbd> aide</span>`;
+ <span><kbd data-key="delete">#</kbd> supprimer</span><span><kbd data-key="search">/</kbd> rechercher</span><span><kbd data-key="reply">R</kbd> répondre</span><span><kbd data-key="help">?</kbd> aide</span>`;
+const F_CMD_READ=`<span><kbd data-key="next">J</kbd><kbd data-key="previous">K</kbd> suivant / précédent</span><span><kbd data-key="archive">E</kbd> archiver</span>
+ <span><kbd data-key="delete">#</kbd> supprimer</span><span><kbd>Échap</kbd> retour liste</span><span><kbd data-key="labels">L</kbd> libellés</span>
+ <span><kbd data-key="reply">R</kbd> répondre</span><span><kbd data-key="help">?</kbd> aide</span>`;
 function renderFocus(){const st=S[1];
   $('#f-cmd').innerHTML=st.mode==='list'?F_CMD_LIST:F_CMD_READ;
   $('#f-list-view').hidden=st.mode!=='list';$('#f-read-view').hidden=st.mode!=='read';
@@ -932,11 +960,11 @@ function renderCanvas(){const st=S[2],cols=cvCols(),wrap=$('#cv-cols');
     if(sel){const list=colEl.querySelector('.cv-list');list.scrollTo({top:sel.offsetTop-list.clientHeight/2+sel.offsetHeight/2,behavior:RM?'auto':'smooth'})}}}
 
 /* ---------- THEME 3 ---------- */
-const P_CMD_LIST=`<span><kbd>J</kbd><kbd>K</kbd> naviguer</span><span><kbd>Entrée</kbd> lire</span>
- <span><kbd data-key="archive">E</kbd> archiver</span><span><kbd>/</kbd> rechercher</span>
- <span><kbd>Z</kbd> recharger</span><span><kbd>?</kbd> aide</span>`;
-const P_CMD_READ=`<span><kbd>J</kbd><kbd>K</kbd> suivant / précédent</span><span><kbd data-key="archive">E</kbd> archiver et avancer</span>
- <span><kbd>Échap</kbd> retour liste</span><span><kbd>R</kbd> répondre</span><span><kbd>?</kbd> aide</span>`;
+const P_CMD_LIST=`<span><kbd data-key="next">J</kbd><kbd data-key="previous">K</kbd> naviguer</span><span><kbd>Entrée</kbd> lire</span>
+ <span><kbd data-key="archive">E</kbd> archiver</span><span><kbd data-key="search">/</kbd> rechercher</span>
+ <span><kbd data-key="refresh">Z</kbd> recharger</span><span><kbd data-key="help">?</kbd> aide</span>`;
+const P_CMD_READ=`<span><kbd data-key="next">J</kbd><kbd data-key="previous">K</kbd> suivant / précédent</span><span><kbd data-key="archive">E</kbd> archiver et avancer</span>
+ <span><kbd>Échap</kbd> retour liste</span><span><kbd data-key="reply">R</kbd> répondre</span><span><kbd data-key="help">?</kbd> aide</span>`;
 function renderPaper(){const st=S[3];
   $('#p-cmd').innerHTML=st.mode==='list'?P_CMD_LIST:P_CMD_READ;
   $('#p-list-view').hidden=st.mode!=='list';$('#p-read-view').hidden=st.mode!=='read';
@@ -1068,34 +1096,38 @@ function openRead(mail){const m=mail||currentMail();if(!m)return;
   if(!m.detail)loadDetail(m).then(()=>{if(overlay==='#ov-read'){
     mountBody($('#rd-body .rd-body-content'),m)}})}
 
+function themePreview(id){
+  const cls=id===1?'focus':id===2?'canvas':'paper';
+  return`<span class="theme-preview ${cls}" aria-hidden="true"><i></i><i></i><i></i><i></i></span>`}
 function renderSettings(){
   const tabs=[
     {id:'theme',icon:'\uF013',label:'Thème'},
     {id:'memos',icon:'\uF249',label:'Mémos'},
     {id:'labels',icon:'\uF02B',label:'Libellés'},
     {id:'shortcuts',icon:'\uF11C',label:'Raccourcis'},
+    {id:'accounts',icon:'\uF0C0',label:'Comptes'},
     {id:'about',icon:'\uF059',label:'À propos'}
   ];
   const activeTab=settingsTab||'theme';
-  $('#set-nav').innerHTML=tabs.map(t=>`<button class="set-tab${t.id===activeTab?' on':''}" data-settab="${t.id}"><i>${t.icon}</i>${t.label}</button>`).join('');
+  $('#set-nav').innerHTML=tabs.map(t=>`<button class="set-tab${t.id===activeTab?' on':''}" data-settab="${t.id}"${t.id===activeTab?' data-autofocus':''}><i>${t.icon}</i><span>${t.label}</span></button>`).join('');
   const c=$('#set-content');
   if(activeTab==='theme'){
     c.innerHTML=`<h4>Thème de lecture</h4>`+THEMES.map(t=>`
       <button class="set-theme${t.id===active?' on':''}" data-th="${t.id}">
-        <span class="sw" style="background:${t.color}"></span>
+        ${themePreview(t.id)}
         <span><span class="nm">0${t.id} · ${t.name}</span><div class="ds">${t.desc}</div></span>
         ${t.id===active?`<span class="st g">${I.check} actif</span>`:''}
       </button>`).join('')+`<button class="set-theme" data-interface="classic">
-        <span class="sw" style="background:#1a73e8"></span>
+        <span class="theme-preview focus" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
         <span><span class="nm">Interface classique</span><div class="ds">Retrouver l'interface V1 complète et ses réglages.</div></span>
       </button><button class="set-theme" data-install>
-        <span class="sw" style="background:#2E6B4E"></span>
+        <span class="theme-preview canvas" aria-hidden="true"><i></i><i></i><i></i></span>
         <span><span class="nm">Installer PKMail</span><div class="ds">Ajouter la PWA à l'écran d'accueil.</div></span>
       </button>`}
   else if(activeTab==='memos'){
     c.innerHTML=`<h4>Mémos & post-its</h4>
       <label class="set-row"><span>Afficher les mémos envoyés à soi-même</span><input id="set-memos" type="checkbox"${PREFS.memoPostits?' checked':''}></label>
-      <label class="set-row"><span>Couleur des post-its</span><input id="set-memo-color" type="color" value="${PREFS.memoColor}"></label>
+      <div class="set-row"><span>Palette des post-its</span><div class="memo-palette">${MEMO_COLORS.map(color=>`<button class="memo-swatch${PREFS.memoColor===color?' on':''}" data-memo-color="${color}" style="background:${color}" aria-label="Post-it ${color}"></button>`).join('')}<input id="set-memo-color" type="color" value="${PREFS.memoColor}" aria-label="Couleur personnalisée"></div></div>
       <div class="set-row"><span>Les mémos apparaissent dans la catégorie « Mémos » du navigateur de mondes.</span></div>`}
   else if(activeTab==='labels'){
     const allLabels=[...new Set([...Object.keys(LABEL_COLORS),...labelPool()])].sort();
@@ -1104,18 +1136,29 @@ function renderSettings(){
       `<div class="set-row"><button id="reset-label-colors" style="font-size:11px;color:var(--muted);border:1px solid var(--hair);padding:6px 12px">Réinitialiser les couleurs</button></div>`}
   else if(activeTab==='shortcuts'){
     c.innerHTML=`<h4>Raccourcis clavier</h4>
-      <label class="set-row"><span>Jeu de raccourcis</span><select id="set-shortcuts"><option value="gmail"${PREFS.shortcutPreset==='gmail'?' selected':''}>Gmail officiel</option><option value="simplemail"${PREFS.shortcutPreset==='simplemail'?' selected':''}>PKMail</option></select></label>
-      <div class="help-grid" style="margin-top:18px"><kbd>E</kbd><div>Archiver</div><kbd>#</kbd><div>Supprimer</div><kbd>L</kbd><div>Attribuer un libellé</div><kbd>/</kbd><div>Rechercher</div><kbd>J / K</kbd><div>Message suivant / précédent</div><kbd>Entrée</kbd><div>Ouvrir</div><kbd>U / Échap</kbd><div>Retour à la liste</div><kbd>R</kbd><div>Répondre</div></div>`}
+      <label class="set-row"><span>Jeu de raccourcis</span><select id="set-shortcuts"><option value="gmail"${PREFS.shortcutPreset==='gmail'?' selected':''}>Gmail officiel</option><option value="simplemail"${PREFS.shortcutPreset==='simplemail'?' selected':''}>PKMail</option><option value="custom"${PREFS.shortcutPreset==='custom'?' selected':''} disabled>Personnalisé</option></select></label>
+      <div class="shortcut-grid">${Object.entries(SHORTCUT_LABELS).map(([action,label])=>`<label><span>${label}</span><input data-shortcut="${action}" maxlength="1" value="${esc(PREFS.shortcuts[action])}" aria-label="Raccourci ${label}"></label>`).join('')}</div>
+      <div class="set-row"><span>Les flèches, Entrée, Échap et Tab restent disponibles pour la navigation.</span></div>`}
+  else if(activeTab==='accounts'){
+    const real=ACCOUNT_LIST.filter(a=>a.imap);
+    c.innerHTML=`<h4>Comptes mail</h4>`+(real.length?real.map(a=>`<label class="set-row"><input type="checkbox" data-account="${esc(a.id)}"${a.enabled!==false?' checked':''}${a.connected?'':' disabled'}><span><b>${esc(a.name||a.id)}</b><br>${esc(a.email||a.imap.user||'')}</span><span class="account-state">${a.connected?(a.enabled===false?'déconnecté':'connecté'):'identifiants manquants'}</span></label>`).join(''):`<div class="set-row"><span>Aucun compte configuré.</span></div>`)}
   else if(activeTab==='about'){
     c.innerHTML=`<h4>À propos</h4>
       <div class="set-row"><span>Application</span><span class="v">PKMail Lab V2</span></div>
-      <div class="set-row"><span>Version</span><span class="v">2026.08.03</span></div>
+      <div class="set-row"><span>Version</span><span class="v">2026.08.04</span></div>
       <div class="set-row"><span>Source</span><span class="v" id="set-src">…</span></div>
       <div class="set-row"><span>Police</span><span class="v">JetBrains Mono Nerd Font</span></div>`}
   /* wire new controls */
   const memosCb=$('#set-memos');if(memosCb)memosCb.addEventListener('change',e=>{PREFS.memoPostits=e.target.checked;savePrefs()});
   const memosColor=$('#set-memo-color');if(memosColor)memosColor.addEventListener('input',e=>{PREFS.memoColor=e.target.value;savePrefs()});
-  const shortcutsSel=$('#set-shortcuts');if(shortcutsSel)shortcutsSel.addEventListener('change',e=>{PREFS.shortcutPreset=e.target.value;savePrefs()});
+  $$('.memo-swatch').forEach(btn=>btn.addEventListener('click',()=>{PREFS.memoColor=btn.dataset.memoColor;savePrefs();renderSettings()}));
+  const shortcutsSel=$('#set-shortcuts');if(shortcutsSel)shortcutsSel.addEventListener('change',e=>{PREFS.shortcutPreset=e.target.value;PREFS.shortcuts={...SHORTCUT_PRESETS[e.target.value]};savePrefs();renderSettings()});
+  $$('[data-shortcut]').forEach(input=>input.addEventListener('change',()=>{if(input.value){PREFS.shortcuts[input.dataset.shortcut]=input.value.slice(-1).toLowerCase();PREFS.shortcutPreset='custom';savePrefs();renderShortcutKeys()}}));
+  $$('[data-account]').forEach(input=>input.addEventListener('change',async()=>{input.disabled=true;
+    try{const r=await fetch(`/api/accounts/${encodeURIComponent(input.dataset.account)}/enabled`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:input.checked})});if(!r.ok)throw new Error(r.status);
+      const account=ACCOUNT_LIST.find(a=>a.id===input.dataset.account);if(account)account.enabled=input.checked;
+      CATEGORY_CACHE.clear();await bootLive();renderSettings();toast(input.checked?'Compte connecté':'Compte déconnecté')}
+    catch(e){input.checked=!input.checked;input.disabled=false;toast('Modification du compte impossible')}}));
   document.querySelectorAll('[data-label-color]').forEach(inp=>inp.addEventListener('input',e=>{LABEL_COLORS[e.target.dataset.labelColor]=e.target.value;saveLabelColors()}));
   const resetBtn=$('#reset-label-colors');if(resetBtn)resetBtn.addEventListener('click',()=>{LABEL_COLORS={...DEFAULT_LABEL_COLORS};saveLabelColors();renderSettings()});
   const addLabel=$('#add-label');if(addLabel)addLabel.addEventListener('click',async()=>{const input=$('#new-label'),name=input.value.trim();if(!name)return;
@@ -1123,7 +1166,7 @@ function renderSettings(){
       ALL_LABELS.push(name);LABEL_COLORS[name]='#71757C';saveLabelColors();renderSettings();toast('Libellé créé')}
     catch(e){toast('Création du libellé impossible')}});
   /* sidebar nav */
-  $$('#set-nav .set-tab').forEach(btn=>btn.addEventListener('click',()=>{settingsTab=btn.dataset.settab;renderSettings()}));
+  $$('#set-nav .set-tab').forEach(btn=>btn.addEventListener('click',()=>{settingsTab=btn.dataset.settab;renderSettings();$('#set-nav .on')?.focus()}));
   /* close button */
   const closeBtn=$('#set-close');if(closeBtn)closeBtn.addEventListener('click',closeOv);
   /* update source label */
@@ -1131,17 +1174,30 @@ function renderSettings(){
 }
 let settingsTab='theme';
 function openSettings(){settingsTab='theme';renderSettings();openOv('#ov-set')}
+function settingsKey(e){
+  if(!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)||e.target.matches('input,select'))return;
+  const nav=[...$$('#set-nav button')],controls=[...$$('#set-content button,#set-content input,#set-content select')].filter(x=>!x.disabled);
+  if(nav.includes(e.target)){
+    e.preventDefault();const i=nav.indexOf(e.target);
+    if(e.key==='ArrowDown'||e.key==='ArrowUp')nav[(i+(e.key==='ArrowDown'?1:-1)+nav.length)%nav.length].click();
+    else if(e.key==='ArrowRight'&&controls.length)controls[0].focus();
+    return}
+  if(controls.includes(e.target)){
+    if(e.key==='ArrowLeft'){e.preventDefault();$('#set-nav .on')?.focus();return}
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();const i=controls.indexOf(e.target);controls[(i+(e.key==='ArrowDown'?1:-1)+controls.length)%controls.length].focus()}}
+}
 
 const HELP={
  1:[['← →','changer de catégorie'],['J / ↓ · K / ↑','naviguer dans la liste'],['Entrée','ouvrir le message'],['A','archiver'],['R','répondre'],['V','libellés'],['Échap','retour à la liste'],[',','réglages']],
  2:[['← →','changer de catégorie'],['H / L','changer de colonne'],['↑ ↓ · J K','message dans la colonne'],['Entrée','lire le message'],['A','archiver (toutes colonnes)'],['Échap','fermer la lecture'],[',','réglages'],['','']],
  3:[['← →','changer de catégorie'],['J / ↓ · K / ↑','naviguer dans la file'],['Entrée','passer en lecture'],['A','archiver (et avancer)'],['R','répondre'],['Échap','retour à la file'],[',','réglages'],['Z','recharger']]};
-function openHelp(){$('#help-body').innerHTML=HELP[active].map(([k,l])=>`<kbd>${k.replace('A',PREFS.shortcutPreset==='gmail'?'E':'A').replace('V',PREFS.shortcutPreset==='gmail'?'L':'V')}</kbd><div>${l}</div>`).join('');openOv('#ov-help')}
+function openHelp(){const rows=[[keyName('next')+' / '+keyName('previous'),'naviguer'],['Entrée','ouvrir'],[keyName('archive'),'archiver'],[keyName('delete'),'supprimer'],[keyName('labels'),'libellés'],[keyName('search'),'rechercher'],[keyName('reply'),'répondre'],[keyName('refresh'),'actualiser'],['Échap','retour'],[keyName('settings'),'réglages']];
+  $('#help-body').innerHTML=rows.map(([k,l])=>`<kbd>${esc(k)}</kbd><div>${l}</div>`).join('');openOv('#ov-help')}
 
 function switchTheme(n){if(n===active)return;active=n;document.body.dataset.theme=n;
   ['1','2','3'].forEach(k=>{$('#c'+k).hidden=k!==String(n)});
   render();toast('Thème 0'+n+' — '+THEMES[n-1].name)}
-function resetTheme(){bootLive();toast(LIVE.on?'Rechargement depuis Gmail…':'Données réinitialisées')}
+function resetTheme(){refreshMail(true)}
 
 window.navigateMail=direction=>{
   const st=S[active],delta=direction>0?1:-1;
@@ -1158,44 +1214,44 @@ function conceptKey(e){
   // ← → : changer de categorie (tous themes, pas d'overlay)
   if(e.key==='ArrowLeft'){cycleCategory(-1);return}
   if(e.key==='ArrowRight'){cycleCategory(1);return}
-  if(k==='#'){deleteActive();return}
+  if(shortcut('delete',k)){deleteActive();return}
   if(active===1){
     if(st.mode==='list'){
-      if(k==='j'||e.key==='ArrowDown'){st.i=Math.min(st.i+1,MAILBOX.length-1);renderFocus()}
-      else if(k==='k'||e.key==='ArrowUp'){st.i=Math.max(st.i-1,0);renderFocus()}
+      if(shortcut('next',k)||e.key==='ArrowDown'){st.i=Math.min(st.i+1,MAILBOX.length-1);renderFocus()}
+      else if(shortcut('previous',k)||e.key==='ArrowUp'){st.i=Math.max(st.i-1,0);renderFocus()}
       else if(e.key==='Enter'&&MAILBOX.length){st.mode='read';renderFocus()}
       else if(shortcut('archive',k))archiveActive();
-      else if(k==='r')openReply();
+      else if(shortcut('reply',k))openReply();
       else if(shortcut('labels',k))openPalette('label')}
     else{
-      if(k==='j'||e.key==='ArrowDown'){st.i=Math.min(st.i+1,MAILBOX.length-1);renderFocus()}
-      else if(k==='k'||e.key==='ArrowUp'){st.i=Math.max(st.i-1,0);renderFocus()}
+      if(shortcut('next',k)||e.key==='ArrowDown'){st.i=Math.min(st.i+1,MAILBOX.length-1);renderFocus()}
+      else if(shortcut('previous',k)||e.key==='ArrowUp'){st.i=Math.max(st.i-1,0);renderFocus()}
       else if(shortcut('archive',k))archiveActive();
       else if(e.key==='Escape'||k==='u'){st.mode='list';renderFocus()}
-      else if(k==='r')openReply();
+      else if(shortcut('reply',k))openReply();
       else if(shortcut('labels',k))openPalette('label')}}
   else if(active===2){
     if(k==='h'){st.col=Math.max(0,st.col-1);st.row=0;renderCanvas()}
     else if(k==='l'){st.col=Math.min(cvCols().length-1,st.col+1);st.row=0;renderCanvas()}
-    else if(e.key==='ArrowDown'||k==='j'){const c=cvCols()[st.col];st.row=Math.min(st.row+1,(c?c.mails.length:1)-1);renderCanvas()}
-    else if(e.key==='ArrowUp'||k==='k'){st.row=Math.max(0,st.row-1);renderCanvas()}
+    else if(e.key==='ArrowDown'||shortcut('next',k)){const c=cvCols()[st.col];st.row=Math.min(st.row+1,(c?c.mails.length:1)-1);renderCanvas()}
+    else if(e.key==='ArrowUp'||shortcut('previous',k)){st.row=Math.max(0,st.row-1);renderCanvas()}
     else if(e.key==='Enter')openRead();
     else if(shortcut('archive',k))archiveActive()}
   else{
     if(st.mode==='list'){
-      if(k==='j'||e.key==='ArrowDown'){st.i=Math.min(st.i+1,MAILBOX.length-1);renderPaper()}
-      else if(k==='k'||e.key==='ArrowUp'){st.i=Math.max(st.i-1,0);renderPaper()}
+      if(shortcut('next',k)||e.key==='ArrowDown'){st.i=Math.min(st.i+1,MAILBOX.length-1);renderPaper()}
+      else if(shortcut('previous',k)||e.key==='ArrowUp'){st.i=Math.max(st.i-1,0);renderPaper()}
       else if(e.key==='Enter'&&MAILBOX.length){st.mode='read';renderPaper()}
       else if(shortcut('archive',k))archiveActive()}
     else{
-      if(k==='j'){st.i=Math.min(st.i+1,MAILBOX.length-1);renderPaper()}
-      else if(k==='k'){st.i=Math.max(st.i-1,0);renderPaper()}
+      if(shortcut('next',k)){st.i=Math.min(st.i+1,MAILBOX.length-1);renderPaper()}
+      else if(shortcut('previous',k)){st.i=Math.max(st.i-1,0);renderPaper()}
       else if(shortcut('archive',k))archiveActive();
       else if(e.key==='Escape'||k==='u'){st.mode='list';renderPaper()}
-      else if(k==='r')openReply()}}}
+      else if(shortcut('reply',k))openReply()}}}
 
 document.addEventListener('keydown',e=>{
-  if(e.key==='#'&&!e.target.matches('input,textarea')){
+  if(shortcut('delete',e.key)&&!e.target.matches('input,textarea')){
     e.preventDefault();
     if(overlay==='#ov-read'){deleteActive().then(ok=>ok&&closeOv());return}
     if(!overlay){deleteActive();return}}
@@ -1221,19 +1277,20 @@ document.addEventListener('keydown',e=>{
       else if(e.key==='Enter'){e.preventDefault();openSearchResult(searchState.sel)}
       return}
     if(overlay==='#ov-read'){
-      if(e.key==='#'){deleteActive().then(ok=>ok&&closeOv());return}
+      if(shortcut('delete',e.key)){deleteActive().then(ok=>ok&&closeOv());return}
       if(shortcut('archive',e.key.toLowerCase())){archiveActive().then(closeOv)}return}
     if(overlay==='#ov-reply'){if((e.metaKey||e.ctrlKey)&&e.key==='Enter')sendReply();return}
     if(overlay==='#ov-set'){
+      settingsKey(e);
       if(['1','2','3'].includes(e.key)){closeOv();switchTheme(+e.key)}
       return}
     return}
   if(typing)return;
-  if(e.key==='/'){e.preventDefault();openSearch();return}
+  if(shortcut('search',e.key)){e.preventDefault();openSearch();return}
   if(['1','2','3'].includes(e.key)){switchTheme(+e.key);return}
-  if(e.key===','){openSettings();return}
-  if(e.key==='?'){openHelp();return}
-  if(e.key.toLowerCase()==='z'){resetTheme();return}
+  if(shortcut('settings',e.key)){openSettings();return}
+  if(shortcut('help',e.key)){openHelp();return}
+  if(shortcut('refresh',e.key)){resetTheme();return}
   conceptKey(e)});
 
 document.addEventListener('click',e=>{
@@ -1286,6 +1343,8 @@ $('.stage').addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 initWorldScene();
 bootLive();
+setInterval(()=>{if(!document.hidden)refreshMail()},60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshMail()});
 </script>
 </body>
 </html>
