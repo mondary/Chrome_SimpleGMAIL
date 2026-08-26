@@ -25,7 +25,7 @@ Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla
 - **Regroupement par jour** : Aujourd'hui / Hier / date
 - **Non-lus** : fond quasi blanc + gras
 - **Écran de chargement immersif** plein écran avec barre animée
-- **PWA + Android + Chrome** : installable comme app (manifest, service worker, APK, extension)
+- **PWA + Chrome en local** : installable depuis `127.0.0.1:8000`, extension sans permission sensible ; Android en pause
 
 ### Interface classique — V1
 - Interface blanche immersive sans cartes, responsive du mobile aux grands écrans
@@ -48,7 +48,7 @@ Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla
 cd src/desktop
 source secrets/mail.env  # ou export des variables
 SIMPLEMAIL_AUTH=0 python3 main.py
-# http://0.0.0.0:8000
+# http://127.0.0.1:8000
 ```
 
 ### Mode application
@@ -111,26 +111,21 @@ Le backend maîtrise sa consommation mémoire :
 
 Pour tout transférer vers une autre machine : **Réglages → Comptes → Exporter**, puis **Importer** sur l'autre machine.
 
-## Déploiement web (o2switch / PWA)
+## Architecture locale
 
-L'application peut être déployée sur un hébergement mutualisé o2switch via
-**cPanel → Setup Python App**. Le backend FastAPI tourne en Python, le frontend
-est servi comme PWA (installable sur iPhone/Android sans App Store).
+Le backend FastAPI, les identifiants Gmail et le cache restent sur l'ordinateur.
+L'interface et la PWA utilisent :
 
 ```
-https://mail.mondary.design/
+http://127.0.0.1:8000/lab/
 ```
 
-**Documentation complète** : [`src/desktop/DEPLOIEMENT_O2SWITCH.md`](src/desktop/DEPLOIEMENT_O2SWITCH.md)
+L'extension Chrome ouvre cette même adresse. Aucun backend SimpleMail n'est
+actuellement publié. Android/iOS restent en pause jusqu'au choix d'un accès
+privé (VPN/Tailscale) ou d'une architecture Gmail API + OAuth.
 
-### Prérequis déploiement
-- Sous-domaine dédié (ex. `mail.votredomaine.fr`)
-- SSL Let's Encrypt (gratuit, activé via cPanel)
-- Setup Python App : Python 3.11, `passenger_wsgi.py`, entry point `application`
-
-### Fichiers à déployer
-- **App root** (Python) : `passenger_wsgi.py`, `main.py`, `config.json`, `secrets/`, `.htaccess`
-- **Document root** (statique) : `index.html`, `manifest.webmanifest`, `sw.js`, `icon.png`, `bg.jpg`
+Le déploiement o2switch est désactivé et documenté uniquement pour référence dans
+[`src/desktop/DEPLOIEMENT_O2SWITCH.md`](src/desktop/DEPLOIEMENT_O2SWITCH.md).
 
 ## Sécurité
 

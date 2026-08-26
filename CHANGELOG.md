@@ -16,6 +16,7 @@ Historique des versions de SimpleMail.
 #### Changed
 - Chargements Gmail bornés et Canvas limité aux éléments visibles.
 - Lecture Canvas dans un drawer bas plutôt qu'une popup.
+- Architecture local-only : extension vers localhost, backend public retiré et builds mobiles automatiques suspendus.
 
 ### [1.0.4] — pré-CalVer
 - Interface classique archivée dans `archive/v1.0.4` et disponible dans le Tester.

@@ -25,7 +25,7 @@ Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Package
 - **Day grouping**: Today / Yesterday / date
 - **Unread**: near-white background + bold
 - **Immersive fullscreen loading screen** with animated bar
-- **PWA + Android + Chrome**: installable as an app (manifest, service worker, APK, extension)
+- **Local PWA + Chrome**: installable from `127.0.0.1:8000`, permission-free extension; Android is paused
 
 ### Classic interface — V1
 - Immersive cardless white interface, responsive from mobile to large displays
@@ -48,7 +48,7 @@ Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Package
 cd src/desktop
 source secrets/mail.env
 SIMPLEMAIL_AUTH=0 python3 main.py
-# http://0.0.0.0:8000
+# http://127.0.0.1:8000
 ```
 
 ### Packaged app
@@ -110,6 +110,14 @@ The backend keeps its memory footprint bounded:
 5. Run `SIMPLEMAIL_AUTH=0 python3 main.py`
 
 To migrate to another machine: **Settings → Accounts → Export**, then **Import** on the target machine.
+
+## Local architecture
+
+The FastAPI backend, Gmail credentials, and cache remain on the computer. The UI,
+PWA, and Chrome extension use `http://127.0.0.1:8000/lab/`.
+
+No SimpleMail backend is currently public. Android/iOS are paused until a private
+access method (VPN/Tailscale) or a Gmail API + OAuth architecture is selected.
 
 ## Build
 

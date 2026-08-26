@@ -2,10 +2,6 @@
   "appId": "fr.simplemail.app",
   "appName": "SimpleMail",
   "webDir": "web",
-  "server": {
-    "url": "https://mail.mondary.design/lab/",
-    "cleartext": false
-  },
   "android": {
     "allowMixedContent": false,
     "backgroundColor": "#ffffff"

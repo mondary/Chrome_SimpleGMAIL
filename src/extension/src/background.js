@@ -1,5 +1,3 @@
-chrome.action.onClicked.addListener(function(tab) {
-  chrome.tabs.create({
-    url: 'https://mail.mondary.design/lab/'
-  });
-});
+chrome.action.onClicked.addListener(() => chrome.tabs.create({
+  url: 'http://127.0.0.1:8000/lab/'
+}));
