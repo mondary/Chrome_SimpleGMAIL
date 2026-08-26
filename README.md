@@ -1,4 +1,4 @@
-# SimpleMail
+# PKMail
 
 ![icon](src/desktop/icon.png)
 
@@ -54,7 +54,7 @@ SIMPLEMAIL_AUTH=0 python3 main.py
 ### Mode application
 ```bash
 ./SimpleMail.command                          # macOS (dev)
-# releases/macos/SimpleMail.app               # macOS (packagé)
+# releases/macos/PKMail.app               # macOS (packagé)
 # releases/windows/SimpleMail/SimpleMail.exe  # Windows
 # releases/linux/SimpleMail/SimpleMail        # Linux
 ```
@@ -173,8 +173,8 @@ Le mot de passe est vérifié via une session cookie (`sm_session`) :
 ```bash
 cd src/desktop
 ./build_macos.sh
-# → releases/macos/SimpleMail.app
-# → /Applications/SimpleMail.app
+# → releases/macos/PKMail.app
+# → /Applications/PKMail.app
 ```
 
 ### Windows

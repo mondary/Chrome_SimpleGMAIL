@@ -9,7 +9,7 @@ REPO="$(cd "$HERE/../.." && pwd)"
 OUT="$REPO/releases/macos"
 WORK="$HERE/build"
 SPEC="$HERE/build"
-APP_NAME="SimpleMail"
+APP_NAME="PKMail"
 INSTALL="/Applications/$APP_NAME.app"
 
 mkdir -p "$OUT" "$WORK"

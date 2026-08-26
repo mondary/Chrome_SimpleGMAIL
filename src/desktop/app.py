@@ -98,7 +98,7 @@ def main():
 
     import webview
     webview.create_window(
-        f"SimpleMail {app_version(base)}", url, width=1280, height=840, min_size=(960, 620),
+        f"PKMail {app_version(base)}", url, width=1280, height=840, min_size=(960, 620),
     )
     webview.start()
     server.should_exit = True

@@ -1,4 +1,4 @@
-# SimpleMail
+# PKMail
 
 ![icon](src/desktop/icon.png)
 
@@ -54,7 +54,7 @@ SIMPLEMAIL_AUTH=0 python3 main.py
 ### Packaged app
 ```bash
 ./SimpleMail.command                          # macOS (dev)
-# releases/macos/SimpleMail.app               # macOS (packaged)
+# releases/macos/PKMail.app               # macOS (packaged)
 # releases/windows/SimpleMail/SimpleMail.exe  # Windows
 # releases/linux/SimpleMail/SimpleMail        # Linux
 ```
@@ -125,8 +125,8 @@ access method (VPN/Tailscale) or a Gmail API + OAuth architecture is selected.
 ```bash
 cd src/desktop
 ./build_macos.sh
-# → releases/macos/SimpleMail.app
-# → /Applications/SimpleMail.app
+# → releases/macos/PKMail.app
+# → /Applications/PKMail.app
 ```
 
 ### Windows
