@@ -185,6 +185,19 @@ def _decode_imap_utf7(value: str) -> str:
     return re.sub(r"&([A-Za-z0-9+,/]*)-", decode, value)
 
 
+def _folder_examine_total(mailbox, folder_name: str) -> int:
+    """SELECT a folder and read EXISTS from untagged responses (fallback when STATUS returns 0)."""
+    try:
+        mailbox.folder.set(folder_name)
+        client = getattr(mailbox, "client", None)
+        if client is None:
+            return 0
+        exists = client.untagged_responses.get("EXISTS", [])
+        return int(exists[-1]) if exists else 0
+    except Exception:
+        return 0
+
+
 def _gmail_message_labels(mailbox, uid_list) -> dict:
     """Read X-GM-LABELS for a set of UIDs via a raw IMAP command.
 
@@ -1869,7 +1882,7 @@ def folders(account_id: str):
         result = []
         order = ["INBOX", "Sent", "Drafts", "Trash", "Junk", "Spam", "Archive"]
         priority = {"inbox", "sent", "sent mail", "drafts", "trash", "junk", "spam", "archive",
-                     "all mail", "starred", "important"}
+                     "all mail", "tous les messages", "starred", "important"}
         for folder in mailbox.folder.list():
             name = folder.name
             key = name.lower().split("/").pop().strip()
@@ -1877,7 +1890,11 @@ def folders(account_id: str):
             if key in priority:
                 try:
                     status = mailbox.folder.status(name)
-                    result.append({"name": name, "unseen": status.get("UNSEEN", 0), "total": status.get("MESSAGES", 0)})
+                    total = status.get("MESSAGES", 0)
+                    # Gmail IMAP STATUS returns 0 for virtual folders — EXAMINE fallback
+                    if total == 0 and key in ("all mail", "tous les messages"):
+                        total = _folder_examine_total(mailbox, name)
+                    result.append({"name": name, "unseen": status.get("UNSEEN", 0), "total": total})
                 except Exception:
                     result.append({"name": name, "unseen": 0, "total": 0})
             else:
@@ -2045,7 +2062,9 @@ def list_messages(
             # dossier en RAM lors d'un filtrage par catégorie/recherche, ce qui
             # faisait exploser la mémoire sur les grosses boîtes (jusqu'à 50 Go+).
             # On plafonne à 6000 en-têtes (le filtre catégorie se fait ensuite).
-            limit = limit_override or ((offset + page_size) if direct_folder_page else _FETCH_FILTER_CAP)
+            limit = limit_override or (
+                (offset + page_size) if direct_folder_page
+                else (max(120, (offset + page_size) * 3) if fast else _FETCH_FILTER_CAP))
             return mailbox.fetch(crit, limit=limit,
                                   reverse=True, mark_seen=False, bulk=True, headers_only=True)
 

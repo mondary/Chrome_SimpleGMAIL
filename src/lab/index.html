@@ -51,10 +51,10 @@ kbd{font:inherit;font-size:10px;border:1px solid var(--hair);border-bottom-width
 
 .categories{position:fixed;top:44px;left:0;right:0;height:38px;display:flex;align-items:center;gap:3px;
   padding:0 18px;border-bottom:1px solid var(--hair);background:var(--bg);z-index:39}
-.cat-icon{position:relative;width:36px;height:30px;display:grid;place-items:center;border-radius:4px;color:var(--faint);font-size:14px}
-.cat-icon:hover{color:var(--ink);background:var(--hair2)}
-.cat-icon.on{color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,white)}
-.cat-icon.on::after{content:'';position:absolute;left:10px;right:10px;bottom:-4px;height:2px;background:var(--accent)}
+.cat-icon{position:relative;width:36px;height:30px;display:grid;place-items:center;border-radius:4px;color:var(--faint);font-size:14px;transition:color .12s}
+.cat-icon:hover{color:var(--cat);background:color-mix(in srgb,var(--cat) 10%,white)}
+.cat-icon.on{color:var(--cat);background:color-mix(in srgb,var(--cat) 9%,white)}
+.cat-icon.on::after{content:'';position:absolute;left:10px;right:10px;bottom:-4px;height:2px;background:var(--cat)}
 .stage{position:absolute;inset:82px 0 0 0}
 .theme{position:absolute;inset:0}
 .theme[hidden]{display:none}
@@ -82,14 +82,18 @@ kbd{font:inherit;font-size:10px;border:1px solid var(--hair);border-bottom-width
 .row .from{width:150px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
 .row .subj{flex:0 1 auto;max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .row .snip{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--faint);font-size:12px}
-.row .tags{flex:none;display:flex;gap:8px;font-size:10px;color:var(--faint);max-width:180px;overflow:hidden}
-.row .tags i{font-style:normal;white-space:nowrap}
+.row .tags{flex:none;display:flex;gap:5px;font-size:9px;color:var(--faint);max-width:180px;overflow:hidden}
+.row .tags i{font-style:normal;white-space:nowrap;background:var(--hair2);border-radius:3px;padding:1px 5px;line-height:1.6}
+.row .att-i{flex:none;font-size:10px;color:var(--faint)}
 .row .date{flex:none;color:var(--faint);font-size:11px;text-align:right;min-width:60px}
 .row .dot{flex:none;color:var(--accent);font-size:8px;width:8px}
 .row:hover{background:var(--hair2)}
 .day-head{display:flex;align-items:center;gap:10px;padding:18px 14px 6px;font-size:10px;letter-spacing:.12em;
   text-transform:uppercase;color:var(--faint)}
 .day-head::after{content:'';flex:1;height:1px;background:var(--hair2)}
+.load-more-wrap{display:flex;justify-content:center;padding:22px 0 30px}
+.load-more{font-size:11px;color:var(--muted);border:1px solid var(--hair);padding:9px 18px}
+.load-more:hover{border-color:var(--faint);color:var(--ink)}
 .row.sel{background:var(--ink);color:#fff}
 .row.sel .subj,.row.sel .date,.row.sel .idx,.row.sel .tags{color:rgba(255,255,255,.72)}
 .row.sel .from{color:#fff}
@@ -99,13 +103,33 @@ kbd{font:inherit;font-size:10px;border:1px solid var(--hair);border-bottom-width
 .row.unread .dot{display:none}
 .row.unread.sel{background:var(--ink);color:#fff}
 .row.unread.sel .from,.row.unread.sel .subj{color:#fff}
-.row.memo{position:relative;width:calc(100% - 28px);margin:5px 14px;background:var(--memo);border:0;
-  box-shadow:2px 3px 0 rgba(23,24,28,.12)}
+/* post-its : papier carre PKbrain (banana), coin plie, grille de notes collees */
+.memo-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;padding:6px 14px 30px}
+.postit{position:relative;display:flex;flex-direction:column;text-align:left;aspect-ratio:1/1;
+  background:#FFF3B0;border-radius:2px;padding:16px 22px 14px 14px;
+  box-shadow:0 1px 2px rgba(23,24,28,.15),5px 7px 12px rgba(23,24,28,.12);
+  transform:rotate(-.6deg);transition:transform .15s ease,box-shadow .15s ease}
+.postit:nth-child(even){transform:rotate(.7deg)}
+.postit:nth-child(3n){transform:rotate(-.2deg)}
+.postit:hover{transform:rotate(0) scale(1.02);box-shadow:0 2px 4px rgba(23,24,28,.18),9px 12px 18px rgba(23,24,28,.15)}
+.postit:focus-visible{transform:rotate(0);outline:2px solid var(--ink)}
+.postit::after{content:'';position:absolute;top:0;right:0;border-style:solid;
+  border-width:0 20px 20px 0;border-color:var(--bg) rgba(23,24,28,.18) transparent transparent;
+  box-shadow:-2px 2px 3px rgba(23,24,28,.08)}
+.postit .ph{display:flex;align-items:baseline;gap:6px;margin-bottom:8px}
+.postit .pwho{font-weight:600;font-size:11px;color:#5A4300;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.postit .pwhen{margin-left:auto;flex:none;font-size:8px;color:#8A7430;letter-spacing:.04em}
+.postit .psubj{font-size:12.5px;font-weight:600;color:#3E3608;line-height:1.4;flex:0 0 auto;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.postit .psnip{margin-top:auto;padding-top:8px;font-size:10px;line-height:1.55;color:#6E621E;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;border-top:1px solid rgba(90,67,0,.14)}
+.postit.sel{outline:2px solid var(--ink);outline-offset:1px}
+.row.memo{position:relative;background:#FFF3B0;border:0;box-shadow:2px 3px 0 rgba(23,24,28,.12)}
 .row.memo::after{content:'';position:absolute;right:0;top:0;border-style:solid;border-width:0 13px 13px 0;
-  border-color:transparent rgba(23,24,28,.12) transparent transparent}
+  border-color:transparent rgba(23,24,28,.15) transparent transparent}
 .row.memo .memo-ic{flex:none;font-size:12px;color:#8A7430}
 .row.memo.sel{color:var(--ink);outline:2px solid var(--ink);outline-offset:0}
-.row.memo.sel .subj,.row.memo.sel .date,.row.memo.sel .idx,.row.memo.sel .tags{color:#555044}
+.row.memo.sel .subj,.row.memo.sel .date,.row.memo.sel .snip{color:#3E3608}
 .row.newsletter-row{min-height:58px}
 .nl-thumb{width:72px;height:42px;flex:none;display:grid;place-items:center;overflow:hidden;background:var(--hair2)}
 .nl-thumb img{width:100%;height:100%;object-fit:cover}
@@ -427,8 +451,12 @@ const THEMES=[
  {id:3,name:'Paper Reader',desc:'Liste du jour puis lecture plein écran, file en bandeau.',color:'#96662B'}];
 const DEMO_LABELS=['Travail','Factures','Perso','Newsletters','Notifications'];
 const CATEGORIES=[
-  ['primary','Principale','\uF0E0'],['promotions','Promotions','\uF02B'],['social','Réseaux','\uF0C0'],
-  ['updates','Notifications','\uF0F3'],['forums','Forums','\uF086'],['newsletter','Newsletters','\uF1EA']];
+  ['primary','Principale','\uF0E0','#1A73E8'],
+  ['promotions','Promotions','\uF02B','#F9C440'],
+  ['social','Réseaux','\uF0C0','#E753B9'],
+  ['updates','Notifications','\uF0F3','#28BCA3'],
+  ['forums','Forums','\uF086','#9B6BE8'],
+  ['newsletter','Newsletters','\uF1EA','#FF8C1A']];
 const DEMO_MAIL=[
 {id:1,from:{name:'Camille Durand',email:'camille@atelier-nord.fr'},subject:'Compte rendu — réunion de cadrage lundi',date:'09:42',labels:['Travail'],unread:true,thread:3,body:['Bonjour, voici le compte rendu de la réunion de lundi. Points clés : périmètre validé pour la phase 1, livraison intermédiaire le 15, revue design la semaine prochaine.','Peux-tu valider le planning côté intégration avant vendredi ?','Camille']},
 {id:2,from:{name:'OVHcloud',email:'noreply@ovhcloud.net'},subject:'Facture FR-2026-0812 disponible',date:'08:15',labels:['Factures'],unread:false,body:['Votre facture de 24,90 € HT est disponible dans votre espace client.','Le montant sera prélevé le 5 du mois prochain.']},
@@ -447,6 +475,7 @@ const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
 const LIVE={on:false,account:null,folder:'INBOX',name:'',email:''};
 let MAILBOX=[];   // shape: {id,from{name,email},subject,date,labels[],unread,thread,html,text,detail:bool,attachments[]}
 let TOTAL=0;
+let ARCHIVED_COUNT=0;
 let activeCategory='primary',categoryRequest=0;
 const CATEGORY_CACHE=new Map(),PREVIEW_CACHE=new Map();
 let PREFS={memoPostits:true,memoColor:'#FFFBEA',shortcutPreset:'gmail'};
@@ -535,18 +564,54 @@ function displayCategory(messages,reset=true){
   renderCategories();render()}
 
 function renderCategories(){
-  $('#categories').innerHTML=CATEGORIES.map(([key,label,icon])=>`<button class="cat-icon g${key===activeCategory?' on':''}" data-category="${key}" aria-label="${label}" title="${label}">${icon}</button>`).join('')}
+  $('#categories').innerHTML=CATEGORIES.map(([key,label,icon,color])=>`<button class="cat-icon g${key===activeCategory?' on':''}" data-category="${key}" aria-label="${label}" title="${label}" style="--cat:${color}">${icon}</button>`).join('')}
 
-async function fetchCategory(key){
+async function fetchCategory(key,page=1){
   if(!LIVE.on){
     const demo=DEMO_MAIL.filter(m=>key==='newsletter'?m.labels.includes('Newsletters'):(m.category||'primary')===key);
     return demo.length?demo:DEMO_MAIL}
   if(key==='newsletter'){
-    let res=await j(`/api/newsletter-messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&cached=1&page_size=20`);
-    if(!(res.messages||[]).length)res=await j(`/api/newsletter-messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&page_size=20`);
+    let res=await j(`/api/newsletter-messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&cached=${page===1?1:0}&page=${page}&page_size=20`);
+    if(!(res.messages||[]).length&&page===1)res=await j(`/api/newsletter-messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&page=1&page_size=20`);
     return normalizeMessages(res.messages)}
-  const res=await j(`/api/messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&category=${key}&page_size=40&fast=true`);
+  const res=await j(`/api/messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&category=${key}&page=${page}&page_size=40&fast=true`);
   return normalizeMessages(res.messages)}
+
+const CAT_PAGE=new Map(),CAT_DONE=new Map();
+async function loadMore(){
+  const key=activeCategory;
+  if(loadMore._busy||CAT_DONE.get(key)||!LIVE.on)return;
+  loadMore._busy=true;
+  const btn=document.querySelector('[data-more]');
+  if(btn)btn.textContent='Chargement…';
+  try{
+    const page=(CAT_PAGE.get(key)||1)+1;
+    const extra=await fetchCategory(key,page);
+    if(extra.length){
+      CAT_PAGE.set(key,page);
+      const ids=new Set(MAILBOX.map(m=>m.id));
+      MAILBOX=MAILBOX.concat(extra.filter(m=>!ids.has(m.id)));
+      CATEGORY_CACHE.set(key,MAILBOX);saveSnapshot(key,MAILBOX);
+      TOTAL=MAILBOX.length;render()}
+    else{CAT_DONE.set(key,true);render();toast('Fin de la catégorie')}}
+  catch(e){toast('Chargement impossible')}
+  loadMore._busy=false}
+
+/* préchauffe silencieuse : les autres catégories se remplent en tâche de fond */
+async function warmCategories(){
+  if(!LIVE.on)return;
+  for(const [key] of CATEGORIES){
+    if(key===activeCategory||CATEGORY_CACHE.has(key))continue;
+    try{const mails=await fetchCategory(key);CATEGORY_CACHE.set(key,mails);saveSnapshot(key,mails);renderCategories()}
+    catch(e){}
+    await new Promise(r=>setTimeout(r,1500))}}
+
+async function fetchArchivedCount(){
+  if(!LIVE.on)return;
+  try{const folders=await j(`/api/accounts/${encodeURIComponent(LIVE.account)}/folders`);
+    const allMail=folders.find(f=>/all mail|tous les messages|archive/i.test(f.name));
+    if(allMail&&allMail.total>0)ARCHIVED_COUNT=allMail.total;hud()}
+  catch(e){}}
 
 async function switchCategory(key,force=false){
   if(!CATEGORIES.some(([k])=>k===key))return;
@@ -568,7 +633,8 @@ async function switchCategory(key,force=false){
   catch(e){MAILBOX=[];toast('Catégorie Gmail indisponible')}
   if(request!==categoryRequest)return;
   setLoading(false);displayCategory(MAILBOX);
-  if(key==='newsletter')hydrateNewsletterPreviews()}
+  if(key==='newsletter')hydrateNewsletterPreviews();
+  warmCategories()}
 
 async function bootLive(){
   try{
@@ -586,7 +652,7 @@ async function bootLive(){
   badge.textContent=LIVE.on?'GMAIL · '+LIVE.name.toUpperCase():'DÉMO';
   badge.classList.toggle('on',LIVE.on);
   $('#set-src').textContent=LIVE.on?LIVE.name+' (boîte de réception réelle)':'données fictives (backend V1 non joignable)';
-  renderCategories();await switchCategory('primary',true)}
+  renderCategories();await switchCategory('primary',true);fetchArchivedCount()}
 
 async function loadDetail(m){
   if(m.detail||!LIVE.on)return m;
@@ -637,17 +703,20 @@ function mountBody(el,m){const r=bodyHtml(m);
 const dayOf=d=>/^\d{1,2}:\d{2}/.test(d)?"Aujourd'hui":(/^hier/.test(d)?'Hier':d.split(' ').slice(0,2).join(' '));
 function listRows(mails,st,scope){
   let out='',day='';
-  mails.forEach((m,ri)=>{
+  mails.forEach((m)=>{
     const d=dayOf(m.date||'');
     if(d!==day){day=d;out+=`<div class="day-head">${esc(d)}</div>`}
-    out+=`<button class="row${activeCategory==='newsletter'?' newsletter-row':''}${m.unread?' unread':''}${isMemo(m)?' memo':''}${ri===st.i?' sel':''}" data-i="${ri}">
-      ${isMemo(m)?'<span class="memo-ic g">\uF249</span>':''}
+    const tags=m.labels&&m.labels.length?`<span class="tags">${m.labels.slice(0,2).map(l=>`<i>${esc(l)}</i>`).join('')}</span>`:'';
+    const att=m.attachments?`<span class="att-i g">${I.clip}</span>`:'';
+    out+=`<button class="row${activeCategory==='newsletter'?' newsletter-row':''}${m.unread?' unread':''}${mails.indexOf(m)===st.i?' sel':''}" data-i="${mails.indexOf(m)}">
       ${newsletterThumb(m)}
       <span class="from">${esc(m.from.name)}</span>
       <span class="subj">${esc(m.subject)}</span>
       <span class="snip">${esc(m.snippet||'')}</span>
+      ${tags}${att}
       <span class="date">${esc(m.date)}</span>
     </button>`});
+  if(!CAT_DONE.get(activeCategory)&&mails.length)out+=`<div class="load-more-wrap"><button class="load-more" data-more>Charger plus</button></div>`;
   return out}
 const attachments=m=>(m.attachments&&m.attachments.length)
   ?`<div class="att-row"><span class="g">${I.clip}</span> ${m.attachments.map(esc).join(' · ')}</div>`:'';
@@ -672,7 +741,7 @@ function panelTrap(e){const p=e.target.closest('.panel');if(!p)return;
     f[(i+(e.shiftKey?-1:1)+f.length)%f.length].focus()}}
 
 function hud(){$('#hud-inbox').textContent=S[active].mails===undefined?MAILBOX.length:mailboxFor().length;
-  $('#hud-arch').textContent=S[active].archived;
+  $('#hud-arch').textContent=ARCHIVED_COUNT>0?ARCHIVED_COUNT.toLocaleString('fr'):'—';
   $('#hud-title').innerHTML=`THEME <b>0${active} / ${THEMES[active-1].name.toUpperCase()}</b>`}
 function mailboxFor(){return MAILBOX}
 
@@ -690,9 +759,18 @@ function renderFocus(){const st=S[1];
   if(st.mode==='list'){
     if(!mails.length){$('#f-list').innerHTML=`<div class="zero"><span class="big g">${I.check}</span><h2>Boîte de réception — zéro.</h2><p>${st.archived} messages traités · Z recharge</p></div>`;return}
     if(st.i>=mails.length)st.i=mails.length-1;
+    const memos=PREFS.memoPostits?mails.filter(isMemo):[];
+    const regular=mails.filter(m=>!isMemo(m));
+    const regularIdx=m=>mails.indexOf(m);
     $('#f-list').innerHTML=`<div class="lst-head"><span class="g">${I.inbox}</span> ${CATEGORIES.find(([k])=>k===activeCategory)?.[1]||'Boîte de réception'} <span class="n">${mails.length}</span><span class="z">${st.archived} archivés</span></div>`+
-    listRows(mails,st);
-    const sel=$('#f-list .row.sel');if(sel)sel.scrollIntoView({block:'nearest'});
+    listRows(regular,st)+
+    (memos.length?`<div class="day-head">Mémos — envoyés à moi-même</div>
+      <div class="memo-board">${memos.map((m,ri)=>`<button class="postit${ri===st.i?' sel':''}" data-i="${mails.indexOf(m)}">
+        <span class="ph"><span class="pwho">${esc(m.from.name)}</span><span class="pwhen">${esc(m.date)}</span></span>
+        <span class="psubj">${esc(m.subject)}</span>
+        <span class="psnip">${esc(m.snippet||'')}</span>
+      </button>`).join('')}</div>`:'');
+    const sel=$('#f-list .row.sel,#f-list .postit.sel');if(sel)sel.scrollIntoView({block:'nearest'});
     return}
   const m=mails[st.i];
   $('#f-progress i').style.width=(st.archived/Math.max(1,TOTAL)*100)+'%';
@@ -844,7 +922,7 @@ function drawSearch(){
 function runSearch(q){
   searchState.q=q;searchState.sel=0;
   if(q.trim().length<2){searchState.results=[];drawSearch();return}
-  const url=`/api/messages?account=${encodeURIComponent(LIVE.account)}&folder=${LIVE.folder}&q=${encodeURIComponent(q)}&page_size=15&fast=true`;
+  const url=`/api/messages?account=${encodeURIComponent(LIVE.account)}&folder=${LIVE.folder}&q=${encodeURIComponent(q)}&page_size=15`;
   j(url).then(res=>{
     if(searchState.q!==q)return;
     searchState.results=normalizeMessages(res.messages||[]);
@@ -895,8 +973,15 @@ window.navigateMail=direction=>{
   else{st.i=Math.max(0,Math.min(st.i+delta,MAILBOX.length-1));active===1?renderFocus():renderPaper()}}
 
 /* ---------- clavier ---------- */
+function cycleCategory(dir){
+  const idx=CATEGORIES.findIndex(([k])=>k===activeCategory);
+  const next=CATEGORIES[(idx+dir+CATEGORIES.length)%CATEGORIES.length];
+  switchCategory(next[0])}
 function conceptKey(e){
   const k=e.key.toLowerCase(),st=S[active];
+  // ← → : changer de categorie (tous themes, pas d'overlay)
+  if(e.key==='ArrowLeft'){cycleCategory(-1);return}
+  if(e.key==='ArrowRight'){cycleCategory(1);return}
   if(active===1){
     if(st.mode==='list'){
       if(k==='j'||e.key==='ArrowDown'){st.i=Math.min(st.i+1,MAILBOX.length-1);renderFocus()}
@@ -913,8 +998,8 @@ function conceptKey(e){
       else if(k==='r')openReply();
       else if(shortcut('labels',k))openPalette('label')}}
   else if(active===2){
-    if(e.key==='ArrowLeft'||k==='h'){st.col=Math.max(0,st.col-1);st.row=0;renderCanvas()}
-    else if(e.key==='ArrowRight'||k==='l'){st.col=Math.min(cvCols().length-1,st.col+1);st.row=0;renderCanvas()}
+    if(k==='h'){st.col=Math.max(0,st.col-1);st.row=0;renderCanvas()}
+    else if(k==='l'){st.col=Math.min(cvCols().length-1,st.col+1);st.row=0;renderCanvas()}
     else if(e.key==='ArrowDown'||k==='j'){const c=cvCols()[st.col];st.row=Math.min(st.row+1,(c?c.mails.length:1)-1);renderCanvas()}
     else if(e.key==='ArrowUp'||k==='k'){st.row=Math.max(0,st.row-1);renderCanvas()}
     else if(e.key==='Enter')openRead();
@@ -926,8 +1011,8 @@ function conceptKey(e){
       else if(e.key==='Enter'&&MAILBOX.length){st.mode='read';renderPaper()}
       else if(shortcut('archive',k))archiveActive()}
     else{
-      if(k==='j'||e.key==='ArrowRight'){st.i=Math.min(st.i+1,MAILBOX.length-1);renderPaper()}
-      else if(k==='k'||e.key==='ArrowLeft'){st.i=Math.max(st.i-1,0);renderPaper()}
+      if(k==='j'){st.i=Math.min(st.i+1,MAILBOX.length-1);renderPaper()}
+      else if(k==='k'){st.i=Math.max(st.i-1,0);renderPaper()}
       else if(shortcut('archive',k))archiveActive();
       else if(e.key==='Escape'||k==='u'){st.mode='list';renderPaper()}
       else if(k==='r')openReply()}}}
@@ -982,7 +1067,7 @@ document.addEventListener('click',e=>{
   if(th){closeOv();switchTheme(+th.dataset.th);return}
   const category=e.target.closest('.cat-icon');
   if(category){switchCategory(category.dataset.category);return}
-  const row=e.target.closest('#f-list .row,#p-list .row');
+  const row=e.target.closest('#f-list .row,#p-list .row,#f-list .postit');
   if(row){const key=row.closest('#f-list')?'1':'3';const st=S[key];
     st.i=+row.dataset.i;st.mode='read';render();return}
   const cvrow=e.target.closest('.cv-row');
@@ -993,6 +1078,7 @@ document.addEventListener('click',e=>{
   if(pi&&overlay==='#ov-pal'){const vis=$('#pal-list')._vis||[];const v=vis[+pi.dataset.i];if(v!==undefined)pal.onPick(v);return}
   const sr=e.target.closest('.search-row');
   if(sr&&overlay==='#ov-search'){openSearchResult(+sr.dataset.sr);return}
+  if(e.target.closest('[data-more]')){loadMore();return}
   if(e.target.closest('[data-open-search]')){openSearch();return}
   if(e.target.closest('#rp-send')){sendReply();return}
   if(e.target.closest('#rd-close')){closeOv();return}
@@ -1000,6 +1086,8 @@ document.addEventListener('click',e=>{
 
 $('#pal-input').addEventListener('input',()=>{pal.idx=0;drawPalette()});
 $('#search-input').addEventListener('input',e=>{clearTimeout(searchState.timer);searchState.timer=setTimeout(()=>runSearch(e.target.value.trim()),280)});
+document.querySelectorAll('.lst-wrap').forEach(el=>el.addEventListener('scroll',()=>{
+  if(el.scrollTop+el.clientHeight>el.scrollHeight-180)loadMore()},{passive:true}));
 $('#set-memos').addEventListener('change',e=>{PREFS.memoPostits=e.target.checked;savePrefs()});
 $('#set-memo-color').addEventListener('input',e=>{PREFS.memoColor=e.target.value;savePrefs()});
 $('#set-shortcuts').addEventListener('change',e=>{PREFS.shortcutPreset=e.target.value;savePrefs()});
