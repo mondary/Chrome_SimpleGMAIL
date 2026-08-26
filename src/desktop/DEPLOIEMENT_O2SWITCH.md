@@ -3,6 +3,14 @@
 Backend FastAPI déployé via **cPanel → Setup Python App**, frontend servi par
 LiteSpeed en parallèle. Tout tient sur un seul domaine.
 
+> **État du projet : déploiement public désactivé.** Le Lab utilise le vrai compte
+> Gmail et reste local jusqu'à validation explicite de l'authentification et de
+> l'exposition Internet.
+>
+> **Règle FTP PK :** toute publication future doit rester sous `/www/pk/`, dans
+> `/www/pk/pkmail/` ou `/www/pk/lab/`. Ne jamais créer `/www/pk-backend` et ne
+> jamais modifier les fichiers WordPress ou les autres projets voisins.
+
 ## 1. Préparer les fichiers
 
 Sur ton Mac (dans le dossier du projet) :
