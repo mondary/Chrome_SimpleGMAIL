@@ -2054,6 +2054,7 @@ def list_messages(
     category: str = Query(""),
     fast: bool = Query(False),
     no_cache: bool = Query(False),
+    snapshot: bool = Query(False),
 ):
     if _is_demo() or _is_demo_account(account):
         msgs = _demo_messages(account, folder)
@@ -2083,9 +2084,12 @@ def list_messages(
                 "total": total, "total_pages": max(1, (total + page_size - 1) // page_size)}
     cache_key = f"messages:{account}:{folder}:{category}:{page}:{page_size}:{int(fast)}"
     if not q and not unseen and not no_cache:
-        cached = _response_cache_get(cache_key, ttl=_INBOX_SNAPSHOT_TTL)
+        cached = _response_cache_get(cache_key, ttl=7 * 86400 if snapshot else _INBOX_SNAPSHOT_TTL)
         if cached:
-            return {**cached, "cache_state": "hit"}
+            return {**cached, "cache_state": "snapshot" if snapshot else "hit"}
+        if snapshot:
+            return {"messages": [], "page": page, "page_size": page_size, "total": 0,
+                    "total_pages": 1, "cache_state": "empty"}
     acc = get_account(account)
     is_gmail = _is_gmail_imap(acc)
     use_gmail_cat = is_gmail and category in _GMAIL_CATEGORY_LABELS

@@ -570,6 +570,7 @@ const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
 /* ============ couche données : Gmail via API V1, sinon démo ============ */
 const LIVE={on:false,account:null,folder:'INBOX',name:'',email:''};
 let MAILBOX=[];   // shape: {id,from{name,email},subject,date,labels[],unread,thread,html,text,detail:bool,attachments[]}
+let SYNCING=false;
 let TOTAL=0;
 let ARCHIVED_COUNT=0;
 let ALL_LABELS=[];
@@ -682,19 +683,19 @@ function renderCategories(){
       <div class="world-track">${CATEGORIES.map(([key,label,icon,color])=>`<button class="cat-icon${key===activeCategory?' on':''}" data-category="${key}" aria-label="${label}" title="${label}" style="--cat:${color}"><i>${icon}</i>${label}</button>`).join('')}</div></div>
     <button class="world-arrow next" data-cycle="1" aria-label="Catégorie suivante : ${next[1]}"><span class="arr">→</span><small>${next[1]}</small></button>`}
 
-async function fetchCategory(key,page=1,noCache=false){
+async function fetchCategory(key,page=1,noCache=false,snapshot=false){
   if(!LIVE.on){
     if(key==='memos')return DEMO_MAIL.filter(m=>isMemo(m));
     const demo=DEMO_MAIL.filter(m=>key==='newsletter'?m.labels.includes('Newsletters'):(m.category||'primary')===key);
     return demo.length?demo:DEMO_MAIL}
   if(key==='memos'){
-    const res=await j(`/api/messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&category=primary&page=${page}&page_size=80&fast=true${noCache?'&no_cache=true':''}`);
+    const res=await j(`/api/messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&category=primary&page=${page}&page_size=80&fast=true${noCache?'&no_cache=true':snapshot?'&snapshot=true':''}`);
     return normalizeMessages(res.messages).filter(m=>isMemo(m))}
   if(key==='newsletter'){
     let res=await j(`/api/newsletter-messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&cached=${noCache?0:page===1?1:0}&page=${page}&page_size=20${noCache?'&no_cache=true':''}`);
     if(!(res.messages||[]).length&&page===1)res=await j(`/api/newsletter-messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&page=1&page_size=20`);
     return normalizeMessages(res.messages)}
-  const res=await j(`/api/messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&category=${key}&page=${page}&page_size=80&fast=true${noCache?'&no_cache=true':''}`);
+  const res=await j(`/api/messages?account=${encodeURIComponent(LIVE.account)}&folder=INBOX&category=${key}&page=${page}&page_size=80&fast=true${noCache?'&no_cache=true':snapshot?'&snapshot=true':''}`);
   return normalizeMessages(res.messages)}
 
 const CAT_PAGE=new Map(),CAT_DONE=new Map();
@@ -735,9 +736,9 @@ async function fetchArchivedCount(){
     if(allMail&&allMail.total>0)ARCHIVED_COUNT=allMail.total;hud()}
   catch(e){}}
 
-async function switchCategory(key,force=false,direction=0){
+async function switchCategory(key,force=false,direction=0,startup=false){
   if(!CATEGORIES.some(([k])=>k===key))return;
-  if(key===activeCategory&&!force)return;
+  if(key===activeCategory&&!force&&!startup)return;
   beginWorldTransition(direction);
   activeCategory=key;renderCategories();
   setWorldVisual(key,direction);
@@ -751,6 +752,11 @@ async function switchCategory(key,force=false,direction=0){
       if(request===categoryRequest&&activeCategory===key){displayCategory(fresh,false);if(key==='newsletter')hydrateNewsletterPreviews()}
     }).catch(()=>{});
     return}
+  if(startup){
+    let cached=[];
+    try{cached=await fetchCategory(key,1,false,true)}catch(e){}
+    SYNCING=!cached.length;CATEGORY_CACHE.set(key,cached);MAILBOX=cached;
+    setLoading(false);displayCategory(cached);refreshMail();return}
   setLoading(true,'Chargement · '+(CATEGORIES.find(([k])=>k===key)?.[1]||key));
   $('#hud-live').textContent='CHARGEMENT…';
   try{const fresh=await fetchCategory(key,1,force);CATEGORY_CACHE.set(key,fresh);saveSnapshot(key,fresh);MAILBOX=fresh}
@@ -777,7 +783,7 @@ async function bootLive(){
   badge.textContent=LIVE.on?'GMAIL · '+LIVE.name.toUpperCase():'DÉMO';
   badge.classList.toggle('on',LIVE.on);
   const srcEl=$('#set-src');if(srcEl)srcEl.textContent=LIVE.on?LIVE.name+' (boîte de réception réelle)':'données fictives (backend V1 non joignable)';
-  renderCategories();await switchCategory('primary',true);fetchArchivedCount()
+  renderCategories();await switchCategory('primary',false,0,true);fetchArchivedCount()
   }catch(e){console.error('bootLive render error',e);setLoading(false)}}
 
 async function refreshMail(notify=false){
@@ -788,10 +794,11 @@ async function refreshMail(notify=false){
   const key=activeCategory,request=++categoryRequest;
   try{
     const fresh=await fetchCategory(key,1,true);
+    SYNCING=false;
     CATEGORY_CACHE.set(key,fresh);saveSnapshot(key,fresh);CAT_PAGE.set(key,1);CAT_DONE.delete(key);
     if(request===categoryRequest&&key===activeCategory){displayCategory(fresh,false);if(key==='newsletter')hydrateNewsletterPreviews()}
     if(notify)toast('Mails actualisés')
-  }catch(e){if(notify)toast('Actualisation Gmail impossible')}
+  }catch(e){SYNCING=false;if(notify)toast('Actualisation Gmail impossible')}
   finally{refreshMail.busy=false;if(button)button.disabled=false;if(label)label.textContent='Actualiser'}}
 
 async function loadDetail(m){
@@ -901,7 +908,7 @@ function renderFocus(){const st=S[1];
   $('#f-list-view').hidden=st.mode!=='list';$('#f-read-view').hidden=st.mode!=='read';
   const mails=mailboxFor();
   if(st.mode==='list'){
-    if(!mails.length){$('#f-list').innerHTML=`<div class="zero"><span class="big g">${I.check}</span><h2>${activeCategory==='memos'?'Aucun mémo — envoyez un mail à vous-même':'Boîte de réception — zéro.'}</h2><p>${st.archived} messages traités · Z recharge</p></div>`;return}
+    if(!mails.length){$('#f-list').innerHTML=`<div class="zero"><span class="big g">${SYNCING?I.envelope:I.check}</span><h2>${SYNCING?'Synchronisation Gmail…':activeCategory==='memos'?'Aucun mémo — envoyez un mail à vous-même':'Boîte de réception — zéro.'}</h2><p>${SYNCING?'Les mails arrivent en arrière-plan':st.archived+' messages traités · Z recharge'}</p></div>`;return}
     if(st.i>=mails.length)st.i=mails.length-1;
     $('#f-list').innerHTML=`<div class="lst-head"><span class="g">${activeCategory==='memos'?I.tag:I.inbox}</span> ${CATEGORIES.find(([k])=>k===activeCategory)?.[1]||'Boîte de réception'} <span class="n">${mails.length}</span><span class="z">${st.archived} archivés</span></div>`+
     listRows(mails,st);
@@ -1145,7 +1152,7 @@ function renderSettings(){
   else if(activeTab==='about'){
     c.innerHTML=`<h4>À propos</h4>
       <div class="set-row"><span>Application</span><span class="v">PKMail Lab V2</span></div>
-      <div class="set-row"><span>Version</span><span class="v">2026.08.04</span></div>
+      <div class="set-row"><span>Version</span><span class="v">2026.08.05</span></div>
       <div class="set-row"><span>Source</span><span class="v" id="set-src">…</span></div>
       <div class="set-row"><span>Police</span><span class="v">JetBrains Mono Nerd Font</span></div>`}
   /* wire new controls */

@@ -4,6 +4,12 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+### [2026.08.05] - 2026-08-26
+
+#### Fixed
+- Démarrage immédiat depuis le dernier instantané local, sans attendre la connexion IMAP.
+- Premier lancement non bloquant avec synchronisation Gmail visible en arrière-plan.
+
 ### [2026.08.04] - 2026-08-26
 
 #### Fixed

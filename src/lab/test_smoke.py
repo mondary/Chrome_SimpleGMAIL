@@ -29,6 +29,7 @@ def main():
     assert 'allow-same-origin allow-popups' in HTML, "rendu html sandbox absent"
     assert "/api/messages" in HTML, "couche gmail absente"
     assert "no_cache=true" in HTML, "actualisation Gmail forcée absente"
+    assert "snapshot=true" in HTML, "instantané de démarrage absent"
     assert "setInterval(()=>{if(!document.hidden)refreshMail()},60000)" in HTML, "actualisation toutes les 60 secondes absente"
     assert "data-reload" in HTML and "Actualiser" in HTML, "bouton d'actualisation absent"
     assert "JetBrainsMonoNerdFont-Regular.ttf" in HTML, "nerd font locale absente"
