@@ -10,6 +10,7 @@ OUT="$REPO/releases/macos"
 WORK="$HERE/build"
 SPEC="$HERE/build"
 APP_NAME="SimpleMail"
+INSTALL="/Applications/$APP_NAME.app"
 
 mkdir -p "$OUT" "$WORK"
 
@@ -47,7 +48,10 @@ python3 -m PyInstaller \
   app.py
 
 codesign --force --deep --sign - "$OUT/$APP_NAME.app"
+rm -rf "$INSTALL"
+ditto "$OUT/$APP_NAME.app" "$INSTALL"
 
 echo ""
 echo "✓ Built: $OUT/$APP_NAME.app"
+echo "✓ Installed: $INSTALL"
 du -sh "$OUT/$APP_NAME.app" 2>/dev/null || true

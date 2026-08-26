@@ -126,6 +126,7 @@ access method (VPN/Tailscale) or a Gmail API + OAuth architecture is selected.
 cd src/desktop
 ./build_macos.sh
 # → releases/macos/SimpleMail.app
+# → /Applications/SimpleMail.app
 ```
 
 ### Windows

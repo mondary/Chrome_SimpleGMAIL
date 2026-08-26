@@ -174,6 +174,7 @@ Le mot de passe est vérifié via une session cookie (`sm_session`) :
 cd src/desktop
 ./build_macos.sh
 # → releases/macos/SimpleMail.app
+# → /Applications/SimpleMail.app
 ```
 
 ### Windows
