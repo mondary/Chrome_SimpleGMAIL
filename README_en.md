@@ -8,13 +8,26 @@ Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Package
 
 ## Features
 
+### V2 interface — Lab (3 concepts)
+- **Three themes**: Focus OS (dense one-line queue), Label Canvas (columns by label), Paper Reader (paper queue)
+- **Gmail categories**: 6 categories with dedicated icon and color (Primary, Promotions, Social, Updates, Forums, Newsletters)
+- **Arrow navigation**: `←` / `→` switch category, `↑` / `↓` (or `J`/`K`) move between messages
+- **Gmail search**: `/` opens a fullscreen overlay, server-side IMAP search (sender, subject, body), keyboard-driven results
+- **Sticky notes**: self-sent emails displayed as real square sticky notes (banana paper, folded corner, alternating rotation) on a dedicated wall; toggleable, configurable color
+- **Newsletters**: adaptive multi-card carousel (4→8 columns), previews with real images (hero + og:image), hero detail
+- **Inline labels and attachments**: short tags + paperclip icon on each list row
+- **Real archive counter**: `[Gmail]/All Mail` total (EXAMINE fallback when STATUS returns 0)
+- **Official Gmail shortcuts**: `E` archive / `L` labels preset (or SimpleMail preset), fully configurable
+- **Local snapshots**: instant display on load (localStorage, 7-day TTL), then silent refresh
+- **Preloading**: other categories load in the background
+- **Pagination**: infinite scroll + "Load more" button per category
+- **Day grouping**: Today / Yesterday / date
+- **Unread**: near-white background + bold
+- **Immersive fullscreen loading screen** with animated bar
+- **PWA + Android + Chrome**: installable as an app (manifest, service worker, APK, extension)
+
+### Classic interface — V1
 - Immersive cardless white interface, responsive from mobile to large displays
-- Three-theme V2 interface, with the classic interface available from Settings
-- Install as a PWA, native Android app, or Chrome extension
-- Self-sent emails displayed as configurable sticky notes
-- Newsletters: adaptive multi-card carousel (4→8 columns depending on space), animated dock, hero detail with real images
-- Gmail categories and labels visible on every message, with a searchable filing picker
-- Fully configurable keyboard shortcuts
 - Full-screen Settings (fonts, theme, date format, newsletters, language, accounts, about)
 - Light/dark/photo background theme
 - Selection mode with bulk actions

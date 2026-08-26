@@ -8,13 +8,26 @@ Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla
 
 ## Fonctionnalités
 
+### Interface V2 — Lab (3 concepts)
+- **Trois thèmes** : Focus OS (file une-ligne dense), Label Canvas (colonnes par libellé), Paper Reader (file papier)
+- **Catégories Gmail** : 6 catégories avec icône et couleur dédiée (Principale, Promotions, Réseaux, Notifications, Forums, Newsletters)
+- **Navigation flèches** : `←` / `→` changent de catégorie, `↑` / `↓` (ou `J`/`K`) naviguent de mail en mail
+- **Recherche Gmail** : `/` ouvre un overlay plein écran, recherche IMAP côté serveur (expéditeur, objet, contenu), navigation clavier des résultats
+- **Post-its** : mails envoyés à soi-même affichés en vrais post-its carrés (papier banana, coin plié, rotation alternée) sur un mur dédié ; activable/désactivable, couleur configurable
+- **Newsletters** : carrousel multicartes (grille adaptative 4→8 colonnes), previews avec vraies images (hero + og:image), détail hero
+- **Libellés et pièces jointes inline** : tags courts + icône trombone sur chaque ligne de liste
+- **Compteur d'archives réel** : total `[Gmail]/Tous les messages` (fallback EXAMINE si STATUS renvoie 0)
+- **Raccourcis Gmail officiels** : preset `E` archiver / `L` libellés (ou preset SimpleMail), entièrement configurables
+- **Snapshots locaux** : affichage instantané au chargement (localStorage, TTL 7 jours), puis refresh silencieux
+- **Préchargement** : les autres catégories se chargent en tâche de fond
+- **Pagination** : scroll infini + bouton « Charger plus » par catégorie
+- **Regroupement par jour** : Aujourd'hui / Hier / date
+- **Non-lus** : fond quasi blanc + gras
+- **Écran de chargement immersif** plein écran avec barre animée
+- **PWA + Android + Chrome** : installable comme app (manifest, service worker, APK, extension)
+
+### Interface classique — V1
 - Interface blanche immersive sans cartes, responsive du mobile aux grands écrans
-- Interface V2 à trois thèmes, avec retour vers l'interface classique depuis les réglages
-- Installation au choix : PWA, application Android native ou extension Chrome
-- Mails envoyés à soi-même affichés en post-its configurables
-- Newsletters : carrousel multicartes (grille adaptative 4→8 colonnes selon la place), dock animé, détail hero avec vraies images
-- Catégories et libellés Gmail visibles sur chaque mail, avec sélecteur de classement et recherche
-- Raccourcis clavier entièrement configurables
 - Page Paramètres plein écran (polices, thème, format date, newsletters, langues, comptes, à propos)
 - Thème light/dark/fond photo
 - Mode sélection avec actions groupées
