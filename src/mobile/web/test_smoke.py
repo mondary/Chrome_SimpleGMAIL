@@ -40,7 +40,9 @@ def main():
     for marker in ("memoPalette", "memoRows", "linkTarget", "categoryNav", "visualMode",
                    "Icônes seules", "Ultra Light · noir et blanc", "newsletterPreviewCount",
                    "senderWidth", "canvasWidth", "listContent", "Sujet + première ligne",
-                   "canvasLabels", "canvasLabelStats", "loadMode", "Bouton + défilement infini"):
+                   "canvasLabels", "canvasLabelStats", "loadMode", "Bouton + défilement infini",
+                   "searchScore", "enterSearchWorkspace", "search-reader", "libellé",
+                   "whoAvatar", "senderShort", "unavatar", "Photos puis initiales"):
         assert marker in HTML, f"option modulaire absente: {marker}"
     for uid in ("#ov-pal", "#ov-reply", "#ov-help", "#ov-read", "#ov-set", "#toast",
                 "cv-cols", "p-strip", "f-mount", "f-list", "p-list", "hud-live"):

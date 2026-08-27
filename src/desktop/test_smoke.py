@@ -33,8 +33,15 @@ class SmokeTests(unittest.TestCase):
         self.assertEqual(main._decode_imap_utf7("Projets/&AMk-t&AOk-"), "Projets/Été")
         self.assertEqual(main._decode_imap_utf7("R&D"), "R&D")
 
+    def test_imap_utf7_label_encoding(self):
+        label = "📭 Mail/🔖 Memo"
+        self.assertEqual(main._decode_imap_utf7(main._encode_imap_utf7(label)), label)
+
     def test_gmail_categories_use_native_search(self):
         self.assertEqual(main._gmail_category_query("primary"), 'X-GM-RAW "category:primary"')
+
+    def test_gmail_text_uses_native_search(self):
+        self.assertEqual(main._gmail_search_query('from:alice "budget"'), 'X-GM-RAW "from:alice \\"budget\\""')
 
     def test_inbox_snapshot_expires_within_refresh_interval(self):
         self.assertLessEqual(main._INBOX_SNAPSHOT_TTL, 60)

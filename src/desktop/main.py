@@ -176,6 +176,11 @@ def _gmail_category_query(category: str) -> str:
     return f'X-GM-RAW "category:{category}"'
 
 
+def _gmail_search_query(query: str) -> str:
+    safe = query.replace("\\", "\\\\").replace('"', '\\"')
+    return f'X-GM-RAW "{safe}"'
+
+
 def _decode_imap_utf7(value: str) -> str:
     def decode(match):
         encoded = match.group(1)
@@ -189,6 +194,25 @@ def _decode_imap_utf7(value: str) -> str:
             return match.group(0)
 
     return re.sub(r"&([A-Za-z0-9+,/]*)-", decode, value)
+
+
+def _encode_imap_utf7(value: str) -> str:
+    result, encoded = [], []
+
+    def flush():
+        if encoded:
+            token = base64.b64encode("".join(encoded).encode("utf-16-be")).decode().rstrip("=").replace("/", ",")
+            result.append(f"&{token}-")
+            encoded.clear()
+
+    for char in value:
+        if 0x20 <= ord(char) <= 0x7e:
+            flush()
+            result.append("&-" if char == "&" else char)
+        else:
+            encoded.append(char)
+    flush()
+    return "".join(result)
 
 
 def _folder_examine_total(mailbox, folder_name: str) -> int:
@@ -2048,6 +2072,7 @@ def list_messages(
     account: str = Query(...),
     folder: str = Query("INBOX"),
     q: str = Query(""),
+    label: str = Query(""),
     page: int = Query(1, ge=1),
     page_size: int = Query(100, ge=1, le=500),
     unseen: bool = Query(False),
@@ -2058,11 +2083,21 @@ def list_messages(
 ):
     if _is_demo() or _is_demo_account(account):
         msgs = _demo_messages(account, folder)
+        demo_labels = {
+            "primary": ["Clients"], "social": ["Réseaux"],
+            "promotions": ["À lire"], "updates": ["Suivi"],
+            "forums": ["Communautés"],
+        }
+        for message in msgs:
+            message["labels"] = demo_labels.get(message.get("category"), [])
         if unseen:
             msgs = [m for m in msgs if not m["seen"]]
         if q:
             ql = q.lower()
-            msgs = [m for m in msgs if ql in m["subject"].lower() or ql in m["snippet"].lower() or ql in m["from_name"].lower()]
+            msgs = [m for m in msgs if ql in m["subject"].lower() or ql in m["snippet"].lower()
+                    or ql in m["from_name"].lower() or any(ql in item.lower() for item in m["labels"])]
+        if label:
+            msgs = [m for m in msgs if label in m["labels"]]
         manual_domains = set(_get_newsletter_domains())
         if category:
             if category == "newsletter":
@@ -2071,19 +2106,12 @@ def list_messages(
                 msgs = [m for m in msgs if m.get("category") == "promotions" and not _is_newsletter_entry(m, manual_domains)]
             else:
                 msgs = [m for m in msgs if m.get("category", "primary") == category and not _is_newsletter_entry(m, manual_domains)]
-        demo_labels = {
-            "primary": ["Clients"], "social": ["Réseaux"],
-            "promotions": ["À lire"], "updates": ["Suivi"],
-            "forums": ["Communautés"],
-        }
-        for message in msgs:
-            message["labels"] = demo_labels.get(message.get("category"), [])
         total = len(msgs)
         start = (page - 1) * page_size
         return {"messages": msgs[start:start + page_size], "page": page, "page_size": page_size,
                 "total": total, "total_pages": max(1, (total + page_size - 1) // page_size)}
     cache_key = f"messages:{account}:{folder}:{category}:{page}:{page_size}:{int(fast)}"
-    if not q and not unseen and not no_cache:
+    if not q and not label and not unseen and not no_cache:
         cached = _response_cache_get(cache_key, ttl=7 * 86400 if snapshot else _INBOX_SNAPSHOT_TTL)
         if cached:
             return {**cached, "cache_state": "snapshot" if snapshot else "hit"}
@@ -2093,12 +2121,14 @@ def list_messages(
     acc = get_account(account)
     is_gmail = _is_gmail_imap(acc)
     use_gmail_cat = is_gmail and category in _GMAIL_CATEGORY_LABELS
+    use_gmail_label = is_gmail and bool(label)
+    use_gmail_search = is_gmail and bool(q) and not category and not label
     with open_mailbox(acc) as mailbox:
         mailbox.folder.set(folder)
         manual_domains = set(_get_newsletter_domains())
         all_messages = []
         offset = (page - 1) * page_size
-        direct_folder_page = not category and not q and not unseen
+        direct_folder_page = not category and not q and not label and not unseen
         folder_total = None
         if direct_folder_page:
             status = _status_or_none(mailbox, folder) or {}
@@ -2106,7 +2136,7 @@ def list_messages(
 
         def _do_fetch(extra_kwargs, limit_override=None, raw=""):
             kw = {}
-            if q: kw["text"] = q
+            if q and not use_gmail_search: kw["text"] = q
             if unseen: kw["seen"] = False
             kw.update(extra_kwargs)
             crit = AND(raw, **kw) if raw else (AND(**kw) if kw else AND(all=True))
@@ -2117,13 +2147,18 @@ def list_messages(
             limit = limit_override or (
                 (offset + page_size) if direct_folder_page
                 else (max(120, (offset + page_size) * 3) if fast else _FETCH_FILTER_CAP))
-            return mailbox.fetch(crit, limit=limit,
+            charset = "UTF-8" if raw or any(not str(value).isascii() for value in extra_kwargs.values()) else "US-ASCII"
+            return mailbox.fetch(crit, limit=limit, charset=charset,
                                   reverse=True, mark_seen=False, bulk=True, headers_only=True)
 
-        if use_gmail_cat:
+        if use_gmail_label:
+            fetched = list(_do_fetch({"gmail_label": _encode_imap_utf7(label)}))
+        elif use_gmail_cat:
             # Gmail categories are search operators, not ordinary X-GM-LABELS.
             # Query Gmail itself so PKMail exactly matches the Gmail inbox tabs.
             fetched = list(_do_fetch({}, offset + page_size, _gmail_category_query(category)))
+        elif use_gmail_search:
+            fetched = list(_do_fetch({}, raw=_gmail_search_query(q)))
         else:
             fetched = _do_fetch({})
 
@@ -2205,7 +2240,7 @@ def list_messages(
         result = {"messages": msgs, "page": page, "page_size": page_size, "total": total,
                   "total_pages": max(1, (total + page_size - 1) // page_size),
                   "cache_state": "miss"}
-    if not q and not unseen:
+    if not q and not label and not unseen:
         _response_cache_set(cache_key, result)
     return result
 

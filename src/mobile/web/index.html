@@ -111,6 +111,12 @@ body[data-sender-wrap="true"] .row .from,body[data-sender-wrap="true"] .cv-from{
 .fav{width:20px;height:20px;border-radius:4px;flex:none;object-fit:contain;background:#F3F3EE;padding:2px}
 .fav.big{width:34px;height:34px;border-radius:6px;padding:3px}
 .fav-off{display:none}
+.who-b{position:relative;width:22px;height:22px;border-radius:50%;background:var(--bub,#71757C);color:#fff;
+  display:inline-grid;place-items:center;font-size:9px;font-weight:700;letter-spacing:.02em;flex:none;
+  overflow:hidden;text-transform:uppercase;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.who-b.big{width:32px;height:32px;font-size:12px}
+.who-b img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+body[data-visual="ultra"] .who-b{box-shadow:none;filter:grayscale(1) contrast(1.1)}
 
 /* listes */
 #f-list-view,#p-list-view,#f-read-view,#p-read-view{position:absolute;inset:0 0 42px 0}
@@ -153,7 +159,7 @@ body[data-sender-wrap="true"] .row .from,body[data-sender-wrap="true"] .cv-from{
 /* post-its : papier carre PKbrain (banana), coin plie, grille de notes collees */
 .memo-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;padding:6px 14px 30px}
 .postit{position:relative;display:flex;flex-direction:column;text-align:left;aspect-ratio:1/1;
-  background:#FFF3B0;border-radius:2px;padding:16px 22px 14px 14px;
+  background:var(--memo);border-radius:2px;padding:16px 22px 14px 14px;
   box-shadow:0 1px 2px rgba(23,24,28,.15),5px 7px 12px rgba(23,24,28,.12);
   transform:rotate(-.6deg);transition:transform .15s ease,box-shadow .15s ease}
 .postit:nth-child(even){transform:rotate(.7deg)}
@@ -171,7 +177,7 @@ body[data-sender-wrap="true"] .row .from,body[data-sender-wrap="true"] .cv-from{
 .postit .psnip{margin-top:auto;padding-top:8px;font-size:10px;line-height:1.55;color:#6E621E;
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;border-top:1px solid rgba(90,67,0,.14)}
 .postit.sel{outline:2px solid var(--ink);outline-offset:1px}
-.row.memo{position:relative;background:#FFF3B0;border:0;box-shadow:2px 3px 0 rgba(23,24,28,.12)}
+.row.memo{position:relative;background:var(--memo);border:0;box-shadow:2px 3px 0 rgba(23,24,28,.12)}
 .row.memo::after{content:'';position:absolute;right:0;top:0;border-style:solid;border-width:0 13px 13px 0;
   border-color:transparent rgba(23,24,28,.15) transparent transparent}
 .row.memo .memo-ic{flex:none;font-size:12px;color:#8A7430}
@@ -379,7 +385,15 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
 .search-bar .g{color:var(--faint);font-size:14px}
 .search-input{flex:1;border:0;background:none;font:inherit;font-size:15px;outline:none}
 .search-input::placeholder{color:var(--faint)}
-.search-results{overflow-y:auto;padding:6px 0}
+.search-count{font-size:10px;color:var(--faint);white-space:nowrap}
+.search-workspace{display:flex;flex:1;min-height:0}
+.search-results{overflow-y:auto;padding:6px 0;flex:1;min-width:0}
+.search-reader{display:none;flex:1.25;min-width:0;overflow:auto;padding:32px max(24px,4vw);border-left:1px solid var(--hair)}
+.search-reader .rd-body-content{min-width:0;overflow:hidden}
+#ov-search.dedicated{padding:0;background:#fff}
+#ov-search.dedicated .search-panel{width:100%;height:100%;max-height:none;border:0;border-radius:0;box-shadow:none;animation:none}
+#ov-search.dedicated .search-results{max-width:520px;border-right:1px solid var(--hair)}
+#ov-search.dedicated .search-reader{display:block}
 .search-row{width:100%;display:flex;align-items:center;gap:10px;text-align:left;padding:8px 16px;font-size:12px}
 .search-row:hover,.search-row.sel{background:var(--hair2)}
 .search-row .from{width:130px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
@@ -397,6 +411,7 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
   .world-center{min-width:0}.world-name{font-size:18px}  .world-track{margin-top:11px}.cat-icon{padding:0 10px;font-size:10px;height:26px}.cat-icon i{font-size:10px}
   .stage{inset:136px 0 0}.memo-board{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .read-drawer{height:calc(100vh - 44px);border-radius:0}
+  #ov-search.dedicated .search-results{max-width:46%}.search-reader{padding:24px 16px}
   #rd-body{padding:46px 18px 24px}
   .p-card{width:180px}
   .set-fs-nav{width:56px}.set-fs-nav button span,.set-fs-nav button{font-size:0}.set-fs-nav button i{font-size:16px}.set-fs-content{padding:16px}.set-theme{grid-template-columns:92px 1fr}.set-theme .st{display:none}.theme-preview{height:58px}}
@@ -512,11 +527,12 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
     <div class="search-bar">
       <span class="g">&#xF002;</span>
       <input class="search-input" id="search-input" data-autofocus autocomplete="off" spellcheck="false"
-        placeholder="Rechercher dans Gmail…" aria-label="Rechercher">
+        placeholder="Mails, personnes, sujets ou libellés…" aria-label="Rechercher">
+      <span class="search-count" id="search-count"></span>
       <span style="font-size:10px;color:var(--faint)"><kbd>Échap</kbd></span>
     </div>
     <div class="search-filters" id="search-filters"></div>
-    <div class="search-results" id="search-results" role="listbox"></div>
+    <div class="search-workspace"><div class="search-results" id="search-results" role="listbox"></div><article class="search-reader" id="search-reader" aria-live="polite"></article></div>
   </div>
 </div>
 
@@ -602,7 +618,7 @@ const CATEGORY_CACHE=new Map(),PREVIEW_CACHE=new Map();
 const SHORTCUT_PRESETS={gmail:{archive:'e',delete:'#',labels:'l',search:'/',next:'j',previous:'k',reply:'r',refresh:'z',settings:',',help:'?'},simplemail:{archive:'a',delete:'#',labels:'v',search:'/',next:'j',previous:'k',reply:'r',refresh:'z',settings:',',help:'?'}};
 const SHORTCUT_LABELS={archive:'Archiver',delete:'Supprimer',labels:'Libellés',search:'Rechercher',next:'Message suivant',previous:'Message précédent',reply:'Répondre',refresh:'Actualiser',settings:'Réglages',help:'Aide'};
 const MEMO_COLORS=['#FFF4A8','#FFD9A8','#FFC8C8','#E7C9FF','#C9DEFF','#C8F0E0','#E2E6EA','#FFFBEA'];
-let PREFS={memoPostits:true,memoPalette:MEMO_COLORS.slice(0,6),newsletterImages:true,newsletterPreviewCount:6,linkTarget:'browser',categoryNav:'icons',visualMode:'standard',listWidth:1100,senderWidth:220,canvasWidth:340,canvasLabels:[],canvasAutoCount:4,loadMode:'both',density:'comfortable',senderMode:'email',senderWrap:true,listContent:'topic-preview',showFavicons:true,showLabels:true,showDates:true,shortcutPreset:'gmail',shortcuts:{...SHORTCUT_PRESETS.gmail}};
+let PREFS={memoPostits:true,memoPalette:MEMO_COLORS.slice(0,6),newsletterImages:true,newsletterPreviewCount:6,linkTarget:'browser',categoryNav:'icons',visualMode:'standard',listWidth:1100,senderWidth:220,canvasWidth:340,canvasLabels:[],canvasAutoCount:4,loadMode:'both',density:'comfortable',senderMode:'short',senderAvatars:'photo',senderWrap:true,listContent:'topic-preview',showFavicons:true,showLabels:true,showDates:true,shortcutPreset:'gmail',shortcuts:{...SHORTCUT_PRESETS.gmail}};
 try{PREFS={...PREFS,...JSON.parse(localStorage.getItem('simplemail_lab_prefs')||'{}')}}catch(e){}
 PREFS.shortcuts={...(SHORTCUT_PRESETS[PREFS.shortcutPreset]||SHORTCUT_PRESETS.gmail),...PREFS.shortcuts};
 if(!Array.isArray(PREFS.memoPalette)||!PREFS.memoPalette.length)PREFS.memoPalette=MEMO_COLORS.slice(0,6);
@@ -611,7 +627,7 @@ applyPrefs();
 const isMemo=m=>PREFS.memoPostits&&LIVE.email&&m.from.email.toLowerCase()===LIVE.email.toLowerCase();
 function savePrefs(){localStorage.setItem('simplemail_lab_prefs',JSON.stringify(PREFS));applyPrefs();render()}
 function memoColorFor(m){const key=String(m?.id||m?.subject||''),hash=[...key].reduce((n,c)=>(n*31+c.charCodeAt(0))>>>0,0);return PREFS.memoPalette[hash%PREFS.memoPalette.length]}
-function senderText(m){return PREFS.senderMode==='name'?m.from.name:PREFS.senderMode==='both'?`${m.from.name} · ${m.from.email}`:m.from.email}
+function senderText(m){return PREFS.senderMode==='name'?m.from.name:PREFS.senderMode==='both'?`${m.from.name} · ${m.from.email}`:PREFS.senderMode==='short'?senderShort(m):m.from.email}
 const DEFAULT_LABEL_COLORS={Travail:'#1A73E8',Factures:'#E74C3C',Perso:'#2E6B4E',Newsletters:'#FF8C1A',Notifications:'#28BCA3',Forums:'#9B6BE8'};
 let LABEL_COLORS={...DEFAULT_LABEL_COLORS};
 try{LABEL_COLORS={...LABEL_COLORS,...JSON.parse(localStorage.getItem('simplemail_lab_label_colors')||'{}')}}catch(e){}
@@ -641,9 +657,29 @@ function favImg(m,big){
   return`<img class="fav${big?' big':''}" src="${u}" alt="" loading="lazy"
     onload="this.classList.remove('fav-off')" onerror="this.remove()">`}
 function wireFavicons(){}  /* inline handlers suffisent */
+const BUBBLE_COLORS=['#C64A12','#2E6B4E','#1A73E8','#96662B','#9B6BE8','#E74C3C','#28BCA3','#D81B60','#5D4037','#546E7A','#00838F','#6D4C41'];
+const GENERIC_SENDER=/^(no.?reply|notifications?|newsletter|hello|hi|contact|info|support|team|admin|mail|news|donotreply|auto|service)/i;
+const senderHasName=m=>m.from.name&&m.from.name.trim()&&m.from.name.toLowerCase()!==m.from.email.toLowerCase();
+function senderInitials(m){
+  if(senderHasName(m)){const p=m.from.name.trim().split(/[\s.]+/).filter(Boolean);return(p[0][0]+(p[1]?p[1][0]:'')).toUpperCase()}
+  const local=m.from.email.split('@')[0]||'',domain=m.from.email.split('@')[1]||'';
+  return((GENERIC_SENDER.test(local)?domain.split('.')[0]:local)[0]||'?').toUpperCase()}
+function senderShort(m){
+  if(senderHasName(m)){const p=m.from.name.trim().split(/\s+/);return p.length>1?p[0]+' '+p[p.length-1][0]+'.':p[0]}
+  const local=m.from.email.split('@')[0]||'',domain=m.from.email.split('@')[1]||'';
+  if(GENERIC_SENDER.test(local)||!/^[a-z]/i.test(local))return domain;
+  return local.replace(/[._-]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}
+function bubbleColor(m){const key=m.from.email||m.from.name||'';let hash=0;for(const c of key)hash=(hash*31+c.charCodeAt(0))>>>0;return BUBBLE_COLORS[hash%BUBBLE_COLORS.length]}
+function whoAvatar(m,big){
+  if(PREFS.senderAvatars==='none')return favImg(m,big);
+  const cls=`who-b${big?' big':''}`,color=bubbleColor(m),initials=esc(senderInitials(m));
+  if(PREFS.senderAvatars==='photo'&&m.from.email){
+    const u=`https://unavatar.io/${encodeURIComponent(m.from.email)}?fallback=false`;
+    return`<span class="${cls}" style="--bub:${color}" aria-hidden="true">${initials}<img src="${u}" alt="" loading="lazy" onerror="this.remove()"></span>`}
+  return`<span class="${cls}" style="--bub:${color}" aria-hidden="true">${initials}</span>`}
 function newsletterThumb(m){
-  if(activeCategory!=='newsletter'||!PREFS.newsletterImages)return favImg(m);
-  return`<span class="nl-thumb" data-preview="${esc(m.id)}">${m.newsletterImage?`<img src="${esc(m.newsletterImage)}" alt="">`:favImg(m)}</span>`}
+  if(activeCategory!=='newsletter'||!PREFS.newsletterImages)return whoAvatar(m);
+  return`<span class="nl-thumb" data-preview="${esc(m.id)}">${m.newsletterImage?`<img src="${esc(m.newsletterImage)}" alt="">`:whoAvatar(m)}</span>`}
 
 async function hydrateNewsletterPreviews(){
   if(!PREFS.newsletterImages)return;
@@ -950,8 +986,8 @@ function renderFocus(){const st=S[1];
   <div style="font-size:10px;color:var(--faint)">${m.labels.map(l=>labelPill(l)).join(' ')}</div>
   <h1 class="f-subject">${esc(m.subject)}</h1>
   <div class="f-meta">
-    ${favImg(m,true)}
-    <span class="who">${esc(m.from.name)}</span>
+    ${whoAvatar(m,true)}
+    <span class="who">${esc(senderShort(m))}</span>
     <span>&lt;${esc(m.from.email)}&gt;</span>
     <span class="date">${esc(m.date)}${m.thread?` · fil de ${m.thread}`:''}</span>
   </div>
@@ -982,7 +1018,7 @@ function renderCanvas(){const st=S[2],cols=cvCols(),wrap=$('#cv-cols');
   wrap.innerHTML=cols.map((c,ci)=>{
     const rows=c.mails.map((m,ri)=>`
     <button class="cv-row${m.unread?' unread':''}${isMemo(m)?' memo':''}${ci===st.col&&ri===st.row?' sel':''}" data-col="${ci}" data-row="${ri}"${isMemo(m)?` style="--memo:${memoColorFor(m)}"`:''}>
-      <span class="cv-top">${favImg(m)}<span class="cv-from">${esc(senderText(m))}</span>
+      <span class="cv-top">${whoAvatar(m)}<span class="cv-from">${esc(senderText(m))}</span>
       ${m.unread?`<span class="cv-dot g">${I.dot}</span>`:''}
       <span class="cv-date">${esc(m.date)}</span></span>
       <span class="cv-sub">${esc(m.subject)}</span><span class="cv-snip">${esc(m.snippet||'')}</span>
@@ -1015,13 +1051,13 @@ function renderPaper(){const st=S[3];
   const m=mails[st.i],art=$('#p-art'),strip=$('#p-strip');
   if(!m){art.innerHTML=`<div class="zero"><span class="big g">${I.check}</span><h2>File terminée.</h2><p>Z recharge</p></div>`;strip.innerHTML='';return}
   m.unread=false;
-  art.innerHTML=`<div class="p-meta">${favImg(m)}<b>${String(st.i+1).padStart(2,'0')} / ${mails.length}</b> — ${esc(senderText(m))} · ${esc(m.date)}</div>
+  art.innerHTML=`<div class="p-meta">${whoAvatar(m,true)}<b>${String(st.i+1).padStart(2,'0')} / ${mails.length}</b> — ${esc(senderText(m))} · ${esc(m.date)}</div>
   <h2>${esc(m.subject)}</h2><div class="p-body"></div>${attachments(m)}`;
   mountBody(art.querySelector('.p-body'),m);
   strip.innerHTML=mails.map((mm,i)=>`
     <button class="p-card${mm.unread?' unread':''}${isMemo(mm)?' memo':''}${i===st.i?' sel':''}" data-i="${i}" aria-label="${esc(senderText(mm))} — ${esc(mm.subject)}">
       <span class="p-no">${String(i+1).padStart(2,'0')}</span>
-      <span class="c1">${favImg(mm)}<span class="nm">${esc(senderText(mm))}</span>
+      <span class="c1">${whoAvatar(mm)}<span class="nm">${esc(senderText(mm))}</span>
       ${mm.unread?`<span class="g" style="color:var(--accent)">${I.dot}</span>`:''}</span>
       <span class="c2">${esc(mm.subject)}</span>
     </button>`).join('');
@@ -1084,48 +1120,53 @@ function openReply(){const m=currentMail();if(!m)return;
 function sendReply(){closeOv();toast(I.plane+' Réponse envoyée (démo)')}
 
 /* ---------- recherche globale ---------- */
-let searchState={q:'',results:[],sel:0,timer:null,labelFilter:null};
-function openSearch(){openOv('#ov-search');const i=$('#search-input');i.value='';searchState={q:'',results:[],sel:0,timer:null,labelFilter:null};renderSearchFilters();drawSearch()}
+let searchState={q:'',results:[],sel:0,timer:null,labelFilter:null,dedicated:false,pending:false};
+const searchNorm=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+function searchScore(m,q){const tokens=searchNorm(q).split(/\s+/).filter(Boolean),fields={subject:searchNorm(m.subject),sender:searchNorm(`${m.from.name} ${m.from.email}`),snippet:searchNorm(m.snippet),labels:searchNorm((m.labels||[]).join(' '))};let score=0;
+  for(const token of tokens){let hit=0;if(fields.labels.split(/\s+/).includes(token))hit=80;else if(fields.labels.includes(token))hit=55;if(fields.subject.startsWith(token))hit=Math.max(hit,50);else if(fields.subject.includes(token))hit=Math.max(hit,38);if(fields.sender.includes(token))hit=Math.max(hit,28);if(fields.snippet.includes(token))hit=Math.max(hit,12);if(!hit)return 0;score+=hit}return score}
+function filteredSearchResults(){return searchState.labelFilter?searchState.results.filter(m=>m.labels&&m.labels.includes(searchState.labelFilter)):searchState.results}
+function matchingSearchLabels(q){const needle=searchNorm(q);if(!needle)return[];return labelPool().filter(label=>searchNorm(label).includes(needle)||needle.includes(searchNorm(shortLabel(label)))).sort((a,b)=>Number(searchNorm(shortLabel(b))===needle)-Number(searchNorm(shortLabel(a))===needle)||a.localeCompare(b))}
+function openSearch(){openOv('#ov-search');$('#ov-search').classList.remove('dedicated');$('#search-reader').innerHTML='';const i=$('#search-input');i.value='';searchState={q:'',results:[],sel:0,timer:null,labelFilter:null,dedicated:false,pending:false};renderSearchFilters();drawSearch()}
 function renderSearchFilters(){
   const box=$('#search-filters');if(!box)return;
-  const labels=labelPool();
+  const labels=[...new Set([...matchingSearchLabels(searchState.q),...searchState.results.flatMap(m=>m.labels||[])])].slice(0,14);
   box.innerHTML=`<button class="search-filter${!searchState.labelFilter?' on':''}" data-sfilter="">Tous</button>`+
     labels.map(l=>`<button class="search-filter${searchState.labelFilter===l?' on':''}" data-sfilter="${esc(l)}" title="${esc(l)}">${esc(shortLabel(l))}</button>`).join('')}
 function drawSearch(){
-  const box=$('#search-results'),{results,sel,labelFilter}=searchState;
-  const filtered=labelFilter?results.filter(m=>m.labels&&m.labels.includes(labelFilter)):results;
-  if(!searchState.q){box.innerHTML=`<div class="search-empty">Rechercher expéditeur, objet ou contenu — <kbd>Entrée</kbd> ouvre le premier résultat</div>`;return}
-  if(!filtered.length){box.innerHTML=`<div class="search-empty">${labelFilter?'Aucun résultat pour « '+esc(labelFilter)+' »':'Aucun résultat'}</div>`;return}
+  const box=$('#search-results'),filtered=filteredSearchResults(),sel=Math.min(searchState.sel,Math.max(0,filtered.length-1));searchState.sel=sel;
+  $('#search-count').textContent=searchState.pending?'Recherche…':searchState.q?`${filtered.length} résultat${filtered.length>1?'s':''}`:'';
+  if(!searchState.q){box.innerHTML=`<div class="search-empty">Rechercher expéditeur, sujet, contenu ou libellé — <kbd>Entrée</kbd> ouvre tous les résultats</div>`;return}
+  if(searchState.pending&&!filtered.length){box.innerHTML='<div class="search-empty">Recherche dans Gmail…</div>';return}
+  if(!filtered.length){box.innerHTML=`<div class="search-empty">${searchState.labelFilter?'Aucun résultat pour « '+esc(searchState.labelFilter)+' »':'Aucun résultat'}</div>`;return}
   box.innerHTML=filtered.map((m,i)=>`<button class="search-row${i===sel?' sel':''}" data-sr="${i}" role="option" aria-selected="${i===sel}">
-    ${favImg(m)}
+    ${whoAvatar(m)}
     <span class="from">${esc(senderText(m))}</span>
     <span class="subj">${esc(m.subject)}</span>
     <span class="snip">${esc(m.snippet||'')}</span>
     ${m.labels?.length?`<span class="tags">${m.labels.slice(0,2).map(l=>`<i title="${esc(l)}" style="background:${labelColor(l)}18;color:${labelColor(l)}">${esc(shortLabel(l))}</i>`).join('')}</span>`:''}
     <span class="date">${esc(m.date)}</span>
   </button>`).join('')}
-function runSearch(q){
-  searchState.q=q;searchState.sel=0;
-  if(q.trim().length<2){searchState.results=[];drawSearch();return}
+async function runSearch(q){
+  searchState.q=q;searchState.sel=0;searchState.labelFilter=null;
+  if(q.trim().length<2){searchState.results=[];searchState.pending=false;renderSearchFilters();drawSearch();return}
+  searchState.pending=true;drawSearch();
   if(!LIVE.on){
-    searchState.results=DEMO_MAIL.filter(m=>(m.subject+m.from.name+(m.body||[]).join(' ')).toLowerCase().includes(q.toLowerCase())).map(m=>({...m,html:null,text:null,detail:false}));
-    drawSearch();return}
-  const url=`/api/messages?account=${encodeURIComponent(LIVE.account)}&folder=${LIVE.folder}&q=${encodeURIComponent(q)}&page_size=15`;
-  j(url).then(res=>{
-    if(searchState.q!==q)return;
-    searchState.results=normalizeMessages(res.messages||[]);
-    drawSearch()})
-  .catch(()=>{
-    if(searchState.q!==q)return;
-    searchState.results=DEMO_MAIL.filter(m=>(m.subject+m.from.name+(m.body||[]).join(' ')).toLowerCase().includes(q.toLowerCase())).map(m=>({...m,html:null,text:null,detail:false}));
-    drawSearch()})}
+    searchState.results=DEMO_MAIL.map(m=>({...m,html:null,text:null,detail:false})).filter(m=>searchScore(m,q)).sort((a,b)=>searchScore(b,q)-searchScore(a,q));searchState.pending=false;renderSearchFilters();drawSearch();return}
+  const base=`/api/messages?account=${encodeURIComponent(LIVE.account)}&folder=${LIVE.folder}&page_size=100&fast=true`,labels=matchingSearchLabels(q).slice(0,1);
+  const requests=[j(`${base}&q=${encodeURIComponent(q)}`),...labels.map(label=>j(`${base}&label=${encodeURIComponent(label)}`))];
+  const settled=await Promise.allSettled(requests),responses=settled.filter(x=>x.status==='fulfilled').map(x=>x.value);
+  if(searchState.q!==q)return;
+  const merged=new Map(canvasMailPool().all.map(m=>[m.id,m]));responses.flatMap(res=>normalizeMessages(res.messages||[])).forEach(m=>merged.set(m.id,m));
+  searchState.results=[...merged.values()].map(m=>({m,score:searchScore(m,q)})).filter(x=>x.score||responses.some(res=>(res.messages||[]).some(raw=>String(raw.uid)===x.m.id))).sort((a,b)=>b.score-a.score).map(x=>x.m);
+  searchState.pending=false;renderSearchFilters();drawSearch();if(searchState.dedicated&&searchState.results.length)renderSearchReader(0)}
+function enterSearchWorkspace(index=searchState.sel){if(!filteredSearchResults().length)return;searchState.dedicated=true;$('#ov-search').classList.add('dedicated');renderSearchReader(index)}
+function renderSearchReader(i){const filtered=filteredSearchResults(),m=filtered[i];if(!m)return;searchState.sel=i;drawSearch();const reader=$('#search-reader');reader.innerHTML=`<div class="rd-meta">${whoAvatar(m,true)} ${esc(senderShort(m))} · ${esc(m.from.email)} · ${esc(m.date)}</div><div class="rd-tags">${m.labels.map(l=>labelPill(l)).join(' ')}</div><h2 class="rd-sub">${esc(m.subject)}</h2><div class="rd-body-content"></div>`;mountBody(reader.querySelector('.rd-body-content'),m);m.unread=false;
+  if(!m.detail)loadDetail(m).then(()=>{if(searchState.dedicated&&filteredSearchResults()[searchState.sel]===m)mountBody($('#search-reader .rd-body-content'),m)})}
 function openSearchResult(i){
-  const filtered=searchState.labelFilter?searchState.results.filter(m=>m.labels&&m.labels.includes(searchState.labelFilter)):searchState.results;
-  const m=filtered[i];if(!m)return;
-  closeOv();loadDetail(m).then(()=>openRead(m))}
+  if(!searchState.dedicated)enterSearchWorkspace(i);else renderSearchReader(i)}
 
 function openRead(mail){const m=mail||currentMail();if(!m)return;
-  $('#rd-body').innerHTML=`<div class="rd-meta">${favImg(m)} ${esc(m.from.name)} · ${esc(m.date)}</div>
+  $('#rd-body').innerHTML=`<div class="rd-meta">${whoAvatar(m,true)} ${esc(senderShort(m))} · ${esc(m.date)}</div>
   <div class="rd-tags">${m.labels.map(l=>labelPill(l)).join(' ')}</div>
   <h2 class="rd-sub" id="rd-sub">${esc(m.subject)}</h2><div class="rd-body-content"></div>`;
   mountBody($('#rd-body .rd-body-content'),m);
@@ -1171,7 +1212,8 @@ function renderSettings(){
       <div class="set-row"><span id="canvas-mode-status">${PREFS.canvasLabels.length?'Sélection personnalisée':'Automatique · plus de non-lus'}</span><button class="f-btn" id="set-canvas-auto"${PREFS.canvasLabels.length?'':' disabled'}>Réinitialiser en auto</button></div>
       <div class="canvas-labels">${canvasLabelStats().map(x=>{const short=shortLabel(x.name);return`<label class="set-row"><span title="${esc(x.name)}"><b>${esc(short)}</b>${short!==x.name?`<br><small>${esc(x.name)}</small>`:''}</span><span class="v">${x.unread} non lus · ${x.total}</span><input type="checkbox" data-canvas-label="${esc(x.name)}"${PREFS.canvasLabels.includes(x.name)?' checked':''}></label>`}).join('')||'<div class="set-row"><span>Aucun libellé disponible</span></div>'}</div>
       <h4 style="margin-top:24px">Contenu des lignes</h4>
-      <label class="set-row"><span>Expéditeur affiché</span><select id="set-sender-mode"><option value="email"${PREFS.senderMode==='email'?' selected':''}>Adresse e-mail</option><option value="name"${PREFS.senderMode==='name'?' selected':''}>Nom</option><option value="both"${PREFS.senderMode==='both'?' selected':''}>Nom + adresse</option></select></label>
+      <label class="set-row"><span>Expéditeur affiché</span><select id="set-sender-mode"><option value="email"${PREFS.senderMode==='email'?' selected':''}>Adresse e-mail</option><option value="short"${PREFS.senderMode==='short'?' selected':''}>Nom court</option><option value="name"${PREFS.senderMode==='name'?' selected':''}>Nom</option><option value="both"${PREFS.senderMode==='both'?' selected':''}>Nom + adresse</option></select></label>
+      <label class="set-row"><span>Avatars expéditeurs</span><select id="set-sender-avatars"><option value="photo"${PREFS.senderAvatars==='photo'?' selected':''}>Photos puis initiales</option><option value="initials"${PREFS.senderAvatars==='initials'?' selected':''}>Bulles initiales</option><option value="none"${PREFS.senderAvatars==='none'?' selected':''}>Favicons domaine</option></select></label>
       <label class="set-row"><span>Ne pas couper les adresses</span><input id="set-sender-wrap" type="checkbox"${PREFS.senderWrap?' checked':''}></label>
       <label class="set-row"><span>Résumé</span><select id="set-list-content"><option value="topic"${PREFS.listContent==='topic'?' selected':''}>Sujet uniquement</option><option value="topic-preview"${PREFS.listContent==='topic-preview'?' selected':''}>Sujet + première ligne</option><option value="preview2"${PREFS.listContent==='preview2'?' selected':''}>Sujet + deux lignes</option></select></label>
       <label class="set-row"><span>Favicons expéditeurs</span><input id="set-favicons" type="checkbox"${PREFS.showFavicons?' checked':''}></label>
@@ -1205,7 +1247,7 @@ function renderSettings(){
     c.innerHTML=`<h4>Application</h4><button class="set-theme" data-interface="classic"><span class="theme-preview focus" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span><span class="nm">Interface classique</span><div class="ds">Retrouver l'interface V1 complète et ses réglages.</div></span></button>
       <button class="set-theme" data-install><img class="install-preview" src="icon-192.png" alt="Icône PKMail"><span><span class="nm">Installer PKMail</span><div class="ds">Ajouter la PWA à l'écran d'accueil.</div></span></button>
       <div class="set-row"><span>Application</span><span class="v">PKMail Lab V2</span></div>
-      <div class="set-row"><span>Version</span><span class="v">2026.08.06</span></div>
+      <div class="set-row"><span>Version</span><span class="v">2026.08.07</span></div>
       <div class="set-row"><span>Source</span><span class="v" id="set-src">…</span></div>
       <div class="set-row"><span>Police</span><span class="v">JetBrains Mono Nerd Font</span></div>`}
   /* wire new controls */
@@ -1215,7 +1257,7 @@ function renderSettings(){
   const catNav=$('#set-category-nav');if(catNav)catNav.addEventListener('change',e=>{PREFS.categoryNav=e.target.value;savePrefs()});
   const visual=$('#set-visual');if(visual)visual.addEventListener('change',e=>{PREFS.visualMode=e.target.value;savePrefs()});
   const selects={
-    '#set-density':'density','#set-load-mode':'loadMode','#set-sender-mode':'senderMode','#set-list-content':'listContent'
+    '#set-density':'density','#set-load-mode':'loadMode','#set-sender-mode':'senderMode','#set-sender-avatars':'senderAvatars','#set-list-content':'listContent'
   };Object.entries(selects).forEach(([selector,key])=>{const el=$(selector);if(el)el.addEventListener('change',e=>{PREFS[key]=e.target.value;savePrefs()})});
   const ranges={'#set-list-width':'listWidth','#set-sender-width':'senderWidth','#set-canvas-width':'canvasWidth'};Object.entries(ranges).forEach(([selector,key])=>{const el=$(selector);if(el)el.addEventListener('input',e=>{PREFS[key]=+e.target.value;const value=$(`[data-value-for="${e.target.id}"]`);if(value)value.textContent=e.target.value+'px';savePrefs()})});
   const toggles={'#set-sender-wrap':'senderWrap','#set-favicons':'showFavicons','#set-show-labels':'showLabels','#set-show-dates':'showDates'};Object.entries(toggles).forEach(([selector,key])=>{const el=$(selector);if(el)el.addEventListener('change',e=>{PREFS[key]=e.target.checked;savePrefs()})});
@@ -1344,10 +1386,10 @@ document.addEventListener('keydown',e=>{
       paletteKey(e);return}
     if(overlay==='#ov-search'){
       if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();
-        const n=searchState.results.length;if(!n)return;
+        const n=filteredSearchResults().length;if(!n)return;
         searchState.sel=(searchState.sel+(e.key==='ArrowDown'?1:-1)+n)%n;drawSearch();
-        document.querySelector('.search-row.sel')?.scrollIntoView({block:'nearest'})}
-      else if(e.key==='Enter'){e.preventDefault();openSearchResult(searchState.sel)}
+        document.querySelector('.search-row.sel')?.scrollIntoView({block:'nearest'});if(searchState.dedicated)renderSearchReader(searchState.sel)}
+      else if(e.key==='Enter'){e.preventDefault();searchState.dedicated?renderSearchReader(searchState.sel):enterSearchWorkspace(searchState.sel)}
       return}
     if(overlay==='#ov-read'){
       if(shortcut('delete',e.key)){deleteActive().then(ok=>ok&&closeOv());return}
@@ -1380,7 +1422,7 @@ document.addEventListener('click',e=>{
   if(e.target.closest('[data-open-settings]')){openSettings();return}
   if(e.target.closest('[data-reload]')){resetTheme();return}
   const sfilter=e.target.closest('[data-sfilter]');
-  if(sfilter){searchState.labelFilter=sfilter.dataset.sfilter||null;searchState.sel=0;renderSearchFilters();drawSearch();return}
+  if(sfilter){searchState.labelFilter=sfilter.dataset.sfilter||null;searchState.sel=0;renderSearchFilters();drawSearch();if(searchState.dedicated&&filteredSearchResults().length)renderSearchReader(0);return}
   const cycle=e.target.closest('[data-cycle]');
   if(cycle){cycleCategory(+cycle.dataset.cycle);return}
   const th=e.target.closest('.set-theme');

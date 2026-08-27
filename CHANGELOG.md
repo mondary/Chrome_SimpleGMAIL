@@ -4,6 +4,17 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+### [2026.08.07] - 2026-08-27
+
+#### Added
+- Recherche intelligente dans les expéditeurs, sujets, contenus et libellés Gmail.
+- Vue de recherche dédiée conservant tous les résultats pendant la lecture des messages.
+- Recherche Gmail native et filtres de libellés classés par pertinence.
++- Bulles avatars expéditeurs : photo si disponible, initiales colorées sinon, noms courts intelligents.
+
+#### Fixed
+- Couleurs multicolores appliquées par défaut aux mémos à la place du jaune fixe.
+
 ### [2026.08.06] - 2026-08-27
 
 #### Fixed

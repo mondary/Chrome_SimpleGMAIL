@@ -1,6 +1,6 @@
 {
   "name": "pkmail-mobile",
-  "version": "2026.08.06",
+  "version": "2026.08.07",
   "private": true,
   "description": "Wrapper natif Capacitor pour SimpleMail (Android .apk + iOS .ipa)",
   "scripts": {
