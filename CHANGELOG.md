@@ -4,13 +4,21 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+### Unreleased
+
+#### Changed
+- Nouveau thème Atelier avec rail de navigation desktop et barre de catégories mobile.
+- Suppression de Three.js, de la boucle WebGL permanente et des filtres plein écran.
+- Navigation clavier optimisée sans reconstruction de toute la liste à chaque déplacement.
+- Lignes mobiles réorganisées sur deux niveaux pour conserver expéditeur, sujet et date lisibles.
+
 ### [2026.08.07] - 2026-08-27
 
 #### Added
 - Recherche intelligente dans les expéditeurs, sujets, contenus et libellés Gmail.
 - Vue de recherche dédiée conservant tous les résultats pendant la lecture des messages.
 - Recherche Gmail native et filtres de libellés classés par pertinence.
-+- Bulles avatars expéditeurs : photo si disponible, initiales colorées sinon, noms courts intelligents.
+- Bulles avatars expéditeurs : photo si disponible, initiales colorées sinon, noms courts intelligents.
 
 #### Fixed
 - Couleurs multicolores appliquées par défaut aux mémos à la place du jaune fixe.

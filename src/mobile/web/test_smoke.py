@@ -35,8 +35,10 @@ def main():
     assert "JetBrainsMonoNerdFont-Regular.ttf" in HTML, "nerd font locale absente"
     assert "ov-set" in HTML, "réglages absents"
     for marker in ("manifest.json", "serviceWorker", "CATEGORIES", "memoPostits", "shortcutPreset",
-                   "three.min.js", "world-canvas", "cycleCategory"):
+                    "app-rail", "rail-actions", "cycleCategory"):
         assert marker in HTML, f"fonction V2 absente: {marker}"
+    assert "requestAnimationFrame" not in HTML, "boucle de rendu permanente présente"
+    assert '<script src="three.min.js">' not in HTML, "Three.js encore chargé"
     for marker in ("memoPalette", "memoRows", "linkTarget", "categoryNav", "visualMode",
                    "Icônes seules", "Ultra Light · noir et blanc", "newsletterPreviewCount",
                    "senderWidth", "canvasWidth", "listContent", "Sujet + première ligne",

@@ -56,7 +56,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 kbd{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;border:1px solid var(--hair);border-bottom-width:2px;border-radius:3px;
   padding:1px 5px;background:#FBFBF9;color:var(--muted);white-space:nowrap}
 
-#world-canvas{position:fixed;inset:44px 0 0;width:100%;height:calc(100% - 44px);pointer-events:none;z-index:0;opacity:.72}
+#world-canvas{display:none}
 .world-nav{position:fixed;top:44px;left:0;right:0;height:104px;display:grid;grid-template-columns:minmax(150px,1fr) auto minmax(150px,1fr);
   align-items:center;padding:0 28px;z-index:39;border-bottom:1px solid color-mix(in srgb,var(--world) 16%,var(--hair));
   background:linear-gradient(180deg,color-mix(in srgb,var(--world) 7%,white),rgba(255,255,255,.9) 76%,rgba(255,255,255,.72));
@@ -405,11 +405,29 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
 #toast{position:fixed;left:50%;bottom:60px;transform:translate(-50%,10px);background:var(--ink);color:#fff;
   font-size:11px;padding:10px 14px;opacity:0;pointer-events:none;transition:all .18s;z-index:80}
 #toast.show{opacity:1;transform:translate(-50%,0)}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}#world-canvas{display:none}}
+/* Atelier Mail: a quiet navigation rail, one bright work surface, no expensive glass or filters. */
+.app-rail{position:fixed;inset:0 auto 0 0;width:236px;display:flex;flex-direction:column;background:#17242b;color:#edf2ef;z-index:45}
+.rail-brand{height:72px;display:flex;align-items:center;gap:11px;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.1)}
+.rail-brand img{width:30px;height:30px;border-radius:8px}.rail-brand b{font-size:13px;letter-spacing:.12em}.rail-brand small{display:block;margin-top:2px;color:#9eaaa5;font-size:9px;letter-spacing:.08em}
+.workspace{position:fixed;inset:0 0 0 236px;background:#f5f7f5}
+.hud{position:absolute;height:72px;padding:0 28px;gap:18px;border-bottom:1px solid #dfe4e1;background:#fff;z-index:40}
+.hud-mark{display:none}.hud-title{font:600 15px/1.2 var(--font-ui);letter-spacing:-.02em}.hud-title b{color:#d85a43}.hud-live{border-color:#dfe4e1;background:#f5f7f5}.hud-right{gap:20px}.hud-refresh{height:34px;padding:0 12px;border-color:#dfe4e1;border-radius:7px;background:#fff}
+.world-nav{position:relative;inset:auto;height:auto;display:flex;flex:1;align-items:stretch;padding:18px 12px;border:0;background:none;z-index:auto}
+.world-center{width:100%;min-width:0;text-align:left}.world-kicker{padding:0 8px;margin:0 0 10px;color:#788780}.world-name{display:none}.world-track{display:flex;flex-direction:column;justify-content:flex-start;gap:3px;margin:0}
+.cat-icon,body[data-category-nav="icons"] .cat-icon{width:100%;height:40px;padding:0 10px;border:0;border-radius:7px;background:transparent;color:#aeb9b4;justify-content:flex-start;font-size:11px;transition:background .14s,color .14s,transform .14s}
+body[data-category-nav="icons"] .cat-icon{font-size:11px}.cat-icon i,body[data-category-nav="icons"] .cat-icon i{width:20px;font-size:13px;text-align:center}.cat-icon:hover{background:rgba(255,255,255,.07);color:#fff;transform:translateX(2px)}
+.cat-icon.on{background:#edf2ef;color:#17242b;box-shadow:none}.cat-icon.on i{color:var(--cat)}.cat-count{margin-left:auto;color:inherit;font-size:9px;opacity:.65;font-variant-numeric:tabular-nums}
+.rail-actions{padding:12px;border-top:1px solid rgba(255,255,255,.1);display:grid;gap:4px}.rail-action{height:38px;padding:0 10px;border-radius:7px;color:#aeb9b4;display:flex;align-items:center;gap:10px;font-size:11px;text-align:left}.rail-action:hover{background:rgba(255,255,255,.07);color:#fff}.rail-action .g{width:20px;text-align:center}
+.stage{inset:72px 0 0;background:#f5f7f5;transition:opacity .14s,transform .18s cubic-bezier(.2,.8,.2,1)}
+.stage.world-exit-left,.stage.world-exit-right{opacity:0;filter:none}.stage.world-exit-left{transform:translateX(-18px)}.stage.world-exit-right{transform:translateX(18px)}
+@keyframes world-enter{from{opacity:0;transform:translateX(var(--world-enter,18px))}to{opacity:1;transform:none}}
+.lst{width:min(var(--list-width),calc(100vw - 284px));padding-top:32px}.lst-head{padding-bottom:14px}.row{background:#fff}.row:first-of-type{border-radius:8px 8px 0 0}.row:hover{background:#f0f3f1}.row,.cv-row,.postit{content-visibility:auto}.row{contain-intrinsic-size:auto 42px}.cv-row{contain-intrinsic-size:auto 58px}.postit{contain-intrinsic-size:auto 190px}
+.cmd{background:#fff}.panel,.search-panel{box-shadow:0 20px 55px rgba(23,36,43,.16)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 @media (max-width:760px){.row .from{width:min(var(--sender-width),32vw)}.row .subj{max-width:36%}.hud-right{display:none}
-  .world-nav{height:92px;grid-template-columns:52px 1fr 52px;padding:0 10px}.world-arrow small{display:none}.world-arrow .arr{width:36px;height:36px}
-  .world-center{min-width:0}.world-name{font-size:18px}  .world-track{margin-top:11px}.cat-icon{padding:0 10px;font-size:10px;height:26px}.cat-icon i{font-size:10px}
-  .stage{inset:136px 0 0}.memo-board{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .app-rail{inset:72px 0 auto;width:auto;height:58px}.rail-brand,.rail-actions,.world-kicker{display:none}.workspace{inset:0}.hud{height:72px;padding:0 16px}.hud-mark{display:inline-flex}.hud-title{font-size:12px}.hud-refresh{margin-left:auto}.world-nav{padding:8px 10px;overflow-x:auto}.world-center{width:max-content}.world-track{flex-direction:row;gap:4px}.cat-icon,body[data-category-nav="icons"] .cat-icon{width:38px;height:38px;padding:0;justify-content:center;font-size:0}.cat-icon i,body[data-category-nav="icons"] .cat-icon i{width:auto;font-size:13px}.cat-count{display:none}
+  .hud-mark{font-size:0}.hud-mark img{margin-right:0!important}.hud-live,.hud-refresh #refresh-label,.hud-refresh kbd{display:none}.hud-refresh{width:34px;padding:0;justify-content:center}
+  .stage{inset:130px 0 0}.lst{width:94vw;padding-top:18px}.row{display:grid;grid-template-columns:24px minmax(0,1fr) auto;grid-template-rows:auto auto;gap:3px 9px;min-height:58px;padding:8px 10px}.row .fav,.row .who-b,.row .nl-thumb{grid-column:1;grid-row:1/3;align-self:center}.row .nl-thumb{width:24px;height:24px}.row .from{grid-column:2;grid-row:1;width:auto;max-width:none;min-width:0}.row .date{grid-column:3;grid-row:1;min-width:0}.row .subj{grid-column:2/4;grid-row:2;width:100%;max-width:none;min-width:0}.row .snip,.row .tags,.row .att-i{display:none}.memo-board{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .read-drawer{height:calc(100vh - 44px);border-radius:0}
   #ov-search.dedicated .search-results{max-width:46%}.search-reader{padding:24px 16px}
   #rd-body{padding:46px 18px 24px}
@@ -418,9 +436,15 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
 </style>
 </head>
 <body data-theme="1">
-
-<canvas id="world-canvas" aria-hidden="true"></canvas>
-
+<aside class="app-rail">
+  <div class="rail-brand"><img src="icon-192.png" alt=""><span><b>PKMAIL</b><small>ATELIER COURRIER</small></span></div>
+  <nav class="world-nav" id="categories" aria-label="Changer de catégorie Gmail"></nav>
+  <div class="rail-actions">
+    <button class="rail-action" data-open-search><span class="g">&#xF002;</span>Rechercher <kbd data-key="search">/</kbd></button>
+    <button class="rail-action" data-open-settings><span class="g">&#xF013;</span>Réglages <kbd data-key="settings">,</kbd></button>
+  </div>
+</aside>
+<div class="workspace">
 <header class="hud">
   <span class="hud-mark"><img src="icon-192.png" alt="" style="height:20px;width:20px;border-radius:4px;vertical-align:middle;margin-right:6px">PKMAIL</span>
   <span class="hud-title" id="hud-title">THEME <b>01 / FOCUS OS</b></span>
@@ -429,12 +453,8 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
   <div class="hud-right">
     <span><span class="n" id="hud-inbox">–</span> messages</span>
     <span><span class="g">&#xF187;</span> <span class="n" id="hud-arch">0</span></span>
-    <button class="hud-key" data-open-search aria-label="Rechercher"><span class="g">&#xF002;</span> <kbd data-key="search">/</kbd></button>
-    <button class="hud-key" data-open-settings aria-label="Réglages">réglages <kbd data-key="settings">,</kbd></button>
   </div>
 </header>
-
-<nav class="world-nav" id="categories" aria-label="Changer de catégorie Gmail"></nav>
 
 <main class="stage">
 
@@ -470,6 +490,7 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
   </section>
 
 </main>
+</div>
 
 <div class="ov" id="ov-set" hidden>
   <div class="panel" role="dialog" aria-modal="true" aria-labelledby="set-title">
@@ -541,7 +562,6 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
   <div class="load-mark"><img src="icon-512.png" alt="" style="width:64px;height:64px;border-radius:14px;margin-bottom:16px;box-shadow:0 4px 20px rgba(0,0,0,.12)"><b>PKMAIL</b><span id="load-label">Connexion à Gmail</span><div class="load-line"></div></div>
 </div>
 
-<script src="three.min.js"></script>
 <script>
 const I={check:'\uF00C',inbox:'\uF01C',tag:'\uF02B',folder:'\uF07B',reply:'\uF112',
   archive:'\uF187',plane:'\uF1D8',dot:'\uF111',envelope:'\uF0E0',clip:'\uF0C6'};
@@ -559,32 +579,9 @@ const CATEGORIES=[
    ['newsletter','Newsletters','\uF1EA','#FF8C1A'],
   ['memos','Mémos','\uF249','#8A7430']];
 
-/* Atmosphère Three.js : profondeur et transitions seulement, jamais le contenu. */
-const WORLD={renderer:null,scene:null,camera:null,points:null,rings:null,color:null,target:null,kick:0};
-function initWorldScene(){
-  if(RM||!window.THREE)return;
-  const canvas=$('#world-canvas'),renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:false,powerPreference:'high-performance'});
-  const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(42,1,.1,30);camera.position.z=6;
-  const geometry=new THREE.BufferGeometry(),positions=[];
-  for(let i=0;i<150;i++)positions.push((Math.random()-.5)*12,(Math.random()-.5)*7,(Math.random()-.5)*5);
-  geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
-  const color=new THREE.Color(CATEGORIES[0][3]),material=new THREE.PointsMaterial({color,size:.035,transparent:true,opacity:.23,sizeAttenuation:true});
-  const points=new THREE.Points(geometry,material);scene.add(points);
-  const rings=new THREE.Group();
-  for(let i=0;i<3;i++){
-    const ring=new THREE.Mesh(new THREE.RingGeometry(1.35+i*.72,1.37+i*.72,96),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.035,side:THREE.DoubleSide}));
-    ring.position.set(4.2-i*.35,-.3+i*.24,-1.5-i*.5);ring.rotation.x=.2+i*.12;rings.add(ring)}
-  scene.add(rings);Object.assign(WORLD,{renderer,scene,camera,points,rings,color,target:color.clone()});
-  const resize=()=>{const w=innerWidth,h=Math.max(1,innerHeight-44);renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()};
-  addEventListener('resize',resize,{passive:true});resize();
-  let last=0;const tick=time=>{requestAnimationFrame(tick);if(document.hidden||time-last<32)return;last=time;
-    color.lerp(WORLD.target,.035);points.material.color.copy(color);rings.children.forEach(r=>r.material.color.copy(color));
-    WORLD.kick*=.92;points.rotation.y+=.0007+WORLD.kick*.008;points.position.x*=.91;rings.rotation.z+=.00025;rings.position.x*=.9;
-    renderer.render(scene,camera)};requestAnimationFrame(tick)}
 function setWorldVisual(key,direction=0){
   const category=CATEGORIES.find(([k])=>k===key)||CATEGORIES[0],color=category[3];
-  document.documentElement.style.setProperty('--world',color);document.body.dataset.category=key;
-  if(WORLD.target){WORLD.target.set(color);WORLD.kick=Math.abs(direction);WORLD.points.position.x=direction*1.8;WORLD.rings.position.x=direction*.8}}
+  document.documentElement.style.setProperty('--world',color);document.body.dataset.category=key}
 function beginWorldTransition(direction){
   if(!direction||RM)return;
   const stage=$('.stage'),exit=direction>0?'world-exit-left':'world-exit-right';stage.classList.add(exit);
@@ -737,13 +734,10 @@ function displayCategory(messages,reset=true){
 
 function renderCategories(){
   const index=CATEGORIES.findIndex(([key])=>key===activeCategory),current=CATEGORIES[index];
-  const prev=CATEGORIES[(index-1+CATEGORIES.length)%CATEGORIES.length],next=CATEGORIES[(index+1)%CATEGORIES.length];
   setWorldVisual(activeCategory);
   $('#categories').innerHTML=`
-    <button class="world-arrow prev" data-cycle="-1" aria-label="Catégorie précédente : ${prev[1]}"><span class="arr">←</span><small>${prev[1]}</small></button>
-    <div class="world-center"><span class="world-kicker">Catégorie ${String(index+1).padStart(2,'0')} / ${String(CATEGORIES.length).padStart(2,'0')}</span><h1 class="world-name">${current[1]}</h1>
-      <div class="world-track">${CATEGORIES.map(([key,label,icon,color])=>`<button class="cat-icon${key===activeCategory?' on':''}" data-category="${key}" aria-label="${label}" title="${label}" style="--cat:${color}"><i>${icon}</i>${label}</button>`).join('')}</div></div>
-    <button class="world-arrow next" data-cycle="1" aria-label="Catégorie suivante : ${next[1]}"><span class="arr">→</span><small>${next[1]}</small></button>`}
+    <div class="world-center"><span class="world-kicker">Boîtes</span><h1 class="world-name">${current[1]}</h1>
+      <div class="world-track">${CATEGORIES.map(([key,label,icon,color])=>{const count=(key===activeCategory?MAILBOX:CATEGORY_CACHE.get(key)||[]).length;return`<button class="cat-icon${key===activeCategory?' on':''}" data-category="${key}" aria-label="${label}" title="${label}" style="--cat:${color}"><i>${icon}</i>${label}<span class="cat-count">${count||'—'}</span></button>`}).join('')}</div></div>`}
 
 async function fetchCategory(key,page=1,noCache=false,snapshot=false){
   if(!LIVE.on){
@@ -956,7 +950,7 @@ function panelTrap(e){const p=e.target.closest('.panel');if(!p)return;
 
 function hud(){$('#hud-inbox').textContent=S[active].mails===undefined?MAILBOX.length:mailboxFor().length;
   $('#hud-arch').textContent=ARCHIVED_COUNT>0?ARCHIVED_COUNT.toLocaleString('fr'):'—';
-  $('#hud-title').innerHTML=`THEME <b>0${active} / ${THEMES[active-1].name.toUpperCase()}</b>`}
+  $('#hud-title').innerHTML=`${CATEGORIES.find(([key])=>key===activeCategory)?.[1]||'Boîte de réception'} <b>· ${THEMES[active-1].name}</b>`}
 function mailboxFor(){return MAILBOX}
 
 /* ---------- THEME 1 ---------- */
@@ -1319,6 +1313,11 @@ window.navigateMail=direction=>{
   if(active===2){const c=cvCols()[st.col];st.row=Math.max(0,Math.min(st.row+delta,(c?.mails.length||1)-1));renderCanvas();if(overlay==='#ov-read')openRead()}
   else{st.i=Math.max(0,Math.min(st.i+delta,MAILBOX.length-1));active===1?renderFocus():renderPaper()}}
 
+function moveListSelection(st,delta,root){
+  const next=Math.max(0,Math.min(st.i+delta,MAILBOX.length-1));if(next===st.i)return;
+  document.querySelector(root+' .sel')?.classList.remove('sel');st.i=next;
+  const selected=document.querySelector(`${root} [data-i="${next}"]`);selected?.classList.add('sel');selected?.scrollIntoView({block:'nearest'})}
+
 /* ---------- clavier ---------- */
 function cycleCategory(dir){
   const idx=CATEGORIES.findIndex(([k])=>k===activeCategory);
@@ -1332,8 +1331,8 @@ function conceptKey(e){
   if(shortcut('delete',k)){deleteActive();return}
   if(active===1){
     if(st.mode==='list'){
-      if(shortcut('next',k)||e.key==='ArrowDown'){st.i=Math.min(st.i+1,MAILBOX.length-1);renderFocus()}
-      else if(shortcut('previous',k)||e.key==='ArrowUp'){st.i=Math.max(st.i-1,0);renderFocus()}
+      if(shortcut('next',k)||e.key==='ArrowDown')moveListSelection(st,1,'#f-list')
+      else if(shortcut('previous',k)||e.key==='ArrowUp')moveListSelection(st,-1,'#f-list')
       else if(e.key==='Enter'&&MAILBOX.length){st.mode='read';renderFocus()}
       else if(shortcut('archive',k))archiveActive();
       else if(shortcut('reply',k))openReply();
@@ -1354,8 +1353,8 @@ function conceptKey(e){
     else if(shortcut('archive',k))archiveActive()}
   else{
     if(st.mode==='list'){
-      if(shortcut('next',k)||e.key==='ArrowDown'){st.i=Math.min(st.i+1,MAILBOX.length-1);renderPaper()}
-      else if(shortcut('previous',k)||e.key==='ArrowUp'){st.i=Math.max(st.i-1,0);renderPaper()}
+      if(shortcut('next',k)||e.key==='ArrowDown')moveListSelection(st,1,'#p-list')
+      else if(shortcut('previous',k)||e.key==='ArrowUp')moveListSelection(st,-1,'#p-list')
       else if(e.key==='Enter'&&MAILBOX.length){st.mode='read';renderPaper()}
       else if(shortcut('archive',k))archiveActive()}
     else{
@@ -1456,7 +1455,6 @@ $('.stage').addEventListener('touchstart',e=>{swipeX=e.changedTouches[0].clientX
 $('.stage').addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-swipeX,dy=e.changedTouches[0].clientY-swipeY;
   if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.4)cycleCategory(dx<0?1:-1)},{passive:true});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
-initWorldScene();
 bootLive();
 setInterval(()=>{if(!document.hidden)refreshMail()},60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshMail()});

@@ -11,7 +11,7 @@ Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Package
 ### V2 interface — Lab (3 concepts)
 - **Three themes with previews**: Focus OS (dense one-line queue), Label Canvas (columns by label), Paper Reader (paper queue)
 - **Gmail categories**: 6 categories with dedicated icon and color (Primary, Promotions, Social, Updates, Forums, Newsletters)
-- **Mail Worlds**: each category fills the screen, with neighboring categories at the edges and atmospheric Three.js transitions (no sidebar)
+- **Atelier navigation**: persistent desktop rail, horizontal mobile category bar, and a unified reading workspace
 - **Arrow navigation**: `←` / `→` switch category, `↑` / `↓` (or `J`/`K`) move between messages
 - **Gmail search**: `/` opens a fullscreen overlay, server-side IMAP search (sender, subject, body), keyboard-driven results
 - **Sticky notes**: self-sent emails displayed as square sticky notes on a dedicated wall; toggleable with eight preset colors or a custom color
@@ -25,7 +25,7 @@ Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Package
 - **Pagination**: infinite scroll + "Load more" button per category
 - **Day grouping**: Today / Yesterday / date
 - **Unread**: near-white background + bold
-- **Immersive fullscreen loading screen** with animated bar
+- **Immersive fullscreen loading screen** with a lightweight animated bar
 - **Local PWA + Chrome**: installable from `127.0.0.1:8000`, permission-free extension; Android is paused
 
 ### Classic interface — V1
@@ -96,6 +96,8 @@ Contents:
 ## Performance
 
 The backend keeps its memory footprint bounded:
+- No permanent WebGL loop or fullscreen filters; off-screen rows use `content-visibility`
+- Keyboard list navigation updates selection without rebuilding the full DOM
 - Bounded in-RAM LRU caches: threads (40 entries), message bodies (150 entries, 5 min TTL)
 - Immediate SQLite snapshot followed by a silent Gmail sync in the background
 - Reused IMAP connections and folder loading limited to useful system statuses

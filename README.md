@@ -11,7 +11,7 @@ Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla
 ### Interface V2 — Lab (3 concepts)
 - **Trois thèmes avec aperçu** : Focus OS (file une-ligne dense), Label Canvas (colonnes par libellé), Paper Reader (file papier)
 - **Catégories Gmail** : 6 catégories avec icône et couleur dédiée (Principale, Promotions, Réseaux, Notifications, Forums, Newsletters)
-- **Mail Worlds** : chaque catégorie occupe tout l'écran, avec catégories voisines aux bords et transitions atmosphériques Three.js (aucun menu latéral)
+- **Navigation Atelier** : rail latéral permanent sur ordinateur, barre de catégories horizontale sur mobile et espace de lecture unifié
 - **Navigation flèches** : `←` / `→` changent de catégorie, `↑` / `↓` (ou `J`/`K`) naviguent de mail en mail
 - **Recherche Gmail** : `/` ouvre un overlay plein écran, recherche IMAP côté serveur (expéditeur, objet, contenu), navigation clavier des résultats
 - **Post-its** : mails envoyés à soi-même affichés en vrais post-its carrés sur un mur dédié ; activables et personnalisables avec une palette de huit couleurs ou une couleur libre
@@ -25,7 +25,7 @@ Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla
 - **Pagination** : scroll infini + bouton « Charger plus » par catégorie
 - **Regroupement par jour** : Aujourd'hui / Hier / date
 - **Non-lus** : fond quasi blanc + gras
-- **Écran de chargement immersif** plein écran avec barre animée
+- **Écran de chargement immersif** plein écran avec barre animée légère
 - **PWA + Chrome en local** : installable depuis `127.0.0.1:8000`, extension sans permission sensible ; Android en pause
 
 ### Interface classique — V1
@@ -96,6 +96,8 @@ Contenu :
 ## Performances
 
 Le backend maîtrise sa consommation mémoire :
+- Interface sans boucle WebGL permanente ni filtre plein écran; les lignes hors écran utilisent `content-visibility`
+- Navigation clavier des listes sans reconstruction complète du DOM à chaque déplacement
 - Caches en RAM bornés (LRU) : threads (40 entrées), corps de messages (150 entrées, TTL 5 min)
 - Instantané SQLite servi immédiatement, puis synchronisation Gmail silencieuse en arrière-plan
 - Connexions IMAP réutilisées et chargement des dossiers limité aux statuts système utiles

@@ -1,6 +1,6 @@
-const CACHE = 'pkmail-2026.08.07-worlds';
+const CACHE = 'pkmail-2026.08.07-atelier';
 const SHELL = ['./', 'manifest.json', 'icon-192.png', 'icon-512.png',
-  'three.min.js', 'fonts/JetBrainsMonoNerdFont-Regular.ttf', 'fonts/JetBrainsMonoNerdFont-SemiBold.ttf'];
+  'fonts/JetBrainsMonoNerdFont-Regular.ttf', 'fonts/JetBrainsMonoNerdFont-SemiBold.ttf'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)));
