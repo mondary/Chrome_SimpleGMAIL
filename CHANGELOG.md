@@ -4,6 +4,24 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+### [2026.08.06] - 2026-08-27
+
+#### Fixed
+- Chargement des catégories dans la liste, sans écran plein bloquant.
+- Hauteur minimale des lignes Label Canvas pour éviter leur compression.
+- Retour permanent vers Mail Worlds depuis l'interface classique.
+- Vraie icône PKMail affichée sur l'action d'installation, à la place d'une miniature de layout.
+- Rendu des mémos restauré en post-its avec palette multicolore stable.
+
+#### Added
+- Réglages modulaires pour la liste, la lecture, les mémos et les newsletters.
+- Navigation des catégories en icônes seules ou avec libellés.
+- Mode Ultra Light noir et blanc et choix d'ouverture des liens dans le drawer ou le navigateur.
+- Largeurs de liste, d'expéditeur et de colonnes Canvas ajustables.
+- Densité et contenu des lignes configurables : expéditeur, sujet, aperçu, favicons, libellés et dates.
+- Colonnes Label Canvas configurables, avec Principale verrouillée en premier et sélection automatique par non-lus.
+- Chargement au choix par bouton, défilement infini, ou les deux.
+
 ### [2026.08.05] - 2026-08-26
 
 #### Fixed

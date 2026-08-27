@@ -1,4 +1,4 @@
-const CACHE = 'pkmail-2026.08.05-worlds';
+const CACHE = 'pkmail-2026.08.06-worlds';
 const SHELL = ['./', 'manifest.json', 'icon-192.png', 'icon-512.png',
   'three.min.js', 'fonts/JetBrainsMonoNerdFont-Regular.ttf', 'fonts/JetBrainsMonoNerdFont-SemiBold.ttf'];
 

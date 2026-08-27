@@ -37,6 +37,11 @@ def main():
     for marker in ("manifest.json", "serviceWorker", "CATEGORIES", "memoPostits", "shortcutPreset",
                    "three.min.js", "world-canvas", "cycleCategory"):
         assert marker in HTML, f"fonction V2 absente: {marker}"
+    for marker in ("memoPalette", "memoRows", "linkTarget", "categoryNav", "visualMode",
+                   "Icônes seules", "Ultra Light · noir et blanc", "newsletterPreviewCount",
+                   "senderWidth", "canvasWidth", "listContent", "Sujet + première ligne",
+                   "canvasLabels", "canvasLabelStats", "loadMode", "Bouton + défilement infini"):
+        assert marker in HTML, f"option modulaire absente: {marker}"
     for uid in ("#ov-pal", "#ov-reply", "#ov-help", "#ov-read", "#ov-set", "#toast",
                 "cv-cols", "p-strip", "f-mount", "f-list", "p-list", "hud-live"):
         assert uid in HTML, f"element absent: {uid}"
