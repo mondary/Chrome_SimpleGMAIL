@@ -398,6 +398,11 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
 .rd-msg-chev{margin-left:auto;color:var(--faint)}
 .rd-msg-body{padding:4px 4px 18px}
 .rd-sub-s{font-weight:700;font-size:13px;color:var(--muted);margin-bottom:8px}
+.att-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.att-link{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border:1px solid var(--hair);border-radius:8px;font-size:12px;color:var(--ink);text-decoration:none;cursor:pointer}
+.att-link:hover{border-color:var(--accent);color:var(--accent)}
+.att-nm{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.att-sz{font-size:10px;color:var(--faint)}
 
 .help-grid{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:8px 14px;align-items:center;font-size:12px}
 .rp-to{font-size:11px;color:var(--muted);margin-bottom:10px}
@@ -991,7 +996,7 @@ async function loadDetail(m){
   try{
     const d=await j(`/api/messages/${encodeURIComponent(LIVE.account)}/${encodeURIComponent(m.id)}?folder=${LIVE.folder}`);
     m.html=d.html||null;m.text=d.text||null;
-    m.attachments=(d.attachments||[]).map(a=>a.filename);
+    m.attachments=(d.attachments||[]).map(a=>({index:a.index,filename:a.filename||'sans-nom',content_type:a.content_type||'',size:a.size||0}));
     m.detail=true;
   }catch(e){m.detail=true;m.text=(m.text||m.snippet||'')}
   return m}
@@ -1055,8 +1060,14 @@ function listRows(mails,st,scope){
   if(PREFS.loadMode!=='infinite'&&!CAT_DONE.get(activeCategory)&&mails.length)out+=`<div class="load-more-wrap"><button class="load-more" data-more>Charger plus</button></div>`;
   return out}
 function memoRows(mails,st){return`<div class="memo-board">${mails.map((m,i)=>`<button class="postit${i===st.i?' sel':''}" data-i="${i}" style="--memo:${memoColorFor(m)}"><span class="ph"><span class="pwho">${esc(m.from.name)}</span><span class="pwhen">${esc(m.date)}</span></span><span class="psubj">${esc(m.subject)}</span><span class="psnip">${esc(m.snippet||'Mémo personnel')}</span></button>`).join('')}</div>`}
-const attachments=m=>(m.attachments&&m.attachments.length)
-  ?`<div class="att-row"><span class="g">${I.clip}</span> ${m.attachments.map(esc).join(' · ')}</div>`:'';
+const attSize=n=>!n?'':(n<1024?n+' o':n<1048576?Math.round(n/1024)+' Ko':(n/1048576).toFixed(1)+' Mo');
+const attUrl=(m,a)=>`/api/messages/${encodeURIComponent(LIVE.account)}/${encodeURIComponent(m.id)}/attachment/${encodeURIComponent(a.index)}?folder=${LIVE.folder}`;
+function openAtt(url){try{if(window.pywebview&&window.pywebview.api){const x=window.pywebview.api.open_external||window.pywebview.api.openExternal;if(typeof x==='function'){x(url);return}}}catch(e){}window.open(url,'_blank','noopener')}
+const attachments=m=>{
+  if(!m.attachments||!m.attachments.length)return'';
+  if(typeof m.attachments[0]==='string')
+    return`<div class="att-row"><span class="g">${I.clip}</span> ${m.attachments.map(esc).join(' · ')}</div>`;
+  return`<div class="att-row">${m.attachments.map(a=>`<a class="att-link" href="${attUrl(m,a)}" download="${esc(a.filename)}" target="_blank" rel="noopener" onclick="event.preventDefault();openAtt(this.getAttribute('href'))" title="Ouvrir ${esc(a.filename)}"><span class="g">${I.clip}</span><span class="att-nm">${esc(a.filename)}</span><span class="att-sz">${attSize(a.size)}</span></a>`).join('')}</div>`};
 
 const fresh=()=>({i:0,col:0,row:0,archived:0,mode:'list'});
 const S={1:fresh(),2:fresh(),3:fresh(),4:fresh(),5:fresh(),6:fresh()};
@@ -1368,27 +1379,30 @@ async function runSearch(q){
   searchState.results=[...merged.values()].map(m=>({m,score:searchScore(m,q)})).filter(x=>x.score||responses.some(res=>(res.messages||[]).some(raw=>String(raw.uid)===x.m.id))).sort((a,b)=>b.score-a.score).map(x=>x.m);
   searchState.pending=false;renderSearchFilters();drawSearch();if(searchState.dedicated&&searchState.results.length)renderSearchReader(0)}
 function enterSearchWorkspace(index=searchState.sel){if(!filteredSearchResults().length)return;searchState.dedicated=true;$('#ov-search').classList.add('dedicated');renderSearchReader(index)}
-function renderSearchReader(i){const filtered=filteredSearchResults(),m=filtered[i];if(!m)return;searchState.sel=i;drawSearch();const reader=$('#search-reader');reader.innerHTML=`<div class="rd-meta">${whoAvatar(m,true)} ${esc(senderShort(m))} · ${esc(m.from.email)} · ${esc(m.date)}</div><div class="rd-tags">${m.labels.map(l=>labelPill(l)).join(' ')}</div><h2 class="rd-sub">${esc(m.subject)}</h2><div class="rd-body-content"></div>`;mountBody(reader.querySelector('.rd-body-content'),m);m.unread=false;
-  if(!m.detail)loadDetail(m).then(()=>{if(searchState.dedicated&&filteredSearchResults()[searchState.sel]===m)mountBody($('#search-reader .rd-body-content'),m)})}
+function renderSearchReader(i){const filtered=filteredSearchResults(),m=filtered[i];if(!m)return;searchState.sel=i;drawSearch();const reader=$('#search-reader');reader.innerHTML=`<div class="rd-meta">${whoAvatar(m,true)} ${esc(senderShort(m))} · ${esc(m.from.email)} · ${esc(m.date)}</div><div class="rd-tags">${m.labels.map(l=>labelPill(l)).join(' ')}</div><h2 class="rd-sub">${esc(m.subject)}</h2><div class="rd-body-content"></div><div class="rd-atts"></div>`;mountBody(reader.querySelector('.rd-body-content'),m);const searchAtts=$('#search-reader .rd-atts');if(searchAtts)searchAtts.innerHTML=attachments(m);m.unread=false;
+  if(!m.detail)loadDetail(m).then(()=>{if(searchState.dedicated&&filteredSearchResults()[searchState.sel]===m){mountBody($('#search-reader .rd-body-content'),m);const at=$('#search-reader .rd-atts');if(at)at.innerHTML=attachments(m)}})}
 function openSearchResult(i){
   if(!searchState.dedicated)enterSearchWorkspace(i);else renderSearchReader(i)}
 
 let RD_STACK=[];
 function fillRdMsg(s,i){const el=document.querySelector(`#rd-body .rd-msg[data-rd="${i}"] .rd-msg-body`);if(!el)return;
-  el.innerHTML=`<div class="rd-sub-s">${esc(s.subject)}</div><div class="rd-body-content"></div>`;
+  el.innerHTML=`<div class="rd-sub-s">${esc(s.subject)}</div><div class="rd-body-content"></div><div class="rd-atts"></div>`;
   mountBody(el.querySelector('.rd-body-content'),s);
-  if(!s.detail)loadDetail(s).then(()=>{if(overlay==='#ov-read'&&el.isConnected)mountBody(el.querySelector('.rd-body-content'),s)})}
+  const fillAtts=()=>{const at=el.querySelector('.rd-atts');if(at)at.innerHTML=attachments(s)};
+  fillAtts();
+  if(!s.detail)loadDetail(s).then(()=>{if(overlay==='#ov-read'&&el.isConnected){mountBody(el.querySelector('.rd-body-content'),s);fillAtts()}})}
 function openRead(mail){const m=mail||currentMail();if(!m)return;
   m.unread=false;
   const stack=(m.tid&&MAILBOX.filter(x=>x.tid===m.tid).length>1)?MAILBOX.filter(x=>x.tid===m.tid).slice().reverse():null;
   if(!stack){
     $('#rd-body').innerHTML=`<div class="rd-meta">${whoAvatar(m,true)} ${esc(senderShort(m))} · ${esc(m.date)}</div>
   <div class="rd-tags">${m.labels.map(l=>labelPill(l)).join(' ')}</div>
-  <h2 class="rd-sub" id="rd-sub">${esc(m.subject)}</h2><div class="rd-body-content"></div>`;
+  <h2 class="rd-sub" id="rd-sub">${esc(m.subject)}</h2><div class="rd-body-content"></div><div class="rd-atts"></div>`;
     mountBody($('#rd-body .rd-body-content'),m);
+    $('#rd-body .rd-atts').innerHTML=attachments(m);
     openOv('#ov-read');renderCanvas();
     if(!m.detail)loadDetail(m).then(()=>{if(overlay==='#ov-read'){
-      mountBody($('#rd-body .rd-body-content'),m)}})
+      mountBody($('#rd-body .rd-body-content'),m);$('#rd-body .rd-atts').innerHTML=attachments(m)}})
     return}
   RD_STACK=stack;
   $('#rd-body').innerHTML=`<div class="rd-conv-head"><h2 class="rd-sub" id="rd-sub">${esc(m.subject)}</h2>

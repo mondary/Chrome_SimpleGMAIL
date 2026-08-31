@@ -21,6 +21,7 @@ Historique des versions de SimpleMail.
 - Anciens styles Aero Glass, Nordic Zen et Editorial réintégrés dans les réglages.
 
 #### Fixed
+- Pièces jointes accessibles et prévisualisables dans le lecteur Lab : liens cliquables (nom, taille), ouverture inline des PDF et images, et pièces jointes fictives valides servies par le backend en mode démo.
 - La touche du raccourci libellés/réponse ne s'inscrit plus dans le champ de recherche du sélecteur ni dans la zone de réponse.
 - Entrée applique désormais le libellé sélectionné, avec message visible si aucun message n'est actif.
 - Repli sur le preset quand un raccourci sauvegardé est vide : `j`/`k` fonctionnent dans tous les cas.

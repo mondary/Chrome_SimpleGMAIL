@@ -2349,13 +2349,80 @@ def list_newsletter_messages(
     return result
 
 
+def _demo_attachments(m):
+    """Pièces jointes fictives cohérentes pour le mode démo (noms, types, tailles)."""
+    n = m.get("attachment_count") or 0
+    if not m.get("has_attachments") or n <= 0:
+        return []
+    subj = (m.get("subject") or "").lower()
+    if "photo" in subj:
+        names = [f"photo-grece-{i}.png" for i in range(1, n + 1)]
+    elif "devis" in subj:
+        names = ["devis-site-web.pdf", "conditions-generales.pdf"][:n]
+    elif "maquette" in subj:
+        names = ["maquettes-mobile-v3.png", "notes-ux.txt"][:n]
+    else:
+        names = ["document.pdf"]
+    types = {".pdf": "application/pdf", ".png": "image/png", ".txt": "text/plain", ".jpg": "image/jpeg"}
+    return [
+        {
+            "index": i,
+            "filename": name,
+            "content_type": types.get(name[name.rfind("."):], "application/octet-stream"),
+            "size": 120_000 + i * 37_000,
+            "content_id": None,
+        }
+        for i, name in enumerate(names)
+    ]
+
+
+def _demo_attachment_payload(att):
+    """Contenu binaire minimal mais valide pour une pièce jointe démo."""
+    ct = att["content_type"]
+    if ct == "text/plain":
+        return ("Pièce jointe de démonstration PKMail — " + att["filename"] + "\n").encode("utf-8"), ct
+    if ct == "image/png":
+        import struct
+        import zlib
+        w, h = 96, 64
+        raw = b"".join(b"\x00" + bytes([212, 122, 78, 255] * w) for _ in range(h))
+
+        def chunk(tag, data):
+            return (
+                struct.pack(">I", len(data)) + tag + data
+                + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+            )
+
+        png = (
+            b"\x89PNG\r\n\x1a\n"
+            + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0))
+            + chunk(b"IDAT", zlib.compress(raw))
+            + chunk(b"IEND", b"")
+        )
+        return png, ct
+    if ct == "application/pdf":
+        stream = "BT /F1 14 Tf 20 60 Td (PKMail - piece jointe demo) Tj ET"
+        pdf = (
+            "%PDF-1.4\n"
+            "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
+            "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
+            "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 120]/Contents 4 0 R>>endobj\n"
+            f"4 0 obj<</Length {len(stream)}>>stream\n{stream}\nendstream endobj\n"
+            "trailer<</Root 1 0 R>>\n%%EOF"
+        )
+        return pdf.encode("latin-1", "ignore"), ct
+    return b"demo", ct
+
+
 @app.get("/api/messages/{account}/{uid}")
 def get_message(account: str, uid: str, folder: str = Query("INBOX")):
     if _is_demo() or _is_demo_account(account):
         msgs = _demo_messages(account, folder)
         for m in msgs:
             if m["uid"] == uid:
-                return m
+                detail = dict(m)
+                detail["attachments"] = _demo_attachments(m)
+                return detail
         raise HTTPException(status_code=404, detail="Message introuvable")
     ck = _cache_key(account, folder, uid)
     cached = cache_get(ck)
@@ -2613,6 +2680,21 @@ def get_thread_sent(
 
 @app.get("/api/messages/{account}/{uid}/attachment/{index}")
 def get_attachment(account: str, uid: str, index: int, folder: str = Query("INBOX")):
+    if _is_demo() or _is_demo_account(account):
+        msgs = _demo_messages(account, folder)
+        demo = next((m for m in msgs if m["uid"] == uid), None)
+        atts = _demo_attachments(demo or {})
+        if demo is None or not (0 <= index < len(atts)):
+            raise HTTPException(status_code=404, detail="Pièce jointe introuvable")
+        att = atts[index]
+        payload, media = _demo_attachment_payload(att)
+        safe_name = re.sub(r'[\\/:<>|*?\x00-\x1f"]', "_", att["filename"])
+        disposition = "inline" if media.startswith("image/") or media == "application/pdf" else "attachment"
+        return Response(
+            content=payload,
+            media_type=media,
+            headers={"Content-Disposition": f'{disposition}; filename="{safe_name}"'},
+        )
     acc = get_account(account)
     with open_mailbox(acc) as mailbox:
         mailbox.folder.set(folder)
@@ -2624,12 +2706,12 @@ def get_attachment(account: str, uid: str, index: int, folder: str = Query("INBO
             raise HTTPException(status_code=404, detail="Pièce jointe introuvable")
         att = atts[index]
         safe_name = re.sub(r'[\\/:<>|*?\x00-\x1f"]', "_", att.filename or "fichier")
+        media = att.content_type or "application/octet-stream"
+        disposition = "inline" if media.startswith("image/") or media == "application/pdf" else "attachment"
         return Response(
             content=att.payload,
-            media_type=att.content_type or "application/octet-stream",
-            headers={
-                "Content-Disposition": f'attachment; filename="{safe_name}"'
-            },
+            media_type=media,
+            headers={"Content-Disposition": f'{disposition}; filename="{safe_name}"'},
         )
 
 
