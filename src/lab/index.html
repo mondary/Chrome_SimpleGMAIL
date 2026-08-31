@@ -109,6 +109,7 @@ body[data-visual="omp"][data-layout="sidebar"] .workspace{background:#000}
 body[data-visual="omp"] #toast{background:var(--omp-accent,#ff4d8f);color:#000}
 body[data-visual="omp"] #toast .toast-act{background:#000;color:#fff}
 body[data-visual="omp"] kbd{background:#0a0a0c;border-color:oklch(100% 0 0/.16)}
+body[data-visual="omp"] #ambient-canvas{opacity:.85}
 .rp-to-input{width:100%;font-family:inherit;font-size:13px;padding:8px 10px;margin-bottom:8px;border:1px solid var(--hair);background:transparent;color:inherit}
 .omp-sw{display:inline-flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .omp-sw button{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
@@ -658,7 +659,6 @@ body[data-theme="6"] .hud,body[data-theme="6"][data-layout="top"] .world-nav{bac
       <span class="g">&#xF002;</span>
       <input class="search-input" id="search-input" data-autofocus autocomplete="off" spellcheck="false"
         placeholder="Mails, personnes, sujets ou libellés…" aria-label="Rechercher">
-<button id="fab" data-act="compose" title="Nouveau message" aria-label="Nouveau message">＋</button>
       <span class="search-count" id="search-count"></span>
       <span style="font-size:10px;color:var(--faint)"><kbd>Échap</kbd></span>
     </div>
@@ -668,6 +668,7 @@ body[data-theme="6"] .hud,body[data-theme="6"][data-layout="top"] .world-nav{bac
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>
+<button id="fab" data-act="compose" title="Nouveau message" aria-label="Nouveau message">＋</button>
 <div class="load-screen" id="load-screen" role="status" aria-live="polite">
   <div class="load-mark"><img src="icon-512.png" alt="" style="width:64px;height:64px;border-radius:14px;margin-bottom:16px;box-shadow:0 4px 20px rgba(0,0,0,.12)"><b>PKMAIL</b><span id="load-label">Connexion à Gmail</span><div class="load-line"></div></div>
 </div>
@@ -699,7 +700,7 @@ const AMBIENT={raf:0,last:0,phase:0,w:0,h:0,points:[]};
 function resizeAmbient(){const canvas=$('#ambient-canvas'),dpr=Math.min(devicePixelRatio,1.5);AMBIENT.w=innerWidth;AMBIENT.h=innerHeight;canvas.width=AMBIENT.w*dpr;canvas.height=AMBIENT.h*dpr;canvas.getContext('2d').setTransform(dpr,0,0,dpr,0,0);AMBIENT.points=Array.from({length:44},()=>({x:Math.random()*AMBIENT.w,y:Math.random()*AMBIENT.h,vx:(Math.random()-.5)*.16,vy:(Math.random()-.5)*.16,r:Math.random()*1.6+.5}))}
 function drawAmbient(time){if(PREFS.motionMode==='off'||RM||document.hidden){AMBIENT.raf=0;return}AMBIENT.raf=requestAnimationFrame(drawAmbient);if(time-AMBIENT.last<33)return;AMBIENT.last=time;AMBIENT.phase+=.008;
   const canvas=$('#ambient-canvas'),ctx=canvas.getContext('2d'),w=AMBIENT.w,h=AMBIENT.h,color=(document.body.dataset.visual==='omp'?(document.documentElement.style.getPropertyValue('--omp-accent')||'#ff4d8f'):(CATEGORIES.find(([k])=>k===activeCategory)?.[3]||'#CC7A3E'));ctx.clearRect(0,0,w,h);ctx.strokeStyle=color;ctx.fillStyle=color;
-  if(PREFS.motionMode==='particles'){AMBIENT.points.forEach(p=>{p.x=(p.x+p.vx+w)%w;p.y=(p.y+p.vy+h)%h;ctx.globalAlpha=.28;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill()})}
+  if(PREFS.motionMode==='particles'){const omp=document.body.dataset.visual==='omp',pa=omp?.6:.28,pr=omp?1.6:1;AMBIENT.points.forEach(p=>{p.x=(p.x+p.vx+w)%w;p.y=(p.y+p.vy+h)%h;ctx.globalAlpha=pa;ctx.beginPath();ctx.arc(p.x,p.y,p.r*pr,0,Math.PI*2);ctx.fill()})}
   else if(PREFS.motionMode==='waves'){ctx.globalAlpha=.16;ctx.lineWidth=1.2;for(let n=0;n<4;n++){ctx.beginPath();for(let x=0;x<=w;x+=18){const y=h*(.28+n*.16)+Math.sin(x*.009+AMBIENT.phase*(1+n*.2))*28+(n%2?12:-12);x?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.stroke()}}
   else{ctx.globalAlpha=.14;ctx.lineWidth=1.4;for(let n=0;n<5;n++){const x=w*(.12+n*.2)+Math.sin(AMBIENT.phase+n)*18,y=h*(.3+(n%2)*.34),r=42+n*8;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(x,y,r*.36,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w*.12,y+(n%2?24:-24));ctx.stroke()}}ctx.globalAlpha=1}
 function syncAmbient(){if(AMBIENT.raf){cancelAnimationFrame(AMBIENT.raf);AMBIENT.raf=0}const canvas=$('#ambient-canvas');if(!canvas)return;if(PREFS.motionMode==='off'||RM){canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);return}resizeAmbient();AMBIENT.raf=requestAnimationFrame(drawAmbient)}
