@@ -15,6 +15,39 @@ DEST = Path.home() / "gmailpk-tester"
 PORT = 9900
 BASE_PORT = 9920
 
+VERSION_SPECS = (
+    {
+        "id": "lab-v2-atelier-current",
+        "runtime_id": "workspace",
+        "label": "Lab V2 — Atelier (actuel)",
+        "description": "Version de travail servie depuis src/lab.",
+        "path": "/lab/",
+    },
+    {
+        "id": "lab-v2-atelier-2026-08-07",
+        "runtime_id": "workspace",
+        "label": "Lab V2 — Atelier (9920, 2026.08.07)",
+        "description": "Snapshot immuable récupéré du paquet PKMail.",
+        "path": "/lab-atelier-2026-08-07/",
+    },
+    {
+        "id": "classic-v1-0-4",
+        "runtime_id": "classic-v1-0-4",
+        "label": "Interface classique V1.0.4",
+        "description": "Archive historique conservée telle quelle.",
+        "path": "/",
+        "source": "a64e77657ef2833600f2b8eb0a70f6c066fc8000",
+    },
+    {
+        "id": "classic-2026-08-01",
+        "runtime_id": "classic-2026-08-01",
+        "label": "Interface classique (2026.08.01)",
+        "description": "Archive historique conservée telle quelle.",
+        "path": "/",
+        "source": "7e293c6034ce286bea03eb8cf5d05af6f15fd979",
+    },
+)
+VERSION_SPECS_BY_ID = {spec["id"]: spec for spec in VERSION_SPECS}
 procs = {}
 lock = threading.Lock()
 
@@ -93,24 +126,15 @@ def free_port():
     raise RuntimeError("aucun port libre")
 
 
-def branches():
-    out = subprocess.run(
-        ["git", "for-each-ref", "--format=%(refname:short)", "refs/heads/archive/"],
-        cwd=REPO, capture_output=True, text=True,
-    ).stdout
-    return sorted(l.strip() for l in out.splitlines() if l.strip())
-
-
-def log_path(name):
+def log_path(runtime_id):
     DEST.mkdir(exist_ok=True)
-    return DEST / (name.replace("/", "_") + ".log")
+    return DEST / f"{runtime_id}.log"
 
-
-def extract(branch, dest):
+def extract(source, dest):
     dest.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(suffix=".tar", delete=False) as t:
         subprocess.run(
-            ["git", "archive", branch, "src/desktop", "-o", t.name],
+            ["git", "archive", source, "src/desktop", "-o", t.name],
             cwd=REPO, check=True, capture_output=True,
         )
         with tarfile.open(t.name) as tf:
@@ -121,36 +145,36 @@ def extract(branch, dest):
     os.unlink(t.name)
 
 
-def start(name):
+def start(version_id):
+    spec = VERSION_SPECS_BY_ID[version_id]
+    runtime_id = spec["runtime_id"]
     with lock:
-        if name in procs and procs[name][0].poll() is None:
+        entry = procs.get(runtime_id)
+        if entry and entry[0].poll() is None:
             return
-        if name == "lab":
-            app_dir = REPO / "src" / "desktop"
-            port = free_port()
-            cmd = ["python3", "-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", str(port)]
-            cwd = app_dir
-        else:
-            dest = DEST / name.split("/")[-1]
-            extract(name, dest)
+        if "source" in spec:
+            dest = DEST / runtime_id
+            extract(spec["source"], dest)
             app_dir = dest / "src" / "desktop"
             cfg = app_dir / "config.json"
             if not cfg.exists():
                 cfg.write_text((app_dir / "config.example.json").read_text(encoding="utf-8"), encoding="utf-8")
-            port = free_port()
-            cmd = ["python3", "-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", str(port)]
-            cwd = app_dir
+        else:
+            app_dir = REPO / "src" / "desktop"
+        port = free_port()
+        cmd = ["python3", "-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", str(port)]
         env = dict(os.environ, SIMPLEMAIL_AUTH="0")
-        procs[name] = (
-            subprocess.Popen(cmd, cwd=cwd, env=env, start_new_session=True,
-                             stdout=open(log_path(name), "w"), stderr=subprocess.STDOUT),
+        procs[runtime_id] = (
+            subprocess.Popen(cmd, cwd=app_dir, env=env, start_new_session=True,
+                             stdout=open(log_path(runtime_id), "w"), stderr=subprocess.STDOUT),
             port,
         )
 
 
-def stop(name):
+def stop(version_id):
+    spec = VERSION_SPECS_BY_ID[version_id]
     with lock:
-        entry = procs.pop(name, None)
+        entry = procs.pop(spec["runtime_id"], None)
     if entry:
         entry[0].terminate()
         try:
@@ -160,14 +184,17 @@ def stop(name):
 
 
 def status():
-    entries = [{"name": "lab", "label": "Nouvelle interface V2", "description": "3 thèmes, catégories Gmail, post-its et PWA", "path": "/lab/"}]
-    for b in branches():
-        entries.append({"name": b, "label": "Ancienne interface classique", "description": "Version 1.0.4 conservée telle quelle"})
-    for e in entries:
-        p = procs.get(e["name"])
-        running = bool(p and p[0].poll() is None)
-        e["running"] = running
-        e["url"] = f"http://127.0.0.1:{p[1]}{e.get('path', '/')}" if p else ""
+    entries = []
+    for spec in VERSION_SPECS:
+        entry = procs.get(spec["runtime_id"])
+        running = bool(entry and entry[0].poll() is None)
+        entries.append({
+            "name": spec["id"],
+            "label": spec["label"],
+            "description": spec["description"],
+            "running": running,
+            "url": f"http://127.0.0.1:{entry[1]}{spec['path']}" if running else "",
+        })
     return {"entries": entries}
 
 
@@ -187,20 +214,26 @@ class Handler(BaseHTTPRequestHandler):
         elif u.path == "/api/status":
             self.reply(json.dumps(status()))
         elif u.path == "/api/log":
-            name = parse_qs(u.query).get("name", [""])[0]
-            p = log_path(name)
+            version_id = parse_qs(u.query).get("name", [""])[0]
+            spec = VERSION_SPECS_BY_ID.get(version_id)
+            if not spec:
+                self.reply(json.dumps({"error": "version inconnue"}), code=404)
+                return
+            p = log_path(spec["runtime_id"])
             self.reply(p.read_text(errors="replace")[-4000:] if p.exists() else "(vide)", "text/plain; charset=utf-8")
         else:
             self.reply("404", "text/plain", 404)
 
     def do_POST(self):
         u = urlparse(self.path)
-        name = parse_qs(u.query).get("name", [""])[0]
-        if u.path == "/api/start" and name:
-            start(name)
+        version_id = parse_qs(u.query).get("name", [""])[0]
+        if version_id not in VERSION_SPECS_BY_ID:
+            self.reply(json.dumps({"error": "version inconnue"}), code=400)
+        elif u.path == "/api/start":
+            start(version_id)
             self.reply(json.dumps(status()))
-        elif u.path == "/api/stop" and name:
-            stop(name)
+        elif u.path == "/api/stop":
+            stop(version_id)
             self.reply(json.dumps(status()))
         else:
             self.reply("404", "text/plain", 404)

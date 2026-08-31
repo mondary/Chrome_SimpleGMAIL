@@ -43,6 +43,7 @@ python3 -m PyInstaller \
   --add-data "$SRC/manifest.webmanifest:." \
   --add-data "$SRC/sw.js:." \
   --add-data "$REPO/src/lab:lab" \
+  --add-data "$REPO/src/lab-atelier-2026.08.07:lab-atelier-2026.08.07" \
   --add-data "$SRC/VERSION:." \
   --collect-all uvicorn --collect-all fastapi --collect-all starlette --collect-all pydantic \
   --hidden-import "webview.platforms.cocoa" \

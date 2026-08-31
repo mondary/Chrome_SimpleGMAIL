@@ -4,9 +4,12 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
-### Unreleased
+### [2026.08.08] - 2026-08-31
 
 #### Added
+- Client mail en ligne de commande `tools/pkmail` adossé à Himalaya : inbox, lecture, recherche, envoi, archive, suppression, favoris et dossiers (doc dans `tools/PKMAIL.md`).
+- Interface web `tools/pkmail-ui` (Next.js) branchée sur le CLI pkmail.
+- Snapshot `lab-atelier-2026.08.07` servi par l'app desktop et ancien thème « Interface classique » accessible depuis le lab.
 - Vue conversation empilée dans le lecteur Lab : messages du même fil triés de l'ancien au récent, repliés sauf le courant, dépliage à la demande.
 - Bouton flottant « nouveau message » avec envoi réel via le backend et transfert pré-rempli avec le message cité.
 - Annulation de suppression façon Gmail : disparition immédiate, toast « Annuler » pendant 6 secondes avant l'exécution réelle.

@@ -1622,12 +1622,24 @@ def index():
 # dev : src/lab (voisin de src/desktop) ; serveur : lab/ dans le dossier de l'app.
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 
-_lab_dir = next(
-    (d for d in (BASE_DIR / "lab", BASE_DIR.parent / "lab") if d.is_dir()),
-    BASE_DIR / "lab",
-)
+def _static_asset_dir(name: str) -> Path:
+    return next(
+        (directory for directory in (BASE_DIR / name, BASE_DIR.parent / name) if directory.is_dir()),
+        BASE_DIR / name,
+    )
+
+
+_lab_dir = _static_asset_dir("lab")
+_lab_atelier_snapshot_dir = _static_asset_dir("lab-atelier-2026.08.07")
+
 if _lab_dir.is_dir():
     app.mount("/lab", StaticFiles(directory=str(_lab_dir), html=True), name="lab")
+if _lab_atelier_snapshot_dir.is_dir():
+    app.mount(
+        "/lab-atelier-2026-08-07",
+        StaticFiles(directory=str(_lab_atelier_snapshot_dir), html=True),
+        name="lab-atelier-2026-08-07",
+    )
 
 
 @app.get("/icon.png")

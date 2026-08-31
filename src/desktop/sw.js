@@ -1,6 +1,7 @@
 // Service Worker SimpleMail — installable PWA, offline shell.
 // Stratégie : network-first pour l'app shell, network-only pour l'API.
-const CACHE = 'simplemail-v1';
+const CACHE = 'pkmail-classic-v1';
+const CACHE_PREFIX = 'pkmail-classic-v1-';
 const SCOPE_URL = new URL(self.registration.scope);
 const APP_ROOT = SCOPE_URL.pathname.endsWith('/') ? SCOPE_URL.pathname : `${SCOPE_URL.pathname}/`;
 const SHELL = [
@@ -18,7 +19,7 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+      Promise.all(keys.filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE).map((key) => caches.delete(key)))
     ).then(() => self.clients.claim())
   );
 });
@@ -29,6 +30,7 @@ self.addEventListener('fetch', (e) => {
   // doivent passer en réseau natif ; les intercepter ici déclenche la CSP
   // `connect-src 'self'` dans le contexte service worker.
   if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith('/lab')) return;
   // API : toujours réseau (jamais de cache pour les mails).
   if (url.pathname.startsWith(`${APP_ROOT}api/`)) return;
   // App shell : network-first, fallback cache (offline).

@@ -27,6 +27,8 @@ python3 -m PyInstaller \
   --add-data "$SRC/config.example.json:." \
   --add-data "$SRC/bg.jpg:." \
   --add-data "$SRC/icon.png:." \
+  --add-data "$REPO/src/lab:lab" \
+  --add-data "$REPO/src/lab-atelier-2026.08.07:lab-atelier-2026.08.07" \
   --collect-all uvicorn --collect-all fastapi --collect-all starlette --collect-all pydantic \
   --hidden-import "webview.platforms.gtk" \
   app.py

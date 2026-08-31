@@ -59,6 +59,25 @@ class SmokeTests(unittest.TestCase):
         finally:
             main.CONFIG_PATH = original
 
+    def test_recovered_atelier_snapshot_is_separately_mounted(self):
+        snapshot_route = next(
+            route for route in main.app.routes
+            if getattr(route, "path", None) == "/lab-atelier-2026-08-07"
+        )
+        self.assertEqual(snapshot_route.name, "lab-atelier-2026-08-07")
+        snapshot_html = (main._lab_atelier_snapshot_dir / "index.html").read_text(encoding="utf-8")
+        self.assertIn("SimpleMail Lab — V2", snapshot_html)
+        self.assertIn("simplemail_lab_atelier_2026_08_07_prefs", snapshot_html)
+        manifest = json.loads(
+            (main._lab_atelier_snapshot_dir / "manifest.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(manifest["start_url"], "/lab-atelier-2026-08-07/")
+        self.assertEqual(manifest["scope"], "/lab-atelier-2026-08-07/")
+
+    def test_current_lab_pwa_scope_isolated_to_lab_route(self):
+        manifest = json.loads((main._lab_dir / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["scope"], "/lab/")
+
 
 if __name__ == "__main__":
     unittest.main()

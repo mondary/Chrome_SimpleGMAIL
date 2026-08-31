@@ -1,0 +1,341 @@
+#!/usr/bin/env python3
+"""PKMail CLI — Himalaya-backed terminal mail client.
+
+Reads src/desktop/config.json, generates a Himalaya TOML config with
+password commands that resolve secrets from the environment or mail.env,
+then delegates to himalaya for all mail operations.
+"""
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parent.parent
+CONFIG_JSON = REPO / "src" / "desktop" / "config.json"
+MAIL_ENV = REPO / "src" / "desktop" / "secrets" / "mail.env"
+HIMALAYA_DIR = Path(__file__).resolve().parent / ".himalaya"
+HIMALAYA_TOML = HIMALAYA_DIR / "config.toml"
+
+
+def load_mail_env():
+    """Load secrets/mail.env into os.environ (setdefault, no overwrite)."""
+    if not MAIL_ENV.exists():
+        return
+    for line in MAIL_ENV.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, val = line.split("=", 1)
+        os.environ.setdefault(key.strip(), val.strip())
+
+
+def expand_env_vars(value):
+    """Resolve ${VAR} references in a string."""
+    if not isinstance(value, str):
+        return value
+    return re.sub(r"\$\{([^}]+)\}", lambda m: os.environ.get(m.group(1), ""), value)
+
+
+def load_config():
+    """Load and expand config.json."""
+    data = json.loads(CONFIG_JSON.read_text(encoding="utf-8"))
+    for acc in data.get("accounts", []):
+        for section in ("imap", "smtp"):
+            if section in acc and "password" in acc[section]:
+                acc[section]["password"] = expand_env_vars(acc[section]["password"])
+    return data
+
+
+def imap_scheme(acc):
+    """Determine IMAP server URL scheme."""
+    imap = acc.get("imap", {})
+    port = imap.get("port", 993)
+    ssl = imap.get("ssl", True)
+    if ssl or port == 993:
+        return "imaps"
+    if port in (143, 587):
+        return "imap"
+    return "imaps" if ssl else "imap"
+
+
+def smtp_scheme(acc):
+    """Determine SMTP server URL scheme."""
+    smtp = acc.get("smtp", {})
+    port = smtp.get("port", 465)
+    ssl = smtp.get("ssl", True)
+    if ssl or port == 465:
+        return "smtps"
+    if port in (25, 587):
+        return "smtp"
+    return "smtps" if ssl else "smtp"
+
+
+def generate_toml():
+    """Generate Himalaya TOML config from config.json + mail.env."""
+    load_mail_env()
+    config = load_config()
+    accounts = config.get("accounts", [])
+    if not accounts:
+        print("No accounts in config.json", file=sys.stderr)
+        sys.exit(1)
+
+    HIMALAYA_DIR.mkdir(parents=True, exist_ok=True)
+    lines = []
+    for i, acc in enumerate(accounts):
+        aid = acc["id"]
+        is_default = "true" if i == 0 else "false"
+        imap = acc.get("imap", {})
+        smtp = acc.get("smtp", {})
+        imap_user = imap.get("user", "")
+        smtp_user = smtp.get("user", "")
+
+        # Determine the env var name for the password
+        # The config.json uses ${VAR_NAME}, so we extract it
+        raw_cfg = json.loads(CONFIG_JSON.read_text(encoding="utf-8"))
+        raw_acc = next((a for a in raw_cfg["accounts"] if a["id"] == aid), {})
+        raw_imap_pw = raw_acc.get("imap", {}).get("password", "")
+        var_match = re.search(r"\$\{([^}]+)\}", raw_imap_pw)
+        env_var = var_match.group(1) if var_match else None
+
+        pw_command = (
+            f'["python3", "{Path(__file__).resolve()}", "secret", "{env_var}"]'
+            if env_var
+            else '["cat"]'  # fallback — shouldn't happen
+        )
+
+        lines.append(f'[accounts.{aid}]')
+        lines.append(f"default = {is_default}")
+        lines.append(f'email = "{imap_user}"')
+        lines.append(f'display-name = "{acc.get("name", aid)}"')
+        lines.append("")
+        lines.append(f"[accounts.{aid}.imap]")
+        scheme = imap_scheme(acc)
+        lines.append(f'server = "{scheme}://{imap.get("host", "")}:{imap.get("port", 993)}"')
+        lines.append("")
+        lines.append(f"[accounts.{aid}.imap.sasl.plain]")
+        lines.append(f'username = "{imap_user}"')
+        lines.append(f"[accounts.{aid}.imap.sasl.plain.password]")
+        lines.append(f"command = {pw_command}")
+        lines.append("")
+        lines.append(f"[accounts.{aid}.smtp]")
+        scheme = smtp_scheme(acc)
+        lines.append(f'server = "{scheme}://{smtp.get("host", "")}:{smtp.get("port", 465)}"')
+        lines.append("")
+        lines.append(f"[accounts.{aid}.smtp.sasl.plain]")
+        lines.append(f'username = "{smtp_user}"')
+        lines.append(f"[accounts.{aid}.smtp.sasl.plain.password]")
+        lines.append(f"command = {pw_command}")
+        lines.append("")
+
+    HIMALAYA_TOML.write_text("\n".join(lines), encoding="utf-8")
+    print(f"Config written to {HIMALAYA_TOML}")
+    print(f"Accounts: {', '.join(a['id'] for a in accounts)}")
+
+
+def cmd_secret(args):
+    """Print a secret value from environment or mail.env."""
+    var_name = args.var
+    load_mail_env()
+    val = os.environ.get(var_name, "")
+    if not val:
+        print(f"Secret {var_name} not found", file=sys.stderr)
+        sys.exit(1)
+    print(val)
+
+
+def himalaya_cmd(extra_args, account=None):
+    """Run a himalaya command with the generated config."""
+    cmd = ["himalaya", "-c", str(HIMALAYA_TOML)]
+    if account:
+        cmd += ["-a", account]
+    cmd += extra_args
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    if result.returncode != 0:
+        print(result.stderr.strip(), file=sys.stderr)
+        sys.exit(result.returncode)
+    print(result.stdout, end="")
+
+
+def cmd_inbox(args):
+    """List inbox messages."""
+    page_args = ["envelope", "list", "-m", "inbox"]
+    if args.page:
+        page_args += ["--page", str(args.page)]
+    if args.size:
+        page_args += ["--page-size", str(args.size)]
+    page_args.append("--json")
+    himalaya_cmd(page_args, account=args.account)
+
+
+def cmd_folders(args):
+    """List mail folders."""
+    himalaya_cmd(["mailbox", "list", "--json"], account=args.account)
+
+
+def cmd_read(args):
+    """Read a message by ID."""
+    himalaya_cmd(
+        ["message", "read", args.id, "-m", args.folder, "--json"],
+        account=args.account,
+    )
+
+
+def cmd_search(args):
+    """Search messages."""
+    himalaya_cmd(
+        ["envelope", "search", args.query, "-m", args.folder, "--json"],
+        account=args.account,
+    )
+
+
+def cmd_archive(args):
+    """Archive a message (move to archive)."""
+    himalaya_cmd(
+        ["message", "move", args.id, "--from", args.folder, "--to", "archive"],
+        account=args.account,
+    )
+
+
+def cmd_delete(args):
+    """Delete a message (move to trash)."""
+    himalaya_cmd(
+        ["message", "delete", "-m", args.folder, args.id],
+        account=args.account,
+    )
+
+
+def cmd_flag(args):
+    """Flag/star a message."""
+    himalaya_cmd(
+        ["flag", "add", "-m", args.folder, "--flag", "flagged", args.id],
+        account=args.account,
+    )
+
+
+def cmd_unflag(args):
+    """Remove flag/star from a message."""
+    himalaya_cmd(
+        ["flag", "remove", "-m", args.folder, "--flag", "flagged", args.id],
+        account=args.account,
+    )
+
+
+def cmd_send(args):
+    """Compose and send a message."""
+    compose_args = ["message", "compose"]
+    if args.to:
+        compose_args += ["--to", args.to]
+    if args.subject:
+        compose_args += ["--subject", args.subject]
+    if args.body:
+        compose_args += ["--body", args.body]
+    if args.save:
+        compose_args += ["--save", args.save]
+    compose_args.append("--send")
+    himalaya_cmd(compose_args, account=args.account)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        prog="pkmail",
+        description="PKMail — Himalaya-backed terminal mail client",
+    )
+    sub = parser.add_subparsers(dest="command")
+
+    # configure
+    sub.add_parser("configure", help="Generate Himalaya config from config.json")
+
+    # secret
+    p_secret = sub.add_parser("secret", help="Print a secret value (internal)")
+    p_secret.add_argument("var", help="Environment variable name")
+
+    # inbox
+    p_inbox = sub.add_parser("inbox", help="List inbox messages")
+    p_inbox.add_argument("--account", "-a", help="Account ID")
+    p_inbox.add_argument("--page", type=int, help="Page number")
+    p_inbox.add_argument("--size", type=int, help="Page size")
+
+    # folders
+    p_folders = sub.add_parser("folders", help="List mail folders")
+    p_folders.add_argument("--account", "-a", help="Account ID")
+
+    # read
+    p_read = sub.add_parser("read", help="Read a message by ID")
+    p_read.add_argument("id", help="Message ID")
+    p_read.add_argument("--account", "-a", help="Account ID")
+    p_read.add_argument("--folder", "-m", default="inbox", help="Folder name")
+
+    # search
+    p_search = sub.add_parser("search", help="Search messages")
+    p_search.add_argument("query", help="Search query")
+    p_search.add_argument("--account", "-a", help="Account ID")
+    p_search.add_argument("--folder", "-m", default="inbox", help="Folder name")
+
+    # archive
+    p_archive = sub.add_parser("archive", help="Archive a message")
+    p_archive.add_argument("id", help="Message ID")
+    p_archive.add_argument("--account", "-a", help="Account ID")
+    p_archive.add_argument("--folder", "-m", default="inbox", help="Folder name")
+
+    # delete
+    p_delete = sub.add_parser("delete", help="Delete a message")
+    p_delete.add_argument("id", help="Message ID")
+    p_delete.add_argument("--account", "-a", help="Account ID")
+    p_delete.add_argument("--folder", "-m", default="inbox", help="Folder name")
+
+    # flag
+    p_flag = sub.add_parser("flag", help="Flag/star a message")
+    p_flag.add_argument("id", help="Message ID")
+    p_flag.add_argument("--account", "-a", help="Account ID")
+    p_flag.add_argument("--folder", "-m", default="inbox", help="Folder name")
+
+    # unflag
+    p_unflag = sub.add_parser("unflag", help="Remove flag from a message")
+    p_unflag.add_argument("id", help="Message ID")
+    p_unflag.add_argument("--account", "-a", help="Account ID")
+    p_unflag.add_argument("--folder", "-m", default="inbox", help="Folder name")
+
+    # send
+    p_send = sub.add_parser("send", help="Compose and send a message")
+    p_send.add_argument("--to", help="Recipient address")
+    p_send.add_argument("--subject", "-s", help="Subject line")
+    p_send.add_argument("--body", "-b", help="Message body")
+    p_send.add_argument("--save", help="Save copy to mailbox")
+    p_send.add_argument("--account", "-a", help="Account ID")
+
+    args = parser.parse_args()
+
+    if not args.command:
+        parser.print_help()
+        sys.exit(0)
+
+    if args.command == "configure":
+        generate_toml()
+    elif args.command == "secret":
+        cmd_secret(args)
+    elif args.command == "inbox":
+        cmd_inbox(args)
+    elif args.command == "folders":
+        cmd_folders(args)
+    elif args.command == "read":
+        cmd_read(args)
+    elif args.command == "search":
+        cmd_search(args)
+    elif args.command == "archive":
+        cmd_archive(args)
+    elif args.command == "delete":
+        cmd_delete(args)
+    elif args.command == "flag":
+        cmd_flag(args)
+    elif args.command == "unflag":
+        cmd_unflag(args)
+    elif args.command == "send":
+        cmd_send(args)
+
+
+if __name__ == "__main__":
+    main()
