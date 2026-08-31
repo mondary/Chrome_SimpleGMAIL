@@ -1068,7 +1068,7 @@ const attachments=m=>{
   if(!m.attachments||!m.attachments.length)return'';
   if(typeof m.attachments[0]==='string')
     return`<div class="att-row"><span class="g">${I.clip}</span> ${m.attachments.map(esc).join(' · ')}</div>`;
-  return`<div class="att-row">${m.attachments.map(a=>`<a class="att-link" href="${attUrl(m,a)}" download="${esc(a.filename)}" target="_blank" rel="noopener" onclick="event.preventDefault();openAtt(this.getAttribute('href'))" title="Ouvrir ${esc(a.filename)}"><span class="g">${I.clip}</span><span class="att-nm">${esc(a.filename)}</span><span class="att-sz">${attSize(a.size)}</span></a>`).join('')}</div>`};
+  return`<div class="att-row">${m.attachments.map(a=>`<a class="att-link" href="${attUrl(m,a)}" download="${esc(a.filename)}" target="_blank" rel="noopener" title="Ouvrir ${esc(a.filename)}"><span class="g">${I.clip}</span><span class="att-nm">${esc(a.filename)}</span><span class="att-sz">${attSize(a.size)}</span></a>`).join('')}</div>`};
 
 const fresh=()=>({i:0,col:0,row:0,archived:0,mode:'list'});
 const S={1:fresh(),2:fresh(),3:fresh(),4:fresh(),5:fresh(),6:fresh()};
