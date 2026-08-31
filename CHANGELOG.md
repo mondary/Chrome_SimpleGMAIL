@@ -7,6 +7,11 @@ Historique des versions de SimpleMail.
 ### Unreleased
 
 #### Added
+- Vue conversation empilée dans le lecteur Lab : messages du même fil triés de l'ancien au récent, repliés sauf le courant, dépliage à la demande.
+- Bouton flottant « nouveau message » avec envoi réel via le backend et transfert pré-rempli avec le message cité.
+- Annulation de suppression façon Gmail : disparition immédiate, toast « Annuler » pendant 6 secondes avant l'exécution réelle.
+- Thème OMP inspiré d'omp.sh : fond noir, hairlines, accent déclinable en six couleurs, particules teintées à l'accent.
+- Jeu étendu de raccourcis Gmail : `c`, `f`, `z`, `!`, `s`, `u`, `v`, `[`, `]`, `Shift+I`/`Shift+U` et la séquence `g` puis `i`.
 - Layout avec catégories en haut conservé en complément du rail latéral repliable.
 - Thème K7 Media Shelf inspiré d'une bibliothèque média sombre à accent cuivre.
 - Thème K7 Preview Deck séparé avec miniatures HTML sandboxées chargées à l'approche de l'écran.
@@ -16,12 +21,18 @@ Historique des versions de SimpleMail.
 - Anciens styles Aero Glass, Nordic Zen et Editorial réintégrés dans les réglages.
 
 #### Fixed
+- La touche du raccourci libellés/réponse ne s'inscrit plus dans le champ de recherche du sélecteur ni dans la zone de réponse.
+- Entrée applique désormais le libellé sélectionné, avec message visible si aucun message n'est actif.
+- Repli sur le preset quand un raccourci sauvegardé est vide : `j`/`k` fonctionnent dans tous les cas.
+- Hiérarchie parent/enfant et emojis des noms visibles dans la gestion des libellés.
+- Ligne sélectionnée lisible dans tous les thèmes et layouts (fin du blanc sur blanc en menu latéral).
 - Raccourcis archiver, supprimer, libellés, répondre, rechercher et actualiser disponibles dans tous les thèmes et lecteurs.
 - Miniatures HTML rendues inertes pour ne plus capturer les raccourcis dans WKWebView.
 
 #### Changed
 - Navigation Atelier disponible comme layout optionnel avec rail desktop et barre de catégories mobile.
 - Suppression de Three.js, de la boucle WebGL permanente et des filtres plein écran.
+- Largeurs de liste, colonne expéditeur et colonnes Canvas réglées en pourcentages, avec migration automatique des anciennes valeurs en pixels.
 - Navigation clavier optimisée sans reconstruction de toute la liste à chaque déplacement.
 - Lignes mobiles réorganisées sur deux niveaux pour conserver expéditeur, sujet et date lisibles.
 

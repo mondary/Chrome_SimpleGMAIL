@@ -15,11 +15,15 @@ Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Package
 - **Configurable animated backgrounds**: off, particles, waves, or cassette; suspended while the app is hidden
 - **Arrow navigation**: `←` / `→` switch category, `↑` / `↓` (or `J`/`K`) move between messages
 - **Gmail search**: `/` opens a fullscreen overlay, server-side IMAP search (sender, subject, body), keyboard-driven results
+- **Conversation view**: messages of the same thread stack in the reader — original collapsed on top, newest open, each message expands on demand
+- **Compose & forward**: always-visible floating ＋ button, real sending through the backend, forward pre-filled with the quoted message
+- **Undo delete**: the message disappears immediately and an "Undo" toast stays for 6 seconds before the actual deletion
+- **OMP theme**: black background, subtle hairlines, and a pink accent declinable into six colors (rose, cyan, violet, amber, green, blue) with accent-tinted particles
 - **Sticky notes**: self-sent emails displayed as square sticky notes on a dedicated wall; toggleable with eight preset colors or a custom color
 - **Newsletters**: adaptive multi-card carousel (4→8 columns), previews with real images (hero + og:image), hero detail
 - **Inline labels and attachments**: short tags + paperclip icon on each list row
 - **Real archive counter**: `[Gmail]/All Mail` total (EXAMINE fallback when STATUS returns 0)
-- **Official Gmail shortcuts**: `E` archive / `L` labels preset (or SimpleMail preset), fully configurable and available in every theme and reader
+- **Gmail shortcuts**: `J`/`K` navigate, `E` archive, `#` delete, `Z` undo, `C` compose, `R` reply, `F` forward, `!` spam, `S` star, `L`/`V` labels, `Shift+I`/`Shift+U` read/unread, `U` back to list, `[`/`]` archive ± navigate, `G` then `I` inbox — fully configurable and active in every theme and reader
 - **Gmail refresh**: always-visible button, forced update on launch, app resume, and every 60 seconds
 - **Accounts**: enable or disable each account in fully keyboard-navigable settings
 - **Preloading**: other categories load in the background

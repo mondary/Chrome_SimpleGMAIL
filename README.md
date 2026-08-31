@@ -15,11 +15,15 @@ Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla
 - **Fonds animés configurables** : désactivés, particules, ondes ou cassette, suspendus lorsque l'application est masquée
 - **Navigation flèches** : `←` / `→` changent de catégorie, `↑` / `↓` (ou `J`/`K`) naviguent de mail en mail
 - **Recherche Gmail** : `/` ouvre un overlay plein écran, recherche IMAP côté serveur (expéditeur, objet, contenu), navigation clavier des résultats
+- **Vue conversation** : les messages d'un même fil s'empilent dans le lecteur — l'original replié en haut, le plus récent ouvert, chaque message se déplie à la demande
+- **Nouveau message & transfert** : bouton flottant ＋ toujours visible, envoi réel via le backend, transfert pré-rempli avec le message cité
+- **Annulation de suppression** : le mail disparaît immédiatement et un toast « Annuler » reste 6 secondes avant la suppression réelle
+- **Thème OMP** : fond noir, hairlines discrètes et accent rose déclinable (rose, cyan, violet, ambre, vert, bleu), particules teintées à l'accent
 - **Post-its** : mails envoyés à soi-même affichés en vrais post-its carrés sur un mur dédié ; activables et personnalisables avec une palette de huit couleurs ou une couleur libre
 - **Newsletters** : carrousel multicartes (grille adaptative 4→8 colonnes), previews avec vraies images (hero + og:image), détail hero
 - **Libellés et pièces jointes inline** : tags courts + icône trombone sur chaque ligne de liste
 - **Compteur d'archives réel** : total `[Gmail]/Tous les messages` (fallback EXAMINE si STATUS renvoie 0)
-- **Raccourcis Gmail officiels** : preset `E` archiver / `L` libellés (ou preset SimpleMail), entièrement configurables et disponibles dans tous les thèmes et lecteurs
+- **Raccourcis Gmail** : `J`/`K` naviguer, `E` archiver, `#` supprimer, `Z` annuler, `C` nouveau message, `R` répondre, `F` transférer, `!` spam, `S` suivi, `L`/`V` libellés, `Shift+I`/`Shift+U` lu/non-lu, `U` retour liste, `[`/`]` archiver ± naviguer, `G` puis `I` boîte de réception — entièrement configurables et actifs dans tous les thèmes et lecteurs
 - **Actualisation Gmail** : bouton toujours visible, mise à jour forcée au lancement, au retour dans l'app et toutes les 60 secondes
 - **Comptes** : activation ou désactivation individuelle dans les réglages, navigables entièrement au clavier
 - **Préchargement** : les autres catégories se chargent en tâche de fond
