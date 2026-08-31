@@ -33,6 +33,9 @@
 body[data-theme="1"]{--accent:#C64A12}
 body[data-theme="2"]{--accent:#2E6B4E}
 body[data-theme="3"]{--accent:#96662B}
+body[data-theme="4"]{--accent:#CC7A3E}
+body[data-theme="5"]{--accent:#CC7A3E}
+body[data-theme="6"]{--accent:#A85E2E}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%}
 body{background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:14px;
@@ -83,6 +86,11 @@ body[data-visual="ultra"] #world-canvas{display:none}
 body[data-visual="ultra"] .world-nav{background:#fff;backdrop-filter:none;border-color:var(--hair)}
 body[data-visual="ultra"] .cat-icon{--cat:#09090b!important;border-radius:6px;box-shadow:none}
 body[data-visual="ultra"] .world-arrow .arr,body[data-visual="ultra"] .postit,body[data-visual="ultra"] .cv-row.memo{box-shadow:none}
+body[data-visual="aero"]{--bg:#f8fafc;--paper:rgba(255,255,255,.72);--ink:#0f172a;--muted:#64748b;--faint:#94a3b8;--hair:rgba(255,255,255,.5);--hair2:rgba(226,232,240,.72);--accent:#5272ea}
+body[data-visual="aero"] .row,body[data-visual="aero"] .cmd,body[data-visual="aero"] .hud{backdrop-filter:blur(20px);box-shadow:0 8px 32px rgba(31,38,135,.04)}
+body[data-visual="nordic"]{--bg:#fbf9f6;--paper:#fbf9f6;--ink:#1c1e21;--muted:#70747c;--faint:#a49d94;--hair:#e8e5df;--hair2:#f2efe9;--accent:#8c6c50}
+body[data-visual="editorial"]{--bg:#fff;--paper:#fff;--ink:#111;--muted:#666;--faint:#999;--hair:#ddd;--hair2:#f4f4f4;--accent:#000}
+body[data-visual="editorial"] .row,body[data-visual="editorial"] .cat-icon,body[data-visual="editorial"] .panel{border-radius:0!important;box-shadow:none!important}
 body[data-favicons="false"] .fav{display:none}
 body[data-labels="false"] .tags{display:none}
 body[data-dates="false"] .row .date,body[data-dates="false"] .cv-date{display:none}
@@ -275,6 +283,16 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
 .p-card.memo .p-no::before{content:'\F249';font-size:10px;color:#8A7430}
 .p-card.memo.sel{outline:2px solid var(--ink);outline-offset:-2px}
 
+/* theme 4: K7-inspired media shelf */
+#c4{background:#090d13;color:#f3eee7;overflow:auto}.k7-wrap{min-height:100%;padding:32px clamp(22px,4vw,64px) 82px}.k7-feature{width:100%;min-height:280px;position:relative;display:grid;grid-template-columns:minmax(260px,1.5fr) minmax(250px,1fr);overflow:hidden;text-align:left;color:#f3eee7;border-radius:18px;background:#151b24;box-shadow:0 22px 70px rgba(0,0,0,.28);transition:transform .18s}.k7-feature:hover,.k7-feature.sel{transform:translateY(-3px)}.k7-feature-art{position:relative;min-height:280px;overflow:hidden;background:var(--cover)}.k7-feature-art img,.k7-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.k7-feature-art img{opacity:.78}.k7-feature-art::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 45%,#151b24)}.k7-feature-copy{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;padding:34px}.k7-kicker{color:#d6a46f;font:700 10px/1 system-ui,sans-serif;letter-spacing:.15em;text-transform:uppercase}.k7-feature-copy h2{margin:14px 0 12px;font:750 clamp(24px,3vw,42px)/1.05 system-ui,sans-serif;letter-spacing:-.04em}.k7-feature-copy p{color:#aaa39a;font:13px/1.55 system-ui,sans-serif}.k7-play{width:max-content;margin-top:24px;padding:10px 16px;border-radius:20px;background:#f3eee7;color:#17110c;font:700 11px system-ui,sans-serif}.k7-head{display:flex;align-items:baseline;gap:14px;margin:34px 0 18px}.k7-head h2{font:700 19px system-ui,sans-serif}.k7-head span{color:#817a72;font:11px system-ui,sans-serif}.k7-shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:26px 20px}.k7-card{min-width:0;text-align:left;color:#f3eee7}.k7-cover{height:205px;position:relative;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;padding:16px;border-radius:13px;background:var(--cover);box-shadow:0 14px 30px rgba(0,0,0,.22);transition:transform .16s}.k7-card:hover .k7-cover,.k7-card.sel .k7-cover{transform:translateY(-5px)}.k7-card:focus-visible{outline:0}.k7-card:focus-visible .k7-cover,.k7-feature:focus-visible{outline:2px solid #CC7A3E;outline-offset:3px}.k7-cover img{opacity:.7}.k7-cover::after{content:'';position:absolute;inset:42% 0 0;background:linear-gradient(transparent,rgba(5,7,10,.9))}.k7-art{position:absolute;inset:0;overflow:hidden}.k7-art::before,.k7-art::after{content:'';position:absolute;border-radius:50%}.k7-art.a::before{width:150px;height:150px;right:-32px;top:-20px;background:rgba(255,255,255,.16)}.k7-art.a::after{width:78px;height:78px;right:18px;top:26px;border:14px solid rgba(9,13,19,.35)}.k7-art.b::before{width:180px;height:52px;left:-28px;top:46px;border-radius:4px;background:rgba(255,255,255,.13);transform:rotate(-28deg)}.k7-art.b::after{width:120px;height:120px;right:-55px;bottom:30px;border:20px solid rgba(255,255,255,.1)}.k7-art.c::before{inset:20px;border-radius:8px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.12) 0 2px,transparent 2px 17px)}.k7-art.c::after{width:86px;height:86px;left:34px;top:46px;background:rgba(9,13,19,.2)}.k7-mark,.k7-subject{position:relative;z-index:1}.k7-mark{font:800 28px/1 system-ui,sans-serif;letter-spacing:-.08em;color:rgba(255,255,255,.9)}.k7-subject{font:700 14px/1.25 system-ui,sans-serif;text-shadow:0 1px 6px #000}.k7-meta{padding:10px 2px 0}.k7-from{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:650 12px system-ui,sans-serif}.k7-date{display:block;margin-top:3px;color:#817a72;font:11px system-ui,sans-serif}.k7-unread{position:absolute;z-index:2;right:12px;top:12px;width:8px;height:8px;border-radius:50%;background:#CC7A3E;box-shadow:0 0 0 3px rgba(12,16,24,.65)}
+
+.k7-feature{grid-template-columns:minmax(0,1.45fr) minmax(230px,.85fr)}.k7-feature-art{background:radial-gradient(circle at 78% 36%,transparent 0 48px,rgba(9,13,19,.3) 49px 66px,transparent 67px),linear-gradient(145deg,rgba(255,255,255,.16),transparent 42%),var(--cover)}.k7-feature-art .k7-art{inset:8%;opacity:.8}.k7-feature-art .k7-art::before{width:240px;height:240px;right:7%;top:-52px}.k7-feature-art .k7-art::after{width:120px;height:120px;right:16%;top:8px;border-width:24px}.k7-feature-copy{min-width:0;padding:30px}.k7-feature-copy h2{overflow-wrap:anywhere;font-size:clamp(22px,2.6vw,36px)}
+
+/* theme 5: K7 shelf with lazy mail previews */
+#c5{background:#090d13;color:#f3eee7;overflow:auto}.kp-wrap{min-height:100%;padding:30px clamp(20px,4vw,62px) 82px}.kp-head{display:flex;align-items:end;justify-content:space-between;margin-bottom:26px}.kp-head h2{font:750 clamp(24px,3vw,38px)/1 system-ui,sans-serif;letter-spacing:-.04em}.kp-head p{margin-top:8px;color:#89837b;font:12px system-ui,sans-serif}.kp-count{color:#CC7A3E;font:700 10px system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase}.kp-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.kp-card{min-height:220px;display:grid;grid-template-columns:180px minmax(0,1fr);overflow:hidden;border-radius:15px;background:#131923;color:#f3eee7;text-align:left;box-shadow:0 12px 30px rgba(0,0,0,.18);transition:transform .16s,background .16s}.kp-card:hover,.kp-card.sel{transform:translateY(-3px);background:#171f2a}.kp-card:focus-visible{outline:2px solid #CC7A3E;outline-offset:3px}.kp-mail-preview{position:relative;overflow:hidden;contain:strict;isolation:isolate;clip-path:inset(0);background:#fff;color:#393630}.kp-mail-preview iframe{position:absolute;inset:0 auto auto 0;width:600px;height:740px;border:0;background:#fff;pointer-events:none;transform:scale(.3);transform-origin:0 0}.kp-preview-status{position:absolute;inset:0;display:grid;place-items:center;padding:18px;color:#736d64;background:#eee9df;font:9px/1.45 system-ui,sans-serif;text-align:center}.kp-mail-preview.ready .kp-preview-status{display:none}.kp-copy{min-width:0;display:flex;flex-direction:column;padding:20px 22px}.kp-top{display:flex;align-items:center;gap:8px;color:#8f887f;font:10px system-ui,sans-serif}.kp-top b{color:#d6a46f;font-weight:700}.kp-copy h3{margin:13px 0 9px;display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:3;font:720 17px/1.18 system-ui,sans-serif}.kp-open{margin-top:auto;padding-top:14px;color:#e7dfd5;font:700 10px system-ui,sans-serif}.kp-dot{width:7px;height:7px;margin-left:auto;border-radius:50%;background:#CC7A3E}
+#c6{background:#f1eee8;color:#1d1c1a;overflow:auto}#c5 .cmd,#c6 .cmd{position:relative;left:auto;right:auto;bottom:auto;margin-top:28px}#c5 .load-more{color:#c7beb4;border-color:#333b46}#c5 .load-more:hover{color:#f3eee7;border-color:#4a5260}.preview-white .kp-head p{color:#78736b}.preview-white .kp-count{color:#A85E2E}.preview-white .kp-card{background:#fff;color:#24211d;box-shadow:0 10px 28px rgba(62,51,40,.1)}.preview-white .kp-card:hover,.preview-white .kp-card.sel{background:#faf7f1}.preview-white .kp-top{color:#8a837a}.preview-white .kp-top b,.preview-white .kp-open{color:#9b552b}.preview-white .kp-dot{background:#A85E2E}
+.kp-card{cursor:pointer}
+
 /* corps de mail html */
 .mail-frame{width:100%;border:none;display:block;margin-top:6px}
 .att-row{display:flex;gap:8px;align-items:center;font-size:11px;color:var(--muted);
@@ -312,6 +330,9 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
 .theme-preview i{display:block;background:#d9d6ce;border-radius:1px}.theme-preview.focus{flex-direction:column}.theme-preview.focus i{height:8px}.theme-preview.focus i:first-child{height:30px;background:#c5d6e9}
 .theme-preview.canvas{align-items:stretch}.theme-preview.canvas i{flex:1}.theme-preview.canvas i:nth-child(2){background:#d7e5d8}.theme-preview.canvas i:nth-child(3){background:#eadfc7}
 .theme-preview.paper{align-items:center}.theme-preview.paper i{width:25%;height:48px;background:#eadfc7}.theme-preview.paper i:first-child{width:48%;height:60px;background:#fff;border:1px solid #d9d6ce}
+.theme-preview.k7{align-items:end;background:#0c1018}.theme-preview.k7 i{flex:1;height:70%;border-radius:4px;background:#29394a}.theme-preview.k7 i:nth-child(2){height:85%;background:#6d4933}.theme-preview.k7 i:nth-child(3){height:62%;background:#354f43}.theme-preview.k7 i:nth-child(4){height:78%;background:#594057}
+.theme-preview.preview{flex-direction:column;background:#0c1018}.theme-preview.preview i{width:100%;height:14px;border-radius:3px;background:linear-gradient(90deg,#6d4933 22%,#242c37 22%)}
+.theme-preview.preview-white{flex-direction:column;background:#eee9df}.theme-preview.preview-white i{width:100%;height:14px;border-radius:3px;background:linear-gradient(90deg,#fff 22%,#d8d0c4 22%)}
 .install-preview{width:64px;height:64px;justify-self:center;border-radius:14px}
 .memo-palette{display:flex;flex-wrap:wrap;gap:8px}.memo-swatch{width:34px;height:34px;border:1px solid rgba(0,0,0,.16);border-radius:50%}.memo-swatch.on{box-shadow:0 0 0 2px var(--ink)}
 .canvas-labels{max-height:260px;overflow:auto;border:1px solid var(--hair)}.canvas-labels .set-row{border-bottom:1px solid var(--hair2)}.canvas-labels .set-row:last-child{border-bottom:0}
@@ -405,39 +426,49 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
 #toast{position:fixed;left:50%;bottom:60px;transform:translate(-50%,10px);background:var(--ink);color:#fff;
   font-size:11px;padding:10px 14px;opacity:0;pointer-events:none;transition:all .18s;z-index:80}
 #toast.show{opacity:1;transform:translate(-50%,0)}
-/* Atelier Mail: a quiet navigation rail, one bright work surface, no expensive glass or filters. */
-.app-rail{position:fixed;inset:0 auto 0 0;width:236px;display:flex;flex-direction:column;background:#17242b;color:#edf2ef;z-index:45}
-.rail-brand{height:72px;display:flex;align-items:center;gap:11px;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.1)}
-.rail-brand img{width:30px;height:30px;border-radius:8px}.rail-brand b{font-size:13px;letter-spacing:.12em}.rail-brand small{display:block;margin-top:2px;color:#9eaaa5;font-size:9px;letter-spacing:.08em}
-.workspace{position:fixed;inset:0 0 0 236px;background:#f5f7f5}
-.hud{position:absolute;height:72px;padding:0 28px;gap:18px;border-bottom:1px solid #dfe4e1;background:#fff;z-index:40}
-.hud-mark{display:none}.hud-title{font:600 15px/1.2 var(--font-ui);letter-spacing:-.02em}.hud-title b{color:#d85a43}.hud-live{border-color:#dfe4e1;background:#f5f7f5}.hud-right{gap:20px}.hud-refresh{height:34px;padding:0 12px;border-color:#dfe4e1;border-radius:7px;background:#fff}
-.world-nav{position:relative;inset:auto;height:auto;display:flex;flex:1;align-items:stretch;padding:18px 12px;border:0;background:none;z-index:auto}
-.world-center{width:100%;min-width:0;text-align:left}.world-kicker{padding:0 8px;margin:0 0 10px;color:#788780}.world-name{display:none}.world-track{display:flex;flex-direction:column;justify-content:flex-start;gap:3px;margin:0}
-.cat-icon,body[data-category-nav="icons"] .cat-icon{width:100%;height:40px;padding:0 10px;border:0;border-radius:7px;background:transparent;color:#aeb9b4;justify-content:flex-start;font-size:11px;transition:background .14s,color .14s,transform .14s}
-body[data-category-nav="icons"] .cat-icon{font-size:11px}.cat-icon i,body[data-category-nav="icons"] .cat-icon i{width:20px;font-size:13px;text-align:center}.cat-icon:hover{background:rgba(255,255,255,.07);color:#fff;transform:translateX(2px)}
-.cat-icon.on{background:#edf2ef;color:#17242b;box-shadow:none}.cat-icon.on i{color:var(--cat)}.cat-count{margin-left:auto;color:inherit;font-size:9px;opacity:.65;font-variant-numeric:tabular-nums}
-.rail-actions{padding:12px;border-top:1px solid rgba(255,255,255,.1);display:grid;gap:4px}.rail-action{height:38px;padding:0 10px;border-radius:7px;color:#aeb9b4;display:flex;align-items:center;gap:10px;font-size:11px;text-align:left}.rail-action:hover{background:rgba(255,255,255,.07);color:#fff}.rail-action .g{width:20px;text-align:center}
-.stage{inset:72px 0 0;background:#f5f7f5;transition:opacity .14s,transform .18s cubic-bezier(.2,.8,.2,1)}
-.stage.world-exit-left,.stage.world-exit-right{opacity:0;filter:none}.stage.world-exit-left{transform:translateX(-18px)}.stage.world-exit-right{transform:translateX(18px)}
+#ambient-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;opacity:.55}body[data-motion="off"] #ambient-canvas{display:none}
+/* Atelier Mail: optional navigation rail; the original top navigation remains available. */
+.app-rail{display:contents}.workspace{display:contents}.rail-brand,.rail-actions{display:none}
+body[data-layout="sidebar"] .app-rail{position:fixed;inset:0 auto 0 0;width:236px;display:flex;flex-direction:column;background:#17242b;color:#edf2ef;z-index:45;transition:width .18s ease}
+body[data-layout="sidebar"] .rail-brand{height:72px;display:flex;align-items:center;gap:11px;padding:0 12px 0 20px;border-bottom:1px solid rgba(255,255,255,.1)}
+body[data-layout="sidebar"] .rail-brand img{width:30px;height:30px;border-radius:8px}body[data-layout="sidebar"] .rail-brand b{font-size:13px;letter-spacing:.12em}body[data-layout="sidebar"] .rail-brand small{display:block;margin-top:2px;color:#9eaaa5;font-size:9px;letter-spacing:.08em}
+.rail-toggle{width:34px;height:34px;margin-left:auto;flex:none;border-radius:7px;color:#aeb9b4;font-size:22px;line-height:1}.rail-toggle:hover{background:rgba(255,255,255,.07);color:#fff}
+body[data-layout="sidebar"] .workspace{position:fixed;display:block;inset:0 0 0 236px;background:#f5f7f5;transition:left .18s ease}
+body[data-layout="sidebar"] .hud{position:absolute;height:72px;padding:0 28px;gap:18px;border-bottom:1px solid #dfe4e1;background:#fff;z-index:40}
+body[data-layout="sidebar"] .hud-mark{display:none}body[data-layout="sidebar"] .hud-title{font:600 15px/1.2 var(--font-ui);letter-spacing:-.02em}body[data-layout="sidebar"] .hud-title b{color:#d85a43}body[data-layout="sidebar"] .hud-live{border-color:#dfe4e1;background:#f5f7f5}body[data-layout="sidebar"] .hud-right{gap:20px}body[data-layout="sidebar"] .hud-refresh{height:34px;padding:0 12px;border-color:#dfe4e1;border-radius:7px;background:#fff}body[data-layout="sidebar"] .hud-key{display:none}
+body[data-layout="sidebar"] .world-nav{position:relative;inset:auto;height:auto;display:flex;flex:1;align-items:stretch;padding:18px 12px;border:0;background:none;z-index:auto}
+body[data-layout="sidebar"] .world-center{width:100%;min-width:0;text-align:left}body[data-layout="sidebar"] .world-kicker{padding:0 8px;margin:0 0 10px;color:#788780}body[data-layout="sidebar"] .world-name{display:none}body[data-layout="sidebar"] .world-track{display:flex;flex-direction:column;justify-content:flex-start;gap:3px;margin:0}
+body[data-layout="sidebar"] .cat-icon,body[data-layout="sidebar"][data-category-nav="icons"] .cat-icon{width:100%;height:40px;padding:0 10px;border:0;border-radius:7px;background:transparent;color:#aeb9b4;justify-content:flex-start;font-size:11px;transition:background .14s,color .14s,transform .14s}
+body[data-layout="sidebar"][data-category-nav="icons"] .cat-icon{font-size:11px}body[data-layout="sidebar"] .cat-icon i,body[data-layout="sidebar"][data-category-nav="icons"] .cat-icon i{width:20px;font-size:13px;text-align:center}body[data-layout="sidebar"] .cat-icon:hover{background:rgba(255,255,255,.07);color:#fff;transform:translateX(2px)}
+body[data-layout="sidebar"] .cat-icon.on{background:#edf2ef;color:#17242b;box-shadow:none}body[data-layout="sidebar"] .cat-icon.on i{color:var(--cat)}.cat-count{margin-left:auto;color:inherit;font-size:9px;opacity:.65;font-variant-numeric:tabular-nums}
+body[data-layout="sidebar"] .rail-actions{padding:12px;border-top:1px solid rgba(255,255,255,.1);display:grid;gap:4px}.rail-action{height:38px;padding:0 10px;border-radius:7px;color:#aeb9b4;display:flex;align-items:center;gap:10px;font-size:11px;text-align:left}.rail-action:hover{background:rgba(255,255,255,.07);color:#fff}.rail-action .g{width:20px;text-align:center}
+body[data-layout="sidebar"] .stage{inset:72px 0 0;background:#f5f7f5;transition:opacity .14s,transform .18s cubic-bezier(.2,.8,.2,1)}
+body[data-layout="sidebar"] .stage.world-exit-left,body[data-layout="sidebar"] .stage.world-exit-right{opacity:0;filter:none}body[data-layout="sidebar"] .stage.world-exit-left{transform:translateX(-18px)}body[data-layout="sidebar"] .stage.world-exit-right{transform:translateX(18px)}
 @keyframes world-enter{from{opacity:0;transform:translateX(var(--world-enter,18px))}to{opacity:1;transform:none}}
-.lst{width:min(var(--list-width),calc(100vw - 284px));padding-top:32px}.lst-head{padding-bottom:14px}.row{background:#fff}.row:first-of-type{border-radius:8px 8px 0 0}.row:hover{background:#f0f3f1}.row,.cv-row,.postit{content-visibility:auto}.row{contain-intrinsic-size:auto 42px}.cv-row{contain-intrinsic-size:auto 58px}.postit{contain-intrinsic-size:auto 190px}
-.cmd{background:#fff}.panel,.search-panel{box-shadow:0 20px 55px rgba(23,36,43,.16)}
+body[data-layout="sidebar"] .lst{width:min(var(--list-width),calc(100vw - 284px));padding-top:32px}body[data-layout="sidebar"] .lst-head{padding-bottom:14px}body[data-layout="sidebar"] .row{background:#fff}body[data-layout="sidebar"] .row:first-of-type{border-radius:8px 8px 0 0}body[data-layout="sidebar"] .row:hover{background:#f0f3f1}.row,.cv-row,.postit{content-visibility:auto}.row{contain-intrinsic-size:auto 42px}.cv-row{contain-intrinsic-size:auto 58px}.postit{contain-intrinsic-size:auto 190px}
+body[data-layout="sidebar"] .cmd{background:#fff}.panel,.search-panel{box-shadow:0 20px 55px rgba(23,36,43,.16)}
+body[data-layout="sidebar"][data-rail-collapsed="true"] .app-rail{width:64px}body[data-layout="sidebar"][data-rail-collapsed="true"] .workspace{left:64px}body[data-layout="sidebar"][data-rail-collapsed="true"] .rail-brand{padding:0 15px}body[data-layout="sidebar"][data-rail-collapsed="true"] .rail-brand img,body[data-layout="sidebar"][data-rail-collapsed="true"] .rail-brand>span{display:none}body[data-layout="sidebar"][data-rail-collapsed="true"] .rail-toggle{margin:0}body[data-layout="sidebar"][data-rail-collapsed="true"] .world-kicker,body[data-layout="sidebar"][data-rail-collapsed="true"] .cat-count{display:none}body[data-layout="sidebar"][data-rail-collapsed="true"] .cat-icon{width:40px;padding:0;justify-content:center;font-size:0}body[data-layout="sidebar"][data-rail-collapsed="true"] .cat-icon i{width:auto;font-size:13px}body[data-layout="sidebar"][data-rail-collapsed="true"] .rail-action{width:40px;padding:0;justify-content:center;font-size:0}body[data-layout="sidebar"][data-rail-collapsed="true"] .rail-action .g{width:auto;font-size:13px}body[data-layout="sidebar"][data-rail-collapsed="true"] .rail-action kbd{display:none}body[data-layout="sidebar"][data-rail-collapsed="true"] .lst{width:min(var(--list-width),calc(100vw - 112px))}
+body[data-theme="4"] .hud,body[data-theme="4"][data-layout="top"] .world-nav{background:#111720;color:#f3eee7;border-color:#2b3038;backdrop-filter:none}body[data-theme="4"] .hud-title,body[data-theme="4"] .hud-right .n,body[data-theme="4"][data-layout="top"] .world-name{color:#f3eee7}body[data-theme="4"] .hud-live,body[data-theme="4"] .hud-refresh{background:#171e28;color:#c7beb4;border-color:#333b46}body[data-theme="4"] .cmd{background:#111720;color:#a79d92;border-color:#2b3038}body[data-theme="4"] kbd{background:#171e28;color:#c7beb4;border-color:#3a424e}body[data-theme="4"][data-layout="sidebar"] .app-rail{background:#090d13}body[data-theme="4"][data-layout="sidebar"] .workspace,body[data-theme="4"][data-layout="sidebar"] .stage{background:#0c1018}
+body[data-theme="5"] .hud,body[data-theme="5"][data-layout="top"] .world-nav{background:#111720;color:#f3eee7;border-color:#2b3038;backdrop-filter:none}body[data-theme="5"] .hud-title,body[data-theme="5"] .hud-right .n,body[data-theme="5"][data-layout="top"] .world-name{color:#f3eee7}body[data-theme="5"] .hud-live,body[data-theme="5"] .hud-refresh{background:#171e28;color:#c7beb4;border-color:#333b46}body[data-theme="5"] .cmd{background:#111720;color:#a79d92;border-color:#2b3038}body[data-theme="5"] kbd{background:#171e28;color:#c7beb4;border-color:#3a424e}body[data-theme="5"][data-layout="sidebar"] .app-rail{background:#090d13}body[data-theme="5"][data-layout="sidebar"] .workspace,body[data-theme="5"][data-layout="sidebar"] .stage{background:#0c1018}
+body[data-theme="6"] .hud,body[data-theme="6"][data-layout="top"] .world-nav{background:#f8f5ef;color:#27231f;border-color:#ddd6cc;backdrop-filter:none}body[data-theme="6"] .hud-title,body[data-theme="6"] .hud-right .n,body[data-theme="6"][data-layout="top"] .world-name{color:#27231f}body[data-theme="6"] .hud-live,body[data-theme="6"] .hud-refresh{background:#fff;color:#625b53;border-color:#ddd6cc}body[data-theme="6"] .cmd{background:#f8f5ef;color:#6f685f;border-color:#ddd6cc}body[data-theme="6"] kbd{background:#fff;color:#504a43;border-color:#d6cec2}body[data-theme="6"][data-layout="sidebar"] .app-rail{background:#e8e2d9}body[data-theme="6"][data-layout="sidebar"] .workspace,body[data-theme="6"][data-layout="sidebar"] .stage{background:#f1eee8}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 @media (max-width:760px){.row .from{width:min(var(--sender-width),32vw)}.row .subj{max-width:36%}.hud-right{display:none}
-  .app-rail{inset:72px 0 auto;width:auto;height:58px}.rail-brand,.rail-actions,.world-kicker{display:none}.workspace{inset:0}.hud{height:72px;padding:0 16px}.hud-mark{display:inline-flex}.hud-title{font-size:12px}.hud-refresh{margin-left:auto}.world-nav{padding:8px 10px;overflow-x:auto}.world-center{width:max-content}.world-track{flex-direction:row;gap:4px}.cat-icon,body[data-category-nav="icons"] .cat-icon{width:38px;height:38px;padding:0;justify-content:center;font-size:0}.cat-icon i,body[data-category-nav="icons"] .cat-icon i{width:auto;font-size:13px}.cat-count{display:none}
+  body[data-layout="sidebar"] .app-rail{inset:72px 0 auto;width:auto!important;height:58px}body[data-layout="sidebar"] .rail-brand,body[data-layout="sidebar"] .rail-actions,body[data-layout="sidebar"] .world-kicker{display:none}body[data-layout="sidebar"] .workspace{inset:0}body[data-layout="sidebar"] .hud{height:72px;padding:0 16px}body[data-layout="sidebar"] .hud-mark{display:inline-flex}body[data-layout="sidebar"] .hud-title{font-size:12px}body[data-layout="sidebar"] .hud-refresh{margin-left:auto}body[data-layout="sidebar"] .world-nav{padding:8px 10px;overflow-x:auto}body[data-layout="sidebar"] .world-center{width:max-content}body[data-layout="sidebar"] .world-track{flex-direction:row;gap:4px}body[data-layout="sidebar"] .cat-icon,body[data-layout="sidebar"][data-category-nav="icons"] .cat-icon{width:38px;height:38px;padding:0;justify-content:center;font-size:0}body[data-layout="sidebar"] .cat-icon i,body[data-layout="sidebar"][data-category-nav="icons"] .cat-icon i{width:auto;font-size:13px}.cat-count{display:none}
   .hud-mark{font-size:0}.hud-mark img{margin-right:0!important}.hud-live,.hud-refresh #refresh-label,.hud-refresh kbd{display:none}.hud-refresh{width:34px;padding:0;justify-content:center}
   .stage{inset:130px 0 0}.lst{width:94vw;padding-top:18px}.row{display:grid;grid-template-columns:24px minmax(0,1fr) auto;grid-template-rows:auto auto;gap:3px 9px;min-height:58px;padding:8px 10px}.row .fav,.row .who-b,.row .nl-thumb{grid-column:1;grid-row:1/3;align-self:center}.row .nl-thumb{width:24px;height:24px}.row .from{grid-column:2;grid-row:1;width:auto;max-width:none;min-width:0}.row .date{grid-column:3;grid-row:1;min-width:0}.row .subj{grid-column:2/4;grid-row:2;width:100%;max-width:none;min-width:0}.row .snip,.row .tags,.row .att-i{display:none}.memo-board{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .read-drawer{height:calc(100vh - 44px);border-radius:0}
   #ov-search.dedicated .search-results{max-width:46%}.search-reader{padding:24px 16px}
   #rd-body{padding:46px 18px 24px}
   .p-card{width:180px}
+  .k7-wrap{padding:14px 12px 74px}.k7-feature{min-height:330px;display:block}.k7-feature-art{position:absolute;inset:0;min-height:0}.k7-feature-art::after{background:linear-gradient(0deg,#151b24 0,rgba(21,27,36,.3) 72%)}.k7-feature-copy{min-height:330px;justify-content:end;padding:22px}.k7-shelf{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 12px}.k7-cover{height:185px;padding:14px}
+  .kp-wrap{padding:20px 12px 74px}.kp-list{grid-template-columns:1fr}.kp-card{grid-template-columns:118px minmax(0,1fr);min-height:190px}.kp-mail-preview iframe{height:970px;transform:scale(.197)}.kp-copy{padding:16px}
   .set-fs-nav{width:56px}.set-fs-nav button span,.set-fs-nav button{font-size:0}.set-fs-nav button i{font-size:16px}.set-fs-content{padding:16px}.set-theme{grid-template-columns:92px 1fr}.set-theme .st{display:none}.theme-preview{height:58px}}
 </style>
 </head>
 <body data-theme="1">
+<canvas id="ambient-canvas" aria-hidden="true"></canvas>
 <aside class="app-rail">
-  <div class="rail-brand"><img src="icon-192.png" alt=""><span><b>PKMAIL</b><small>ATELIER COURRIER</small></span></div>
+  <div class="rail-brand"><img src="icon-192.png" alt=""><span><b>PKMAIL</b><small>ATELIER COURRIER</small></span><button class="rail-toggle" data-toggle-rail aria-label="Replier le menu latéral" aria-expanded="true" aria-controls="categories">‹</button></div>
   <nav class="world-nav" id="categories" aria-label="Changer de catégorie Gmail"></nav>
   <div class="rail-actions">
     <button class="rail-action" data-open-search><span class="g">&#xF002;</span>Rechercher <kbd data-key="search">/</kbd></button>
@@ -453,6 +484,8 @@ body[data-category-nav="icons"] .cat-icon{font-size:11px}.cat-icon i,body[data-c
   <div class="hud-right">
     <span><span class="n" id="hud-inbox">–</span> messages</span>
     <span><span class="g">&#xF187;</span> <span class="n" id="hud-arch">0</span></span>
+    <button class="hud-key" data-open-search aria-label="Rechercher"><span class="g">&#xF002;</span> <kbd data-key="search">/</kbd></button>
+    <button class="hud-key" data-open-settings aria-label="Réglages">réglages <kbd data-key="settings">,</kbd></button>
   </div>
 </header>
 
@@ -473,8 +506,8 @@ body[data-category-nav="icons"] .cat-icon{font-size:11px}.cat-icon i,body[data-c
     <div id="cv-wrap"><div id="cv-cols"></div></div>
     <div class="cmd" aria-hidden="true">
       <span><kbd>H</kbd><kbd>L</kbd> colonne</span><span><kbd>&#x2190;</kbd><kbd>&#x2192;</kbd> catégorie</span><span><kbd>&#x2191;</kbd><kbd>&#x2193;</kbd> message</span>
-      <span><kbd>Entrée</kbd> lire</span><span><kbd data-key="archive">E</kbd> archiver</span>
-      <span><kbd data-key="search">/</kbd> rechercher</span><span><kbd data-key="refresh">Z</kbd> recharger</span><span><kbd data-key="help">?</kbd> aide</span>
+      <span><kbd>Entrée</kbd> lire</span><span><kbd data-key="archive">E</kbd> archiver</span><span><kbd data-key="delete">#</kbd> supprimer</span>
+      <span><kbd data-key="labels">L</kbd> libellés</span><span><kbd data-key="reply">R</kbd> répondre</span><span><kbd data-key="search">/</kbd> rechercher</span><span><kbd data-key="refresh">Z</kbd> recharger</span><span><kbd data-key="help">?</kbd> aide</span>
     </div>
   </section>
 
@@ -487,6 +520,21 @@ body[data-category-nav="icons"] .cat-icon{font-size:11px}.cat-icon i,body[data-c
       <div id="p-strip" aria-label="File d'attente"></div>
     </div>
     <div class="cmd" id="p-cmd" aria-hidden="true"></div>
+  </section>
+
+  <section class="theme" id="c4" hidden aria-label="Thème K7 Media Shelf">
+    <div class="k7-wrap"><div id="k7-feature"></div><header class="k7-head"><h2 id="k7-title">Récemment reçus</h2><span id="k7-count"></span></header><div class="k7-shelf" id="k7-list"></div></div>
+    <div class="cmd" aria-hidden="true"><span><kbd data-key="next">J</kbd><kbd data-key="previous">K</kbd> naviguer</span><span><kbd>Entrée</kbd> lire</span><span><kbd data-key="archive">E</kbd> archiver</span><span><kbd data-key="delete">#</kbd> supprimer</span><span><kbd data-key="labels">L</kbd> libellés</span><span><kbd data-key="reply">R</kbd> répondre</span><span><kbd data-key="search">/</kbd> rechercher</span><span><kbd data-key="refresh">Z</kbd> recharger</span></div>
+  </section>
+
+  <section class="theme" id="c5" hidden aria-label="Thème K7 Preview Deck">
+    <div class="kp-wrap"><header class="kp-head"><div><h2 id="kp-title">Aperçus</h2><p>Le contenu se charge à l'approche de l'écran.</p></div><span class="kp-count" id="kp-count"></span></header><div class="kp-list" id="kp-list"></div></div>
+    <div class="cmd" aria-hidden="true"><span><kbd data-key="next">J</kbd><kbd data-key="previous">K</kbd> naviguer</span><span><kbd>Entrée</kbd> ouvrir</span><span><kbd data-key="archive">E</kbd> archiver</span><span><kbd data-key="delete">#</kbd> supprimer</span><span><kbd data-key="labels">L</kbd> libellés</span><span><kbd data-key="reply">R</kbd> répondre</span><span><kbd data-key="search">/</kbd> rechercher</span></div>
+  </section>
+
+  <section class="theme preview-white" id="c6" hidden aria-label="Thème K7 Preview Deck clair">
+    <div class="kp-wrap"><header class="kp-head"><div><h2 id="kw-title">Aperçus</h2><p>Le contenu se charge à l'approche de l'écran.</p></div><span class="kp-count" id="kw-count"></span></header><div class="kp-list" id="kw-list"></div></div>
+    <div class="cmd" aria-hidden="true"><span><kbd data-key="next">J</kbd><kbd data-key="previous">K</kbd> naviguer</span><span><kbd>Entrée</kbd> ouvrir</span><span><kbd data-key="archive">E</kbd> archiver</span><span><kbd data-key="delete">#</kbd> supprimer</span><span><kbd data-key="labels">L</kbd> libellés</span><span><kbd data-key="reply">R</kbd> répondre</span><span><kbd data-key="search">/</kbd> rechercher</span></div>
   </section>
 
 </main>
@@ -539,7 +587,7 @@ body[data-category-nav="icons"] .cat-icon{font-size:11px}.cat-icon i,body[data-c
   <div class="panel" role="dialog" aria-modal="true" aria-labelledby="help-title">
     <h3 id="help-title">Raccourcis</h3>
     <div class="help-grid" id="help-body"></div>
-    <div class="ov-foot"><span><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> thème</span><span><kbd>,</kbd> réglages</span><span><kbd>Échap</kbd> fermer</span></div>
+    <div class="ov-foot"><span><kbd>1</kbd>–<kbd>6</kbd> thème</span><span><kbd>,</kbd> réglages</span><span><kbd>Échap</kbd> fermer</span></div>
   </div>
 </div>
 
@@ -568,7 +616,10 @@ const I={check:'\uF00C',inbox:'\uF01C',tag:'\uF02B',folder:'\uF07B',reply:'\uF11
 const THEMES=[
  {id:1,name:'Focus OS',desc:'Liste compacte, un message actif à la fois, progression vers zéro.',color:'#C64A12'},
  {id:2,name:'Label Canvas',desc:'Colonnes spatiales par libellé, Inbox Zero par zone.',color:'#2E6B4E'},
- {id:3,name:'Paper Reader',desc:'Liste du jour puis lecture plein écran, file en bandeau.',color:'#96662B'}];
+ {id:3,name:'Paper Reader',desc:'Liste du jour puis lecture plein écran, file en bandeau.',color:'#96662B'},
+ {id:4,name:'K7 Media Shelf',desc:'Boîte sombre en jaquettes, inspirée d’une bibliothèque média locale.',color:'#CC7A3E'},
+ {id:5,name:'K7 Preview Deck',desc:'Cartes sombres avec miniature HTML chargée à l’approche de l’écran.',color:'#CC7A3E'},
+ {id:6,name:'K7 Preview Deck Clair',desc:'La même lecture rapide dans une interface blanche et chaleureuse.',color:'#A85E2E'}];
 const DEMO_LABELS=['Travail','Factures','Perso','Newsletters','Notifications'];
 const CATEGORIES=[
   ['primary','Principale','\uF0E0','#1A73E8'],
@@ -582,6 +633,15 @@ const CATEGORIES=[
 function setWorldVisual(key,direction=0){
   const category=CATEGORIES.find(([k])=>k===key)||CATEGORIES[0],color=category[3];
   document.documentElement.style.setProperty('--world',color);document.body.dataset.category=key}
+const AMBIENT={raf:0,last:0,phase:0,w:0,h:0,points:[]};
+function resizeAmbient(){const canvas=$('#ambient-canvas'),dpr=Math.min(devicePixelRatio,1.5);AMBIENT.w=innerWidth;AMBIENT.h=innerHeight;canvas.width=AMBIENT.w*dpr;canvas.height=AMBIENT.h*dpr;canvas.getContext('2d').setTransform(dpr,0,0,dpr,0,0);AMBIENT.points=Array.from({length:44},()=>({x:Math.random()*AMBIENT.w,y:Math.random()*AMBIENT.h,vx:(Math.random()-.5)*.16,vy:(Math.random()-.5)*.16,r:Math.random()*1.6+.5}))}
+function drawAmbient(time){if(PREFS.motionMode==='off'||RM||document.hidden){AMBIENT.raf=0;return}AMBIENT.raf=requestAnimationFrame(drawAmbient);if(time-AMBIENT.last<33)return;AMBIENT.last=time;AMBIENT.phase+=.008;
+  const canvas=$('#ambient-canvas'),ctx=canvas.getContext('2d'),w=AMBIENT.w,h=AMBIENT.h,color=CATEGORIES.find(([k])=>k===activeCategory)?.[3]||'#CC7A3E';ctx.clearRect(0,0,w,h);ctx.strokeStyle=color;ctx.fillStyle=color;
+  if(PREFS.motionMode==='particles'){AMBIENT.points.forEach(p=>{p.x=(p.x+p.vx+w)%w;p.y=(p.y+p.vy+h)%h;ctx.globalAlpha=.28;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill()})}
+  else if(PREFS.motionMode==='waves'){ctx.globalAlpha=.16;ctx.lineWidth=1.2;for(let n=0;n<4;n++){ctx.beginPath();for(let x=0;x<=w;x+=18){const y=h*(.28+n*.16)+Math.sin(x*.009+AMBIENT.phase*(1+n*.2))*28+(n%2?12:-12);x?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.stroke()}}
+  else{ctx.globalAlpha=.14;ctx.lineWidth=1.4;for(let n=0;n<5;n++){const x=w*(.12+n*.2)+Math.sin(AMBIENT.phase+n)*18,y=h*(.3+(n%2)*.34),r=42+n*8;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(x,y,r*.36,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w*.12,y+(n%2?24:-24));ctx.stroke()}}ctx.globalAlpha=1}
+function syncAmbient(){if(AMBIENT.raf){cancelAnimationFrame(AMBIENT.raf);AMBIENT.raf=0}const canvas=$('#ambient-canvas');if(!canvas)return;if(PREFS.motionMode==='off'||RM){canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);return}resizeAmbient();AMBIENT.raf=requestAnimationFrame(drawAmbient)}
+addEventListener('resize',()=>{if(AMBIENT.raf)resizeAmbient()},{passive:true});
 function beginWorldTransition(direction){
   if(!direction||RM)return;
   const stage=$('.stage'),exit=direction>0?'world-exit-left':'world-exit-right';stage.classList.add(exit);
@@ -615,11 +675,11 @@ const CATEGORY_CACHE=new Map(),PREVIEW_CACHE=new Map();
 const SHORTCUT_PRESETS={gmail:{archive:'e',delete:'#',labels:'l',search:'/',next:'j',previous:'k',reply:'r',refresh:'z',settings:',',help:'?'},simplemail:{archive:'a',delete:'#',labels:'v',search:'/',next:'j',previous:'k',reply:'r',refresh:'z',settings:',',help:'?'}};
 const SHORTCUT_LABELS={archive:'Archiver',delete:'Supprimer',labels:'Libellés',search:'Rechercher',next:'Message suivant',previous:'Message précédent',reply:'Répondre',refresh:'Actualiser',settings:'Réglages',help:'Aide'};
 const MEMO_COLORS=['#FFF4A8','#FFD9A8','#FFC8C8','#E7C9FF','#C9DEFF','#C8F0E0','#E2E6EA','#FFFBEA'];
-let PREFS={memoPostits:true,memoPalette:MEMO_COLORS.slice(0,6),newsletterImages:true,newsletterPreviewCount:6,linkTarget:'browser',categoryNav:'icons',visualMode:'standard',listWidth:1100,senderWidth:220,canvasWidth:340,canvasLabels:[],canvasAutoCount:4,loadMode:'both',density:'comfortable',senderMode:'short',senderAvatars:'photo',senderWrap:true,listContent:'topic-preview',showFavicons:true,showLabels:true,showDates:true,shortcutPreset:'gmail',shortcuts:{...SHORTCUT_PRESETS.gmail}};
+let PREFS={layout:'sidebar',railCollapsed:false,motionMode:'particles',memoPostits:true,memoPalette:MEMO_COLORS.slice(0,6),newsletterImages:true,newsletterPreviewCount:6,linkTarget:'browser',categoryNav:'icons',visualMode:'standard',listWidth:1100,senderWidth:220,canvasWidth:340,canvasLabels:[],canvasAutoCount:4,loadMode:'both',density:'comfortable',senderMode:'short',senderAvatars:'photo',senderWrap:true,listContent:'topic-preview',showFavicons:true,showLabels:true,showDates:true,shortcutPreset:'gmail',shortcuts:{...SHORTCUT_PRESETS.gmail}};
 try{PREFS={...PREFS,...JSON.parse(localStorage.getItem('simplemail_lab_prefs')||'{}')}}catch(e){}
 PREFS.shortcuts={...(SHORTCUT_PRESETS[PREFS.shortcutPreset]||SHORTCUT_PRESETS.gmail),...PREFS.shortcuts};
 if(!Array.isArray(PREFS.memoPalette)||!PREFS.memoPalette.length)PREFS.memoPalette=MEMO_COLORS.slice(0,6);
-function applyPrefs(){const root=document.documentElement.style,body=document.body;root.setProperty('--memo',PREFS.memoPalette[0]);root.setProperty('--list-width',PREFS.listWidth+'px');root.setProperty('--sender-width',PREFS.senderWidth+'px');root.setProperty('--canvas-width',PREFS.canvasWidth+'px');root.setProperty('--row-padding',({compact:5,comfortable:8,spacious:12}[PREFS.density]||8)+'px');body.dataset.categoryNav=PREFS.categoryNav;body.dataset.visual=PREFS.visualMode;body.dataset.senderWrap=PREFS.senderWrap;body.dataset.listContent=PREFS.listContent;body.dataset.favicons=PREFS.showFavicons;body.dataset.labels=PREFS.showLabels;body.dataset.dates=PREFS.showDates}
+function applyPrefs(){const root=document.documentElement.style,body=document.body;root.setProperty('--memo',PREFS.memoPalette[0]);root.setProperty('--list-width',PREFS.listWidth+'px');root.setProperty('--sender-width',PREFS.senderWidth+'px');root.setProperty('--canvas-width',PREFS.canvasWidth+'px');root.setProperty('--row-padding',({compact:5,comfortable:8,spacious:12}[PREFS.density]||8)+'px');body.dataset.layout=PREFS.layout;body.dataset.railCollapsed=PREFS.railCollapsed;body.dataset.motion=RM?'off':PREFS.motionMode;body.dataset.categoryNav=PREFS.categoryNav;body.dataset.visual=PREFS.visualMode;body.dataset.senderWrap=PREFS.senderWrap;body.dataset.listContent=PREFS.listContent;body.dataset.favicons=PREFS.showFavicons;body.dataset.labels=PREFS.showLabels;body.dataset.dates=PREFS.showDates;const toggle=$('[data-toggle-rail]');if(toggle){toggle.textContent=PREFS.railCollapsed?'›':'‹';toggle.setAttribute('aria-expanded',String(!PREFS.railCollapsed));toggle.setAttribute('aria-label',PREFS.railCollapsed?'Déplier le menu latéral':'Replier le menu latéral')}queueMicrotask(syncAmbient)}
 applyPrefs();
 const isMemo=m=>PREFS.memoPostits&&LIVE.email&&m.from.email.toLowerCase()===LIVE.email.toLowerCase();
 function savePrefs(){localStorage.setItem('simplemail_lab_prefs',JSON.stringify(PREFS));applyPrefs();render()}
@@ -735,6 +795,12 @@ function displayCategory(messages,reset=true){
 function renderCategories(){
   const index=CATEGORIES.findIndex(([key])=>key===activeCategory),current=CATEGORIES[index];
   setWorldVisual(activeCategory);
+  if(PREFS.layout==='top'){
+    const prev=CATEGORIES[(index-1+CATEGORIES.length)%CATEGORIES.length],next=CATEGORIES[(index+1)%CATEGORIES.length];
+    $('#categories').innerHTML=`<button class="world-arrow prev" data-cycle="-1" aria-label="Catégorie précédente : ${prev[1]}"><span class="arr">←</span><small>${prev[1]}</small></button>
+      <div class="world-center"><span class="world-kicker">Catégorie ${String(index+1).padStart(2,'0')} / ${String(CATEGORIES.length).padStart(2,'0')}</span><h1 class="world-name">${current[1]}</h1>
+      <div class="world-track">${CATEGORIES.map(([key,label,icon,color])=>`<button class="cat-icon${key===activeCategory?' on':''}" data-category="${key}" aria-label="${label}" title="${label}" style="--cat:${color}"><i>${icon}</i>${label}</button>`).join('')}</div></div>
+      <button class="world-arrow next" data-cycle="1" aria-label="Catégorie suivante : ${next[1]}"><span class="arr">→</span><small>${next[1]}</small></button>`;return}
   $('#categories').innerHTML=`
     <div class="world-center"><span class="world-kicker">Boîtes</span><h1 class="world-name">${current[1]}</h1>
       <div class="world-track">${CATEGORIES.map(([key,label,icon,color])=>{const count=(key===activeCategory?MAILBOX:CATEGORY_CACHE.get(key)||[]).length;return`<button class="cat-icon${key===activeCategory?' on':''}" data-category="${key}" aria-label="${label}" title="${label}" style="--cat:${color}"><i>${icon}</i>${label}<span class="cat-count">${count||'—'}</span></button>`}).join('')}</div></div>`}
@@ -930,7 +996,7 @@ const attachments=m=>(m.attachments&&m.attachments.length)
   ?`<div class="att-row"><span class="g">${I.clip}</span> ${m.attachments.map(esc).join(' · ')}</div>`:'';
 
 const fresh=()=>({i:0,col:0,row:0,archived:0,mode:'list'});
-const S={1:fresh(),2:fresh(),3:fresh()};
+const S={1:fresh(),2:fresh(),3:fresh(),4:fresh(),5:fresh(),6:fresh()};
 let active=1,overlay=null,lastFocus=null;
 let installPrompt=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e});
@@ -1027,10 +1093,10 @@ function renderCanvas(){const st=S[2],cols=cvCols(),wrap=$('#cv-cols');
 
 /* ---------- THEME 3 ---------- */
 const P_CMD_LIST=`<span><kbd data-key="next">J</kbd><kbd data-key="previous">K</kbd> naviguer</span><span><kbd>Entrée</kbd> lire</span>
- <span><kbd data-key="archive">E</kbd> archiver</span><span><kbd data-key="search">/</kbd> rechercher</span>
- <span><kbd data-key="refresh">Z</kbd> recharger</span><span><kbd data-key="help">?</kbd> aide</span>`;
+ <span><kbd data-key="archive">E</kbd> archiver</span><span><kbd data-key="delete">#</kbd> supprimer</span><span><kbd data-key="labels">L</kbd> libellés</span>
+ <span><kbd data-key="reply">R</kbd> répondre</span><span><kbd data-key="search">/</kbd> rechercher</span><span><kbd data-key="refresh">Z</kbd> recharger</span><span><kbd data-key="help">?</kbd> aide</span>`;
 const P_CMD_READ=`<span><kbd data-key="next">J</kbd><kbd data-key="previous">K</kbd> suivant / précédent</span><span><kbd data-key="archive">E</kbd> archiver et avancer</span>
- <span><kbd>Échap</kbd> retour liste</span><span><kbd data-key="reply">R</kbd> répondre</span><span><kbd data-key="help">?</kbd> aide</span>`;
+ <span><kbd data-key="delete">#</kbd> supprimer</span><span><kbd data-key="labels">L</kbd> libellés</span><span><kbd>Échap</kbd> retour liste</span><span><kbd data-key="reply">R</kbd> répondre</span><span><kbd data-key="help">?</kbd> aide</span>`;
 function renderPaper(){const st=S[3];
   $('#p-cmd').innerHTML=st.mode==='list'?P_CMD_LIST:P_CMD_READ;
   $('#p-list-view').hidden=st.mode!=='list';$('#p-read-view').hidden=st.mode!=='read';
@@ -1059,7 +1125,30 @@ function renderPaper(){const st=S[3];
   const sel=strip.querySelector('.p-card.sel');
   if(sel)strip.scrollTo({left:sel.offsetLeft-(strip.clientWidth-sel.offsetWidth)/2,behavior:RM?'auto':'smooth'})}
 
-const RENDER={1:renderFocus,2:renderCanvas,3:renderPaper};
+/* ---------- THEME 4 ---------- */
+function renderK7(){const st=S[4],mails=mailboxFor(),list=$('#k7-list'),feature=$('#k7-feature'),category=CATEGORIES.find(([key])=>key===activeCategory)?.[1]||'Bibliothèque';
+  $('#k7-title').textContent=category+' · récemment reçus';$('#k7-count').textContent=`${mails.length} messages`;
+  if(st.i>=mails.length)st.i=Math.max(0,mails.length-1);
+  if(!mails.length){feature.innerHTML='';list.innerHTML=`<div class="zero"><span class="big g">${I.check}</span><h2>Bibliothèque vide.</h2></div>`;return}
+  const lead=mails[0],leadImage=lead.newsletterImage?`<img src="${esc(lead.newsletterImage)}" alt="">`:'';
+  feature.innerHTML=`<button class="k7-feature k7-card${st.i===0?' sel':''}" data-i="0" style="--cover:${bubbleColor(lead)}" aria-label="${esc(senderText(lead))} — ${esc(lead.subject)}"><span class="k7-feature-art">${leadImage}<span class="k7-art a"></span></span><span class="k7-feature-copy"><span class="k7-kicker">À la une · ${esc(category)}</span><h2>${esc(lead.subject)}</h2><p>${esc(lead.snippet||'Message de '+senderText(lead))}</p><span class="k7-play">Ouvrir le message</span></span></button>`;
+  list.innerHTML=mails.slice(1).map((m,n)=>{const i=n+1,cover=m.newsletterImage?`<img src="${esc(m.newsletterImage)}" alt="">`:'';return`<button class="k7-card${i===st.i?' sel':''}" data-i="${i}" style="--cover:${bubbleColor(m)}" aria-label="${esc(senderText(m))} — ${esc(m.subject)}"><span class="k7-cover"><span class="k7-art ${['a','b','c'][i%3]}"></span>${cover}${m.unread?'<i class="k7-unread" aria-hidden="true"></i>':''}<span class="k7-mark">${esc(senderInitials(m))}</span><span class="k7-subject">${esc(m.subject)}</span></span><span class="k7-meta"><span class="k7-from">${esc(senderText(m))}</span><span class="k7-date">${esc(m.date)}</span></span></button>`}).join('');
+  if(PREFS.loadMode!=='infinite'&&!CAT_DONE.get(activeCategory)&&mails.length)list.innerHTML+=`<div class="load-more-wrap"><button class="load-more" data-more>Charger plus</button></div>`;
+  document.querySelector('#c4 .sel')?.scrollIntoView({block:'nearest'})}
+
+/* ---------- THEME 5 ---------- */
+let PREVIEW_OBSERVER=null;
+function mailPreviewText(m){let text=m.text||m.snippet||(Array.isArray(m.body)?m.body.join(' '):'');if(!text&&m.html)text=new DOMParser().parseFromString(m.html,'text/html').body.textContent||'';return String(text||'Aperçu indisponible.').replace(/\s+/g,' ').trim().slice(0,360)}
+function mailPreviewDocument(m){if(m.html?.trim())return m.html;return `<!doctype html><meta charset="utf-8"><style>body{margin:32px;color:#292724;font:18px/1.55 system-ui,sans-serif;white-space:pre-wrap}</style>${esc(m.text||mailPreviewText(m))}`}
+async function hydrateMailPreview(m,pane){if(!pane?.isConnected)return;const status=pane.querySelector('.kp-preview-status');if(!m.detail&&LIVE.on){status.textContent='Chargement du mail…';await loadDetail(m)}if(pane.isConnected){pane.querySelector('iframe').srcdoc=mailPreviewDocument(m);pane.classList.add('ready')}}
+function renderK7Preview(){const st=S[active],mails=mailboxFor(),prefix=active===6?'kw':'kp',list=$('#'+prefix+'-list'),category=CATEGORIES.find(([key])=>key===activeCategory)?.[1]||'Bibliothèque';
+  $('#'+prefix+'-title').textContent=category+' · aperçus';$('#'+prefix+'-count').textContent=`${mails.length} messages`;if(st.i>=mails.length)st.i=Math.max(0,mails.length-1);PREVIEW_OBSERVER?.disconnect();
+  list.innerHTML=mails.map((m,i)=>`<article class="kp-card${i===st.i?' sel':''}" data-i="${i}" role="button" tabindex="0" aria-label="${esc(senderText(m))} — ${esc(m.subject)}"><span class="kp-mail-preview"><iframe title="Aperçu HTML de ${esc(m.subject)}" tabindex="-1" sandbox="" inert aria-hidden="true"></iframe><span class="kp-preview-status">Aperçu HTML</span></span><span class="kp-copy"><span class="kp-top"><b>${esc(senderText(m))}</b><span>${esc(m.date)}</span>${m.unread?'<i class="kp-dot" aria-hidden="true"></i>':''}</span><h3>${esc(m.subject)}</h3><span class="kp-open">Ouvrir le message →</span></span></article>`).join('')||`<div class="zero"><span class="big g">${I.check}</span><h2>Aucun aperçu.</h2></div>`;
+  if(PREFS.loadMode!=='infinite'&&!CAT_DONE.get(activeCategory)&&mails.length)list.innerHTML+=`<div class="load-more-wrap"><button class="load-more" data-more>Charger plus</button></div>`;
+  const cards=[...list.querySelectorAll('.kp-card')];if('IntersectionObserver'in window){PREVIEW_OBSERVER=new IntersectionObserver(entries=>entries.forEach(entry=>{if(!entry.isIntersecting)return;PREVIEW_OBSERVER.unobserve(entry.target);const i=+entry.target.dataset.i;hydrateMailPreview(mails[i],entry.target.querySelector('.kp-mail-preview'))}),{root:$('#c'+active),rootMargin:'240px 0px'});cards.forEach(card=>PREVIEW_OBSERVER.observe(card))}else cards.slice(0,4).forEach(card=>hydrateMailPreview(mails[+card.dataset.i],card.querySelector('.kp-mail-preview')));
+  list.querySelector('.sel')?.scrollIntoView({block:'nearest'})}
+
+const RENDER={1:renderFocus,2:renderCanvas,3:renderPaper,4:renderK7,5:renderK7Preview,6:renderK7Preview};
 function render(){hud();RENDER[active]();renderShortcutKeys()}
 
 /* ---------- communs ---------- */
@@ -1169,7 +1258,7 @@ function openRead(mail){const m=mail||currentMail();if(!m)return;
     mountBody($('#rd-body .rd-body-content'),m)}})}
 
 function themePreview(id){
-  const cls=id===1?'focus':id===2?'canvas':'paper';
+  const cls=id===1?'focus':id===2?'canvas':id===3?'paper':id===4?'k7':id===5?'preview':'preview-white';
   return`<span class="theme-preview ${cls}" aria-hidden="true"><i></i><i></i><i></i><i></i></span>`}
 function renderSettings(){
   const tabs=[
@@ -1192,8 +1281,10 @@ function renderSettings(){
         <span><span class="nm">0${t.id} · ${t.name}</span><div class="ds">${t.desc}</div></span>
         ${t.id===active?`<span class="st g">${I.check} actif</span>`:''}
       </button>`).join('')+`<h4 style="margin-top:24px">Navigation & apparence</h4>
+      <label class="set-row"><span>Disposition</span><select id="set-layout"><option value="top"${PREFS.layout==='top'?' selected':''}>Catégories en haut</option><option value="sidebar"${PREFS.layout==='sidebar'?' selected':''}>Menu latéral repliable</option></select></label>
       <label class="set-row"><span>Catégories</span><select id="set-category-nav"><option value="icons"${PREFS.categoryNav==='icons'?' selected':''}>Icônes seules</option><option value="labels"${PREFS.categoryNav==='labels'?' selected':''}>Icônes et noms</option></select></label>
-      <label class="set-row"><span>Style visuel</span><select id="set-visual"><option value="standard"${PREFS.visualMode==='standard'?' selected':''}>Mail Worlds</option><option value="ultra"${PREFS.visualMode==='ultra'?' selected':''}>Ultra Light · noir et blanc</option></select></label>
+      <label class="set-row"><span>Style visuel</span><select id="set-visual"><option value="standard"${PREFS.visualMode==='standard'?' selected':''}>Mail Worlds</option><option value="aero"${PREFS.visualMode==='aero'?' selected':''}>Aero Glass · ancien thème</option><option value="nordic"${PREFS.visualMode==='nordic'?' selected':''}>Nordic Zen · ancien thème</option><option value="editorial"${PREFS.visualMode==='editorial'?' selected':''}>Editorial · ancien thème</option><option value="ultra"${PREFS.visualMode==='ultra'?' selected':''}>Ultra Light · noir et blanc</option></select></label>
+      <label class="set-row"><span>Animation de fond</span><select id="set-motion"><option value="off"${PREFS.motionMode==='off'?' selected':''}>Désactivée</option><option value="particles"${PREFS.motionMode==='particles'?' selected':''}>Particules</option><option value="waves"${PREFS.motionMode==='waves'?' selected':''}>Ondes</option><option value="cassette"${PREFS.motionMode==='cassette'?' selected':''}>Cassette</option></select></label>
       <label class="set-row"><span>Densité</span><select id="set-density"><option value="compact"${PREFS.density==='compact'?' selected':''}>Compacte</option><option value="comfortable"${PREFS.density==='comfortable'?' selected':''}>Confortable</option><option value="spacious"${PREFS.density==='spacious'?' selected':''}>Aérée</option></select></label>
       <label class="set-row"><span>Chargement</span><select id="set-load-mode"><option value="button"${PREFS.loadMode==='button'?' selected':''}>Bouton « Charger plus »</option><option value="infinite"${PREFS.loadMode==='infinite'?' selected':''}>Défilement infini</option><option value="both"${PREFS.loadMode==='both'?' selected':''}>Bouton + défilement infini</option></select></label>
       <h4 style="margin-top:24px">Largeurs</h4>
@@ -1249,9 +1340,10 @@ function renderSettings(){
   const memosColor=$('#set-memo-color');if(memosColor)memosColor.addEventListener('change',e=>{if(!PREFS.memoPalette.includes(e.target.value))PREFS.memoPalette.push(e.target.value);savePrefs();renderSettings()});
   $$('.memo-swatch').forEach(btn=>btn.addEventListener('click',()=>{const color=btn.dataset.memoColor,index=PREFS.memoPalette.indexOf(color);if(index>=0&&PREFS.memoPalette.length>1)PREFS.memoPalette.splice(index,1);else if(index<0)PREFS.memoPalette.push(color);savePrefs();renderSettings()}));
   const catNav=$('#set-category-nav');if(catNav)catNav.addEventListener('change',e=>{PREFS.categoryNav=e.target.value;savePrefs()});
+  const layout=$('#set-layout');if(layout)layout.addEventListener('change',e=>{PREFS.layout=e.target.value;savePrefs();renderCategories()});
   const visual=$('#set-visual');if(visual)visual.addEventListener('change',e=>{PREFS.visualMode=e.target.value;savePrefs()});
   const selects={
-    '#set-density':'density','#set-load-mode':'loadMode','#set-sender-mode':'senderMode','#set-sender-avatars':'senderAvatars','#set-list-content':'listContent'
+    '#set-density':'density','#set-load-mode':'loadMode','#set-sender-mode':'senderMode','#set-sender-avatars':'senderAvatars','#set-list-content':'listContent','#set-motion':'motionMode'
   };Object.entries(selects).forEach(([selector,key])=>{const el=$(selector);if(el)el.addEventListener('change',e=>{PREFS[key]=e.target.value;savePrefs()})});
   const ranges={'#set-list-width':'listWidth','#set-sender-width':'senderWidth','#set-canvas-width':'canvasWidth'};Object.entries(ranges).forEach(([selector,key])=>{const el=$(selector);if(el)el.addEventListener('input',e=>{PREFS[key]=+e.target.value;const value=$(`[data-value-for="${e.target.id}"]`);if(value)value.textContent=e.target.value+'px';savePrefs()})});
   const toggles={'#set-sender-wrap':'senderWrap','#set-favicons':'showFavicons','#set-show-labels':'showLabels','#set-show-dates':'showDates'};Object.entries(toggles).forEach(([selector,key])=>{const el=$(selector);if(el)el.addEventListener('change',e=>{PREFS[key]=e.target.checked;savePrefs()})});
@@ -1284,7 +1376,7 @@ function renderSettings(){
 let settingsTab='list';
 function openSettings(){settingsTab='list';renderSettings();openOv('#ov-set')}
 function settingsKey(e){
-  if(!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)||e.target.matches('input,select'))return;
+  if(!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)||(e.target&&e.target.matches&&e.target.matches('input,select')))return;
   const nav=[...$$('#set-nav button')],controls=[...$$('#set-content button,#set-content input,#set-content select')].filter(x=>!x.disabled);
   if(nav.includes(e.target)){
     e.preventDefault();const i=nav.indexOf(e.target);
@@ -1304,14 +1396,14 @@ function openHelp(){const rows=[[keyName('next')+' / '+keyName('previous'),'navi
   $('#help-body').innerHTML=rows.map(([k,l])=>`<kbd>${esc(k)}</kbd><div>${l}</div>`).join('');openOv('#ov-help')}
 
 function switchTheme(n){if(n===active)return;active=n;document.body.dataset.theme=n;
-  ['1','2','3'].forEach(k=>{$('#c'+k).hidden=k!==String(n)});
+  ['1','2','3','4','5','6'].forEach(k=>{$('#c'+k).hidden=k!==String(n)});
   render();toast('Thème 0'+n+' — '+THEMES[n-1].name)}
 function resetTheme(){refreshMail(true)}
 
 window.navigateMail=direction=>{
   const st=S[active],delta=direction>0?1:-1;
   if(active===2){const c=cvCols()[st.col];st.row=Math.max(0,Math.min(st.row+delta,(c?.mails.length||1)-1));renderCanvas();if(overlay==='#ov-read')openRead()}
-  else{st.i=Math.max(0,Math.min(st.i+delta,MAILBOX.length-1));active===1?renderFocus():renderPaper()}}
+  else{st.i=Math.max(0,Math.min(st.i+delta,MAILBOX.length-1));RENDER[active]()}}
 
 function moveListSelection(st,delta,root){
   const next=Math.max(0,Math.min(st.i+delta,MAILBOX.length-1));if(next===st.i)return;
@@ -1329,6 +1421,8 @@ function conceptKey(e){
   if(e.key==='ArrowLeft'){cycleCategory(-1);return}
   if(e.key==='ArrowRight'){cycleCategory(1);return}
   if(shortcut('delete',k)){deleteActive();return}
+  if(shortcut('labels',k)){openPalette('label');return}
+  if(shortcut('reply',k)){openReply();return}
   if(active===1){
     if(st.mode==='list'){
       if(shortcut('next',k)||e.key==='ArrowDown')moveListSelection(st,1,'#f-list')
@@ -1351,7 +1445,7 @@ function conceptKey(e){
     else if(e.key==='ArrowUp'||shortcut('previous',k)){st.row=Math.max(0,st.row-1);renderCanvas()}
     else if(e.key==='Enter')openRead();
     else if(shortcut('archive',k))archiveActive()}
-  else{
+  else if(active===3){
     if(st.mode==='list'){
       if(shortcut('next',k)||e.key==='ArrowDown')moveListSelection(st,1,'#p-list')
       else if(shortcut('previous',k)||e.key==='ArrowUp')moveListSelection(st,-1,'#p-list')
@@ -1362,10 +1456,16 @@ function conceptKey(e){
       else if(shortcut('previous',k)){st.i=Math.max(st.i-1,0);renderPaper()}
       else if(shortcut('archive',k))archiveActive();
       else if(e.key==='Escape'||k==='u'){st.mode='list';renderPaper()}
-      else if(shortcut('reply',k))openReply()}}}
+      else if(shortcut('reply',k))openReply()}}
+  else{
+    const root=active===4?'#k7-list':active===5?'#kp-list':'#kw-list';
+    if(shortcut('next',k)||e.key==='ArrowDown')moveListSelection(st,1,root)
+    else if(shortcut('previous',k)||e.key==='ArrowUp')moveListSelection(st,-1,root)
+    else if(e.key==='Enter'&&MAILBOX.length)openRead()
+    else if(shortcut('archive',k))archiveActive()}}
 
 document.addEventListener('keydown',e=>{
-  if(shortcut('delete',e.key)&&!e.target.matches('input,textarea')){
+  if(shortcut('delete',e.key)&&!(e.target&&e.target.matches&&e.target.matches('input,textarea'))){
     e.preventDefault();
     if(overlay==='#ov-read'){deleteActive().then(ok=>ok&&closeOv());return}
     if(!overlay){deleteActive();return}}
@@ -1378,7 +1478,7 @@ document.addEventListener('keydown',e=>{
     const st=S[active];
     if((active===1||active===3)&&st.mode==='read'){st.mode='list';render();return}
     return}
-  const typing=e.target.matches('input,textarea');
+  const typing=!!(e.target&&e.target.matches&&e.target.matches('input,textarea'));
   if(overlay){
     if(overlay==='#ov-pal'){
       if(typing&&!['ArrowDown','ArrowUp','Enter'].includes(e.key))return;
@@ -1391,17 +1491,28 @@ document.addEventListener('keydown',e=>{
       else if(e.key==='Enter'){e.preventDefault();searchState.dedicated?renderSearchReader(searchState.sel):enterSearchWorkspace(searchState.sel)}
       return}
     if(overlay==='#ov-read'){
-      if(shortcut('delete',e.key)){deleteActive().then(ok=>ok&&closeOv());return}
-      if(shortcut('archive',e.key.toLowerCase())){archiveActive().then(closeOv)}return}
+      const k=e.key.toLowerCase(),
+      step=dir=>{const mails=mailboxFor(),st=S[active];const n=st.i+dir;
+        if(n>=0&&n<mails.length){st.i=n;openRead()}},
+      after=fn=>{fn().then(async ok=>{if(ok===false)return;
+        const mails=mailboxFor(),st=S[active];
+        if(st.i<mails.length-1){st.i++;openRead()}else closeOv()})};
+      if(shortcut('next',k)||e.key==='ArrowDown'){e.preventDefault();step(1);return}
+      if(shortcut('previous',k)||e.key==='ArrowUp'){e.preventDefault();step(-1);return}
+      if(shortcut('delete',e.key)){after(deleteActive);return}
+      if(shortcut('archive',k)){after(archiveActive);return}
+      if(shortcut('labels',k)){closeOv();openPalette('label');return}
+      if(shortcut('reply',k)){closeOv();openReply();return}
+      return}
     if(overlay==='#ov-reply'){if((e.metaKey||e.ctrlKey)&&e.key==='Enter')sendReply();return}
     if(overlay==='#ov-set'){
       settingsKey(e);
-      if(['1','2','3'].includes(e.key)){closeOv();switchTheme(+e.key)}
+      if(['1','2','3','4','5','6'].includes(e.key)){closeOv();switchTheme(+e.key)}
       return}
     return}
   if(typing)return;
   if(shortcut('search',e.key)){e.preventDefault();openSearch();return}
-  if(['1','2','3'].includes(e.key)){switchTheme(+e.key);return}
+  if(['1','2','3','4','5','6'].includes(e.key)){switchTheme(+e.key);return}
   if(shortcut('settings',e.key)){openSettings();return}
   if(shortcut('help',e.key)){openHelp();return}
   if(shortcut('refresh',e.key)){resetTheme();return}
@@ -1419,6 +1530,7 @@ document.addEventListener('click',e=>{
   if(e.target.closest('[data-interface="classic"]')){location.href='/';return}
   if(e.target.closest('[data-install]')){if(installPrompt){installPrompt.prompt();installPrompt=null}else toast('Chrome : menu · Installer');return}
   if(e.target.closest('[data-open-settings]')){openSettings();return}
+  if(e.target.closest('[data-toggle-rail]')){PREFS.railCollapsed=!PREFS.railCollapsed;savePrefs();return}
   if(e.target.closest('[data-reload]')){resetTheme();return}
   const sfilter=e.target.closest('[data-sfilter]');
   if(sfilter){searchState.labelFilter=sfilter.dataset.sfilter||null;searchState.sel=0;renderSearchFilters();drawSearch();if(searchState.dedicated&&filteredSearchResults().length)renderSearchReader(0);return}
@@ -1432,6 +1544,8 @@ document.addEventListener('click',e=>{
   const row=e.target.closest('#f-list .row,#p-list .row,#f-list .postit');
   if(row){const key=row.closest('#f-list')?'1':'3';const st=S[key];
     st.i=+row.dataset.i;st.mode='read';render();return}
+  const k7=e.target.closest('.k7-card');if(k7){S[4].i=+k7.dataset.i;openRead();return}
+  const preview=e.target.closest('.kp-card');if(preview){S[active].i=+preview.dataset.i;openRead();return}
   const cvrow=e.target.closest('.cv-row');
   if(cvrow){S[2].col=+cvrow.dataset.col;S[2].row=+cvrow.dataset.row;renderCanvas();return}
   const card=e.target.closest('.p-card');
@@ -1450,6 +1564,11 @@ $('#pal-input').addEventListener('input',()=>{pal.idx=0;drawPalette()});
 $('#search-input').addEventListener('input',e=>{clearTimeout(searchState.timer);searchState.timer=setTimeout(()=>runSearch(e.target.value.trim()),280)});
 document.querySelectorAll('.lst-wrap').forEach(el=>el.addEventListener('scroll',()=>{
   if(PREFS.loadMode!=='button'&&el.scrollTop+el.clientHeight>el.scrollHeight-180)loadMore()},{passive:true}));
+['c4','c5','c6'].forEach(id=>{const el=document.getElementById(id);el&&el.addEventListener('scroll',()=>{
+  if(PREFS.loadMode!=='button'&&el.scrollTop+el.clientHeight>el.scrollHeight-240)loadMore()},{passive:true})});
+/* WKWebView : une miniature srcdoc ou l'iframe du drawer peut prendre le focus natif et avaler les touches */
+setInterval(()=>{const a=document.activeElement;
+  if(a&&a.tagName==='IFRAME'&&((active===5||active===6)||overlay==='#ov-read')){a.blur();document.body.focus()}},400);
 let swipeX=0,swipeY=0;
 $('.stage').addEventListener('touchstart',e=>{swipeX=e.changedTouches[0].clientX;swipeY=e.changedTouches[0].clientY},{passive:true});
 $('.stage').addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-swipeX,dy=e.changedTouches[0].clientY-swipeY;
@@ -1457,7 +1576,7 @@ $('.stage').addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 bootLive();
 setInterval(()=>{if(!document.hidden)refreshMail()},60000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshMail()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshMail();syncAmbient()});
 </script>
 </body>
 </html>

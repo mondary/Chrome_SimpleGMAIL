@@ -8,17 +8,18 @@ Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Package
 
 ## Features
 
-### V2 interface — Lab (3 concepts)
-- **Three themes with previews**: Focus OS (dense one-line queue), Label Canvas (columns by label), Paper Reader (paper queue)
+### V2 interface — Lab (6 concepts)
+- **Six themes with previews**: Focus OS (dense one-line queue), Label Canvas (columns by label), Paper Reader (paper queue), K7 Media Shelf (dark cover-art library), K7 Preview Deck (dark cards with HTML thumbnails), K7 Preview Deck Light (warm white variant)
 - **Gmail categories**: 6 categories with dedicated icon and color (Primary, Promotions, Social, Updates, Forums, Newsletters)
-- **Atelier navigation**: persistent desktop rail, horizontal mobile category bar, and a unified reading workspace
+- **Preserved layouts**: top categories or a collapsible navigation rail, selectable in settings
+- **Configurable animated backgrounds**: off, particles, waves, or cassette; suspended while the app is hidden
 - **Arrow navigation**: `←` / `→` switch category, `↑` / `↓` (or `J`/`K`) move between messages
 - **Gmail search**: `/` opens a fullscreen overlay, server-side IMAP search (sender, subject, body), keyboard-driven results
 - **Sticky notes**: self-sent emails displayed as square sticky notes on a dedicated wall; toggleable with eight preset colors or a custom color
 - **Newsletters**: adaptive multi-card carousel (4→8 columns), previews with real images (hero + og:image), hero detail
 - **Inline labels and attachments**: short tags + paperclip icon on each list row
 - **Real archive counter**: `[Gmail]/All Mail` total (EXAMINE fallback when STATUS returns 0)
-- **Official Gmail shortcuts**: `E` archive / `L` labels preset (or SimpleMail preset), fully configurable
+- **Official Gmail shortcuts**: `E` archive / `L` labels preset (or SimpleMail preset), fully configurable and available in every theme and reader
 - **Gmail refresh**: always-visible button, forced update on launch, app resume, and every 60 seconds
 - **Accounts**: enable or disable each account in fully keyboard-navigable settings
 - **Preloading**: other categories load in the background

@@ -6,8 +6,21 @@ Historique des versions de SimpleMail.
 
 ### Unreleased
 
+#### Added
+- Layout avec catégories en haut conservé en complément du rail latéral repliable.
+- Thème K7 Media Shelf inspiré d'une bibliothèque média sombre à accent cuivre.
+- Thème K7 Preview Deck séparé avec miniatures HTML sandboxées chargées à l'approche de l'écran.
+- Variante claire de K7 Preview Deck et barre de raccourcis intégrée au défilement.
+- Vue K7 enrichie avec message vedette, jaquettes abstraites et étagère sans bordures décoratives.
+- Fonds animés Particules, Ondes et Cassette sélectionnables et désactivables dans les réglages.
+- Anciens styles Aero Glass, Nordic Zen et Editorial réintégrés dans les réglages.
+
+#### Fixed
+- Raccourcis archiver, supprimer, libellés, répondre, rechercher et actualiser disponibles dans tous les thèmes et lecteurs.
+- Miniatures HTML rendues inertes pour ne plus capturer les raccourcis dans WKWebView.
+
 #### Changed
-- Nouveau thème Atelier avec rail de navigation desktop et barre de catégories mobile.
+- Navigation Atelier disponible comme layout optionnel avec rail desktop et barre de catégories mobile.
 - Suppression de Three.js, de la boucle WebGL permanente et des filtres plein écran.
 - Navigation clavier optimisée sans reconstruction de toute la liste à chaque déplacement.
 - Lignes mobiles réorganisées sur deux niveaux pour conserver expéditeur, sujet et date lisibles.

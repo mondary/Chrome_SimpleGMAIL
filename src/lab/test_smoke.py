@@ -22,7 +22,8 @@ class Balancer(HTMLParser):
 
 
 def main():
-    for marker in ("Focus OS", "Label Canvas", "Paper Reader", "data-theme"):
+    for marker in ("Focus OS", "Label Canvas", "Paper Reader", "K7 Media Shelf", "K7 Preview Deck",
+                   "id=\"c5\"", "id=\"c6\"", "IntersectionObserver", "hydrateMailPreview", "inert", "data-theme"):
         assert marker in HTML, f"marqueur absent: {marker}"
     assert HTML.count("from:{name:") >= 8, "mocks de secours absents"
     assert HTML.count("s2/favicons?domain=") >= 1, "favicons expéditeur absents"
@@ -37,15 +38,20 @@ def main():
     for marker in ("manifest.json", "serviceWorker", "CATEGORIES", "memoPostits", "shortcutPreset",
                     "app-rail", "rail-actions", "cycleCategory"):
         assert marker in HTML, f"fonction V2 absente: {marker}"
-    assert "requestAnimationFrame" not in HTML, "boucle de rendu permanente présente"
+    assert "cancelAnimationFrame" in HTML and "document.hidden" in HTML, "animation de fond non suspendable"
     assert '<script src="three.min.js">' not in HTML, "Three.js encore chargé"
     for marker in ("memoPalette", "memoRows", "linkTarget", "categoryNav", "visualMode",
                    "Icônes seules", "Ultra Light · noir et blanc", "newsletterPreviewCount",
                    "senderWidth", "canvasWidth", "listContent", "Sujet + première ligne",
                    "canvasLabels", "canvasLabelStats", "loadMode", "Bouton + défilement infini",
                    "searchScore", "enterSearchWorkspace", "search-reader", "libellé",
-                   "whoAvatar", "senderShort", "unavatar", "Photos puis initiales"):
+                    "whoAvatar", "senderShort", "unavatar", "Photos puis initiales",
+                    "set-layout", "railCollapsed", "Catégories en haut",
+                    "Aero Glass", "Nordic Zen", "Editorial", "motionMode",
+                    "Animation de fond", "Particules", "Ondes", "Cassette"):
         assert marker in HTML, f"option modulaire absente: {marker}"
+    for shortcut in ("archive", "delete", "labels", "reply", "search", "refresh"):
+        assert HTML.count(f'data-key="{shortcut}"') >= 4, f"raccourci non global: {shortcut}"
     for uid in ("#ov-pal", "#ov-reply", "#ov-help", "#ov-read", "#ov-set", "#toast",
                 "cv-cols", "p-strip", "f-mount", "f-list", "p-list", "hud-live"):
         assert uid in HTML, f"element absent: {uid}"

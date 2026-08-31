@@ -8,17 +8,18 @@ Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla
 
 ## Fonctionnalités
 
-### Interface V2 — Lab (3 concepts)
-- **Trois thèmes avec aperçu** : Focus OS (file une-ligne dense), Label Canvas (colonnes par libellé), Paper Reader (file papier)
+### Interface V2 — Lab (6 concepts)
+- **Six thèmes avec aperçu** : Focus OS (file une-ligne dense), Label Canvas (colonnes par libellé), Paper Reader (file papier), K7 Media Shelf (bibliothèque sombre en jaquettes), K7 Preview Deck (cartes sombres avec miniature HTML), K7 Preview Deck Clair (variante blanche et chaleureuse)
 - **Catégories Gmail** : 6 catégories avec icône et couleur dédiée (Principale, Promotions, Réseaux, Notifications, Forums, Newsletters)
-- **Navigation Atelier** : rail latéral permanent sur ordinateur, barre de catégories horizontale sur mobile et espace de lecture unifié
+- **Layouts conservés** : catégories en haut ou rail latéral repliable, au choix dans les réglages
+- **Fonds animés configurables** : désactivés, particules, ondes ou cassette, suspendus lorsque l'application est masquée
 - **Navigation flèches** : `←` / `→` changent de catégorie, `↑` / `↓` (ou `J`/`K`) naviguent de mail en mail
 - **Recherche Gmail** : `/` ouvre un overlay plein écran, recherche IMAP côté serveur (expéditeur, objet, contenu), navigation clavier des résultats
 - **Post-its** : mails envoyés à soi-même affichés en vrais post-its carrés sur un mur dédié ; activables et personnalisables avec une palette de huit couleurs ou une couleur libre
 - **Newsletters** : carrousel multicartes (grille adaptative 4→8 colonnes), previews avec vraies images (hero + og:image), détail hero
 - **Libellés et pièces jointes inline** : tags courts + icône trombone sur chaque ligne de liste
 - **Compteur d'archives réel** : total `[Gmail]/Tous les messages` (fallback EXAMINE si STATUS renvoie 0)
-- **Raccourcis Gmail officiels** : preset `E` archiver / `L` libellés (ou preset SimpleMail), entièrement configurables
+- **Raccourcis Gmail officiels** : preset `E` archiver / `L` libellés (ou preset SimpleMail), entièrement configurables et disponibles dans tous les thèmes et lecteurs
 - **Actualisation Gmail** : bouton toujours visible, mise à jour forcée au lancement, au retour dans l'app et toutes les 60 secondes
 - **Comptes** : activation ou désactivation individuelle dans les réglages, navigables entièrement au clavier
 - **Préchargement** : les autres catégories se chargent en tâche de fond
