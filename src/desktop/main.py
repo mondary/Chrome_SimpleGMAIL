@@ -1631,6 +1631,7 @@ def _static_asset_dir(name: str) -> Path:
 
 _lab_dir = _static_asset_dir("lab")
 _lab_atelier_snapshot_dir = _static_asset_dir("lab-atelier-2026.08.07")
+_lab_focus_snapshot_dir = _static_asset_dir("lab-focus-os-2026.08.01")
 
 if _lab_dir.is_dir():
     app.mount("/lab", StaticFiles(directory=str(_lab_dir), html=True), name="lab")
@@ -1639,6 +1640,12 @@ if _lab_atelier_snapshot_dir.is_dir():
         "/lab-atelier-2026-08-07",
         StaticFiles(directory=str(_lab_atelier_snapshot_dir), html=True),
         name="lab-atelier-2026-08-07",
+    )
+if _lab_focus_snapshot_dir.is_dir():
+    app.mount(
+        "/lab-focus-os-2026-08-01",
+        StaticFiles(directory=str(_lab_focus_snapshot_dir), html=True),
+        name="lab-focus-os-2026-08-01",
     )
 
 

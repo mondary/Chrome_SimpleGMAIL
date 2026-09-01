@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SimpleMail Lab — V2</title>
+<script>if(new URLSearchParams(location.search).has('minimal'))location.replace('/lab-focus-os-2026-08-01/')</script>
 <meta name="theme-color" content="#ffffff">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -353,6 +354,7 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
 .set-theme .nm{font-weight:600;font-size:13px}
 .set-theme .ds{color:var(--muted);font-size:11px;margin-top:2px}
 .set-theme .st{margin-left:auto;font-size:10px;color:var(--accent)}
+.choice-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--hair2);font-size:11px;color:var(--muted)}.choice-row>span:first-child{min-width:118px}.choice-group{display:flex;flex-wrap:wrap;gap:6px}.choice-group button{border:1px solid var(--hair);padding:7px 10px;font-size:10px;color:var(--muted);background:#fff}.choice-group button:hover{border-color:var(--faint);color:var(--ink)}.choice-group button.on{border-color:var(--ink);background:var(--ink);color:#fff}
 .theme-preview{height:76px;border:1px solid var(--hair);background:#f8f7f3;padding:7px;display:flex;gap:5px;overflow:hidden}
 .theme-preview i{display:block;background:#d9d6ce;border-radius:1px}.theme-preview.focus{flex-direction:column}.theme-preview.focus i{height:8px}.theme-preview.focus i:first-child{height:30px;background:#c5d6e9}
 .theme-preview.canvas{align-items:stretch}.theme-preview.canvas i{flex:1}.theme-preview.canvas i:nth-child(2){background:#d7e5d8}.theme-preview.canvas i:nth-child(3){background:#eadfc7}
@@ -740,7 +742,6 @@ const SHORTCUT_LABELS={archive:'Archiver',delete:'Supprimer',labels:'Libellés',
 const MEMO_COLORS=['#FFF4A8','#FFD9A8','#FFC8C8','#E7C9FF','#C9DEFF','#C8F0E0','#E2E6EA','#FFFBEA'];
 const OMP_ACCENTS=[{n:'rose',v:'oklch(70% .24 340)'},{n:'cyan',v:'oklch(81% .14 200)'},{n:'violet',v:'oklch(70% .2 300)'},{n:'ambre',v:'oklch(80% .15 75)'},{n:'vert',v:'oklch(75% .16 155)'},{n:'bleu',v:'oklch(70% .15 250)'}];
 let PREFS={layout:'sidebar',railCollapsed:false,motionMode:'particles',memoPostits:true,memoPalette:MEMO_COLORS.slice(0,6),newsletterImages:true,newsletterPreviewCount:6,linkTarget:'browser',categoryNav:'icons',visualMode:'standard',ompAccent:'oklch(70% .24 340)',listWidth:80,senderWidth:20,canvasWidth:30,canvasLabels:[],canvasAutoCount:4,loadMode:'both',density:'comfortable',senderMode:'short',senderAvatars:'photo',senderWrap:true,listContent:'topic-preview',showFavicons:true,showLabels:true,showDates:true,shortcutPreset:'gmail',shortcuts:{...SHORTCUT_PRESETS.gmail}};
-const MINIMAL=new URLSearchParams(location.search).has('minimal');
 try{PREFS={...PREFS,...JSON.parse(localStorage.getItem('simplemail_lab_prefs')||'{}')}}catch(e){}
 const px2pct=(v,a,b,pa,pb)=>Math.round(Math.min(Math.max(pa+(v-a)/(b-a)*(pb-pa),pa),pb));
 if(PREFS.listWidth>100)PREFS.listWidth=px2pct(PREFS.listWidth,720,1500,50,100);
@@ -748,7 +749,6 @@ if(PREFS.senderWidth>40)PREFS.senderWidth=px2pct(PREFS.senderWidth,120,420,10,40
 if(PREFS.canvasWidth>60)PREFS.canvasWidth=px2pct(PREFS.canvasWidth,240,560,15,60);
 PREFS.shortcuts={...(SHORTCUT_PRESETS[PREFS.shortcutPreset]||SHORTCUT_PRESETS.gmail),...PREFS.shortcuts};
 if(!Array.isArray(PREFS.memoPalette)||!PREFS.memoPalette.length)PREFS.memoPalette=MEMO_COLORS.slice(0,6);
-if(MINIMAL){Object.assign(PREFS,{layout:'top',categoryNav:'icons',visualMode:'standard',motionMode:'off',listContent:'topic',showLabels:false,senderMode:'name',senderAvatars:'none'});try{localStorage.setItem('simplemail_lab_prefs',JSON.stringify(PREFS))}catch(e){}}
 function applyPrefs(){const root=document.documentElement.style,body=document.body;root.setProperty('--memo',PREFS.memoPalette[0]);root.setProperty('--omp-accent',PREFS.ompAccent||'oklch(70% .24 340)');root.setProperty('--list-width',PREFS.listWidth+'%');root.setProperty('--sender-width',PREFS.senderWidth+'%');root.setProperty('--canvas-width',PREFS.canvasWidth+'%');root.setProperty('--row-padding',({compact:5,comfortable:8,spacious:12}[PREFS.density]||8)+'px');body.dataset.layout=PREFS.layout;body.dataset.railCollapsed=PREFS.railCollapsed;body.dataset.motion=RM?'off':PREFS.motionMode;body.dataset.categoryNav=PREFS.categoryNav;body.dataset.visual=PREFS.visualMode;body.dataset.senderWrap=PREFS.senderWrap;body.dataset.listContent=PREFS.listContent;body.dataset.favicons=PREFS.showFavicons;body.dataset.labels=PREFS.showLabels;body.dataset.dates=PREFS.showDates;const toggle=$('[data-toggle-rail]');if(toggle){toggle.textContent=PREFS.railCollapsed?'›':'‹';toggle.setAttribute('aria-expanded',String(!PREFS.railCollapsed));toggle.setAttribute('aria-label',PREFS.railCollapsed?'Déplier le menu latéral':'Replier le menu latéral')}queueMicrotask(syncAmbient)}
 applyPrefs();
 const isMemo=m=>PREFS.memoPostits&&LIVE.email&&m.from.email.toLowerCase()===LIVE.email.toLowerCase();
@@ -961,7 +961,6 @@ async function switchCategory(key,force=false,direction=0,startup=false){
 
 async function bootLive(){
   try{
-    if(MINIMAL)throw new Error('minimal demo');
     const accs=await j('/api/accounts/all');
     const list=accs.accounts||accs||[];ACCOUNT_LIST=list;
     const ok=a=>a.imap&&a.imap.password_configured;
@@ -1429,6 +1428,7 @@ $('#rd-body').addEventListener('click',e=>{const t=e.target.closest('[data-rd-to
 function themePreview(id){
   const cls=id===1?'focus':id===2?'canvas':id===3?'paper':id===4?'k7':id===5?'preview':'preview-white';
   return`<span class="theme-preview ${cls}" aria-hidden="true"><i></i><i></i><i></i><i></i></span>`}
+const choices=(key,items,current)=>`<span class="choice-group">${items.map(([value,label])=>`<button data-choice="${key}" data-value="${value}" class="${String(current)===String(value)?'on':''}">${label}</button>`).join('')}</span>`;
 function renderSettings(){
   const tabs=[
     {id:'list',icon:'\uF03A',label:'Liste'},
@@ -1444,42 +1444,42 @@ function renderSettings(){
   $('#set-nav').innerHTML=tabs.map(t=>`<button class="set-tab${t.id===activeTab?' on':''}" data-settab="${t.id}"${t.id===activeTab?' data-autofocus':''}><i>${t.icon}</i><span>${t.label}</span></button>`).join('');
   const c=$('#set-content');
   if(activeTab==='list'){
-    c.innerHTML=`<h4>Layout de la liste</h4>`+THEMES.map(t=>`
+    c.innerHTML=`<h4>Interfaces</h4>
+      <button class="set-theme${PREFS.layout==='sidebar'?' on':''}" data-interface="sidebar"><span class="theme-preview focus" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span><span class="nm">Atelier · rail latéral</span><div class="ds">Navigation latérale repliable, thèmes Mail Worlds.</div></span>${PREFS.layout==='sidebar'?`<span class="st g">${I.check} actif</span>`:''}</button>
+      <button class="set-theme${PREFS.layout==='top'?' on':''}" data-interface="top"><span class="theme-preview focus" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span><span class="nm">Atelier · navigation haute</span><div class="ds">Catégories en haut, thèmes Mail Worlds.</div></span>${PREFS.layout==='top'?`<span class="st g">${I.check} actif</span>`:''}</button>
+      <button class="set-theme" data-interface="focus"><span class="theme-preview focus" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span><span class="nm">Focus OS compact · historique</span><div class="ds">L'interface SIMPLEMAIL·LAB de la capture, sans le shell Mail Worlds.</div></span><span class="st g">↗ ouvrir</span></button>
+      <button class="set-theme" data-interface="classic"><span class="theme-preview focus" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span><span class="nm">Interface classique · V1</span><div class="ds">Interface historique complète et ses réglages.</div></span><span class="st g">↗ ouvrir</span></button>
+      <h4 style="margin-top:24px">Thèmes Mail Worlds</h4>`+THEMES.map(t=>`
       <button class="set-theme${t.id===active?' on':''}" data-th="${t.id}">
         ${themePreview(t.id)}
         <span><span class="nm">0${t.id} · ${t.name}</span><div class="ds">${t.desc}</div></span>
         ${t.id===active?`<span class="st g">${I.check} actif</span>`:''}
-      </button>`).join('')+`<button class="set-theme" data-interface="classic">
-        <span class="theme-preview focus" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-        <span><span class="nm">Interface classique · V1</span><div class="ds">Interface historique complète et ses réglages.</div></span>
-        <span class="st g">↗ ouvrir</span>
-      </button><h4 style="margin-top:24px">Navigation & apparence</h4>
-      <label class="set-row"><span>Disposition</span><select id="set-layout"><option value="top"${PREFS.layout==='top'?' selected':''}>Catégories en haut</option><option value="sidebar"${PREFS.layout==='sidebar'?' selected':''}>Menu latéral repliable</option></select></label>
-      <label class="set-row"><span>Catégories</span><select id="set-category-nav"><option value="icons"${PREFS.categoryNav==='icons'?' selected':''}>Icônes seules</option><option value="labels"${PREFS.categoryNav==='labels'?' selected':''}>Icônes et noms</option></select></label>
-      <label class="set-row"><span>Style visuel</span><select id="set-visual"><option value="standard"${PREFS.visualMode==='standard'?' selected':''}>Mail Worlds</option><option value="aero"${PREFS.visualMode==='aero'?' selected':''}>Aero Glass · ancien thème</option><option value="nordic"${PREFS.visualMode==='nordic'?' selected':''}>Nordic Zen · ancien thème</option><option value="editorial"${PREFS.visualMode==='editorial'?' selected':''}>Editorial · ancien thème</option><option value="omp"${PREFS.visualMode==='omp'?' selected':''}>OMP · noir &amp; rose</option><option value="ultra"${PREFS.visualMode==='ultra'?' selected':''}>Ultra Light · noir et blanc</option></select></label>
+      </button>`).join('')+`<h4 style="margin-top:24px">Apparence</h4>
+      <div class="choice-row"><span>Catégories</span><span class="choice-group"><button data-choice="categoryNav" data-value="icons" class="${PREFS.categoryNav==='icons'?'on':''}">Icônes</button><button data-choice="categoryNav" data-value="labels" class="${PREFS.categoryNav==='labels'?'on':''}">Icônes + noms</button></span></div>
+      <div class="choice-row"><span>Style visuel</span><span class="choice-group">${[['standard','Mail Worlds'],['aero','Aero Glass'],['nordic','Nordic Zen'],['editorial','Editorial'],['omp','OMP'],['ultra','Ultra Light']].map(([v,n])=>`<button data-choice="visualMode" data-value="${v}" class="${PREFS.visualMode===v?'on':''}">${n}</button>`).join('')}</span></div>
       <div class="set-row"><span>Accent OMP <small style="display:block;font-size:9px;color:var(--faint)">thème OMP — rose, cyan, violet…</small></span><span class="omp-sw" id="omp-swatches">${OMP_ACCENTS.map(a=>`<button data-omp-accent="${a.v}" style="background:${a.v}" class="${(PREFS.ompAccent||OMP_ACCENTS[0].v)===a.v?'on':''}" aria-label="Accent ${a.n}" title="${a.n}"></button>`).join('')}</span></div>
-      <label class="set-row"><span>Animation de fond</span><select id="set-motion"><option value="off"${PREFS.motionMode==='off'?' selected':''}>Désactivée</option><option value="particles"${PREFS.motionMode==='particles'?' selected':''}>Particules</option><option value="waves"${PREFS.motionMode==='waves'?' selected':''}>Ondes</option><option value="cassette"${PREFS.motionMode==='cassette'?' selected':''}>Cassette</option></select></label>
-      <label class="set-row"><span>Densité</span><select id="set-density"><option value="compact"${PREFS.density==='compact'?' selected':''}>Compacte</option><option value="comfortable"${PREFS.density==='comfortable'?' selected':''}>Confortable</option><option value="spacious"${PREFS.density==='spacious'?' selected':''}>Aérée</option></select></label>
-      <label class="set-row"><span>Chargement</span><select id="set-load-mode"><option value="button"${PREFS.loadMode==='button'?' selected':''}>Bouton « Charger plus »</option><option value="infinite"${PREFS.loadMode==='infinite'?' selected':''}>Défilement infini</option><option value="both"${PREFS.loadMode==='both'?' selected':''}>Bouton + défilement infini</option></select></label>
+      <div class="choice-row"><span>Fond</span>${choices('motionMode',[['off','Aucun'],['particles','Particules'],['waves','Ondes'],['cassette','Cassette']],PREFS.motionMode)}</div>
+      <div class="choice-row"><span>Densité</span>${choices('density',[['compact','Compacte'],['comfortable','Confort'],['spacious','Aérée']],PREFS.density)}</div>
+      <div class="choice-row"><span>Chargement</span>${choices('loadMode',[['button','Bouton'],['infinite','Infini'],['both','Les deux']],PREFS.loadMode)}</div>
       <h4 style="margin-top:24px">Largeurs</h4>
       <label class="set-row"><span>Liste <b class="v" data-value-for="set-list-width">${PREFS.listWidth}%</b></span><input id="set-list-width" type="range" min="50" max="100" step="1" value="${PREFS.listWidth}"></label>
       <label class="set-row"><span>Expéditeur <b class="v" data-value-for="set-sender-width">${PREFS.senderWidth}%</b></span><input id="set-sender-width" type="range" min="10" max="40" step="1" value="${PREFS.senderWidth}"></label>
       <label class="set-row"><span>Colonnes Canvas <b class="v" data-value-for="set-canvas-width">${PREFS.canvasWidth}%</b></span><input id="set-canvas-width" type="range" min="15" max="60" step="1" value="${PREFS.canvasWidth}"></label>
       <h4 style="margin-top:24px">Colonnes Label Canvas</h4>
       <div class="set-row"><span><b>Principale</b><br>Toujours en première colonne</span><span class="v">verrouillée</span></div>
-      <label class="set-row"><span>Nombre automatique</span><select id="set-canvas-auto-count">${[2,3,4,5,6].map(n=>`<option value="${n}"${PREFS.canvasAutoCount===n?' selected':''}>${n} libellés</option>`).join('')}</select></label>
+      <div class="choice-row"><span>Colonnes auto</span>${choices('canvasAutoCount',[[2,'2'],[3,'3'],[4,'4'],[5,'5'],[6,'6']],PREFS.canvasAutoCount)}</div>
       <div class="set-row"><span id="canvas-mode-status">${PREFS.canvasLabels.length?'Sélection personnalisée':'Automatique · plus de non-lus'}</span><button class="f-btn" id="set-canvas-auto"${PREFS.canvasLabels.length?'':' disabled'}>Réinitialiser en auto</button></div>
       <div class="canvas-labels">${canvasLabelStats().map(x=>{const short=shortLabel(x.name);return`<label class="set-row"><span title="${esc(x.name)}"><b>${esc(short)}</b>${short!==x.name?`<br><small>${esc(x.name)}</small>`:''}</span><span class="v">${x.unread} non lus · ${x.total}</span><input type="checkbox" data-canvas-label="${esc(x.name)}"${PREFS.canvasLabels.includes(x.name)?' checked':''}></label>`}).join('')||'<div class="set-row"><span>Aucun libellé disponible</span></div>'}</div>
       <h4 style="margin-top:24px">Contenu des lignes</h4>
-      <label class="set-row"><span>Expéditeur affiché</span><select id="set-sender-mode"><option value="email"${PREFS.senderMode==='email'?' selected':''}>Adresse e-mail</option><option value="short"${PREFS.senderMode==='short'?' selected':''}>Nom court</option><option value="name"${PREFS.senderMode==='name'?' selected':''}>Nom</option><option value="both"${PREFS.senderMode==='both'?' selected':''}>Nom + adresse</option></select></label>
-      <label class="set-row"><span>Avatars expéditeurs</span><select id="set-sender-avatars"><option value="photo"${PREFS.senderAvatars==='photo'?' selected':''}>Photos puis initiales</option><option value="initials"${PREFS.senderAvatars==='initials'?' selected':''}>Bulles initiales</option><option value="none"${PREFS.senderAvatars==='none'?' selected':''}>Favicons domaine</option></select></label>
+      <div class="choice-row"><span>Expéditeur</span>${choices('senderMode',[['email','Adresse'],['short','Nom court'],['name','Nom'],['both','Les deux']],PREFS.senderMode)}</div>
+      <div class="choice-row"><span>Avatar</span>${choices('senderAvatars',[['photo','Photo'],['initials','Initiales'],['none','Favicon']],PREFS.senderAvatars)}</div>
       <label class="set-row"><span>Ne pas couper les adresses</span><input id="set-sender-wrap" type="checkbox"${PREFS.senderWrap?' checked':''}></label>
-      <label class="set-row"><span>Résumé</span><select id="set-list-content"><option value="topic"${PREFS.listContent==='topic'?' selected':''}>Sujet uniquement</option><option value="topic-preview"${PREFS.listContent==='topic-preview'?' selected':''}>Sujet + première ligne</option><option value="preview2"${PREFS.listContent==='preview2'?' selected':''}>Sujet + deux lignes</option></select></label>
+      <div class="choice-row"><span>Résumé</span>${choices('listContent',[['topic','Sujet'],['topic-preview','1 ligne'],['preview2','2 lignes']],PREFS.listContent)}</div>
       <label class="set-row"><span>Favicons expéditeurs</span><input id="set-favicons" type="checkbox"${PREFS.showFavicons?' checked':''}></label>
       <label class="set-row"><span>Libellés</span><input id="set-show-labels" type="checkbox"${PREFS.showLabels?' checked':''}></label>
       <label class="set-row"><span>Dates</span><input id="set-show-dates" type="checkbox"${PREFS.showDates?' checked':''}></label>`}
   else if(activeTab==='reader'){
-    c.innerHTML=`<h4>Mode lecture</h4><label class="set-row"><span>Ouverture des liens</span><select id="set-link-target"><option value="drawer"${PREFS.linkTarget==='drawer'?' selected':''}>Dans le drawer de lecture</option><option value="browser"${PREFS.linkTarget==='browser'?' selected':''}>Dans le navigateur externe</option></select></label>
+    c.innerHTML=`<h4>Mode lecture</h4><div class="choice-row"><span>Liens</span>${choices('linkTarget',[['drawer','Dans le drawer'],['browser','Navigateur externe']],PREFS.linkTarget)}</div>
       <div class="set-row"><span>Les messages restent ouverts dans le drawer bas, avec Échap pour revenir à la liste.</span></div>`}
   else if(activeTab==='memos'){
     c.innerHTML=`<h4>Mémos & post-its</h4>
@@ -1488,7 +1488,7 @@ function renderSettings(){
       <div class="set-row"><span>Les mémos apparaissent dans la catégorie « Mémos » du navigateur de mondes.</span></div>`}
   else if(activeTab==='newsletters'){
     c.innerHTML=`<h4>Mode newsletters</h4><label class="set-row"><span>Afficher les images de couverture</span><input id="set-newsletter-images" type="checkbox"${PREFS.newsletterImages?' checked':''}></label>
-      <label class="set-row"><span>Previews enrichies</span><select id="set-newsletter-count"><option value="3"${PREFS.newsletterPreviewCount===3?' selected':''}>3 messages</option><option value="6"${PREFS.newsletterPreviewCount===6?' selected':''}>6 messages</option><option value="12"${PREFS.newsletterPreviewCount===12?' selected':''}>12 messages</option></select></label>`}
+      <div class="choice-row"><span>Previews</span>${choices('newsletterPreviewCount',[[3,'3 mails'],[6,'6 mails'],[12,'12 mails']],PREFS.newsletterPreviewCount)}</div>`}
   else if(activeTab==='labels'){
     const allLabels=[...new Set([...Object.keys(LABEL_COLORS),...labelPool()])].sort();
     const childOf=new Map(),children=new Set();
@@ -1501,7 +1501,7 @@ function renderSettings(){
       `<div class="set-row"><button id="reset-label-colors" style="font-size:11px;color:var(--muted);border:1px solid var(--hair);padding:6px 12px">Réinitialiser les couleurs</button></div>`}
   else if(activeTab==='shortcuts'){
     c.innerHTML=`<h4>Raccourcis clavier</h4>
-      <label class="set-row"><span>Jeu de raccourcis</span><select id="set-shortcuts"><option value="gmail"${PREFS.shortcutPreset==='gmail'?' selected':''}>Gmail officiel</option><option value="simplemail"${PREFS.shortcutPreset==='simplemail'?' selected':''}>PKMail</option><option value="custom"${PREFS.shortcutPreset==='custom'?' selected':''} disabled>Personnalisé</option></select></label>
+      <div class="choice-row"><span>Jeu</span>${choices('shortcutPreset',[['gmail','Gmail'],['simplemail','PKMail']],PREFS.shortcutPreset)}</div>
       <div class="shortcut-grid">${Object.entries(SHORTCUT_LABELS).map(([action,label])=>`<label><span>${label}</span><input data-shortcut="${action}" maxlength="1" value="${esc(PREFS.shortcuts[action]||shortcutDefault(action)||'')}" aria-label="Raccourci ${label}"></label>`).join('')}</div>
       <div class="set-row"><span>Les flèches, Entrée, Échap et Tab restent disponibles pour la navigation.</span></div>`}
   else if(activeTab==='accounts'){
@@ -1521,6 +1521,7 @@ function renderSettings(){
   const catNav=$('#set-category-nav');if(catNav)catNav.addEventListener('change',e=>{PREFS.categoryNav=e.target.value;savePrefs()});
   const layout=$('#set-layout');if(layout)layout.addEventListener('change',e=>{PREFS.layout=e.target.value;savePrefs();renderCategories()});
   const visual=$('#set-visual');if(visual)visual.addEventListener('change',e=>{PREFS.visualMode=e.target.value;savePrefs()});
+  $$('[data-choice]').forEach(button=>button.addEventListener('click',()=>{const key=button.dataset.choice,value=button.dataset.value;if(key==='shortcutPreset')PREFS.shortcuts={...SHORTCUT_PRESETS[value]};PREFS[key]=['canvasAutoCount','newsletterPreviewCount'].includes(key)?+value:value;savePrefs();renderCategories();renderSettings()}));
   $$('[data-omp-accent]').forEach(b=>b.addEventListener('click',()=>{PREFS.ompAccent=b.dataset.ompAccent;savePrefs();renderSettings()}));
   const selects={
     '#set-density':'density','#set-load-mode':'loadMode','#set-sender-mode':'senderMode','#set-sender-avatars':'senderAvatars','#set-list-content':'listContent','#set-motion':'motionMode'
@@ -1726,7 +1727,10 @@ document.addEventListener('click',e=>{
     else if(act.dataset.act==='labels')openPalette('label');
     else if(act.dataset.act==='back'){st.mode='list';renderFocus()}
     return}
+  if(e.target.closest('[data-interface="sidebar"]')){PREFS.layout='sidebar';savePrefs();renderCategories();renderSettings();return}
+  if(e.target.closest('[data-interface="top"]')){PREFS.layout='top';savePrefs();renderCategories();renderSettings();return}
   if(e.target.closest('[data-interface="classic"]')){location.href='/';return}
+  if(e.target.closest('[data-interface="focus"]')){location.href='/lab-focus-os-2026-08-01/';return}
   if(e.target.closest('[data-install]')){if(installPrompt){installPrompt.prompt();installPrompt=null}else toast('Chrome : menu · Installer');return}
   if(e.target.closest('[data-open-settings]')){openSettings();return}
   if(e.target.closest('[data-toggle-rail]')){PREFS.railCollapsed=!PREFS.railCollapsed;savePrefs();return}
