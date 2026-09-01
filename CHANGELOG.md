@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+### [2026.09.02] - 2026-09-01
+
+#### Fixed
+- `?minimal=1` force aussi les données de démonstration Focus OS afin de restituer l'interface à huit messages de la capture historique.
+
 ### [2026.09.01] - 2026-09-01
 
 #### Added

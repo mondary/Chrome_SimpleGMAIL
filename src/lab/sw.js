@@ -1,4 +1,4 @@
-const CACHE = 'pkmail-lab-current-atelier-2026.09.01';
+const CACHE = 'pkmail-lab-current-atelier-2026.09.02';
 const CACHE_PREFIX = 'pkmail-lab-current-atelier-';
 const SHELL = ['./', 'manifest.json', 'icon-192.png', 'icon-512.png',
   'fonts/JetBrainsMonoNerdFont-Regular.ttf', 'fonts/JetBrainsMonoNerdFont-SemiBold.ttf'];
