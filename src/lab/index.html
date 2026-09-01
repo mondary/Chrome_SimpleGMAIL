@@ -747,6 +747,7 @@ if(PREFS.senderWidth>40)PREFS.senderWidth=px2pct(PREFS.senderWidth,120,420,10,40
 if(PREFS.canvasWidth>60)PREFS.canvasWidth=px2pct(PREFS.canvasWidth,240,560,15,60);
 PREFS.shortcuts={...(SHORTCUT_PRESETS[PREFS.shortcutPreset]||SHORTCUT_PRESETS.gmail),...PREFS.shortcuts};
 if(!Array.isArray(PREFS.memoPalette)||!PREFS.memoPalette.length)PREFS.memoPalette=MEMO_COLORS.slice(0,6);
+if(new URLSearchParams(location.search).has('minimal')){Object.assign(PREFS,{layout:'top',categoryNav:'icons',visualMode:'standard',motionMode:'off',listContent:'topic',showLabels:false});try{localStorage.setItem('simplemail_lab_prefs',JSON.stringify(PREFS))}catch(e){}}
 function applyPrefs(){const root=document.documentElement.style,body=document.body;root.setProperty('--memo',PREFS.memoPalette[0]);root.setProperty('--omp-accent',PREFS.ompAccent||'oklch(70% .24 340)');root.setProperty('--list-width',PREFS.listWidth+'%');root.setProperty('--sender-width',PREFS.senderWidth+'%');root.setProperty('--canvas-width',PREFS.canvasWidth+'%');root.setProperty('--row-padding',({compact:5,comfortable:8,spacious:12}[PREFS.density]||8)+'px');body.dataset.layout=PREFS.layout;body.dataset.railCollapsed=PREFS.railCollapsed;body.dataset.motion=RM?'off':PREFS.motionMode;body.dataset.categoryNav=PREFS.categoryNav;body.dataset.visual=PREFS.visualMode;body.dataset.senderWrap=PREFS.senderWrap;body.dataset.listContent=PREFS.listContent;body.dataset.favicons=PREFS.showFavicons;body.dataset.labels=PREFS.showLabels;body.dataset.dates=PREFS.showDates;const toggle=$('[data-toggle-rail]');if(toggle){toggle.textContent=PREFS.railCollapsed?'›':'‹';toggle.setAttribute('aria-expanded',String(!PREFS.railCollapsed));toggle.setAttribute('aria-label',PREFS.railCollapsed?'Déplier le menu latéral':'Replier le menu latéral')}queueMicrotask(syncAmbient)}
 applyPrefs();
 const isMemo=m=>PREFS.memoPostits&&LIVE.email&&m.from.email.toLowerCase()===LIVE.email.toLowerCase();
@@ -1508,7 +1509,7 @@ function renderSettings(){
     c.innerHTML=`<h4>Application</h4>
       <button class="set-theme" data-install><img class="install-preview" src="icon-192.png" alt="Icône PKMail"><span><span class="nm">Installer PKMail</span><div class="ds">Ajouter la PWA à l'écran d'accueil.</div></span></button>
       <div class="set-row"><span>Application</span><span class="v">PKMail Lab V2</span></div>
-      <div class="set-row"><span>Version</span><span class="v">2026.08.08</span></div>
+      <div class="set-row"><span>Version</span><span class="v">2026.09.01</span></div>
       <div class="set-row"><span>Source</span><span class="v" id="set-src">…</span></div>
       <div class="set-row"><span>Police</span><span class="v">JetBrains Mono Nerd Font</span></div>`}
   /* wire new controls */

@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+### [2026.09.01] - 2026-09-01
+
+#### Added
+- Paramètre d'URL `?minimal=1` dans le Lab : applique et sauvegarde le look Focus OS d'origine (catégories en haut en icônes seules, style standard mono, liste sujet seul, libellés masqués, animations de fond coupées).
+
 ### [2026.08.08] - 2026-08-31
 
 #### Added
