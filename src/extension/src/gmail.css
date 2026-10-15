@@ -84,7 +84,9 @@ div.brC-aT5-aOt-Jw {
 #gb [aria-label*="support" i],
 .zo,
 .gb_z.gb_gd.gb_f.gb_zf,
-.Yb.dIH7rb.bax {
+.Yb.dIH7rb.bax,
+div.G-asx.J-J5-Ji,
+div.aBS.J-J5-Ji {
     display: none;
 }
 
@@ -254,16 +256,27 @@ table.F.cf.zt, .F.cf.zt tbody { background: #ffffff !important; }
   display: none !important;
 }
 
-/* 13) Header auto-hide v2 — header + barre d'action se replient au scroll (scroll-driven, Chrome 116+) */
+/* 13) Header auto-hide v3 — header en calque + remontée de l'interface (scroll-driven, Chrome 116+) */
 body { timeline-scope: --pkscroll; }
 .aeJ, .aia, .bA9, .Am .aeJ {
   scroll-timeline: --pkscroll block;
 }
 #gb {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 8000 !important;
+  background: #ffffff !important;
   animation: pk-gb-hide linear both;
   animation-timeline: --pkscroll;
   animation-range: 0px 140px;
   will-change: transform;
+}
+body {
+  animation: pk-body-rise linear both;
+  animation-timeline: --pkscroll;
+  animation-range: 0px 140px;
 }
 .G-atb {
   animation: pk-toolbar-hide linear both;
@@ -272,7 +285,11 @@ body { timeline-scope: --pkscroll; }
   will-change: transform;
 }
 @keyframes pk-gb-hide {
-  to { transform: translateY(-110%); margin-bottom: -120px; opacity: 0; pointer-events: none; }
+  to { transform: translateY(-110%); opacity: 0; pointer-events: none; }
+}
+@keyframes pk-body-rise {
+  from { padding-top: 120px; }
+  to { padding-top: 0; }
 }
 @keyframes pk-toolbar-hide {
   to { transform: translateY(-110%); margin-bottom: -60px; opacity: 0; pointer-events: none; }

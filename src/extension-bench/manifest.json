@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PK Gmail Scripts Lab",
-  "version": "2026.10.23",
+  "version": "2026.10.25",
   "description": "Banc de test : charge/décharge chaque script Gmail à la volée",
   "permissions": ["storage", "scripting"],
   "host_permissions": ["https://mail.google.com/*"],
