@@ -4,6 +4,20 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+### [2026.10.1] - 2026-10-15
+
+#### Added
+- `src/extension-bench/` : banc de test Chrome « PK Gmail Scripts Lab » — 28 scripts chargeables/déchargeables à la volée depuis un popup, régénérable par `build.sh` depuis `gmail.css` et les snippets ScriptCat.
+- Sections 10 à 19 dans `src/extension/src/gmail.css` : ScrollBarGrey, thème PK Web Memory, masquage du statut Actif/absent, header auto-hide au scroll (scroll-driven), barre supérieure en niveaux de gris, masquage des outils de saisie, masquage du volet de lecture, toast centré en pilule, bouton Composer aligné sur la largeur des dossiers, sidebar en niveaux de gris.
+- Réglage des marges du tweak Margin en pourcentage (variable `--pk-margin-side`, défaut 5 %) piloté depuis le banc de test.
+
+#### Changed
+- Section 1 renommée « Background White » (ex-FullWhite) pour refléter son rôle réel.
+- Section 7 (TopRight) réancrée sur des `aria-label` stables au lieu des classes Google obfusquées.
+
+#### Fixed
+- Tweak Margin : sélecteurs « frère adjacent » périmés remplacés par un centrage structurel (`calc(100% - 2 × marges)` + marges auto).
+
 ### [2026.09.02] - 2026-09-01
 
 #### Fixed

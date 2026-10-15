@@ -1,0 +1,10 @@
+/* 12) Statut — masquer le bouton Actif / Ne pas déranger / Absent (à côté d'assistance et réglages) — généré depuis gmail.css */
+#gb [aria-label*="Actif" i],
+#gb [aria-label*="Ne pas déranger" i],
+#gb [aria-label*="défini comme absent" i],
+#gb [aria-label*="présence" i],
+#gb [aria-label*="disponibilité" i],
+#gb [aria-label*="availability" i],
+#gb [aria-label*="presence" i] {
+  display: none !important;
+}

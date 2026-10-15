@@ -1,0 +1,30 @@
+/* 10) Gmail ScrollBar Grey — généré depuis gmail.css */
+/* Styliser la scrollbar principale */
+::-webkit-scrollbar {
+    width: 8px;  /* Légèrement plus fine pour plus de subtilité */
+    height: 8px;
+}
+
+/* Style du track (partie arrière de la scrollbar) */
+::-webkit-scrollbar-track {
+    background: #ffffff;  /* Blanc pur pour le fond */
+    border-radius: 4px;
+}
+
+/* Style du thumb (partie mobile de la scrollbar) */
+::-webkit-scrollbar-thumb {
+    background: #f0f0f07a;  /* Gris très très clair */
+    border-radius: 4px;
+    border: 1px solid #f0f0f07a;  /* Bordure légèrement plus foncée */
+}
+
+/* Style au survol du thumb */
+::-webkit-scrollbar-thumb:hover {
+    background: #f0f0f07a;  /* Un peu plus foncé au survol mais toujours très subtil */
+}
+
+/* Pour Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #f0f0f07a #ffffff;
+}

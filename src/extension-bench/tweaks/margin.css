@@ -1,0 +1,13 @@
+/* 5) Margin — colonne de mails centrée (v3 : marges réglables en %) — généré depuis gmail.css */
+:root { --pk-margin-side: 5%; }
+.AO, .aeF > .nH, .bkK, .aBA + .bkK, .a3W + .bkK {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-top: 0 !important;
+}
+.AO, .aeF > .nH {
+  max-width: calc(100% - (2 * var(--pk-margin-side))) !important;
+}
+.bkK, .aBA + .bkK, .a3W + .bkK {
+  max-width: 100% !important;
+}

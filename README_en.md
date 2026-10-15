@@ -6,6 +6,8 @@
 
 Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Packaged as native desktop app (macOS · Windows · Linux).
 
+**Version 2026.10.1** — [Changelog](CHANGELOG.md)
+
 ## Features
 
 ### V2 interface — Lab (6 concepts)
@@ -179,3 +181,7 @@ First run auto-creates the user data directory with a generic config template.
 ├── SimpleMail.command        ← Dev launcher (macOS)
 └── README.md
 ```
+
+## Support
+
+If PKMail is useful to you: [Ko-fi](https://ko-fi.com/pouark)

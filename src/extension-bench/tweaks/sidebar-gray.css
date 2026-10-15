@@ -1,0 +1,4 @@
+/* 19) Sidebar gris — bouton composer + icônes/textes en niveaux de gris (puces des libellés préservées) — généré depuis gmail.css */
+.wT .T-I-KE, .wT .TO .nU, .wT .TO .n0, .wT .TO .bsU, .wT .TO svg {
+  filter: grayscale(1) !important;
+}

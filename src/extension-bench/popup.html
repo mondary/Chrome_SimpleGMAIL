@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header>
+    <div class="title">
+      <span class="dot"></span>
+      PK Gmail Scripts Lab
+    </div>
+    <div class="actions">
+      <button id="all-on" title="Tout activer">Tout ON</button>
+      <button id="all-off" title="Tout désactiver">Tout OFF</button>
+    </div>
+  </header>
+
+  <main id="list"></main>
+
+  <footer>
+    <span id="count">—</span>
+    <span class="hint">Gmail est rechargé après chaque changement · désactive les équivalents dans ScriptCat pour un test propre</span>
+  </footer>
+
+  <script src="data/manifest.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

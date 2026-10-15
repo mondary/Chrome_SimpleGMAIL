@@ -1,0 +1,23 @@
+/* 13) Header auto-hide v2 — header + barre d'action se replient au scroll (scroll-driven, Chrome 116+) — généré depuis gmail.css */
+body { timeline-scope: --pkscroll; }
+.aeJ, .aia, .bA9, .Am .aeJ {
+  scroll-timeline: --pkscroll block;
+}
+#gb {
+  animation: pk-gb-hide linear both;
+  animation-timeline: --pkscroll;
+  animation-range: 0px 140px;
+  will-change: transform;
+}
+.G-atb {
+  animation: pk-toolbar-hide linear both;
+  animation-timeline: --pkscroll;
+  animation-range: 0px 110px;
+  will-change: transform;
+}
+@keyframes pk-gb-hide {
+  to { transform: translateY(-110%); margin-bottom: -120px; opacity: 0; pointer-events: none; }
+}
+@keyframes pk-toolbar-hide {
+  to { transform: translateY(-110%); margin-bottom: -60px; opacity: 0; pointer-events: none; }
+}

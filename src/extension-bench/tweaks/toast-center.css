@@ -1,0 +1,22 @@
+/* 17) Toast redesign v2 — centré en bas, pilule arrondie sombre — généré depuis gmail.css */
+.bAp {
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 24px !important;
+  top: auto !important;
+  display: flex !important;
+  justify-content: center !important;
+  pointer-events: none !important;
+}
+.bAn {
+  border-radius: 9999px !important;
+  background: #09090b !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 32px rgba(9,9,11,.28) !important;
+  padding: 10px 20px !important;
+  pointer-events: auto !important;
+}
+.bAn button, .bAn [role="button"], .bAu, .bAv {
+  color: #ffd35c !important;
+  font-weight: 600 !important;
+}

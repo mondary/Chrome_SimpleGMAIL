@@ -1,0 +1,7 @@
+/* 3) Gmail Sticky Topic — généré depuis gmail.css */
+.iY.a98.nH > div.nH:nth-of-type(1) {
+    position: sticky !important; /* Comportement sticky forcé */
+    top: 0 !important;           /* Collé en haut du conteneur parent */
+    z-index: 1 !important;      /* Priorité inférieure à .aVN */
+    background-color: white;     /* Évite la transparence */
+}

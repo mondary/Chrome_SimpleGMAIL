@@ -1,4 +1,4 @@
-/* 1) Tout en blanc, police fine */
+/* 1) Background White — tout en blanc, police fine */
 @font-face {
   font-family: 'OpenDyslexic Nerd Font';
   src: url('https://cdn.jsdelivr.net/gh/Nick2bad4u/nerd-fonts-woff2@v1.0.0/fonts/woff2/OpenDyslexic/OpenDyslexicNerdFont-Regular.woff2') format('woff2');
@@ -50,12 +50,18 @@ div.brC-aT5-aOt-Jw {
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* 5) Gmail Marging */
-.aBA + .bkK,
-.a3W + .bkK {
-  margin-left: 80px;
-  margin-right: 30px;
-  margin-top: 0px;
+/* 5) Margin — colonne de mails centrée (v3 : marges réglables en %) */
+:root { --pk-margin-side: 5%; }
+.AO, .aeF > .nH, .bkK, .aBA + .bkK, .a3W + .bkK {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-top: 0 !important;
+}
+.AO, .aeF > .nH {
+  max-width: calc(100% - (2 * var(--pk-margin-side))) !important;
+}
+.bkK, .aBA + .bkK, .a3W + .bkK {
+  max-width: 100% !important;
 }
 
 /* 6) Gmail Unread GREY */
@@ -68,7 +74,14 @@ div.brC-aT5-aOt-Jw {
     font-weight: 600 !important;
 }
 
-/* 7) Gmail TopRight */
+/* 7) TopRight v2 — masque aide/apps/notifications/assistance à côté des réglages (ancrage aria-label stable) */
+#gb [aria-label*="Applications Google" i],
+#gb [aria-label*="Google apps" i],
+#gb [aria-label*="notifications" i],
+#gb [aria-label*="Aide" i],
+#gb [aria-label*="Help" i],
+#gb [aria-label*="assistance" i],
+#gb [aria-label*="support" i],
 .zo,
 .gb_z.gb_gd.gb_f.gb_zf,
 .Yb.dIH7rb.bax {
@@ -97,4 +110,232 @@ div.brC-aT5-aOt-Jw {
 	padding-right: 40px !important;
 	padding-top: 20px !important;
 	padding-bottom: 20px !important;
+}
+
+/* 10) Gmail ScrollBar Grey */
+/* Styliser la scrollbar principale */
+::-webkit-scrollbar {
+    width: 8px;  /* Légèrement plus fine pour plus de subtilité */
+    height: 8px;
+}
+
+/* Style du track (partie arrière de la scrollbar) */
+::-webkit-scrollbar-track {
+    background: #ffffff;  /* Blanc pur pour le fond */
+    border-radius: 4px;
+}
+
+/* Style du thumb (partie mobile de la scrollbar) */
+::-webkit-scrollbar-thumb {
+    background: #f0f0f07a;  /* Gris très très clair */
+    border-radius: 4px;
+    border: 1px solid #f0f0f07a;  /* Bordure légèrement plus foncée */
+}
+
+/* Style au survol du thumb */
+::-webkit-scrollbar-thumb:hover {
+    background: #f0f0f07a;  /* Un peu plus foncé au survol mais toujours très subtil */
+}
+
+/* Pour Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #f0f0f07a #ffffff;
+}
+
+/* 11) Theme · PK Web Memory — zinc & hairlines */
+/* 11a) Base : blanc pur + typographie système */
+body, .aeF, .nH, .nH .aeF, .nH .nH.Hd, div.brC-aT5-aOt-Jw {
+  background: #ffffff !important;
+  color: #09090b !important;
+  font-family: -apple-system, "Segoe UI", Roboto, Inter, sans-serif !important;
+  font-size: 13px !important;
+}
+.aMb, .aqJ, .aRM, .gb_2d { background: #ffffff !important; }
+
+/* 11b) Hairlines : séparateurs et cadres discrets */
+.zA { box-shadow: none !important; border-bottom: 1px solid #e4e4e7 !important; }
+.zA:hover, .zA.bzw, .zA.bgy { background: #fafafa !important; }
+table.F.cf.zt, .F.cf.zt tbody { background: #ffffff !important; }
+.aKk { border: 1px solid #e4e4e7 !important; border-radius: 10px !important; background: #ffffff !important; box-shadow: none !important; }
+.aAy { border-radius: 8px !important; }
+.aAy.aIf-aLe, .aAy:hover { background: #f4f4f5 !important; }
+
+/* 11c) Recherche : pilule hairline façon PKWM */
+#aso_search_form_anchor {
+  background: #ffffff !important;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 10px !important;
+  margin: auto;
+}
+#aso_search_form_anchor:focus-within { border-color: #71717a !important; }
+.w-asV .aaZ, .gssb_c { border-radius: 10px !important; }
+
+/* 11d) Liste : lignes, non-lus, compteurs */
+.zA { transition: background-color .15s ease; }
+.zA:not(.yO) { background: #fafafa !important; }
+.zA:not(.yO) .xS span .bqe { font-weight: 600 !important; }
+.y2, .y6, .xT .yP { color: #71717a !important; }
+.Dj { color: #71717a !important; font-family: ui-monospace, "SF Mono", Menlo, monospace !important; font-size: 11px !important; font-variant-numeric: tabular-nums; }
+
+/* 11e) Rail latéral : items sobres, actif zinc */
+.wT { background: transparent !important; }
+.TO, .nZ .TO { border-radius: 8px !important; }
+.TO .nU, .TO .n0, .ain .nU { color: #71717a !important; font-size: 12.5px !important; }
+.TO:hover, .TO.nZ { background: #f4f4f5 !important; }
+.TO.nZ .nU, .TO.nZ .n0 { color: #09090b !important; font-weight: 600 !important; }
+.nZ .nU .n0 .CJ { color: #09090b !important; }
+.ain .CJ, .nZ .aio { color: #09090b !important; }
+.aio, .bsU { color: #71717a !important; }
+
+/* 11f) Boutons : composer plein zinc-950, les autres en hairline */
+.T-I-KE {
+  background: #09090b !important;
+  color: #ffffff !important;
+  border-radius: 9999px !important;
+  box-shadow: none !important;
+  font-weight: 600 !important;
+}
+.T-I-KE:hover { background: #18181b !important; box-shadow: 0 6px 16px rgba(9,9,11,.12) !important; }
+.T-I, .J-J5-Ji .T-I, .T-I-Js-Gs {
+  border-radius: 8px !important;
+  transition: background-color .12s ease;
+}
+.T-I-JW, .T-I-Js-Gs.mA { background: #f4f4f5 !important; }
+.T-I .asa, .asa { color: #71717a !important; }
+
+/* 11g) Labels/badges : pilules hairline 10px */
+.ar .at, .at {
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 5px !important;
+  padding: 1px 6px !important;
+  font-size: 10px !important;
+  line-height: 1.4 !important;
+  color: #52525b !important;
+  background: rgba(255,255,255,.9) !important;
+  box-shadow: none !important;
+}
+.av { font-size: 10px !important; color: #52525b !important; }
+
+/* 11h) Lecteur de mail : sujet éditorial, métadonnées muted */
+.hP { font-size: 19px !important; font-weight: 600 !important; color: #09090b !important; }
+.gD, .iV { color: #09090b !important; font-weight: 500 !important; }
+.g2, .ajz, .ajn { color: #71717a !important; }
+.iY.a98.nH > div.nH:nth-of-type(1) { background: #ffffff !important; border-bottom: 1px solid #e4e4e7 !important; }
+.hr, .adI, .acM { border-color: #e4e4e7 !important; }
+
+/* 11i) Composeur : carte hairline + ombre douce façon palette ⌘K */
+.AD, .a8X {
+  border-radius: 14px !important;
+  border: 1px solid #e4e4e7 !important;
+  box-shadow: 0 24px 80px rgba(9,9,11,.16), 0 2px 10px rgba(9,9,11,.07) !important;
+  overflow: hidden;
+}
+.akh, .JD-Kh, .d2 { background: #fafafa !important; border-bottom: 1px solid #e4e4e7 !important; }
+
+/* 11j) Menus, toasts et divers */
+.J-M, .J-M-Jz, .SK.AX { border: 1px solid #e4e4e7 !important; border-radius: 10px !important; box-shadow: 0 12px 32px rgba(9,9,11,.12) !important; }
+.J-N-JT, .J-N-JW.oHoJ5d { background: #f4f4f5 !important; }
+.bAp.bAn, .vh { border-radius: 10px !important; }
+.aj5 .Jd-Ale, .Jd-Je, .ajA { background: #ffffff !important; }
+::-webkit-scrollbar { width: 8px !important; height: 8px !important; }
+::-webkit-scrollbar-track { background: #ffffff !important; }
+::-webkit-scrollbar-thumb { background: #f0f0f07a !important; border-radius: 4px !important; }
+::-webkit-scrollbar-thumb:hover { background: #d4d4d8 !important; }
+
+/* 12) Statut — masquer le bouton Actif / Ne pas déranger / Absent (à côté d'assistance et réglages) */
+#gb [aria-label*="Actif" i],
+#gb [aria-label*="Ne pas déranger" i],
+#gb [aria-label*="défini comme absent" i],
+#gb [aria-label*="présence" i],
+#gb [aria-label*="disponibilité" i],
+#gb [aria-label*="availability" i],
+#gb [aria-label*="presence" i] {
+  display: none !important;
+}
+
+/* 13) Header auto-hide v2 — header + barre d'action se replient au scroll (scroll-driven, Chrome 116+) */
+body { timeline-scope: --pkscroll; }
+.aeJ, .aia, .bA9, .Am .aeJ {
+  scroll-timeline: --pkscroll block;
+}
+#gb {
+  animation: pk-gb-hide linear both;
+  animation-timeline: --pkscroll;
+  animation-range: 0px 140px;
+  will-change: transform;
+}
+.G-atb {
+  animation: pk-toolbar-hide linear both;
+  animation-timeline: --pkscroll;
+  animation-range: 0px 110px;
+  will-change: transform;
+}
+@keyframes pk-gb-hide {
+  to { transform: translateY(-110%); margin-bottom: -120px; opacity: 0; pointer-events: none; }
+}
+@keyframes pk-toolbar-hide {
+  to { transform: translateY(-110%); margin-bottom: -60px; opacity: 0; pointer-events: none; }
+}
+
+/* 14) Barre supérieure en niveaux de gris (focus couleur sur les mails) */
+#gb { filter: grayscale(1) !important; }
+
+/* 15) Outil de saisie v2 — barre de mise en forme + bouton/menus outils de saisie */
+.aDh, .aDj, .aX .aDh,
+[aria-label*="Outils de saisie" i],
+[aria-label*="outil de saisie" i],
+[role="menuitem"][aria-label*="saisie" i],
+[role="menuitemcheckbox"][aria-label*="saisie" i] {
+  display: none !important;
+}
+
+/* 16) Volet de lecture v2 — bouton + entrées de menu, partout */
+[aria-label*="volet" i],
+[role="menuitem"][aria-label*="volet" i],
+[role="menuitemradio"][aria-label*="volet" i],
+[role="menu"][aria-label*="volet" i],
+[role="button"][aria-label*="volet" i],
+.aDs, .aDg {
+  display: none !important;
+}
+
+/* 17) Toast redesign v2 — centré en bas, pilule arrondie sombre */
+.bAp {
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 24px !important;
+  top: auto !important;
+  display: flex !important;
+  justify-content: center !important;
+  pointer-events: none !important;
+}
+.bAn {
+  border-radius: 9999px !important;
+  background: #09090b !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 32px rgba(9,9,11,.28) !important;
+  padding: 10px 20px !important;
+  pointer-events: auto !important;
+}
+.bAn button, .bAn [role="button"], .bAu, .bAv {
+  color: #ffd35c !important;
+  font-weight: 600 !important;
+}
+
+/* 18) Sidebar — « Nouveau message » à la même largeur que les dossiers */
+.z0 .T-I-KE, .wT .T-I-KE, .aJ6 .T-I-KE {
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box !important;
+}
+.z0, .z0 .TN, .wT .z0 {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+/* 19) Sidebar gris — bouton composer + icônes/textes en niveaux de gris (puces des libellés préservées) */
+.wT .T-I-KE, .wT .TO .nU, .wT .TO .n0, .wT .TO .bsU, .wT .TO svg {
+  filter: grayscale(1) !important;
 }

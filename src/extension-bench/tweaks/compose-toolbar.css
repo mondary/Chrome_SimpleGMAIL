@@ -1,0 +1,8 @@
+/* 15) Outil de saisie v2 — barre de mise en forme + bouton/menus outils de saisie — généré depuis gmail.css */
+.aDh, .aDj, .aX .aDh,
+[aria-label*="Outils de saisie" i],
+[aria-label*="outil de saisie" i],
+[role="menuitem"][aria-label*="saisie" i],
+[role="menuitemcheckbox"][aria-label*="saisie" i] {
+  display: none !important;
+}

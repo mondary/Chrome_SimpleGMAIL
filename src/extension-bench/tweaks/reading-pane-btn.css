@@ -1,0 +1,9 @@
+/* 16) Volet de lecture v2 — bouton + entrées de menu, partout — généré depuis gmail.css */
+[aria-label*="volet" i],
+[role="menuitem"][aria-label*="volet" i],
+[role="menuitemradio"][aria-label*="volet" i],
+[role="menu"][aria-label*="volet" i],
+[role="button"][aria-label*="volet" i],
+.aDs, .aDg {
+  display: none !important;
+}

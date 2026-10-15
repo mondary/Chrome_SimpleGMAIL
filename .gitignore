@@ -33,3 +33,6 @@ __pycache__/
 releases/
 tools/.himalaya/
 scriptcat-backup-*.zip
+
+# symlinks locaux vers projets voisins (non versionnés)
+/vendors/

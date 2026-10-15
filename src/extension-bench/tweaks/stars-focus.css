@@ -1,0 +1,10 @@
+/* 4) Gmail Stars — généré depuis gmail.css */
+.zA:has(.T-KT:not(.aXw)) {
+  background-color: #fefcf4 !important; /* jaune doux crème */
+  border-left: 4px solid #ffc107 !important; /* bande couleur ambre */
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.zA {
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}

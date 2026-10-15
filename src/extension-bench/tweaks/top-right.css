@@ -1,0 +1,13 @@
+/* 7) TopRight v2 — masque aide/apps/notifications/assistance à côté des réglages (ancrage aria-label stable) — généré depuis gmail.css */
+#gb [aria-label*="Applications Google" i],
+#gb [aria-label*="Google apps" i],
+#gb [aria-label*="notifications" i],
+#gb [aria-label*="Aide" i],
+#gb [aria-label*="Help" i],
+#gb [aria-label*="assistance" i],
+#gb [aria-label*="support" i],
+.zo,
+.gb_z.gb_gd.gb_f.gb_zf,
+.Yb.dIH7rb.bax {
+    display: none;
+}

@@ -1,0 +1,11 @@
+/* 18) Sidebar — « Nouveau message » à la même largeur que les dossiers — généré depuis gmail.css */
+.z0 .T-I-KE, .wT .T-I-KE, .aJ6 .T-I-KE {
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box !important;
+}
+.z0, .z0 .TN, .wT .z0 {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
