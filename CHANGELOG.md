@@ -4,6 +4,12 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+### [2026.10.3] - 2026-10-15
+
+#### Changed
+- Header auto-hide v3 : le header devient un calque flottant et le corps remonte au scroll (`padding-top` animé) — l'espace est réellement récupéré au lieu de laisser un bandeau vide.
+- Masquage des séparateurs vertical et horizontal de la barre Gmail (`div.G-asx.J-J5-Ji`, `div.aBS.J-J5-Ji`).
+
 ### [2026.10.2] - 2026-10-15
 
 #### Added
