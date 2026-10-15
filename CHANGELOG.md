@@ -4,6 +4,14 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+### [2026.10.2] - 2026-10-15
+
+#### Added
+- Nouvelle extension Chrome `src/extension-simplify/` : surcouche visuelle indépendante pour Gmail, préférences de densité et de largeur, et bouton de rédaction flottant.
+- Réglages de l'extension liés à la confidentialité et au soutien du projet sur Ko-fi.
+- Kit de présentation bilingue `store/` avec captures de démonstration et instructions d'installation locale.
+- Licence MIT et `PKSTACK.md` pour documenter les compétences utilisées.
+
 ### [2026.10.1] - 2026-10-15
 
 #### Added

@@ -6,7 +6,10 @@
 
 Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Packaged as native desktop app (macOS · Windows · Linux).
 
-**Version 2026.10.1** — [Changelog](CHANGELOG.md)
+**Version 2026.10.2** — [Changelog](CHANGELOG.md)
+
+[![Gmail extension preview](store/screenshots/01-inbox.png)](store/index.html)
+[![Gmail extension settings](store/screenshots/02-reglages.png)](store/index.html)
 
 ## Features
 
@@ -34,6 +37,10 @@ Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Package
 - **Unread**: near-white background + bold
 - **Immersive fullscreen loading screen** with a lightweight animated bar
 - **Local PWA + Chrome**: installable from `127.0.0.1:8000`, permission-free extension; Android is paused
+
+### Chrome extension — Simplify Style for Gmail
+- **PK Gmail — Simplify Style** adds an independent visual layer to Gmail, with an airy inbox, centered search, density and width settings, and a floating compose button.
+- Installation and privacy guide: [`src/extension-simplify/`](src/extension-simplify/README.md). The extension is not published on the Chrome Web Store.
 
 ### Classic interface — V1
 - Immersive cardless white interface, responsive from mobile to large displays

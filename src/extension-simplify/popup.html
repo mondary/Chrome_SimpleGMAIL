@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PK Gmail — Simplify Style</title>
+  <link rel="stylesheet" href="popup.css">
+  <script src="settings.js" defer></script>
+  <script src="popup.js" defer></script>
+</head>
+<body>
+  <header>
+    <img src="icons/48.png" width="32" height="32" alt="">
+    <div><h1>PK Gmail</h1><p>Simplify Style</p></div>
+    <label class="switch master"><input id="enabled" type="checkbox" role="switch" aria-label="Activer la surcouche"><span></span></label>
+  </header>
+  <main>
+    <p class="intro">Un peu d’espace dans votre boîte mail.</p>
+    <form id="settings">
+      <fieldset id="appearance" disabled>
+        <legend>Affichage</legend>
+        <label class="field" for="density"><span>Densité des messages</span>
+          <select id="density"><option value="compact">Compacte</option><option value="comfortable">Confortable</option><option value="spacious">Aérée</option></select>
+        </label>
+        <label class="field" for="width"><span>Largeur de la liste</span>
+          <select id="width"><option value="balanced">Centrée</option><option value="wide">Large</option><option value="full">Toute la largeur</option></select>
+        </label>
+        <div class="separator"></div>
+        <label class="toggle-row" for="quietHeader"><span><strong>Interface épurée</strong><small>Masquer le logo, Chat, Meet et les outils secondaires.</small></span><span class="switch"><input id="quietHeader" type="checkbox" role="switch"><span></span></span></label>
+        <label class="toggle-row" for="hideAddons"><span><strong>Masquer le panneau latéral</strong><small>Agenda, Keep, Tasks et extensions.</small></span><span class="switch"><input id="hideAddons" type="checkbox" role="switch"><span></span></span></label>
+        <label class="toggle-row" for="floatingCompose"><span><strong>Bouton de rédaction flottant</strong><small>Un bouton + en bas à droite.</small></span><span class="switch"><input id="floatingCompose" type="checkbox" role="switch"><span></span></span></label>
+      </fieldset>
+    </form>
+    <div class="feedback"><p id="status" role="status" aria-live="polite">Chargement des réglages…</p><button id="reset" type="button" disabled>Réinitialiser</button></div>
+  </main>
+  <footer><span>Gmail reste Gmail. Vos messages restent chez Google.</span><div class="footer-links"><a href="https://mail.google.com/mail/" target="_blank" rel="noopener noreferrer">Ouvrir Gmail <span aria-hidden="true">↗</span></a><a class="support-link" href="https://ko-fi.com/pouark" target="_blank" rel="noopener noreferrer">Soutenir sur Ko-fi ↗</a></div></footer>
+</body>
+</html>

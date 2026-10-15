@@ -2,6 +2,10 @@ inspi/
 .vscode/
 release/
 store/
+!/store/
+!/store/**
+store/website/
+store/website/**
 .claude/
 .agent
 /AGENT.md

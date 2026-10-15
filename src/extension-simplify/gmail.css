@@ -1,0 +1,304 @@
+/*
+ * PK Gmail — Simplify Style
+ * Visual references: benchmark/05–10. Original CSS, no Simplify code or assets.
+ * Every rule is gated by data-pks="on": switching off restores Gmail immediately.
+ * Gmail selectors are intentionally confined to the app chrome, not email HTML.
+ */
+
+html[data-pks="on"] {
+  --pks-paper: #fff;
+  --pks-ink: #3c4043;
+  --pks-muted: #777c80;
+  --pks-line: #eceff1;
+  --pks-search: #f1f3f4;
+  --pks-hover: #f7f7f7;
+  --pks-accent: #d74738;
+  --pks-selected: #fbe9e7;
+  --pks-row-height: 48px;
+  --pks-list-width: 1180px;
+  --pks-gutter: clamp(20px, 5vw, 96px);
+  --pks-font: Roboto, Arial, sans-serif;
+  color-scheme: light;
+}
+
+html[data-pks="on"][data-pks-density="compact"] { --pks-row-height: 38px; }
+html[data-pks="on"][data-pks-density="spacious"] { --pks-row-height: 58px; }
+html[data-pks="on"][data-pks-width="wide"] { --pks-list-width: 1480px; --pks-gutter: 40px; }
+html[data-pks="on"][data-pks-width="full"] { --pks-list-width: none; --pks-gutter: 20px; }
+
+/* White application shell. Do not use .nH or *: these also occur inside messages. */
+html[data-pks="on"] :is(body, .w-asV, .bkL, .bkK, .AO, .aeF, .Tm, .aUx, .aKh, .aqJ) {
+  background: var(--pks-paper) !important;
+  background-image: none !important;
+}
+html[data-pks="on"] .bkK {
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+html[data-pks="on"] .AO {
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+html[data-pks="on"] .bkK [role="main"] {
+  width: calc(100% - var(--pks-gutter) * 2) !important;
+  max-width: var(--pks-list-width) !important;
+  min-width: 0 !important;
+  margin-inline: auto !important;
+  background: var(--pks-paper) !important;
+  font-family: var(--pks-font) !important;
+}
+
+/* The original header remains in the document: search, account and settings work normally. */
+html[data-pks="on"] #gb {
+  background: var(--pks-paper) !important;
+  border-bottom: 1px solid var(--pks-line) !important;
+  box-shadow: none !important;
+  color: var(--pks-muted) !important;
+}
+html[data-pks="on"][data-pks-quiet="true"] #gb [aria-label="Gmail"] { display: none !important; }
+html[data-pks="on"][data-pks-quiet="true"] #gb .gb_Dd {
+  min-width: 64px !important;
+  width: 64px !important;
+}
+html[data-pks="on"] #gb .gb_We { padding-left: 0 !important; }
+html[data-pks="on"] #gb .gb_Ve { flex: 1 1 auto !important; }
+html[data-pks="on"] #aso_search_form_anchor {
+  width: min(100%, 536px) !important;
+  max-width: 536px !important;
+  margin-inline: auto !important;
+  border: 1px solid transparent !important;
+  border-radius: 9px !important;
+  background: var(--pks-search) !important;
+  box-shadow: none !important;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+html[data-pks="on"] #aso_search_form_anchor:focus-within {
+  background: var(--pks-paper) !important;
+  border-color: #dadce0 !important;
+  box-shadow: 0 2px 8px #3c404314 !important;
+}
+html[data-pks="on"] #aso_search_form_anchor input {
+  font-family: var(--pks-font) !important;
+  font-size: 15px !important;
+  color: var(--pks-ink) !important;
+}
+html[data-pks="on"] #aso_search_form_anchor input::placeholder { color: #80868b !important; }
+html[data-pks="on"][data-pks-quiet="true"] #aso_search_form_anchor:not(:focus-within) input::placeholder {
+  color: transparent !important;
+}
+html[data-pks="on"][data-pks-quiet="true"] #gb :is(
+  .zo, .lJradf, .Zmxtcf,
+  [aria-label="Google apps"], [aria-label="Applications Google"],
+  [aria-label="Support"], [aria-label="Assistance"]
+) { display: none !important; }
+
+/* Gmail's own hamburger controls both the old sidebar and the new Workspace drawer. */
+html[data-pks="on"][data-pks-quiet="true"] .aeN:has(> .Xa) { display: none !important; }
+html[data-pks="on"][data-pks-nav="closed"] .aeN:not(:has(> .Xa)),
+html[data-pks="on"][data-pks-nav="closed"] .aqn.aIH {
+  width: 0 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  visibility: hidden !important;
+}
+html[data-pks="on"] :is(.aeN, .aqn.aIH, .wT) { background: var(--pks-paper) !important; }
+html[data-pks="on"][data-pks-nav="open"] .aqn.aIH { border-right: 1px solid var(--pks-line) !important; }
+html[data-pks="on"][data-pks-compose="true"] .z0 { display: none !important; }
+html[data-pks="on"][data-pks-compose="true"] .aqn.aIH .aBO { padding-top: 18px !important; }
+html[data-pks="on"] :is(.aeN, .aqn.aIH) .TO {
+  border-radius: 0 24px 24px 0 !important;
+  margin-right: 12px !important;
+  background: transparent !important;
+}
+html[data-pks="on"] :is(.aeN, .aqn.aIH) .TO:hover { background: var(--pks-hover) !important; }
+html[data-pks="on"] :is(.aeN, .aqn.aIH) .TO.nZ { background: var(--pks-selected) !important; }
+html[data-pks="on"] :is(.aeN, .aqn.aIH) .n0 {
+  font: 400 14px/1.5 var(--pks-font) !important;
+  color: var(--pks-ink) !important;
+}
+html[data-pks="on"] :is(.aeN, .aqn.aIH) .nZ .n0 {
+  color: var(--pks-accent) !important;
+  font-weight: 600 !important;
+}
+html[data-pks="on"] :is(.aeN, .aqn.aIH) .TN { min-height: 34px !important; }
+html[data-pks="on"][data-pks-addons="true"] .aUx { display: none !important; }
+
+/* A quiet toolbar, never hidden: selection, refresh, pagination and undo remain available. */
+html[data-pks="on"] .bkK .G-atb {
+  background: var(--pks-paper) !important;
+  border-bottom: 0 !important;
+  padding-inline: 6px !important;
+  box-shadow: none !important;
+}
+html[data-pks="on"] .bkK .G-atb .T-I { border-radius: 50% !important; }
+html[data-pks="on"] .bkK .G-atb .Dj {
+  color: var(--pks-muted) !important;
+  font: 12px/1.5 var(--pks-font) !important;
+}
+html[data-pks="on"] .bkK .aeH > .G-atb {
+  width: calc(100% - var(--pks-gutter) * 2) !important;
+  max-width: 880px !important;
+  margin-inline: auto !important;
+  box-sizing: border-box !important;
+}
+
+/* Understated categories, matching the flat tabs in the benchmark. */
+html[data-pks="on"] .aKk {
+  width: 100% !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--pks-line) !important;
+  background: var(--pks-paper) !important;
+  box-shadow: none !important;
+}
+html[data-pks="on"] .aAy {
+  min-height: 52px !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: var(--pks-muted) !important;
+  box-shadow: none !important;
+}
+html[data-pks="on"] .aAy .aKz {
+  font: 500 12px/1.4 var(--pks-font) !important;
+  text-transform: uppercase !important;
+  letter-spacing: .035em !important;
+  color: var(--pks-muted) !important;
+}
+html[data-pks="on"] .aAy:is(.J-KU-KO, [aria-selected="true"]) { color: var(--pks-accent) !important; }
+html[data-pks="on"] .aAy:is(.J-KU-KO, [aria-selected="true"]) .aKz { color: var(--pks-accent) !important; }
+html[data-pks="on"] .aAy:hover { background: var(--pks-hover) !important; }
+html[data-pks="on"] .aAy :is(.aKp, .aKo, .aDG, .aKv, .aKn, .aKs) { display: none !important; }
+html[data-pks="on"] .aAy::before,
+html[data-pks="on"] .aAy::after { display: none !important; }
+html[data-pks="on"] .aAy .aKw { padding-inline: 16px !important; }
+
+/* Native rows keep all their semantics, handlers and selected/unread states. */
+html[data-pks="on"] .bkK .zA {
+  min-height: var(--pks-row-height) !important;
+  height: var(--pks-row-height) !important;
+  padding-block: 0 !important;
+  align-items: center !important;
+  background: var(--pks-paper) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: var(--pks-ink) !important;
+  font: 400 14px/1.45 var(--pks-font) !important;
+  transition: background-color 120ms ease;
+}
+html[data-pks="on"] .bkK .zA > td { border-bottom: 0 !important; }
+html[data-pks="on"] .bkK .zA.zE {
+  background: #fafafa !important;
+  color: #202124 !important;
+}
+html[data-pks="on"] .bkK .zA.zE :is(.yW, .bog, .bqe, .xW) { font-weight: 600 !important; }
+html[data-pks="on"] .bkK .zA:hover { background: var(--pks-hover) !important; }
+html[data-pks="on"] .bkK .zA:is(.x7, [aria-selected="true"]) { background: #e8f0fe !important; }
+html[data-pks="on"] .bkK .zA:focus-visible {
+  outline: 2px solid #8ab4f8 !important;
+  outline-offset: -2px !important;
+}
+html[data-pks="on"] .bkK .zA .yW { color: inherit !important; font-size: 14px !important; }
+html[data-pks="on"] .bkK .zA .y2 { color: #92969a !important; }
+html[data-pks="on"] .bkK .zA .xW {
+  color: #696e72 !important;
+  font-size: 12px !important;
+  font-variant-numeric: tabular-nums;
+}
+html[data-pks="on"] .bkK .zA .yX { width: clamp(140px, 17vw, 220px) !important; }
+html[data-pks="on"] .bkK .zA .WA { display: none !important; }
+html[data-pks="on"] .bkK .zA :is(.T-Jo, .T-KT.aXw) { opacity: .38; }
+html[data-pks="on"] .bkK .zA:is(:hover, :focus-within, .x7) :is(.T-Jo, .T-KT),
+html[data-pks="on"] .bkK .zA .T-Jo[aria-checked="true"] { opacity: 1; }
+html[data-pks="on"] .bkK .zA .at { border-radius: 3px !important; box-shadow: none !important; }
+html[data-pks="on"] .bkK .zA .av { font-size: 11px !important; }
+html[data-pks="on"] .bkK .zA .bqY { background: var(--pks-hover) !important; }
+
+/* Reading is centered; leave sender-provided email HTML, colors and typography untouched. */
+html[data-pks="on"][data-pks-view="reading"] .bkK [role="main"] {
+  max-width: 880px !important;
+}
+html[data-pks="on"] .bkK .ha { padding-top: 28px !important; padding-bottom: 20px !important; }
+html[data-pks="on"] .bkK .hP {
+  color: #303134 !important;
+  font: 400 24px/1.4 var(--pks-font) !important;
+}
+html[data-pks="on"] .bkK :is(.gD, .go, .g2, .g3) { font-family: var(--pks-font) !important; }
+html[data-pks="on"] .bkK .gD { font-weight: 600 !important; color: var(--pks-ink) !important; }
+html[data-pks="on"] .bkK :is(.go, .g2, .g3) { color: var(--pks-muted) !important; }
+html[data-pks="on"] .bkK .adn { border-color: var(--pks-line) !important; }
+html[data-pks="on"][data-pks-view="split"] .bkK [role="main"] {
+  width: calc(100% - 32px) !important;
+  max-width: none !important;
+}
+
+/* Compose windows: preserve minimize, fullscreen, formatting, attachments and Send. */
+html[data-pks="on"] :is(.AD, .Hd[role="dialog"]) {
+  border-radius: 9px 9px 0 0 !important;
+  box-shadow: 0 5px 24px #2021242b !important;
+  border: 1px solid #e6e8eb !important;
+}
+html[data-pks="on"] :is(.AD, .Hd[role="dialog"]) :is(.Hy, .Njo3Cf) {
+  background: #3f3f3f !important;
+  color: #fff !important;
+  border-radius: 8px 8px 0 0 !important;
+}
+html[data-pks="on"] :is(.AD, .Hd[role="dialog"]) .aYF { color: #fff !important; font: 500 14px/1.5 var(--pks-font) !important; }
+html[data-pks="on"] :is(.AD, .Hd[role="dialog"]) .Hm button { color: #ddd !important; }
+html[data-pks="on"] :is(.AD, .Hd[role="dialog"]) .Hm svg { fill: #ddd !important; }
+html[data-pks="on"] :is(.AD, .Hd[role="dialog"]) :is(.aDh, .aDj) { background: #fff !important; }
+
+html[data-pks="on"] #pks-compose {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 110;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  padding: 0;
+  border: 1px solid #f3f3f3;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px #0003;
+  cursor: pointer;
+  transition: box-shadow 140ms ease, background-color 140ms ease;
+}
+html[data-pks="on"] #pks-compose:hover { background: #fafafa; box-shadow: 0 3px 10px #0002; }
+html[data-pks="on"] #pks-compose:focus-visible { outline: 3px solid #8ab4f8; outline-offset: 3px; }
+html[data-pks="on"] #pks-compose .pks-plus {
+  width: 24px;
+  height: 24px;
+  background: conic-gradient(#4285f4 0deg 90deg, #34a853 90deg 180deg, #fbbc04 180deg 270deg, #ea4335 270deg 360deg);
+  clip-path: polygon(42% 0,58% 0,58% 42%,100% 42%,100% 58%,58% 58%,58% 100%,42% 100%,42% 58%,0 58%,0 42%,42% 42%);
+}
+/* Do not cover a native compose window or a modal dialog. */
+html[data-pks="on"] body:has(.AD, .Hd[role="dialog"], [aria-modal="true"]) #pks-compose { display: none; }
+html[data-pks="on"][data-pks-addons="false"] #pks-compose { right: 80px; }
+
+@media (min-width: 960px) {
+  html[data-pks="on"][data-pks-quiet="true"] #aso_search_form_anchor {
+    position: absolute !important;
+    top: 8px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: min(42vw, 536px) !important;
+    margin: 0 !important;
+  }
+}
+@media (max-width: 900px) {
+  html[data-pks="on"] { --pks-gutter: 20px; }
+  html[data-pks="on"] .bkK .zA .yX { width: 150px !important; }
+  html[data-pks="on"] #aso_search_form_anchor { max-width: 440px !important; }
+}
+@media (max-width: 640px) {
+  html[data-pks="on"] { --pks-gutter: 8px; }
+  html[data-pks="on"] .bkK .zA { font-size: 13px !important; }
+  html[data-pks="on"] .bkK .zA .yX { width: 112px !important; }
+  html[data-pks="on"] #pks-compose { right: 16px; bottom: 16px; width: 52px; height: 52px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-pks="on"] :is(#aso_search_form_anchor, #pks-compose, .bkK .zA) { transition: none !important; }
+}
