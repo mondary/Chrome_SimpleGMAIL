@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.14] - 2026-10-16
+
+### Changed
+- Tester dédoublonné : quatre entrées réduites aux deux versions les plus avancées — « Lab V2 — Atelier (actuel) » et « Interface classique (2026.08.01) ». Les quasi-doublons (snapshot Lab du 2026.08.07, classique V1.0.4) restent dans l'historique git et les snapshots servis par l'app.
+
 ## [2026.10.13] - 2026-10-16
 
 ### Fixed
