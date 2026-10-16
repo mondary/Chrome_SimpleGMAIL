@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.34] - 2026-10-16
+
+### Fixed
+- **Un seul compteur de version** : le dépôt rattrape l'extension (2026.10.34) et les deux vivent désormais au même numéro — CHANGELOG, bandeaux README et `chrome://extensions` affichent la même version, bumpée ensemble à chaque commit. Fini les numéros divergents (27 côté dépôt, 33/34 côté extension).
+
 ## [2026.10.27] - 2026-10-16
 
 ### Fixed
