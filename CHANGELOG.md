@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.43] - 2026-10-16
+
+### Changed
+- **Arborescence — étape 5** : `store/assets/` ne garde que le ZIP courant — les huit versions antérieures de l'extension Simplify partent dans `archives/releases/extension-pk/`. Les APK de `releases/android/` restent suivis (politique du workflow : la dernière build est committée, les anciennes retirées). Note : le manifest de l'extension garde 2026.10.42 tant que les retouches du thème Original en cours ne sont pas committées ; il rejoindra le compteur au prochain commit de l'extension.
+
 ## [2026.10.42] - 2026-10-16
 
 ### Changed

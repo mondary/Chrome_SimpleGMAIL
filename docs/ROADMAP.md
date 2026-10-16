@@ -44,7 +44,7 @@ sont retirées — `src/mobile/` porte la tentative Android.)
 - [ ] `docs/CONFIGURATION_GMAIL_OAUTH.md` concerne le projet voisin
       `Chrome_GmailPK` (« Modern Gmail Client ») : à transférer dans son dépôt
       lors du prochain passage là-bas.
-- [ ] `store/assets/` : ne garder que le ZIP courant ; les versions antérieures
-      partent dans `archives/releases/`.
+- [x] `store/assets/` : ne garde que le ZIP courant ; les versions antérieures
+      partent dans `archives/releases/extension-pk/`.
 - [x] `src/extension/` : absorbée dans `src/extension-pk/sources/` — le dossier
       gelé quitte le git, miré dans `archives/versions/01-extension-simplemail-2026.08.01/`.
