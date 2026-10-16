@@ -4,6 +4,12 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+### [2026.10.5] - 2026-10-16
+
+#### Changed
+- Lab : les réglages « Interfaces », « Thèmes Mail Worlds » et « Style visuel » fusionnent en une liste unique de dispositions avec aperçus miniature redessinés (rail latéral, navigation haute, canvas, paper, K7, OMP).
+- Nouvelles entrées « Focus OS (Nav Haute) » et « OMP Terminal » ; choisir une disposition applique d'un geste la disposition, le style visuel et le thème actif.
+
 ### [2026.10.4] - 2026-10-16
 
 #### Added

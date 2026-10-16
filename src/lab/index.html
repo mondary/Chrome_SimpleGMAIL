@@ -355,13 +355,17 @@ body[data-theme="3"] .cmd{background:var(--paper);border-color:#ECEAE2}
 .set-theme .ds{color:var(--muted);font-size:11px;margin-top:2px}
 .set-theme .st{margin-left:auto;font-size:10px;color:var(--accent)}
 .choice-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--hair2);font-size:11px;color:var(--muted)}.choice-row>span:first-child{min-width:118px}.choice-group{display:flex;flex-wrap:wrap;gap:6px}.choice-group button{border:1px solid var(--hair);padding:7px 10px;font-size:10px;color:var(--muted);background:#fff}.choice-group button:hover{border-color:var(--faint);color:var(--ink)}.choice-group button.on{border-color:var(--ink);background:var(--ink);color:#fff}
-.theme-preview{height:76px;border:1px solid var(--hair);background:#f8f7f3;padding:7px;display:flex;gap:5px;overflow:hidden}
-.theme-preview i{display:block;background:#d9d6ce;border-radius:1px}.theme-preview.focus{flex-direction:column}.theme-preview.focus i{height:8px}.theme-preview.focus i:first-child{height:30px;background:#c5d6e9}
-.theme-preview.canvas{align-items:stretch}.theme-preview.canvas i{flex:1}.theme-preview.canvas i:nth-child(2){background:#d7e5d8}.theme-preview.canvas i:nth-child(3){background:#eadfc7}
-.theme-preview.paper{align-items:center}.theme-preview.paper i{width:25%;height:48px;background:#eadfc7}.theme-preview.paper i:first-child{width:48%;height:60px;background:#fff;border:1px solid #d9d6ce}
-.theme-preview.k7{align-items:end;background:#0c1018}.theme-preview.k7 i{flex:1;height:70%;border-radius:4px;background:#29394a}.theme-preview.k7 i:nth-child(2){height:85%;background:#6d4933}.theme-preview.k7 i:nth-child(3){height:62%;background:#354f43}.theme-preview.k7 i:nth-child(4){height:78%;background:#594057}
-.theme-preview.preview{flex-direction:column;background:#0c1018}.theme-preview.preview i{width:100%;height:14px;border-radius:3px;background:linear-gradient(90deg,#6d4933 22%,#242c37 22%)}
-.theme-preview.preview-white{flex-direction:column;background:#eee9df}.theme-preview.preview-white i{width:100%;height:14px;border-radius:3px;background:linear-gradient(90deg,#fff 22%,#d8d0c4 22%)}
+.theme-preview{height:62px;width:110px;border:1px solid var(--hair);background:#f8f7f3;padding:4px;display:flex;gap:3px;overflow:hidden;border-radius:4px;flex:none}
+.theme-preview i{display:block;background:#d9d6ce;border-radius:1px;opacity:.6}
+.theme-preview.sidebar{flex-direction:row}.theme-preview.sidebar i:first-child{width:16px;background:#c5d6e9;opacity:1}
+.theme-preview.top{flex-direction:column}.theme-preview.top i:first-child{height:10px;background:#c5d6e9;opacity:1}
+.theme-preview .p-main{flex:1;display:flex;flex-direction:column;gap:2px}
+.theme-preview .p-row{height:6px;background:#e9e9e4;width:100%}
+.theme-preview.canvas .p-main{flex-direction:row;gap:2px}
+.theme-preview.canvas .p-col{flex:1;background:#eeebe0;height:100%}
+.theme-preview.paper .p-main{position:relative}.theme-preview.paper .p-strip{position:absolute;bottom:0;left:0;right:0;height:12px;background:#e0dbd1}
+.theme-preview.k7 .p-main{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}.theme-preview.k7 .p-box{aspect-ratio:1;background:#6d4933;opacity:.4}
+.theme-preview.omp{background:#000;border-color:#333}.theme-preview.omp i{background:#222}.theme-preview.omp i:first-child{background:#ff4d8f;opacity:1}
 .install-preview{width:64px;height:64px;justify-self:center;border-radius:14px}
 .memo-palette{display:flex;flex-wrap:wrap;gap:8px}.memo-swatch{width:34px;height:34px;border:1px solid rgba(0,0,0,.16);border-radius:50%}.memo-swatch.on{box-shadow:0 0 0 2px var(--ink)}
 .canvas-labels{max-height:260px;overflow:auto;border:1px solid var(--hair)}.canvas-labels .set-row{border-bottom:1px solid var(--hair2)}.canvas-labels .set-row:last-child{border-bottom:0}
@@ -679,12 +683,15 @@ body[data-theme="6"] .hud,body[data-theme="6"][data-layout="top"] .world-nav{bac
 const I={check:'\uF00C',inbox:'\uF01C',tag:'\uF02B',folder:'\uF07B',reply:'\uF112',
   archive:'\uF187',plane:'\uF1D8',dot:'\uF111',envelope:'\uF0E0',clip:'\uF0C6'};
 const THEMES=[
- {id:1,name:'Focus OS',desc:'Liste compacte, un message actif à la fois, progression vers zéro.',color:'#C64A12'},
- {id:2,name:'Label Canvas',desc:'Colonnes spatiales par libellé, Inbox Zero par zone.',color:'#2E6B4E'},
- {id:3,name:'Paper Reader',desc:'Liste du jour puis lecture plein écran, file en bandeau.',color:'#96662B'},
- {id:4,name:'K7 Media Shelf',desc:'Boîte sombre en jaquettes, inspirée d’une bibliothèque média locale.',color:'#CC7A3E'},
- {id:5,name:'K7 Preview Deck',desc:'Cartes sombres avec miniature HTML chargée à l’approche de l’écran.',color:'#CC7A3E'},
- {id:6,name:'K7 Preview Deck Clair',desc:'La même lecture rapide dans une interface blanche et chaleureuse.',color:'#A85E2E'}];
+ {id:1,name:'Focus OS',desc:'Liste compacte, un message actif à la fois.',layout:'sidebar',visual:'standard'},
+ {id:2,name:'Label Canvas',desc:'Colonnes spatiales par libellé.',layout:'sidebar',visual:'standard'},
+ {id:3,name:'Paper Reader',desc:'Liste du jour puis lecture plein écran.',layout:'sidebar',visual:'standard'},
+ {id:4,name:'K7 Media Shelf',desc:'Boîte sombre en jaquettes média.',layout:'sidebar',visual:'standard'},
+ {id:5,name:'K7 Preview Deck',desc:'Cartes sombres avec aperçu HTML.',layout:'sidebar',visual:'standard'},
+ {id:6,name:'K7 Preview Clair',desc:'Lecture rapide, interface blanche.',layout:'sidebar',visual:'standard'},
+ {id:7,name:'Focus OS (Nav Haute)',desc:'Version Focus OS avec catégories en haut.',layout:'top',visual:'standard'},
+ {id:8,name:'OMP Terminal',desc:'Style terminal noir & rose.',layout:'sidebar',visual:'omp'}
+];
 const DEMO_LABELS=['Travail','Factures','Perso','Newsletters','Notifications'];
 const CATEGORIES=[
   ['primary','Principale','\uF0E0','#1A73E8'],
@@ -1425,9 +1432,16 @@ $('#rd-body').addEventListener('click',e=>{const t=e.target.closest('[data-rd-to
   if(willOpen&&RD_STACK[i]&&!body.dataset.filled){fillRdMsg(RD_STACK[i],i);body.dataset.filled='1'}
   body.hidden=!willOpen;msg.classList.toggle('open',willOpen);t.setAttribute('aria-expanded',willOpen)});
 
-function themePreview(id){
-  const cls=id===1?'focus':id===2?'canvas':id===3?'paper':id===4?'k7':id===5?'preview':'preview-white';
-  return`<span class="theme-preview ${cls}" aria-hidden="true"><i></i><i></i><i></i><i></i></span>`}
+function themePreview(t){
+  const layoutCls=t.layout==='top'?'top':'sidebar';
+  const typeCls=t.visual==='omp'?'omp':t.id===2?'canvas':t.id===3?'paper':(t.id===4||t.id===5||t.id===6)?'k7':'focus';
+  let inner=`<div class="p-main">`;
+  if(typeCls==='canvas')inner+=`<div class="p-col"></div><div class="p-col"></div><div class="p-col"></div>`;
+  else if(typeCls==='paper')inner+=`<div class="p-row"></div><div class="p-row"></div><div class="p-strip"></div>`;
+  else if(typeCls==='k7')inner+=`<div class="p-box"></div><div class="p-box"></div><div class="p-box"></div><div class="p-box"></div><div class="p-box"></div><div class="p-box"></div>`;
+  else inner+=`<div class="p-row"></div><div class="p-row"></div><div class="p-row" style="width:70%"></div><div class="p-row"></div>`;
+  inner+=`</div>`;
+  return `<span class="theme-preview ${layoutCls} ${typeCls}" aria-hidden="true"><i></i>${inner}</span>`}
 const choices=(key,items,current)=>`<span class="choice-group">${items.map(([value,label])=>`<button data-choice="${key}" data-value="${value}" class="${String(current)===String(value)?'on':''}">${label}</button>`).join('')}</span>`;
 function renderSettings(){
   const tabs=[
@@ -1444,19 +1458,16 @@ function renderSettings(){
   $('#set-nav').innerHTML=tabs.map(t=>`<button class="set-tab${t.id===activeTab?' on':''}" data-settab="${t.id}"${t.id===activeTab?' data-autofocus':''}><i>${t.icon}</i><span>${t.label}</span></button>`).join('');
   const c=$('#set-content');
   if(activeTab==='list'){
-    c.innerHTML=`<h4>Interfaces</h4>
-      <button class="set-theme${PREFS.layout==='sidebar'?' on':''}" data-interface="sidebar"><span class="theme-preview focus" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span><span class="nm">Atelier · rail latéral</span><div class="ds">Navigation latérale repliable, thèmes Mail Worlds.</div></span>${PREFS.layout==='sidebar'?`<span class="st g">${I.check} actif</span>`:''}</button>
-      <button class="set-theme${PREFS.layout==='top'?' on':''}" data-interface="top"><span class="theme-preview focus" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span><span class="nm">Atelier · navigation haute</span><div class="ds">Catégories en haut, thèmes Mail Worlds.</div></span>${PREFS.layout==='top'?`<span class="st g">${I.check} actif</span>`:''}</button>
-      <button class="set-theme" data-interface="focus"><span class="theme-preview focus" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span><span class="nm">Focus OS compact · historique</span><div class="ds">L'interface SIMPLEMAIL·LAB de la capture, sans le shell Mail Worlds.</div></span><span class="st g">↗ ouvrir</span></button>
-      <button class="set-theme" data-interface="classic"><span class="theme-preview focus" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span><span class="nm">Interface classique · V1</span><div class="ds">Interface historique complète et ses réglages.</div></span><span class="st g">↗ ouvrir</span></button>
-      <h4 style="margin-top:24px">Thèmes Mail Worlds</h4>`+THEMES.map(t=>`
-      <button class="set-theme${t.id===active?' on':''}" data-th="${t.id}">
-        ${themePreview(t.id)}
-        <span><span class="nm">0${t.id} · ${t.name}</span><div class="ds">${t.desc}</div></span>
-        ${t.id===active?`<span class="st g">${I.check} actif</span>`:''}
-      </button>`).join('')+`<h4 style="margin-top:24px">Apparence</h4>
+    c.innerHTML=`<h4>Dispositions</h4>`+THEMES.map(t=>`
+      <button class="set-theme${(t.layout===PREFS.layout&&t.visual===PREFS.visualMode&&(t.visual==='omp'||t.id===active))?' on':''}" data-layout-mode="${t.id}">
+        ${themePreview(t)}
+        <span><span class="nm">${t.name}</span><div class="ds">${t.desc}</div></span>
+        ${(t.layout===PREFS.layout&&t.visual===PREFS.visualMode&&(t.visual==='omp'||t.id===active))?`<span class="st g">${I.check} actif</span>`:''}
+      </button>`).join('')+`<button class="set-theme" data-interface="classic">${themePreview({layout:'sidebar',visual:'standard',id:100})}<span><span class="nm">Interface classique · V1</span><div class="ds">Interface historique complète et ses réglages.</div></span><span class="st g">↗ ouvrir</span></button>
+      <button class="set-theme" data-interface="focus">${themePreview({layout:'top',visual:'standard',id:101})}<span><span class="nm">Focus OS compact · historique</span><div class="ds">L'interface SIMPLEMAIL·LAB d'origine (snapshot).</div></span><span class="st g">↗ ouvrir</span></button>
+      <h4 style="margin-top:24px">Apparence</h4>
+
       <div class="choice-row"><span>Catégories</span><span class="choice-group"><button data-choice="categoryNav" data-value="icons" class="${PREFS.categoryNav==='icons'?'on':''}">Icônes</button><button data-choice="categoryNav" data-value="labels" class="${PREFS.categoryNav==='labels'?'on':''}">Icônes + noms</button></span></div>
-      <div class="choice-row"><span>Style visuel</span><span class="choice-group">${[['standard','Mail Worlds'],['aero','Aero Glass'],['nordic','Nordic Zen'],['editorial','Editorial'],['omp','OMP'],['ultra','Ultra Light']].map(([v,n])=>`<button data-choice="visualMode" data-value="${v}" class="${PREFS.visualMode===v?'on':''}">${n}</button>`).join('')}</span></div>
       <div class="set-row"><span>Accent OMP <small style="display:block;font-size:9px;color:var(--faint)">thème OMP — rose, cyan, violet…</small></span><span class="omp-sw" id="omp-swatches">${OMP_ACCENTS.map(a=>`<button data-omp-accent="${a.v}" style="background:${a.v}" class="${(PREFS.ompAccent||OMP_ACCENTS[0].v)===a.v?'on':''}" aria-label="Accent ${a.n}" title="${a.n}"></button>`).join('')}</span></div>
       <div class="choice-row"><span>Fond</span>${choices('motionMode',[['off','Aucun'],['particles','Particules'],['waves','Ondes'],['cassette','Cassette']],PREFS.motionMode)}</div>
       <div class="choice-row"><span>Densité</span>${choices('density',[['compact','Compacte'],['comfortable','Confort'],['spacious','Aérée']],PREFS.density)}</div>
@@ -1727,8 +1738,10 @@ document.addEventListener('click',e=>{
     else if(act.dataset.act==='labels')openPalette('label');
     else if(act.dataset.act==='back'){st.mode='list';renderFocus()}
     return}
-  if(e.target.closest('[data-interface="sidebar"]')){PREFS.layout='sidebar';savePrefs();renderCategories();renderSettings();return}
-  if(e.target.closest('[data-interface="top"]')){PREFS.layout='top';savePrefs();renderCategories();renderSettings();return}
+  if(e.target.closest('[data-layout-mode]')){
+    const id=+e.target.closest('[data-layout-mode]').dataset.layoutMode, t=THEMES.find(x=>x.id===id);
+    if(t){PREFS.layout=t.layout;PREFS.visualMode=t.visual;if(t.id<=6)active=t.id;savePrefs();renderCategories();renderSettings();render()}
+    return}
   if(e.target.closest('[data-interface="classic"]')){location.href='/';return}
   if(e.target.closest('[data-interface="focus"]')){location.href='/lab-focus-os-2026-08-01/';return}
   if(e.target.closest('[data-install]')){if(installPrompt){installPrompt.prompt();installPrompt=null}else toast('Chrome : menu · Installer');return}
