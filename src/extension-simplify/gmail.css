@@ -123,8 +123,7 @@ html[data-pks="on"] :is(.aeN, .aqn.aIH) .nZ .n0 {
   font-weight: 600 !important;
 }
 html[data-pks="on"] :is(.aeN, .aqn.aIH) .TN { min-height: 34px !important; }
-html[data-pks="on"][data-pks-addons="true"] .aUx:not(:has(> .IU)) { display: none !important; }
-html[data-pks="on"][data-pks-addons="true"] .brC-aT5-aOt-bsf-Jw { display: none !important; }
+html[data-pks="on"][data-pks-addons="true"] .aUx { display: none !important; }
 
 /* A quiet toolbar, never hidden: selection, refresh, pagination and undo remain available. */
 html[data-pks="on"] .bkK .G-atb {
@@ -372,11 +371,6 @@ html[data-pks="on"][data-pks-quiet="true"][data-pks-menu-native="true"] #gb [dat
   cursor: pointer !important; z-index: 191 !important;
 }
 html[data-pks="on"][data-pks-quiet="true"][data-pks-menu-native="true"] #gb [data-pks-menu-native-key] :is(svg,img) { pointer-events: none !important; }
-html[data-pks="on"] [data-pks-native-popup] {
-  position: fixed !important; left: var(--pks-native-popup-left) !important;
-  top: var(--pks-native-popup-top) !important; right: auto !important;
-  bottom: auto !important; z-index: 220 !important;
-}
 html[data-pks="on"][data-pks-menu-native="true"] .w-asV { z-index: 190 !important; }
 html[data-pks="on"][data-pks-menu-native="true"] #gb { z-index: 190 !important; }
 html[data-pks="on"][data-pks-menu-native="true"] .bkK [data-pks-toolbar] { z-index: 190 !important; }

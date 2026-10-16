@@ -4,6 +4,15 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.11] - 2026-10-16
+
+### Fixed
+- Menu compact et en-tête restaurés à leur disposition stable de v2026.10.8, après la régression d’alignement.
+- Retour à l’ouverture des commandes Gmail via leurs contrôles natifs, sans menus repositionnés par l’extension.
+
+### Changed
+- Archive Chrome et liens de téléchargement mis à jour en v2026.10.11.
+
 ## [2026.10.10] - 2026-10-16
 
 ### Fixed
