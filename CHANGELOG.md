@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.42] - 2026-10-16
+
+### Changed
+- **Arborescence — étape 4** : `src/desktop/` sépare le code des données — les fichiers vivants (`config.json`, `secrets/mail.env`, `simplemail.db`) déménagent sous `src/desktop/var/` (hors git), `VERSION` rejoint le compteur unique (2026.09.02 → 2026.10.42), les anciens installateurs `.pkg` partent dans `archives/releases/macos/` et les READMEs FR/EN (mode dev, configuration, installation, arborescence) sont réécrits.
+
 ## [2026.10.41] - 2026-10-16
 
 ### Changed

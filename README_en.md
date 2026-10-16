@@ -6,7 +6,7 @@
 
 Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Packaged as native desktop app (macOS · Windows · Linux).
 
-**Version 2026.10.41** — [Changelog](CHANGELOG.md)
+**Version 2026.10.42** — [Changelog](CHANGELOG.md)
 
 [![Gmail extension preview](store/screenshots/05-ocean.png)](store/index.html)
 [![Gmail extension settings](store/screenshots/02-reglages.png)](store/index.html)
@@ -66,14 +66,14 @@ Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Package
 ### Development mode
 ```bash
 cd src/desktop
-source secrets/mail.env
+source var/secrets/mail.env
 SIMPLEMAIL_AUTH=0 python3 main.py
 # http://127.0.0.1:8000
 ```
 
 ### Packaged app
 ```bash
-./SimpleMail.command                          # macOS (dev)
+src/desktop/start.sh                          # macOS (dev, reads var/secrets/mail.env)
 # releases/macos/PKMail.app               # macOS (packaged)
 # releases/windows/SimpleMail/SimpleMail.exe  # Windows
 # releases/linux/SimpleMail/SimpleMail        # Linux
@@ -107,6 +107,8 @@ User data is stored per platform:
 - **Windows**: `%APPDATA%/SimpleMail/`
 - **Linux**: `~/.local/share/SimpleMail/`
 
+In development, the same files live in `src/desktop/var/` (untracked):
+
 Contents:
 - `config.json`: IMAP/SMTP accounts
 - `secrets/mail.env`: passwords (never in repo)
@@ -127,8 +129,8 @@ The backend keeps its memory footprint bounded:
 
 1. Clone the project
 2. `cd src/desktop`
-3. Copy `config.example.json` → `config.json`, fill your accounts
-4. Create `secrets/mail.env` with your passwords
+3. `mkdir -p var && cp config.example.json var/config.json`, fill your accounts
+4. Create `var/secrets/mail.env` with your passwords
 5. Run `SIMPLEMAIL_AUTH=0 python3 main.py`
 
 To migrate to another machine: **Settings → Accounts → Export**, then **Import** on the target machine.
@@ -177,23 +179,24 @@ First run auto-creates the user data directory with a generic config template.
 ## Project structure
 
 ```
+├── docs/                     ← Documentation (Gmail OAuth, o2switch deployment, roadmap)
 ├── src/
-│   ├── desktop/              ← FastAPI backend of the classic app
+│   ├── desktop/              ← FastAPI backend of the classic app + V2 UI
 │   │   ├── main.py           ← FastAPI backend
 │   │   ├── app.py            ← pywebview launcher (cross-platform)
 │   │   ├── index.html        ← Full UI
+│   │   ├── var/              ← Local dev data (config, secrets, cache — untracked)
 │   │   ├── config.example.json
-│   │   ├── build_macos.sh / build_linux.sh / build_windows.ps1
-│   │   └── icon.png
-│   ├── extension/            ← SimpleMail v2026.08.01 (historical CSS source, read by extension-pk/build.sh)
-│   ├── extension-pk/         ← PK Gmail Studio — canonical Chrome extension (PK, Simplify themes + Lab coming)
-│   ├── mobile/               ← Mobile attempt (Capacitor)
-│   └── rust/                 ← Desktop app (Go or Rust, to be decided)
+│   │   └── build_macos.sh / build_linux.sh / build_windows.ps1
+│   ├── extension-pk/         ← PK Gmail Studio — canonical Chrome extension (six themes)
+│   │   └── sources/gmail.css ← CSS source of the tweaks (absorbed from the former SimpleMail extension)
+│   └── mobile/               ← Mobile attempt (Capacitor)
 ├── tools/
 │   ├── lab/                  ← Lab attempts (atelier-actuel, focus-os)
+│   ├── previews/             ← Fictional theme previews (focus-os, simplemail-original)
 │   ├── mail-client/          ← Sombre Mail (standalone mail client)
-│   ├── pkmail / pkmail-ui    ← CLI and Next.js UI
-│   └── tester-server.py      ← Version picker page (port 9900)
+│   ├── pkmail/               ← Himalaya CLI + Next.js UI + local config
+│   └── tester/               ← Version picker page (port 9900)
 ├── releases/                 ← macOS / Windows / Linux builds
 ├── archives/                 ← Old versions, benchmark and Simplify (local, untracked)
 ├── store/                    ← Bilingual landing and media kit

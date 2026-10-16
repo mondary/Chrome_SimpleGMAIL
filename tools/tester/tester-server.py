@@ -141,8 +141,9 @@ def start(version_id):
             dest = DEST / runtime_id
             extract(spec["source"], dest)
             app_dir = dest / "src" / "desktop"
-            cfg = app_dir / "config.json"
+            cfg = app_dir / "var" / "config.json"
             if not cfg.exists():
+                cfg.parent.mkdir(parents=True, exist_ok=True)
                 cfg.write_text((app_dir / "config.example.json").read_text(encoding="utf-8"), encoding="utf-8")
         else:
             app_dir = REPO / "src" / "desktop"

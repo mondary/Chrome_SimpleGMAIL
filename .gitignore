@@ -34,6 +34,7 @@ __pycache__/
 *.db-shm
 *.sqlite
 *.sqlite3
+/src/desktop/var/
 releases/
 tools/pkmail/.himalaya/
 scriptcat-backup-*.zip

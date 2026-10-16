@@ -3,7 +3,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-secrets_file="$PWD/secrets/mail.env"
+secrets_file="$PWD/var/secrets/mail.env"
 if [[ -f "$secrets_file" ]]; then
   while IFS= read -r line || [[ -n "$line" ]]; do
     [[ -z "$line" ]] && continue
@@ -19,7 +19,7 @@ fi
 configured_accounts="$(
 python3 - <<'PY'
 import json, os, pathlib, re
-cfg = json.loads(pathlib.Path("config.json").read_text(encoding="utf-8"))
+cfg = json.loads(pathlib.Path("var/config.json").read_text(encoding="utf-8"))
 count = 0
 for account in cfg.get("accounts", []):
     ok = True
@@ -42,7 +42,7 @@ PY
 
 if [[ "$configured_accounts" -le 0 ]]; then
   echo "Erreur: aucun compte mail valide n'est configuré."
-  echo "Renseigne au moins une variable de mot de passe dans secrets/mail.env."
+  echo "Renseigne au moins une variable de mot de passe dans var/secrets/mail.env."
   exit 1
 fi
 

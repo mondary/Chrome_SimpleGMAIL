@@ -45,9 +45,9 @@ BASE_DIR = ASSETS_DIR
 
 
 def _user_data_dir() -> Path:
-    """Writable per-user folder for config/secrets/db. Same as script dir in dev."""
+    """Writable per-user folder for config/secrets/db: var/ next to the script in dev."""
     if not getattr(sys, "frozen", False):
-        return Path(__file__).resolve().parent
+        return Path(__file__).resolve().parent / "var"
     import platform
     sysname = platform.system()
     if sysname == "Darwin":
@@ -777,7 +777,7 @@ async def lifespan(app):
     else:
         accounts = _safe_load_config().get("accounts", [])
         if not accounts:
-            print("[CONFIG] Aucun compte mail actif. Configurez secrets/mail.env.")
+            print("[CONFIG] Aucun compte mail actif. Configurez var/secrets/mail.env.")
         for acc in accounts:
             _start_idle_worker(acc)
     yield
@@ -901,7 +901,7 @@ def load_config(configured_only: bool = False):
     if not CONFIG_PATH.exists():
         raise HTTPException(
             status_code=500,
-            detail="config.json introuvable. Copiez config.example.json -> config.json et renseignez vos comptes.",
+            detail="var/config.json introuvable. Lancez l'app (le fichier est créé depuis config.example.json) et renseignez vos comptes.",
         )
     data = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
     data = _expand_env_values(data)
@@ -1018,7 +1018,7 @@ def active_config():
     if not cfg.get("accounts"):
         raise HTTPException(
             status_code=500,
-            detail="Aucun compte mail réel connecté. Configurez secrets/mail.env.",
+            detail="Aucun compte mail réel connecté. Configurez var/secrets/mail.env.",
         )
     return cfg
 

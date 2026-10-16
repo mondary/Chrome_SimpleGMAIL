@@ -6669,7 +6669,7 @@
       const connected=account.connected!==false;
       details.innerHTML=`<form onsubmit="saveAccountSettings(event,'${escapeAttr(account.id)}')" class="rounded-2xl border p-5" style="border-color:rgba(0,0,0,0.1)">
         <div class="flex items-start justify-between gap-4 mb-5">
-          <div class="flex-1"><input id="account-name" class="settings-select account-edit-input text-base font-semibold" value="${escapeAttr(account.name||account.id)}" required><div class="text-xs mt-1" style="color:#5f6368">Configuration enregistrée dans <code>config.json</code> et <code>secrets/mail.env</code></div></div>
+          <div class="flex-1"><input id="account-name" class="settings-select account-edit-input text-base font-semibold" value="${escapeAttr(account.name||account.id)}" required><div class="text-xs mt-1" style="color:#5f6368">Configuration enregistrée dans <code>var/config.json</code> et <code>var/secrets/mail.env</code></div></div>
           ${connected&&account.id!==currentAccount?`<button type="button" onclick="closeSettings();onAccountChange('${escapeAttr(account.id)}')" class="preset-btn">Utiliser ce compte</button>`:''}
         </div>
         <label class="block text-xs mb-3"><span style="color:#80868b">Adresse mail / identifiant</span><input id="account-email" type="email" class="settings-select account-edit-input mt-1" value="${escapeAttr(account.email||'')}" required></label>

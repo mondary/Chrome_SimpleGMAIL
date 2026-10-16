@@ -6,7 +6,7 @@
 
 Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla. Packagé en application native (macOS · Windows · Linux).
 
-**Version 2026.10.41** — [Changelog](CHANGELOG.md)
+**Version 2026.10.42** — [Changelog](CHANGELOG.md)
 
 [![Aperçu de l’extension Gmail](store/screenshots/05-ocean.png)](store/index.html)
 [![Réglages de l’extension Gmail](store/screenshots/02-reglages.png)](store/index.html)
@@ -66,14 +66,14 @@ Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla
 ### Mode développement
 ```bash
 cd src/desktop
-source secrets/mail.env  # ou export des variables
+source var/secrets/mail.env  # ou export des variables
 SIMPLEMAIL_AUTH=0 python3 main.py
 # http://127.0.0.1:8000
 ```
 
 ### Mode application
 ```bash
-./SimpleMail.command                          # macOS (dev)
+src/desktop/start.sh                          # macOS (dev, lit var/secrets/mail.env)
 # releases/macos/PKMail.app               # macOS (packagé)
 # releases/windows/SimpleMail/SimpleMail.exe  # Windows
 # releases/linux/SimpleMail/SimpleMail        # Linux
@@ -107,6 +107,8 @@ Les fichiers de configuration sont stockés par plateforme :
 - **Windows** : `%APPDATA%/SimpleMail/`
 - **Linux** : `~/.local/share/SimpleMail/`
 
+En développement, les mêmes fichiers vivent dans `src/desktop/var/` (hors git) :
+
 Contenu :
 - `config.json` : comptes IMAP/SMTP
 - `secrets/mail.env` : mots de passe (jamais dans le dépôt)
@@ -127,8 +129,8 @@ Le backend maîtrise sa consommation mémoire :
 
 1. Cloner le projet
 2. `cd src/desktop`
-3. Copier `config.example.json` → `config.json`, renseigner vos comptes
-4. Créer `secrets/mail.env` avec les mots de passe
+3. `mkdir -p var && cp config.example.json var/config.json`, renseigner vos comptes
+4. Créer `var/secrets/mail.env` avec les mots de passe
 5. Lancer `SIMPLEMAIL_AUTH=0 python3 main.py`
 
 Pour tout transférer vers une autre machine : **Réglages → Comptes → Exporter**, puis **Importer** sur l'autre machine.
@@ -225,23 +227,24 @@ La première ouverture crée automatiquement les dossiers de données utilisateu
 ## Structure du projet
 
 ```
+├── docs/                     ← Documentation (OAuth Gmail, déploiement o2switch, roadmap)
 ├── src/
-│   ├── desktop/              ← Backend FastAPI de l'app classique
+│   ├── desktop/              ← Backend FastAPI de l'app classique + interface V2
 │   │   ├── main.py           ← Backend FastAPI
 │   │   ├── app.py            ← Lanceur pywebview (multi-plateforme)
 │   │   ├── index.html        ← Interface complète
+│   │   ├── var/              ← Données locales de dev (config, secrets, cache — hors git)
 │   │   ├── config.example.json
-│   │   ├── build_macos.sh / build_linux.sh / build_windows.ps1
-│   │   └── icon.png
-│   ├── extension/            ← SimpleMail v2026.08.01 (source CSS historique, lue par extension-pk/build.sh)
-│   ├── extension-pk/         ← PK Gmail Studio — extension Chrome canonique (thèmes PK, Simplify + Lab à venir)
-│   ├── mobile/               ← Tentative mobile (Capacitor)
-│   └── rust/                 ← Application desktop (Go ou Rust, à trancher)
+│   │   └── build_macos.sh / build_linux.sh / build_windows.ps1
+│   ├── extension-pk/         ← PK Gmail Studio — extension Chrome canonique (six thèmes)
+│   │   └── sources/gmail.css ← Source CSS des tweaks (absorbée de l'ex-extension SimpleMail)
+│   └── mobile/               ← Tentative mobile (Capacitor)
 ├── tools/
 │   ├── lab/                  ← Tentatives Lab (atelier-actuel, focus-os)
+│   ├── previews/             ← Aperçus fictifs des thèmes (focus-os, simplemail-original)
 │   ├── mail-client/          ← Sombre Mail (client mail autonome)
-│   ├── pkmail / pkmail-ui    ← CLI et interface Next.js
-│   └── tester-server.py      ← Page « Choisir une version » (port 9900)
+│   ├── pkmail/               ← CLI Himalaya + interface Next.js + config locale
+│   └── tester/               ← Page « Choisir une version » (port 9900)
 ├── releases/                 ← Builds macOS / Windows / Linux
 ├── archives/                 ← Anciennes versions, benchmark et Simplify (local, hors git)
 ├── store/                    ← Landing et kit média bilingue

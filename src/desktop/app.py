@@ -69,10 +69,10 @@ def wait_for_port(host, port, timeout=25.0):
 
 def main():
     base = resource_dir()
-    os.chdir(base)  # config.json / db / relative paths resolve from here
+    os.chdir(base)  # relative runtime paths (var/, assets) resolve from here
     if base not in sys.path:
         sys.path.insert(0, base)
-    load_env_file(os.path.join(base, "secrets", "mail.env"))
+    load_env_file(os.path.join(base, "var", "secrets", "mail.env"))
 
     # The packaged desktop app only binds to 127.0.0.1. Do not require a
     # deployment password when Finder launches it; an explicit mail.env value
