@@ -6,7 +6,7 @@
 
 Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla. Packagé en application native (macOS · Windows · Linux).
 
-**Version 2026.10.21** — [Changelog](CHANGELOG.md)
+**Version 2026.10.22** — [Changelog](CHANGELOG.md)
 
 [![Aperçu de l’extension Gmail](store/screenshots/05-ocean.png)](store/index.html)
 [![Réglages de l’extension Gmail](store/screenshots/02-reglages.png)](store/index.html)
@@ -38,9 +38,9 @@ Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla
 - **Écran de chargement immersif** plein écran avec barre animée légère
 - **PWA + Chrome en local** : installable depuis `127.0.0.1:8000`, extension sans permission sensible ; Android en pause
 
-### Extension Chrome — Gmail simplifié
-- **PK Gmail — Simplify Style** : surcouche CSS indépendante pour Gmail, avec fonds photo, état de boîte vide, menu compact près du compte, actions Gmail conservées dans leur barre native, séparateurs par date et volet de lecture. Densité et largeur réglables, bouton de rédaction flottant.
-- Guide d’installation et de confidentialité : [`src/extension-simplify/`](src/extension-simplify/README.md). L’extension n’est pas publiée sur le Chrome Web Store.
+### Extension Chrome — PK Gmail Studio
+- **PK Gmail Studio** : l'extension canonique, avec panneau latéral (drawer) et **thèmes** — *Gmail normal*, *PK — thème Studio* (presets validés, 28 tweaks cochables) et *Simplify* (surcouche V2 : fonds photo, boîte vide, menu compact près du compte, actions Gmail natives dans leur barre, séparateurs par date, volet de lecture). Les thèmes du Lab (OMP Terminal, Focus OS, K7…) sont proposés en attente de transposition.
+- Guide : [`src/extension-pk/`](src/extension-pk/). Simplify vit désormais comme thème (`src/extension-pk/themes/simplify/`) ; son extension autonome est archivée (`archives/versions/05-simplify-2026.10.16/`, hors git). Non publiée sur le Chrome Web Store.
 
 ### Sombre Mail — client mail autonome (`tools/mail-client/`)
 - **Interface mail indépendante** : serveur FastAPI local relié directement à vos boîtes IMAP/SMTP — multi-comptes, lecture, envoi réel, favoris, suppression, pièces jointes et temps réel (IMAP IDLE). Gmail n'est jamais ouvert, là où l'extension Chrome se contente de l'habiller.
@@ -233,8 +233,7 @@ La première ouverture crée automatiquement les dossiers de données utilisateu
 │   │   ├── build_macos.sh / build_linux.sh / build_windows.ps1
 │   │   └── icon.png
 │   ├── extension/            ← SimpleMail v2026.08.01 (source CSS historique, lue par extension-pk/build.sh)
-│   ├── extension-pk/         ← PK Gmail Studio — extension Chrome canonique (thèmes PK & Simplify)
-│   ├── extension-simplify/   ← V2 Simplify (à merger dans Bench comme thème)
+│   ├── extension-pk/         ← PK Gmail Studio — extension Chrome canonique (thèmes PK, Simplify + Lab à venir)
 │   ├── mobile/               ← Tentative mobile (Capacitor)
 │   └── rust/                 ← Application desktop (Go ou Rust, à trancher)
 ├── tools/
@@ -243,7 +242,7 @@ La première ouverture crée automatiquement les dossiers de données utilisateu
 │   ├── pkmail / pkmail-ui    ← CLI et interface Next.js
 │   └── tester-server.py      ← Page « Choisir une version » (port 9900)
 ├── releases/                 ← Builds macOS / Windows / Linux
-├── archives/                 ← Anciennes versions et benchmark (locale, hors git)
+├── archives/                 ← Anciennes versions, benchmark et Simplify (local, hors git)
 ├── store/                    ← Landing et kit média bilingue
 └── README.md / CHANGELOG.md
 ```

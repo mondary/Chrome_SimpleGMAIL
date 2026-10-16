@@ -10,35 +10,61 @@ function renderThemes(active) {
   h.className = 'group';
   h.textContent = '✦ Thème';
   themesEl.appendChild(h);
-  const options = [{ id: '', label: 'PK — thème Studio', meta: 'Les tweaks du manifest, préconfigurés.' }]
-    .concat(self.LAB_THEMES.map((t) => ({ id: t.id, label: t.label, meta: t.description })));
-  for (const opt of options) {
+  for (const t of self.LAB_THEMES) {
     const row = document.createElement('label');
-    row.className = 'theme-row' + (active === opt.id ? ' active' : '');
+    row.className = 'theme-row' + (active === t.id ? ' active' : '');
     const input = document.createElement('input');
     input.type = 'radio';
     input.name = 'theme';
-    input.value = opt.id;
-    input.checked = active === opt.id;
-    input.addEventListener('change', () => setTheme(opt.id));
+    input.value = t.id;
+    input.checked = active === t.id;
+    input.addEventListener('change', () => setTheme(t.id));
     const box = document.createElement('div');
     const name = document.createElement('div');
     name.className = 'name';
-    name.textContent = opt.label;
+    name.textContent = t.label;
     const meta = document.createElement('div');
     meta.className = 'meta';
-    meta.textContent = opt.meta;
+    meta.textContent = t.description;
     box.appendChild(name);
     box.appendChild(meta);
     row.appendChild(input);
     row.appendChild(box);
     themesEl.appendChild(row);
   }
+  const upcoming = self.LAB_THEMES_UPCOMING || [];
+  if (upcoming.length) {
+    const h2 = document.createElement('div');
+    h2.className = 'group';
+    h2.textContent = '⋯ À transposer — thèmes du Lab';
+    themesEl.appendChild(h2);
+    for (const u of upcoming) {
+      const row = document.createElement('div');
+      row.className = 'theme-row upcoming';
+      const name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = u.label;
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.textContent = u.note + ' · en attente de transposition Gmail';
+      row.appendChild(name);
+      row.appendChild(meta);
+      themesEl.appendChild(row);
+    }
+  }
 }
 
 async function setTheme(id) {
-  await chrome.storage.local.set({ theme: id });
+  const enabled = {};
+  // PK applique ses presets ; Gmail normal et Simplify coupent les tweaks.
+  if (id === 'theme-pk') {
+    for (const item of self.LAB_ITEMS) enabled[item.id] = (item.status || 'ok') !== 'ko';
+  } else {
+    for (const item of self.LAB_ITEMS) enabled[item.id] = false;
+  }
+  await chrome.storage.local.set({ theme: id, enabled });
   await chrome.runtime.sendMessage({ type: 'sync' });
+  await loadState();
 }
 
 function render(enabled, marginPct = 5) {

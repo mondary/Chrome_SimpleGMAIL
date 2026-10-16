@@ -2,7 +2,7 @@
 
 | Skill | Rôle | Livrable |
 | --- | --- | --- |
-| `frontend-design` | Préciser la direction visuelle Simplify pour la surcouche Gmail. | `src/extension-simplify/gmail.css`, popup et icône. |
+| `frontend-design` | Préciser la direction visuelle Simplify pour la surcouche Gmail. | `src/extension-pk/themes/simplify/theme.css`, panneau latéral et icône. |
 | `ego-browser` | Vérifier l'interface Gmail dans une session isolée. | Sélecteurs et comportements validés, documentés dans le README de l'extension. |
 | `ego-browser-user-policy` | Garder les interactions Gmail dans un navigateur isolé. | Validation sans utiliser les fenêtres personnelles. |
 | `premium-promo-media` | Préparer une landing, des captures fictives et leurs dérivés média. | `store/`. |

@@ -4,6 +4,9 @@
 
 importScripts('data/manifest.js', 'data/themes.js');
 
+// Le bouton de barre d'outils ouvre le panneau latéral (drawer).
+chrome.sidePanel?.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
+
 const MATCH = ['https://mail.google.com/*'];
 const LAB_IDS = self.LAB_ITEMS.map((i) => i.id);
 const THEME_IDS = self.LAB_THEMES.map((t) => t.id);
@@ -105,12 +108,12 @@ chrome.tabs.onUpdated.addListener((tabId, info, tab) => {
 });
 
 chrome.runtime.onInstalled.addListener(async () => {
-  const { enabled = {} } = await chrome.storage.local.get('enabled');
+  const { enabled = {} } = await chrome.storage.local.get(['enabled', 'theme']);
   if (Object.keys(enabled).length === 0) {
-    // Premier install : tout actif
+    // Premier install : thème PK avec ses presets (les tweaks validés)
     const all = {};
-    for (const item of self.LAB_ITEMS) all[item.id] = true;
-    await chrome.storage.local.set({ enabled: all });
+    for (const item of self.LAB_ITEMS) all[item.id] = (item.status || 'ok') !== 'ko';
+    await chrome.storage.local.set({ enabled: all, theme: 'theme-pk' });
   }
   await syncRegistrations();
 });

@@ -4,6 +4,17 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.22] - 2026-10-16
+
+### Added
+- **PK Gmail Studio en drawer** : le popup devient un panneau latéral Chrome (Side Panel) ouvert par le bouton de barre d'outils — interface claire pleine hauteur, thèmes et tweaks lisibles.
+- Choix de thème en trois options propres : **Gmail normal** (aucun style), **PK — thème Studio** (applique ses presets : tweaks validés actifs, `ko` désactivés) et **Simplify**. Le doublon « PK — thème Studio » est corrigé.
+- Les huit thèmes du Lab (OMP Terminal, Focus OS, Label Canvas, Paper Reader, K7…) sont proposés dans le panneau en attente de transposition vers le DOM de Gmail.
+
+### Changed
+- `src/extension-simplify/` quitte `src/` : Simplify vit désormais comme thème de PK Gmail Studio (`src/extension-pk/themes/simplify/`), son extension autonome restant archivée dans `archives/versions/05-simplify-2026.10.16/` (hors git). README FR/EN et PKSTACK mis à jour.
+- Extension en v2026.10.27 : permission `sidePanel`, description « Studio de thèmes pour Gmail ».
+
 ## [2026.10.21] - 2026-10-16
 
 ### Added

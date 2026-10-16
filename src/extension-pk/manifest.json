@@ -1,15 +1,15 @@
 {
   "manifest_version": 3,
   "name": "PK Gmail Studio",
-  "version": "2026.10.26",
-  "description": "Banc de test : charge/décharge chaque script Gmail à la volée",
-  "permissions": ["storage", "scripting"],
+  "version": "2026.10.27",
+  "description": "Studio de thèmes pour Gmail : PK, Simplify et les thèmes du Lab.",
+  "permissions": ["storage", "scripting", "sidePanel"],
   "host_permissions": ["https://mail.google.com/*"],
   "background": { "service_worker": "background.js" },
   "action": {
-    "default_popup": "popup.html",
     "default_title": "PK Gmail Studio",
     "default_icon": "icon.png"
   },
+  "side_panel": { "default_path": "popup.html" },
   "icons": { "16": "icon.png", "48": "icon.png", "128": "icon.png" }
 }
