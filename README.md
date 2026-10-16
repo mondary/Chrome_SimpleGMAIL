@@ -6,7 +6,7 @@
 
 Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla. Packagé en application native (macOS · Windows · Linux).
 
-**Version 2026.10.37** — [Changelog](CHANGELOG.md)
+**Version 2026.10.39** — [Changelog](CHANGELOG.md)
 
 [![Aperçu de l’extension Gmail](store/screenshots/05-ocean.png)](store/index.html)
 [![Réglages de l’extension Gmail](store/screenshots/02-reglages.png)](store/index.html)
@@ -147,7 +147,7 @@ actuellement publié. Android/iOS restent en pause jusqu'au choix d'un accès
 privé (VPN/Tailscale) ou d'une architecture Gmail API + OAuth.
 
 Le déploiement o2switch est désactivé et documenté uniquement pour référence dans
-[`src/desktop/DEPLOIEMENT_O2SWITCH.md`](src/desktop/DEPLOIEMENT_O2SWITCH.md).
+[`docs/DEPLOIEMENT_O2SWITCH.md`](docs/DEPLOIEMENT_O2SWITCH.md).
 
 ## Sécurité
 

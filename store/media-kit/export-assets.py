@@ -35,7 +35,7 @@ def promo_image(path, size, heading, subheading, tag, shot_box):
     draw = ImageDraw.Draw(image)
     w, h = size
     draw.rounded_rectangle((50, 48, 80, 78), radius=9, fill="#ffffff")
-    icon = Image.open(ROOT / "src/extension-simplify/icons/32.png").convert("RGBA").resize((30, 30))
+    icon = Image.open(ROOT / "archives/versions/05-simplify-2026.10.16/icons/32.png").convert("RGBA").resize((30, 30))
     image.paste(icon, (50, 48), icon)
     draw.text((92, 53), "PK GMAIL  /  SIMPLIFY STYLE", font=font(13, True), fill="#e4e4e5")
     draw.text((50, 116), tag.upper(), font=font(10, True), fill="#f18777")

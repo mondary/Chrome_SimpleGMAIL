@@ -5,7 +5,7 @@ Client mail web autonome : un serveur FastAPI local qui se connecte directement
 suppression, pièces jointes et temps réel (IMAP IDLE → Server-Sent Events).
 Gmail n'est jamais ouvert : ce n'est pas une surcouche, c'est une interface
 indépendante. Pour l'habillage de Gmail lui-même, voir
-[`src/extension-simplify/`](../extension-simplify/README.md).
+[`src/extension-pk/`](../../src/extension-pk/README.md).
 
 ## Démarrage
 

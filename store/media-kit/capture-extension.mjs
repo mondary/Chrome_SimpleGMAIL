@@ -1,4 +1,4 @@
-/* Screenshots/frames use the current MV3 build and the fictional fixture in the browser checks. */
+/* Screenshots/frames use the archived standalone MV3 build and the fictional fixture in the browser checks. */
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -6,7 +6,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const project = fileURLToPath(new URL("../../", import.meta.url));
-const extension = path.join(project, "src/extension-simplify");
+// Simplify autonome archivé (hors git) — la version canonique vit dans src/extension-pk/.
+const extension = path.join(project, "archives/versions/05-simplify-2026.10.16");
 const media = path.join(project, "store");
 const testSource = await readFile(path.join(extension, "tests/browser.mjs"), "utf8");
 const fixtureStart = testSource.indexOf("const fixture = `");

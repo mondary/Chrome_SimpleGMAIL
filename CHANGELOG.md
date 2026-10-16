@@ -4,6 +4,14 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.39] - 2026-10-16
+
+### Changed
+- **Arborescence — étape 1** : documentation regroupée dans `docs/` (`CONFIGURATION_GMAIL_OAUTH.md`, `DEPLOIEMENT_O2SWITCH.md`, nouvelle `ROADMAP.md` qui fusionne `src/rust/`). Chemins morts `src/extension-simplify/` réparés dans le store, le kit média et Sombre Mail ; coquilles vides `src/android/`, `src/ios/`, `src/macos/` retirées ; bandeaux de version rattrapés.
+
+### Added
+- **Guide et confidentialité de l'extension canonique** : `src/extension-pk/README.md` (guide d'installation, thèmes, build) et `src/extension-pk/PRIVACY.md` (permissions et données), liés depuis la landing du store.
+
 ## [2026.10.38] - 2026-10-16
 
 ### Added

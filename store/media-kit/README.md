@@ -1,8 +1,9 @@
 # Kit média — régénération
 
 Toutes les commandes partent de la racine `Chrome_SimpleGMAIL`. Les messages et expéditeurs
-visibles sont fictifs. `gmail-fixture.html` n'est pas Gmail : Chrome charge `src/extension-simplify/`
-comme une vraie extension MV3 et applique le CSS/JS de production à cette page de démonstration.
+visibles sont fictifs. `gmail-fixture.html` n'est pas Gmail : Chrome charge l'extension autonome
+Simplify archivée (`archives/versions/05-simplify-2026.10.16/`, hors git) comme une vraie
+extension MV3 et applique le CSS/JS de production à cette page de démonstration.
 Les captures ne prétendent donc pas montrer une session Gmail authentifiée. La vérification de
 Gmail réel reste décrite dans le README de l'extension ; ses images ne sont pas distribuées.
 
@@ -21,7 +22,7 @@ node store/media-kit/capture-extension.mjs
 python3 store/media-kit/export-assets.py
 ```
 
-La commande de capture extrait les fixtures de la suite `src/extension-simplify/tests/browser.mjs`
+La commande de capture extrait les fixtures de la suite `archives/versions/05-simplify-2026.10.16/tests/browser.mjs`
 pour conserver la même source de messages. Elle ouvre un profil temporaire, route uniquement
 `https://mail.google.com/mail/*` vers cette fixture locale, charge l'extension avec le manifest
 courant, et capture inbox, popup, avant/après, composeur, fonds, boîte vide, menu et lecture.
@@ -43,4 +44,5 @@ captures ; la carte et la bannière sont des compositions éditoriales.
 
 Aucun Web Store ou autre canal de publication n'est créé. Pour modifier le déroulé d'une capture,
 modifier l'adaptateur dans `capture-extension.mjs`, puis les textes et ratios éditoriaux dans
-`export-assets.py`. La surcouche du produit demeure exclusivement dans `src/extension-simplify/`.
+`export-assets.py`. La surcouche vit désormais comme thème dans `src/extension-pk/themes/simplify/` ;
+l'extension autonome est archivée dans `archives/versions/05-simplify-2026.10.16/`.

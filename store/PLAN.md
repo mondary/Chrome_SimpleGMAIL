@@ -9,7 +9,7 @@ ne lit ni ne transmet le contenu des messages. Elle n'est pas publiée au Chrome
 Les captures du kit sont des **simulations de Gmail avec des courriels fictifs**, rendues par
 le véritable CSS et le véritable script de contenu de l'extension dans une page de démonstration.
 Elles valident le rendu de la surcouche ; elles ne démontrent pas la connexion à un compte Gmail.
-La validation de Gmail réel est effectuée séparément dans `src/extension-simplify/README.md`.
+La validation de Gmail réel est effectuée séparément dans `src/extension-pk/README.md` (extension canonique) ; la version autonome de Simplify est archivée dans `archives/versions/05-simplify-2026.10.16/`.
 
 ## Storyboard et livrables
 

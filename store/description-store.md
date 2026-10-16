@@ -13,7 +13,7 @@
 **FAQ** :
 
 - *Mes courriels passent-ils par un autre service ?* Non. L'extension ne fait aucune requête réseau ; Gmail continue de gérer les messages.
-- *Comment essayer ?* Chargez `src/extension-simplify/` dans `chrome://extensions`, en mode développeur, puis rechargez Gmail.
+- *Comment essayer ?* Téléchargez le ZIP depuis la page, décompressez-le, chargez le dossier dans `chrome://extensions` (mode développeur), puis rechargez Gmail. La version canonique de l'extension vit dans `src/extension-pk/`.
 - *L'extension est-elle au Chrome Web Store ?* Non. Elle est disponible comme source à charger localement.
 - *Quelles fonctions de Simplify sont incluses ?* L'apparence et les réglages décrits ici. Bundles, rappels et blocage des traceurs ne sont pas inclus.
 
@@ -30,6 +30,6 @@
 **FAQ**:
 
 - *Does my email go through another service?* No. The extension makes no network requests; Gmail still handles your messages.
-- *How can I try it?* Load `src/extension-simplify/` in `chrome://extensions` with developer mode on, then reload Gmail.
+- *How can I try it?* Download the ZIP from the page, unzip it, load the folder in `chrome://extensions` with developer mode on, then reload Gmail. The canonical extension lives in `src/extension-pk/`.
 - *Is it on the Chrome Web Store?* No. It is available as source to load locally.
 - *Which Simplify features are included?* The appearance and settings described here. Bundles, reminders and tracker blocking are not included.
