@@ -16,6 +16,7 @@
   let compose, menuButton, menuPanel, status, preferences, searchButton, backgroundLayer;
   let dateSignature = "", dateRows = [];
   let pending = Promise.resolve();
+  let nativeCloseTimer = 0;
   const nativeOverlayListeners = new Map();
   const observer = new MutationObserver(records => {
     if (records.some(r => !r.target.closest?.('[data-pks-ui]') && (r.type === 'attributes' || ![...r.addedNodes, ...r.removedNodes].every(n => n.nodeType === 1 && n.hasAttribute('data-pks-ui'))))) schedule();
@@ -66,6 +67,41 @@
     nativeOverlayListeners.clear();
     root.style.removeProperty("--pks-menu-toolbar-z");
   }
+  function releaseNativeControlWhenClosed(key, target) {
+    setTimeout(() => {
+      if (root.dataset.pksNativeControl === key && target?.getAttribute("aria-expanded") !== "true") {
+        root.removeAttribute("data-pks-native-control");
+        all(`[data-pks-native-popup="${key}"]`).forEach(popup => popup.removeAttribute("data-pks-native-popup"));
+      }
+    }, 200);
+  }
+  function positionNativePopup(key, target, trigger) {
+    if (["settings", "apps", "gemini"].includes(key) || !trigger) return;
+    const popupId = target.getAttribute("aria-controls");
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const popup = (popupId && document.getElementById(popupId)) || all('[role="menu"],[role="listbox"],[role="dialog"]')
+        .filter(el => el !== menuPanel && !el.hasAttribute("data-pks-ui") && el.getBoundingClientRect().width > 0)
+        .at(-1);
+      if (!popup || popup === menuPanel || !popup.getBoundingClientRect().width) return;
+      if (popupId && target.getAttribute("aria-expanded") !== "true") return;
+      const anchor = trigger.getBoundingClientRect();
+      const panel = popup.getBoundingClientRect();
+      const left = Math.max(8, Math.min(anchor.left, innerWidth - panel.width - 8));
+      const top = Math.max(8, Math.min(anchor.top, innerHeight - panel.height - 8));
+      popup.dataset.pksNativePopup = key;
+      popup.style.setProperty("--pks-native-popup-left", `${left}px`);
+      popup.style.setProperty("--pks-native-popup-top", `${top}px`);
+    }));
+  }
+  function deferNativeMenuClose(key, target) {
+    root.setAttribute("data-pks-native-control", key);
+    clearTimeout(nativeCloseTimer);
+    nativeCloseTimer = setTimeout(() => {
+      nativeCloseTimer = 0;
+      closeMenu();
+      releaseNativeControlWhenClosed(key, target);
+    }, 100);
+  }
   function syncNativeMenuTargets() {
     if (!menuPanel) return;
     const desired = all("button[data-pks-menu-key]", menuPanel).flatMap(trigger => {
@@ -93,7 +129,10 @@
         target.style.setProperty(`--pks-menu-${name}`, `${value}px`);
       }
       const type = ["pane", "paneOptions", "input"].includes(key) ? "mouseup" : "click";
-      const handler = () => closeMenu();
+      const handler = () => {
+        positionNativePopup(key, target, trigger);
+        deferNativeMenuClose(key, target);
+      };
       target.addEventListener(type, handler, { once: true });
       nativeOverlayListeners.set(target, { key, trigger, type, handler });
     }
@@ -101,6 +140,7 @@
     root.setAttribute("data-pks-menu-native", "true");
   }
   function closeMenu(focus = false) {
+    if (nativeCloseTimer) { clearTimeout(nativeCloseTimer); nativeCloseTimer = 0; }
     menuPanel?.remove(); menuPanel = null;
     root.removeAttribute("data-pks-menu-native");
     clearNativeOverlayTargets();
@@ -109,15 +149,17 @@
   }
   function closePreferences() { preferences?.remove(); preferences = null; }
   function nativeAction(key) {
-    // Keyboard activation uses Gmail's native target without exposing its header icon.
-    closeMenu();
+    // Keyboard activation keeps Gmail's real popup anchor in place until its handler runs.
     const candidates = all(selectors[key]);
     const target = candidates.find(el => el.closest('[data-pks-toolbar]')) || candidates[0];
-    if (!target) return;
+    if (!target) { closeMenu(); return; }
+    positionNativePopup(key, target, $(`[data-pks-menu-key="${key}"]`, menuPanel));
+    root.setAttribute("data-pks-native-control", key);
     // Gmail's Closure toolbar controls activate on mouseup; header links use click.
     if (['pane', 'paneOptions', 'input'].includes(key)) {
       for (const type of ['mousedown', 'mouseup']) target.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window, button: 0 }));
     } else target.click();
+    deferNativeMenuClose(key, target);
   }
   function openPreferences() {
     closeMenu(); closePreferences();
@@ -157,7 +199,7 @@
     item(tr("Apparence de Gmail", "Gmail appearance"), openPreferences);
     for (const [key, title] of [["settings", tr("Paramètres Gmail", "Gmail settings")], ["apps", tr("Applications Google", "Google apps")], ["help", tr("Aide", "Help")], ["gemini", "Gemini"], ["availability", tr("Disponibilité", "Availability")], ["pane", tr("Activer / désactiver le volet de lecture", "Toggle reading pane")], ["paneOptions", tr("Position du volet de lecture", "Reading pane position")], ["input", tr("Outils de saisie", "Input tools")]]) {
       const target = all(selectors[key]).find(el => el.closest('[data-pks-toolbar]')) || $(selectors[key]);
-      if (target) item(title, () => nativeAction(key), key);
+      if (target || ["settings", "apps", "help", "gemini", "availability"].includes(key)) item(title, () => nativeAction(key), key);
     }
     item(settings.hideAddons ? tr("Afficher le panneau Google", "Show Google side panel") : tr("Masquer le panneau Google", "Hide Google side panel"), () => { save({ hideAddons: !settings.hideAddons }); closeMenu(true); });
     menuPanel.addEventListener("keydown", e => {
@@ -310,9 +352,15 @@
   window.addEventListener('hashchange',()=>{closeMenu();closePreferences();root.removeAttribute('data-pks-search-open');schedule();});
   window.addEventListener('resize',schedule);
   document.addEventListener('click',e=>{
-    if(menuPanel&&!menuPanel.contains(e.target)&&!menuButton?.contains(e.target))closeMenu();
+    const nativeTarget = e.target.closest?.('[data-pks-menu-native-key]');
+    if (nativeTarget) deferNativeMenuClose(nativeTarget.dataset.pksMenuNativeKey, nativeTarget);
+    else if(menuPanel&&!menuPanel.contains(e.target)&&!menuButton?.contains(e.target))closeMenu();
     if(!e.target.closest('#aso_search_form_anchor,#pks-search-button'))root.removeAttribute('data-pks-search-open');
-    if(!e.target.closest('[data-pks-utility],#pks-menu'))root.removeAttribute('data-pks-native-control');
+    const nativeKey = root.dataset.pksNativeControl;
+    if(nativeKey && !e.target.closest('[data-pks-utility],#pks-menu')) {
+      const target = all(selectors[nativeKey]).find(el => el.closest('[data-pks-toolbar]')) || $(selectors[nativeKey]);
+      releaseNativeControlWhenClosed(nativeKey, target);
+    }
     schedule();
   });
   document.addEventListener('keydown',e=>{

@@ -4,6 +4,16 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.10] - 2026-10-16
+
+### Fixed
+- Paramètres Gmail ouvre le panneau natif « Configuration rapide » et celui-ci reste visible malgré le masquage de la barre latérale Google.
+- Le menu natif d’Aide et les autres menus contrôlés depuis le menu compact sont repositionnés près de l’option choisie au lieu de s’ouvrir en haut à gauche.
+- La barre d’applications Google est masquée sans masquer le conteneur des panneaux et menus Gmail.
+
+### Changed
+- Archive Chrome et liens de téléchargement mis à jour en v2026.10.10.
+
 ## [2026.10.9] - 2026-10-16
 
 ### Added

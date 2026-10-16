@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PK Gmail — Simplify Style",
-  "version": "2026.10.8",
+  "version": "2026.10.10",
   "description": "Une surcouche visuelle pour Gmail : fonds photo, boîte vide immersive, menu compact et actions réunies dans l’en-tête.",
   "minimum_chrome_version": "120",
   "permissions": ["storage"],

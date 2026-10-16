@@ -148,12 +148,34 @@ try {
   // New reference states: native controls, themes, empty views and Gmail's Trusted Types.
   await page.evaluate(() => {
     const native = document.createElement("button"); native.className = "FH"; native.setAttribute("aria-label", "Paramètres");
-    native.onclick = () => { window.nativeSettingsClicks = (window.nativeSettingsClicks || 0) + 1; };
+    native.setAttribute("aria-expanded", "false");
+    native.onclick = () => {
+      window.nativeSettingsClicks = (window.nativeSettingsClicks || 0) + 1;
+      native.setAttribute("aria-expanded", "true");
+      const quickSettings = document.createElement("div"); quickSettings.className = "IU"; quickSettings.setAttribute("role", "menu");
+      quickSettings.innerHTML = '<button aria-label="Voir tous les paramètres">Voir tous les paramètres</button>';
+      document.querySelector(".aUx").append(quickSettings);
+    };
+    const help = document.querySelector(".demo-help"); help.setAttribute("aria-controls", "demo-help-menu"); help.setAttribute("aria-expanded", "false");
+    help.onclick = () => {
+      help.setAttribute("aria-expanded", "true");
+      const menu = document.createElement("div"); menu.id = "demo-help-menu"; menu.setAttribute("role", "menu"); menu.textContent = "Aide · Formation";
+      document.querySelector("#gb").append(menu);
+    };
     document.querySelector("#gb").append(native);
   });
   await page.locator("#pks-menu-button").click();
   await page.getByRole("menuitem", { name: "Paramètres Gmail", exact: true }).click();
   check(await page.evaluate(() => window.nativeSettingsClicks === 1), "Compact menu delegates once to Gmail settings");
+  await page.waitForSelector(".aUx > .IU");
+  check(await page.locator(".aUx > .IU").isVisible(), "Native Gmail quick settings remain visible when Google side-panel apps are hidden");
+  await page.locator(".aUx > .IU button").click();
+  await page.evaluate(() => { document.querySelector(".aUx > .IU")?.remove(); document.querySelector("#gb .FH")?.setAttribute("aria-expanded", "false"); });
+  await page.locator("#pks-menu-button").click();
+  await page.getByRole("menuitem", { name: "Aide", exact: true }).click();
+  await page.waitForSelector("#gb [data-pks-native-popup=help]");
+  check(await page.locator("#gb [data-pks-native-popup=help]").evaluate(el => el.getBoundingClientRect().left > 0), "Native Gmail help menu opens beside its compact-menu item");
+  await page.evaluate(() => { document.querySelector("#gb #demo-help-menu")?.remove(); document.querySelector(".demo-help")?.setAttribute("aria-expanded", "false"); });
   await page.evaluate(() => {
     const pane = document.createElement("button"); pane.className = "apG";
     pane.addEventListener("mouseup", () => { window.nativePaneActivations = (window.nativePaneActivations || 0) + 1; });
