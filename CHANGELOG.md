@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.9] - 2026-10-16
+
+### Added
+- Dix fonds d'écran candidats générés par IA stockés dans `src/extension-simplify/backgrounds/candidates/` (1672×941, non packagés dans l'extension) en attente du réagencement.
+
 ## [2026.10.8] - 2026-10-16
 
 ### Fixed
