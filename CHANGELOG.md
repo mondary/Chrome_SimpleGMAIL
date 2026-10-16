@@ -4,6 +4,12 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.20] - 2026-10-16
+
+### Changed
+- `extension/` retourne dans `src/extension-bench/` : toute l'implémentation vit sous `src/` ; l'ancienne `src/extension/` (SimpleMail v2026.08.01) reste en place et demeure la source CSS de `build.sh`. Références (README FR/EN, Simplify, scaffold rust) mises à jour.
+- Releases : une seule version conservée par plateforme — macOS `PKMail.app` (31 août) et Android `PKMail-2026.08.07.apk` ; les six APKs et deux builds macOS antérieurs sont déplacés dans `archives/releases/` (locale, hors git).
+
 ## [2026.10.19] - 2026-10-16
 
 ### Changed

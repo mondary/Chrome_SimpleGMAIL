@@ -6,7 +6,7 @@
 
 Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla. Packagé en application native (macOS · Windows · Linux).
 
-**Version 2026.10.19** — [Changelog](CHANGELOG.md)
+**Version 2026.10.20** — [Changelog](CHANGELOG.md)
 
 [![Aperçu de l’extension Gmail](store/screenshots/05-ocean.png)](store/index.html)
 [![Réglages de l’extension Gmail](store/screenshots/02-reglages.png)](store/index.html)
@@ -224,7 +224,6 @@ La première ouverture crée automatiquement les dossiers de données utilisateu
 ## Structure du projet
 
 ```
-├── extension/                ← Extension Bench — extension Chrome canonique
 ├── src/
 │   ├── desktop/              ← Backend FastAPI de l'app classique
 │   │   ├── main.py           ← Backend FastAPI
@@ -233,7 +232,8 @@ La première ouverture crée automatiquement les dossiers de données utilisateu
 │   │   ├── config.example.json
 │   │   ├── build_macos.sh / build_linux.sh / build_windows.ps1
 │   │   └── icon.png
-│   ├── extension/            ← Source CSS historique (lue par extension/build.sh)
+│   ├── extension/            ← SimpleMail v2026.08.01 (source CSS historique, lue par extension-bench/build.sh)
+│   ├── extension-bench/      ← Extension Bench — extension Chrome canonique (PK Gmail Scripts Lab)
 │   ├── extension-simplify/   ← V2 Simplify (à merger dans Bench comme thème)
 │   ├── mobile/               ← Tentative mobile (Capacitor)
 │   └── rust/                 ← Application desktop (Go ou Rust, à trancher)

@@ -6,7 +6,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-SG_ROOT="$(cd .. && pwd)"                         # Chrome_SimpleGMAIL
+SG_ROOT="$(cd ../.. && pwd)"                      # Chrome_SimpleGMAIL
 SNIPPETS="$SG_ROOT/vendors/scriptcat-snippets"    # symlink vendors → snippets ScriptCat
 
 if [ ! -d "$SNIPPETS" ]; then
