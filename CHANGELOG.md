@@ -4,6 +4,17 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.17] - 2026-10-16
+
+### Fixed
+- En-tête de l’extension Gmail aligné sur la référence : le menu compact, la loupe et l’avatar partagent la même ligne médiane, calculée depuis le compte Google à chaque rafraîchissement.
+- Les menus natifs ouverts depuis le menu compact (paramètres, applications, aide, disponibilité, outils de saisie) se positionnent sous celui-ci grâce à une ancre mesurable, sans rester en haut à gauche ni déborder de l’écran.
+
+### Changed
+- L’icône du menu compact est dessinée en SVG (trois points réguliers) au lieu d’un glyphe texte.
+- Les actions natives des messages restent dans leur barre d’en-tête, sans boutons clonés ; elles s’estompent quand aucune sélection n’est active et la loupe les remplace en lecture.
+- Captures du store, archive Chrome et liens de téléchargement mis à jour en v2026.10.17.
+
 ## [2026.10.16] - 2026-10-16
 
 ### Changed

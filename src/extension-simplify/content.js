@@ -57,16 +57,20 @@
   }
   function closePreferences() { preferences?.remove(); preferences = null; }
   function nativeAction(key) {
-    // Temporarily expose the native target at its original location for Gmail's popovers.
     closeMenu();
+    all('[data-pks-anchor]').forEach(el => delete el.dataset.pksAnchor);
     const candidates = all(selectors[key]);
     const target = candidates.find(el => el.closest('[data-pks-toolbar]')) || candidates[0];
     if (!target) return;
     set("native-control", key);
-    target.focus();
-    // Gmail's Closure toolbar controls activate on mouseup; header links use click.
-    if (['pane', 'paneOptions', 'input'].includes(key)) {
-      for (const type of ['mousedown', 'mouseup']) target.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window, button: 0 }));
+    target.dataset.pksAnchor = "";
+    // Keep a measurable, invisible anchor below the menu button. Gmail measures it
+    // when opening its own popup; display:none would send that popup to (0, 0).
+    const rect = target.getBoundingClientRect();
+    target.focus({ preventScroll: true });
+    // Gmail's reading-pane controls activate on mouseup; the other controls use click.
+    if (['pane', 'paneOptions'].includes(key)) {
+      for (const type of ['mousedown', 'mouseup']) target.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window, button: 0, buttons: type === 'mousedown' ? 1 : 0, clientX: rect.x + rect.width / 2, clientY: rect.y + rect.height / 2 }));
     } else target.click();
   }
   function openPreferences() {
@@ -99,7 +103,7 @@
   function openMenu() {
     if (menuPanel) { closeMenu(true); return; }
     menuPanel = element("div", "pks-menu"); menuPanel.setAttribute("role", "menu"); menuPanel.setAttribute("aria-label", tr("Options Gmail", "Gmail options"));
-    function item(title, action) { const b = button(null, title, title); b.setAttribute("role", "menuitem"); b.onclick = action; menuPanel.append(b); }
+    function item(title, action) { const b = button(null, title, title); b.setAttribute("role", "menuitem"); b.onclick = e => { e.stopPropagation(); action(); }; menuPanel.append(b); }
     item(tr("Apparence de Gmail", "Gmail appearance"), openPreferences);
     for (const [key, title] of [["settings", tr("Paramètres Gmail", "Gmail settings")], ["apps", tr("Applications Google", "Google apps")], ["help", tr("Aide", "Help")], ["gemini", "Gemini"], ["availability", tr("Disponibilité", "Availability")], ["pane", tr("Activer / désactiver le volet de lecture", "Toggle reading pane")], ["paneOptions", tr("Position du volet de lecture", "Reading pane position")], ["input", tr("Outils de saisie", "Input tools")]]) {
       if ($(selectors[key])) item(title, () => nativeAction(key));
@@ -116,7 +120,7 @@
     backgroundLayer = null;
     compose = menuButton = status = searchButton = null;
     closeMenu(); closePreferences();
-    all('[data-pks-toolbar], [data-pks-pagination], [data-pks-utility]').forEach(el => { delete el.dataset.pksToolbar; delete el.dataset.pksPagination; delete el.dataset.pksUtility; });
+    all('[data-pks-toolbar], [data-pks-pagination], [data-pks-utility], [data-pks-anchor]').forEach(el => { delete el.dataset.pksToolbar; delete el.dataset.pksPagination; delete el.dataset.pksUtility; delete el.dataset.pksAnchor; });
     all('[data-pks-date]').forEach(el => el.remove()); dateSignature = ""; dateRows = [];
     for (const attr of [...root.attributes]) if (attr.name === "data-pks" || attr.name.startsWith("data-pks-")) root.removeAttribute(attr.name);
     for (const prop of [...root.style]) if (prop.startsWith("--pks-")) root.style.removeProperty(prop);
@@ -185,7 +189,7 @@
     const header = $("#gb"), mains = all('.bkK [role="main"], .bkK .aia').filter(visible);
     if (!header || !mains.length || /^(#settings|#chat|#meet|#contacts)/.test(location.hash)) { removeUI(); return; }
     root.setAttribute("data-pks", "on");
-    for (const [key, value] of Object.entries({ density:settings.density, width:settings.width, quiet:settings.quietHeader, addons:settings.hideAddons })) set(key,value);
+    for (const [key, value] of Object.entries({ density:settings.density, width:settings.width, quiet:settings.quietHeader, addons:settings.hideAddons, actions:settings.quietHeader })) set(key,value);
     const nav = header.querySelector('[data-ogmb], [aria-label="Main menu"], [aria-label="Menu principal"]');
     set("nav", nav?.getAttribute("aria-expanded") === "false" ? "closed" : "open");
     const rows = all('.bkK .zA').filter(visible);
@@ -205,6 +209,7 @@
     const account = all('#gb [aria-label^="Compte Google"], #gb [aria-label^="Google Account"], #gb .gb_bb, #gb .account').find(visible);
     const accountRect = account?.getBoundingClientRect();
     cssVar("account-left",`${accountRect?.left || innerWidth - 56}px`);
+    cssVar("header-center",`${accountRect ? accountRect.top + accountRect.height / 2 : h.top + h.height / 2}px`);
     const toolbar = all('.bkK .G-atb').find(el => el.getClientRects().length > 0);
     all('[data-pks-toolbar]').forEach(el => { if (el !== toolbar) delete el.dataset.pksToolbar; });
     if (toolbar) {
@@ -215,7 +220,10 @@
     if (settings.quietHeader) {
       for (const key of Object.keys(selectors)) all(selectors[key]).forEach(el => el.dataset.pksUtility = key);
       if (!menuButton?.isConnected) {
-        menuButton = button("pks-menu-button", tr("Options Gmail", "Gmail options"), "⋮"); menuButton.setAttribute("aria-haspopup", "menu"); menuButton.setAttribute("aria-expanded", "false"); menuButton.onclick = openMenu; document.body.append(menuButton);
+        menuButton = button("pks-menu-button", tr("Options Gmail", "Gmail options"), "");
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('aria-hidden', 'true');
+        for (const y of [5,12,19]) { const dot = document.createElementNS(svg.namespaceURI, 'circle'); dot.setAttribute('cx','12'); dot.setAttribute('cy',String(y)); dot.setAttribute('r','1.8'); svg.append(dot); }
+        menuButton.append(svg); menuButton.setAttribute("aria-haspopup", "menu"); menuButton.setAttribute("aria-expanded", "false"); menuButton.onclick = openMenu; document.body.append(menuButton);
       }
     } else { menuButton?.remove(); menuButton = null; closeMenu(); }
     if (!searchButton?.isConnected) {
