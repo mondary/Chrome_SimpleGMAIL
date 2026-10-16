@@ -20,7 +20,7 @@ VERSION_SPECS = (
         "id": "lab-v2-atelier-current",
         "runtime_id": "workspace",
         "label": "Lab V2 — Atelier (actuel)",
-        "description": "Version de travail servie depuis src/lab.",
+        "description": "Version de travail servie depuis tools/lab/atelier-actuel.",
         "path": "/lab/",
     },
     {

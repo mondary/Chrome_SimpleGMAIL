@@ -6,7 +6,7 @@
 
 Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Packaged as native desktop app (macOS · Windows · Linux).
 
-**Version 2026.10.17** — [Changelog](CHANGELOG.md)
+**Version 2026.10.18** — [Changelog](CHANGELOG.md)
 
 [![Gmail extension preview](store/screenshots/05-ocean.png)](store/index.html)
 [![Gmail extension settings](store/screenshots/02-reglages.png)](store/index.html)
@@ -176,22 +176,28 @@ First run auto-creates the user data directory with a generic config template.
 ## Project structure
 
 ```
-├── src/desktop/              ← Main application
-│   ├── main.py               ← FastAPI backend
-│   ├── app.py                ← pywebview launcher (cross-platform)
-│   ├── index.html            ← Full UI
-│   ├── config.example.json
-│   ├── build_macos.sh
-│   ├── build_linux.sh
-│   ├── build_windows.ps1
-│   └── icon.png
-├── releases/macos            ← macOS builds (.app)
-├── releases/windows          ← Windows builds (.exe)
-├── releases/linux            ← Linux builds
-├── tools/mail-client/        ← Sombre Mail (standalone mail client)
-├── archives/                 ← Old versions
-├── SimpleMail.command        ← Dev launcher (macOS)
-└── README.md
+├── extension/                ← Extension Bench — canonical Chrome extension
+├── rust/                     ← Desktop app (Go or Rust, to be decided)
+├── src/
+│   ├── desktop/              ← FastAPI backend of the classic app
+│   │   ├── main.py           ← FastAPI backend
+│   │   ├── app.py            ← pywebview launcher (cross-platform)
+│   │   ├── index.html        ← Full UI
+│   │   ├── config.example.json
+│   │   ├── build_macos.sh / build_linux.sh / build_windows.ps1
+│   │   └── icon.png
+│   ├── extension/            ← Historical CSS source (read by extension/build.sh)
+│   ├── extension-simplify/   ← Simplify V2 (to merge into Bench as a theme)
+│   └── mobile/               ← Mobile attempt
+├── tools/
+│   ├── lab/                  ← Lab attempts (atelier-actuel, focus-os)
+│   ├── mail-client/          ← Sombre Mail (standalone mail client)
+│   ├── pkmail / pkmail-ui    ← CLI and Next.js UI
+│   └── tester-server.py      ← Version picker page (port 9900)
+├── releases/                 ← macOS / Windows / Linux builds
+├── archives/                 ← Old versions and benchmark (local, untracked)
+├── store/                    ← Bilingual landing and media kit
+└── README.md / CHANGELOG.md
 ```
 
 ## Support

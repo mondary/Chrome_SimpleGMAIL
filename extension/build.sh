@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # PK Gmail Scripts Lab — build
 # Régénère tweaks/, scripts/ et data/manifest.js depuis :
-#   - gmail.css (source de vérité CSS)  : ../extension/src/gmail.css
+#   - gmail.css (source de vérité CSS)  : src/extension/src/gmail.css
 #   - snippets ScriptCat (scripts JS)   : vendors/scriptcat-snippets (symlink)
 set -euo pipefail
 cd "$(dirname "$0")"
 
-SG_ROOT="$(cd ../.. && pwd)"                      # Chrome_SimpleGMAIL
+SG_ROOT="$(cd .. && pwd)"                         # Chrome_SimpleGMAIL
 SNIPPETS="$SG_ROOT/vendors/scriptcat-snippets"    # symlink vendors → snippets ScriptCat
 
 if [ ! -d "$SNIPPETS" ]; then

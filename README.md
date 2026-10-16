@@ -6,7 +6,7 @@
 
 Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla. Packagé en application native (macOS · Windows · Linux).
 
-**Version 2026.10.17** — [Changelog](CHANGELOG.md)
+**Version 2026.10.18** — [Changelog](CHANGELOG.md)
 
 [![Aperçu de l’extension Gmail](store/screenshots/05-ocean.png)](store/index.html)
 [![Réglages de l’extension Gmail](store/screenshots/02-reglages.png)](store/index.html)
@@ -224,22 +224,28 @@ La première ouverture crée automatiquement les dossiers de données utilisateu
 ## Structure du projet
 
 ```
-├── src/desktop/              ← Application principale
-│   ├── main.py               ← Backend FastAPI
-│   ├── app.py                ← Lanceur pywebview (multi-plateforme)
-│   ├── index.html            ← Interface complète
-│   ├── config.example.json
-│   ├── build_macos.sh
-│   ├── build_linux.sh
-│   ├── build_windows.ps1
-│   └── icon.png
-├── releases/macos            ← Builds macOS (.app)
-├── releases/windows          ← Builds Windows (.exe)
-├── releases/linux            ← Builds Linux
-├── tools/mail-client/        ← Sombre Mail (client mail autonome)
-├── archives/                 ← Anciennes versions
-├── SimpleMail.command        ← Lanceur développement (macOS)
-└── README.md
+├── extension/                ← Extension Bench — extension Chrome canonique
+├── rust/                     ← Application desktop (Go ou Rust, à trancher)
+├── src/
+│   ├── desktop/              ← Backend FastAPI de l'app classique
+│   │   ├── main.py           ← Backend FastAPI
+│   │   ├── app.py            ← Lanceur pywebview (multi-plateforme)
+│   │   ├── index.html        ← Interface complète
+│   │   ├── config.example.json
+│   │   ├── build_macos.sh / build_linux.sh / build_windows.ps1
+│   │   └── icon.png
+│   ├── extension/            ← Source CSS historique (lue par extension/build.sh)
+│   ├── extension-simplify/   ← V2 Simplify (à merger dans Bench comme thème)
+│   └── mobile/               ← Tentative mobile
+├── tools/
+│   ├── lab/                  ← Tentatives Lab (atelier-actuel, focus-os)
+│   ├── mail-client/          ← Sombre Mail (client mail autonome)
+│   ├── pkmail / pkmail-ui    ← CLI et interface Next.js
+│   └── tester-server.py      ← Page « Choisir une version » (port 9900)
+├── releases/                 ← Builds macOS / Windows / Linux
+├── archives/                 ← Anciennes versions et benchmark (locale, hors git)
+├── store/                    ← Landing et kit média bilingue
+└── README.md / CHANGELOG.md
 ```
 
 ## Soutien

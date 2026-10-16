@@ -4,6 +4,12 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.18] - 2026-10-16
+
+### Changed
+- Refacto structurel (aucune suppression, uniquement des déplacements) : `src/extension-bench` devient `extension/` à la racine (version canonique), `src/lab` et `src/lab-focus-os-2026.08.01` deviennent `tools/lab/atelier-actuel` et `tools/lab/focus-os-2026.08.01` (montages de `main.py` et Tester mis à jour), `benchmark/` rejoint `archives/benchmark/` (hors git), et le scaffold `rust/` accueille l'application desktop à venir (Go ou Rust).
+- Arbres de structure des README FR/EN alignés sur le nouveau découpage.
+
 ## [2026.10.17] - 2026-10-16
 
 ### Fixed

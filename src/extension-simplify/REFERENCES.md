@@ -1,6 +1,6 @@
 # Comparaison Simplify
 
-Références consultées le 15 octobre 2026 : dix captures dans `../../benchmark/`, [simpl.fyi](https://simpl.fyi/) via EGO, archive locale `../../../simpli.zip` (Simplify Gmail 3.4.9).
+Références consultées le 15 octobre 2026 : dix captures dans `../../archives/benchmark/`, [simpl.fyi](https://simpl.fyi/) via EGO, archive locale `../../../simpli.zip` (Simplify Gmail 3.4.9).
 
 L’archive originale est extraite dans `../../Vendors/simplify-3.4.9/`, répertoire local ignoré par Git. Son CSS et son script documentent notamment les états de boîte vide, le menu des applications et le volet de lecture. Ce code propriétaire n’est pas intégré au paquet PK. Le dépôt historique [leggett/simplify](https://github.com/leggett/simplify) sert aujourd’hui au suivi des problèmes. L’historique local contient aussi les premiers styles PK dans `ext/gmail.css` (notamment `ab17fd6`), mais l’archive retrouvée à côté du projet est la référence complète.
 

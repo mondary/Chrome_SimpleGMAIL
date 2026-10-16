@@ -3,8 +3,8 @@
 Version **2026.10.17** · Licence MIT · [Confidentialité](PRIVACY.md)
 
 Une extension Chrome autonome qui applique une surcouche visuelle à **Gmail web**,
-inspirée des dix captures Simplify du dossier `../../benchmark/`.
-Ce dossier est indépendant de `../extension/` et de `../extension-bench/`.
+inspirée des dix captures Simplify du dossier `../../archives/benchmark/`.
+Ce dossier est indépendant de `../extension/` (source CSS historique, lue par `extension/build.sh`) et de `../../extension/` (Extension Bench, la version canonique).
 Aucun backend, compte supplémentaire, OAuth, compilation ou abonnement nécessaire.
 
 ## Installer ou actualiser

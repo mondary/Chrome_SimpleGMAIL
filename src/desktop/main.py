@@ -1619,18 +1619,17 @@ def index():
 
 
 # Lab V2 : prototypes de themes branches sur la meme API que l'app.
-# dev : src/lab (voisin de src/desktop) ; serveur : lab/ dans le dossier de l'app.
+# dev : tools/lab/<tentative> (racine du repo) ; serveur packagé : lab/ dans le dossier de l'app.
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 
-def _static_asset_dir(name: str) -> Path:
-    return next(
-        (directory for directory in (BASE_DIR / name, BASE_DIR.parent / name) if directory.is_dir()),
-        BASE_DIR / name,
-    )
+def _static_asset_dir(name: str, *repo_paths: str) -> Path:
+    root = BASE_DIR.parent.parent
+    candidates = [root / path for path in repo_paths] + [BASE_DIR / name, BASE_DIR.parent / name]
+    return next((directory for directory in candidates if directory.is_dir()), candidates[0])
 
 
-_lab_dir = _static_asset_dir("lab")
-_lab_focus_snapshot_dir = _static_asset_dir("lab-focus-os-2026.08.01")
+_lab_dir = _static_asset_dir("lab", "tools/lab/atelier-actuel")
+_lab_focus_snapshot_dir = _static_asset_dir("lab-focus-os-2026.08.01", "tools/lab/focus-os-2026.08.01")
 
 if _lab_dir.is_dir():
     app.mount("/lab", StaticFiles(directory=str(_lab_dir), html=True), name="lab")
