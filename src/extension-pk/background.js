@@ -2,10 +2,12 @@
 // Synchronise les enregistrements chrome.scripting avec l'état stocké,
 // puis recharge les onglets Gmail pour appliquer proprement.
 
-importScripts('data/manifest.js');
+importScripts('data/manifest.js', 'data/themes.js');
 
 const MATCH = ['https://mail.google.com/*'];
 const LAB_IDS = self.LAB_ITEMS.map((i) => i.id);
+const THEME_IDS = self.LAB_THEMES.map((t) => t.id);
+const ALL_IDS = [...LAB_IDS, ...THEME_IDS];
 
 function registrationFor(item) {
   const base = {
@@ -24,14 +26,31 @@ function registrationFor(item) {
   };
 }
 
+// Thème actif (radio du popup) : un seul enregistré à la fois.
+function themeRegistration(themeId) {
+  const theme = self.LAB_THEMES.find((t) => t.id === themeId);
+  if (!theme || !theme.css) return null;
+  const script = {
+    id: theme.id,
+    matches: MATCH,
+    persistAcrossSessions: false,
+    css: [theme.css],
+    runAt: 'document_start',
+  };
+  if (theme.js) script.js = theme.js;
+  return script;
+}
+
 async function syncRegistrations() {
-  const { enabled = {} } = await chrome.storage.local.get('enabled');
+  const { enabled = {}, theme = '' } = await chrome.storage.local.get(['enabled', 'theme']);
   const wanted = self.LAB_ITEMS
     .filter((i) => enabled[i.id] !== false)
     .map(registrationFor);
+  const themeScript = themeRegistration(theme);
+  if (themeScript) wanted.push(themeScript);
 
   const current = await chrome.scripting.getRegisteredContentScripts();
-  const currentLab = current.filter((c) => LAB_IDS.includes(c.id));
+  const currentLab = current.filter((c) => ALL_IDS.includes(c.id));
   const currentIds = new Set(currentLab.map((c) => c.id));
   const wantedIds = new Set(wanted.map((w) => w.id));
 
@@ -46,7 +65,7 @@ async function syncRegistrations() {
 
   const currentAfter = await chrome.scripting.getRegisteredContentScripts();
   const stillThere = new Set(
-    currentAfter.filter((c) => LAB_IDS.includes(c.id)).map((c) => c.id)
+    currentAfter.filter((c) => ALL_IDS.includes(c.id)).map((c) => c.id)
   );
   const toAdd = wanted.filter((w) => !stillThere.has(w.id));
   if (toAdd.length) {
@@ -56,7 +75,7 @@ async function syncRegistrations() {
       console.error('[lab] register échoué', e);
     }
   }
-  return { wanted: wanted.length, total: self.LAB_ITEMS.length };
+  return { wanted: wanted.length, total: self.LAB_ITEMS.length, theme: theme || 'pk' };
 }
 
 async function reloadGmailTabs() {

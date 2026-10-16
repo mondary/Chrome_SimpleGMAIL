@@ -6,7 +6,7 @@
 
 Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Packaged as native desktop app (macOS · Windows · Linux).
 
-**Version 2026.10.20** — [Changelog](CHANGELOG.md)
+**Version 2026.10.21** — [Changelog](CHANGELOG.md)
 
 [![Gmail extension preview](store/screenshots/05-ocean.png)](store/index.html)
 [![Gmail extension settings](store/screenshots/02-reglages.png)](store/index.html)
@@ -184,8 +184,8 @@ First run auto-creates the user data directory with a generic config template.
 │   │   ├── config.example.json
 │   │   ├── build_macos.sh / build_linux.sh / build_windows.ps1
 │   │   └── icon.png
-│   ├── extension/            ← SimpleMail v2026.08.01 (historical CSS source, read by extension-bench/build.sh)
-│   ├── extension-bench/      ← Extension Bench — canonical Chrome extension (PK Gmail Scripts Lab)
+│   ├── extension/            ← SimpleMail v2026.08.01 (historical CSS source, read by extension-pk/build.sh)
+│   ├── extension-pk/         ← PK Gmail Studio — canonical Chrome extension (PK & Simplify themes)
 │   ├── extension-simplify/   ← Simplify V2 (to merge into Bench as a theme)
 │   ├── mobile/               ← Mobile attempt (Capacitor)
 │   └── rust/                 ← Desktop app (Go or Rust, to be decided)

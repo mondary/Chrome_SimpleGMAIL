@@ -4,6 +4,16 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.21] - 2026-10-16
+
+### Added
+- **PK Gmail Studio** : système de thèmes dans l'extension canonique — nouvelle section « Thème » en radio dans le popup (`PK — thème Studio` par défaut, `Simplify`), enregistrement mutuellement exclusif via `chrome.scripting` (`data/themes.js`, thèmes sous `themes/<nom>/`).
+- Le thème Simplify embarque sa logique complète (`settings.js` + `content.js`, monde isolé, réglages par défaut recommandés) — paramétrable via le stockage `pkGmailStyle` ; l'exposition des réglages dans le popup est la suite prévue.
+
+### Changed
+- Renommage : `src/extension-bench/` → `src/extension-pk/`, produit « PK Gmail Studio » (ex « PK Gmail Scripts Lab ») — README FR/EN, Simplify et scaffold rust mis à jour.
+- Les APKs déplacés dans `archives/releases/` sortent de l'index git (alignement sur le changelog v2026.10.20).
+
 ## [2026.10.20] - 2026-10-16
 
 ### Changed

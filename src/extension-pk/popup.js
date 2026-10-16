@@ -1,6 +1,45 @@
-// PK Gmail Scripts Lab — popup
+// PK Gmail Studio — popup
 const listEl = document.getElementById('list');
 const countEl = document.getElementById('count');
+const themesEl = document.getElementById('themes');
+
+function renderThemes(active) {
+  if (!themesEl) return;
+  themesEl.innerHTML = '';
+  const h = document.createElement('div');
+  h.className = 'group';
+  h.textContent = '✦ Thème';
+  themesEl.appendChild(h);
+  const options = [{ id: '', label: 'PK — thème Studio', meta: 'Les tweaks du manifest, préconfigurés.' }]
+    .concat(self.LAB_THEMES.map((t) => ({ id: t.id, label: t.label, meta: t.description })));
+  for (const opt of options) {
+    const row = document.createElement('label');
+    row.className = 'theme-row' + (active === opt.id ? ' active' : '');
+    const input = document.createElement('input');
+    input.type = 'radio';
+    input.name = 'theme';
+    input.value = opt.id;
+    input.checked = active === opt.id;
+    input.addEventListener('change', () => setTheme(opt.id));
+    const box = document.createElement('div');
+    const name = document.createElement('div');
+    name.className = 'name';
+    name.textContent = opt.label;
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.textContent = opt.meta;
+    box.appendChild(name);
+    box.appendChild(meta);
+    row.appendChild(input);
+    row.appendChild(box);
+    themesEl.appendChild(row);
+  }
+}
+
+async function setTheme(id) {
+  await chrome.storage.local.set({ theme: id });
+  await chrome.runtime.sendMessage({ type: 'sync' });
+}
 
 function render(enabled, marginPct = 5) {
   listEl.innerHTML = '';
@@ -82,7 +121,8 @@ function updateCount(enabled) {
 }
 
 async function loadState() {
-  const { enabled = {}, marginPct = 5 } = await chrome.storage.local.get(['enabled', 'marginPct']);
+  const { enabled = {}, marginPct = 5, theme = '' } = await chrome.storage.local.get(['enabled', 'marginPct', 'theme']);
+  renderThemes(theme);
   render(enabled, marginPct);
 }
 

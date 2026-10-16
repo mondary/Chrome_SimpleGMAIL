@@ -174,3 +174,22 @@ footer {
   color: var(--accent);
 }
 
+
+/* Thèmes */
+#themes { padding: 10px 14px 2px; }
+#themes .group { padding: 0 0 6px; }
+.theme-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  cursor: pointer;
+}
+.theme-row:hover { border-color: var(--dim); }
+.theme-row.active { border-color: var(--accent); background: rgba(255, 92, 138, 0.08); }
+.theme-row input[type="radio"] { accent-color: var(--accent); margin-top: 2px; }
+.theme-row .name { font-weight: 600; font-size: 12px; }
+.theme-row .meta { font-size: 11px; color: var(--dim); margin-top: 2px; }
