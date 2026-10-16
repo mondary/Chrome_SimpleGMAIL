@@ -6,7 +6,7 @@
 
 Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Packaged as native desktop app (macOS · Windows · Linux).
 
-**Version 2026.10.18** — [Changelog](CHANGELOG.md)
+**Version 2026.10.19** — [Changelog](CHANGELOG.md)
 
 [![Gmail extension preview](store/screenshots/05-ocean.png)](store/index.html)
 [![Gmail extension settings](store/screenshots/02-reglages.png)](store/index.html)
@@ -177,7 +177,6 @@ First run auto-creates the user data directory with a generic config template.
 
 ```
 ├── extension/                ← Extension Bench — canonical Chrome extension
-├── rust/                     ← Desktop app (Go or Rust, to be decided)
 ├── src/
 │   ├── desktop/              ← FastAPI backend of the classic app
 │   │   ├── main.py           ← FastAPI backend
@@ -188,7 +187,8 @@ First run auto-creates the user data directory with a generic config template.
 │   │   └── icon.png
 │   ├── extension/            ← Historical CSS source (read by extension/build.sh)
 │   ├── extension-simplify/   ← Simplify V2 (to merge into Bench as a theme)
-│   └── mobile/               ← Mobile attempt
+│   ├── mobile/               ← Mobile attempt (Capacitor)
+│   └── rust/                 ← Desktop app (Go or Rust, to be decided)
 ├── tools/
 │   ├── lab/                  ← Lab attempts (atelier-actuel, focus-os)
 │   ├── mail-client/          ← Sombre Mail (standalone mail client)

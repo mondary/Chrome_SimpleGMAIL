@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.19] - 2026-10-16
+
+### Changed
+- Le scaffold de l'application desktop rejoint le motif par plateforme : `rust/` devient `src/rust/`, aux côtés de `src/desktop` et `src/mobile`.
+
 ## [2026.10.18] - 2026-10-16
 
 ### Changed
