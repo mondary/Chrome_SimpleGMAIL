@@ -367,8 +367,12 @@ html[data-pks="on"][data-pks-quiet="true"][data-pks-menu-native="true"] #gb [dat
   width: var(--pks-menu-width) !important; height: var(--pks-menu-height) !important;
   min-width: 0 !important; min-height: 0 !important; max-width: none !important;
   margin: 0 !important; padding: 0 !important; opacity: 0 !important;
-  visibility: visible !important; pointer-events: auto !important; cursor: pointer !important; z-index: 191 !important;
+  overflow: hidden !important; visibility: visible !important; pointer-events: auto !important;
+  cursor: pointer !important; z-index: 191 !important;
 }
+html[data-pks="on"][data-pks-quiet="true"][data-pks-menu-native="true"] #gb [data-pks-menu-native-key] :is(svg,img) { pointer-events: none !important; }
+html[data-pks="on"][data-pks-menu-native="true"] .w-asV { z-index: 190 !important; }
+html[data-pks="on"][data-pks-menu-native="true"] #gb { z-index: 190 !important; }
 html[data-pks="on"][data-pks-menu-native="true"] .bkK [data-pks-toolbar] { z-index: 190 !important; }
 html[data-pks="on"][data-pks-menu-native="true"] .bkK [data-pks-toolbar] :is(.apF,.apG,.d-Na-JG) { display: block !important; }
 html[data-pks="on"] #pks-menu-button,

@@ -4,6 +4,16 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.8] - 2026-10-16
+
+### Fixed
+- Le clic sur une option du menu compact arrive au contrôle Gmail natif. La roue des paramètres et le lanceur d’applications s’ouvrent en un clic, puis le menu compact se referme.
+- Les cibles invisibles restent alignées sur leur entrée lors du réagencement de l’en-tête, et les icônes Gmail débordantes ne capturent plus les clics d’autres options.
+- Les compteurs de messages non lus des catégories restent visibles, sans badge vide sur les catégories à zéro.
+
+### Changed
+- Paquet, captures et références de version actualisés.
+
 ## [2026.10.7] - 2026-10-16
 
 ### Changed
