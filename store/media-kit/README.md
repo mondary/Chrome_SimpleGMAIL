@@ -24,7 +24,8 @@ python3 store/media-kit/export-assets.py
 La commande de capture extrait les fixtures de la suite `src/extension-simplify/tests/browser.mjs`
 pour conserver la même source de messages. Elle ouvre un profil temporaire, route uniquement
 `https://mail.google.com/mail/*` vers cette fixture locale, charge l'extension avec le manifest
-courant, et capture inbox, popup, avant/après et composeur. Les frames sont générées dans
+courant, et capture inbox, popup, avant/après, composeur, fonds, boîte vide, menu et lecture.
+Utiliser `PK_GIF_FRAMES=0` pour ne régénérer que les captures statiques. Les frames sont générées dans
 `media-kit/.frames/`, répertoire local ignoré par Git, prêt pour l'export.
 
 `export-assets.py` compose les images 1544 × 500 et 1200 × 630 à partir de captures locales et
@@ -35,6 +36,7 @@ captures ; la carte et la bannière sont des compositions éditoriales.
 ## Résultats
 
 - `../screenshots/01-inbox.png`, `02-reglages.png`, `03-avant.png`, `04-compose.png`
+- `../screenshots/05-ocean.png`, `06-boite-vide.png`, `07-menu.png`, `08-nuit.png`, `09-lecture.png`
 - `../assets/banner-1544x500.png`, `card-1200x630.png`
 - `../gifs/demo-large.gif`, `demo-compact.gif`
 - `../videos/demo.mp4`

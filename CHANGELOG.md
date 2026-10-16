@@ -4,6 +4,17 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.6] - 2026-10-16
+
+### Changed
+- Simplify Style : cartes photo arrondies et contraste des commandes sur le fond nocturne.
+- Documentation FR/EN, confidentialité, paquet et landing synchronisés ; captures fictives renouvelées pour les fonds, la boîte vide, le menu et la lecture.
+- Tests complétés à partir de Gmail réel : couche de fond fixe, activation du volet, largeur des séparateurs, recherche et synchronisation des préférences.
+
+### Fixed
+- Icônes de l’extension ajoutées au suivi Git malgré l’exclusion globale du dossier `icons`, pour rendre le chargement depuis un clone reproductible.
+- Références et crédits inclus dans le ZIP ; localisation de la landing conservée après remplacement de la démonstration ancienne par les nouvelles captures.
+
 ### [2026.10.5] - 2026-10-16
 
 #### Changed

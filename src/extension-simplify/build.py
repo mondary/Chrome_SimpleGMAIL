@@ -10,7 +10,7 @@ project_license = root.parent.parent / "LICENSE"
 store = project_license.parent / "store"
 manifest = json.loads((root / "manifest.json").read_text())
 runtime = ["manifest.json", "gmail.css", "settings.js", "content.js",
-           "popup.html", "popup.css", "popup.js", "README.md", "PRIVACY.md"]
+           "popup.html", "popup.css", "popup.js", "README.md", "PRIVACY.md", "REFERENCES.md"]
 runtime += [f"icons/{size}.png" for size in (16, 32, 48, 128)]
 runtime += ["backgrounds/ocean.jpg", "backgrounds/night.jpg", "backgrounds/CREDITS.md"]
 for name in runtime:

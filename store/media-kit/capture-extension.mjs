@@ -74,13 +74,53 @@ try {
   await settings.setViewportSize({ width: 352, height: 640 });
   await settings.goto(`chrome-extension://${extensionId}/popup.html`);
   await settings.waitForFunction(() => !document.querySelector("#enabled")?.disabled);
-  console.log("popupSettings", JSON.stringify(await settings.evaluate(() => ({ enabled: document.querySelector("#enabled").checked, quietHeader: document.querySelector("#quietHeader").checked, hideAddons: document.querySelector("#hideAddons").checked, floatingCompose: document.querySelector("#floatingCompose").checked }))));
   await settings.screenshot({ path: path.join(media, "screenshots/02-reglages.png"), fullPage: true });
 
   await page.locator("#pks-compose").click();
   await page.waitForSelector('.Hd[role="dialog"]');
   await page.screenshot({ path: path.join(media, "screenshots/04-compose.png") });
   await page.getByRole("button", { name: "Fermer", exact: true }).click();
+
+  await settings.locator("#background").selectOption("ocean");
+  await page.waitForFunction(() => document.documentElement.dataset.pksBackground === "ocean");
+  await page.locator("#pks-background-layer").evaluate(el => el.decode());
+  await page.screenshot({ path: path.join(media, "screenshots/05-ocean.png") });
+  await page.evaluate(() => {
+    window.demoRows = [...document.querySelectorAll(".zA")]; window.demoRows.forEach(el => el.remove());
+    const empty = document.createElement("div"); empty.className = "TC"; empty.textContent = "Aucun message"; document.querySelector("#list").append(empty);
+  });
+  await page.waitForFunction(() => document.documentElement.dataset.pksEmpty === "true");
+  await page.screenshot({ path: path.join(media, "screenshots/06-boite-vide.png") });
+  await page.evaluate(() => { document.querySelector(".TC").remove(); document.querySelector("table.F tbody").append(...window.demoRows); });
+  await page.waitForFunction(() => document.documentElement.dataset.pksEmpty === "false");
+  await page.evaluate(() => {
+    for (const [cls,label] of [["FH","Paramètres"],["demo-apps","Applications Google"],["demo-help","Assistance"]]) {
+      const button = document.createElement("button"); button.className = cls; button.setAttribute("aria-label",label); document.querySelector("#gb").append(button);
+    }
+  });
+  await page.locator("#pks-menu-button").click();
+  await page.screenshot({ path: path.join(media, "screenshots/07-menu.png") });
+  await page.keyboard.press("Escape");
+  await page.evaluate(() => document.activeElement?.blur());
+  await settings.locator("#background").selectOption("night");
+  await page.waitForFunction(() => document.documentElement.dataset.pksBackground === "night");
+  await page.locator("#pks-background-layer").evaluate(el => el.decode());
+  await page.screenshot({ path: path.join(media, "screenshots/08-nuit.png") });
+  await settings.locator("#background").selectOption("ocean");
+  const reader = await context.newPage();
+  await reader.goto("https://mail.google.com/mail/u/0/#inbox/demo");
+  await reader.waitForSelector("#pks-menu-button");
+  await reader.evaluate(() => {
+    document.querySelector("#list").hidden = true;
+    const main = document.createElement("main"); main.setAttribute("role","main"); main.className = "reading";
+    main.innerHTML = '<div class="G-atb"><button aria-label="Retour">←</button><button aria-label="Archiver">▣</button><button aria-label="Supprimer">⌫</button><button aria-label="Marquer comme non lu">✉</button><button aria-label="Mettre en attente">◷</button><button aria-label="Plus">⋮</button></div><div class="ha"><h2 class="hP">Les dernières maquettes</h2></div><p style="margin:36px 0">Camille &lt;camille@example.com&gt;<br><small>À moi · 10:42</small></p><article style="font:16px/1.8 Georgia,serif;color:#444"><p>Bonjour,</p><p>La nouvelle version est prête pour notre échange. Les marges sont plus généreuses et chaque élément retrouve sa place.</p><p>Je vous propose de regarder les deux pistes demain matin, autour d’un café.</p><p>À très vite,<br>Camille</p></article><button style="background:white;border:1px solid #ddd;border-radius:20px;padding:10px 20px;margin-top:24px">↩ Répondre</button>';
+    document.querySelector(".aeF").append(main);
+  });
+  await reader.waitForFunction(() => document.documentElement.dataset.pksView === "reading");
+  await reader.locator("#pks-background-layer").evaluate(el => el.decode());
+  await reader.screenshot({ path: path.join(media, "screenshots/09-lecture.png") });
+  await reader.close();
+  await settings.locator("#background").selectOption("native");
 
   const views = await page.evaluate(() => Object.fromEntries(["[data-ogmb]", "input[name='q']", ".zA .T-Jo", ".zA .T-KT", "#pks-compose"].map((selector, i) => {
     const el = document.querySelector(selector); const r = el.getBoundingClientRect();

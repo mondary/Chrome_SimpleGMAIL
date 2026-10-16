@@ -331,6 +331,8 @@ html[data-pks="on"] .bkK [role="main"] { padding-top: 38px !important; backgroun
 html[data-pks="on"] .bkK :is(.UI,.Nr,.Nu,.aDP,.aDM,.ae4,.Cp,.iY,.aia,.apa) { background-color: transparent !important; }
 html[data-pks="on"] .bkK :is(.F,.aKk,.aKh) { background: var(--pks-paper) !important; }
 html[data-pks="on"][data-pks-photo="true"] .bkK :is(.F,.aKk,.aKh) { background: rgba(255,255,255,.96) !important; }
+html[data-pks="on"][data-pks-photo="true"] .bkK .aKk { border-radius: 9px 9px 0 0; overflow: hidden; }
+html[data-pks="on"][data-pks-photo="true"] .bkK .F { border-radius: 0 0 9px 9px; overflow: hidden; }
 html[data-pks="on"][data-pks-photo="true"] .bkK .Cp { border-radius: 9px !important; overflow: hidden; }
 html[data-pks="on"][data-pks-photo="true"] .bkK .zA:not(:hover):not(.x7):not(.zE) { background: rgba(255,255,255,.96) !important; }
 html[data-pks="on"] #gb { position: relative; background: transparent !important; border-bottom-color: #80868b24 !important; }
@@ -469,3 +471,11 @@ html[data-pks="on"][data-pks-photo="false"] .wl { background-color: #fff !import
 html[data-pks="on"][data-pks-native-control="pane"] .bkK [data-pks-toolbar] .apF,
 html[data-pks="on"][data-pks-native-control="paneOptions"] .bkK [data-pks-toolbar] .apG,
 html[data-pks="on"][data-pks-native-control="input"] .bkK [data-pks-toolbar] .d-Na-JG { display: inline-block !important; }
+/* Keep controls legible over the bundled night photograph. */
+html[data-pks="on"][data-pks-background="night"] :is(#pks-menu-button,#pks-search-button),
+html[data-pks="on"][data-pks-background="night"] #gb [data-ogmb],
+html[data-pks="on"][data-pks-background="night"] [data-pks-toolbar] > button { color: #fff !important; }
+html[data-pks="on"][data-pks-background="night"] #gb [data-ogmb] svg,
+html[data-pks="on"][data-pks-background="night"] [data-pks-toolbar] :is(.asa,.T-Jo) { filter: brightness(0) invert(1); }
+html[data-pks="on"][data-pks-background="night"] #aso_search_form_anchor { background: #ffffffbd !important; }
+html[data-pks="on"][data-pks-background="night"][data-pks-selected="false"] .bkK [data-pks-toolbar] { opacity: .75; }
