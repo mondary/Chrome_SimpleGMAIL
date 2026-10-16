@@ -4,6 +4,13 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.7] - 2026-10-16
+
+### Changed
+- Les compteurs Gmail de messages non lus restent visibles sur les onglets de catégories et sont plus lisibles dans la liste.
+- Les entrées du menu compact activent directement les contrôles natifs Gmail par clic, au lieu de faire réapparaître leurs icônes dans l’en-tête.
+- Captures de démonstration et paquet Chrome renouvelés.
+
 ## [2026.10.6] - 2026-10-16
 
 ### Changed

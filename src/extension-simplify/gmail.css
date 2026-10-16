@@ -173,6 +173,12 @@ html[data-pks="on"] .aAy :is(.aKp, .aKo, .aDG, .aKv, .aKn, .aKs) { display: none
 html[data-pks="on"] .aAy::before,
 html[data-pks="on"] .aAy::after { display: none !important; }
 html[data-pks="on"] .aAy .aKw { padding-inline: 16px !important; }
+/* Keep Gmail's unread counts beside category names. */
+html[data-pks="on"] .aAy .aKx { display: flex !important; align-items: center !important; gap: 6px; top: 0 !important; }
+html[data-pks="on"] .aAy .aDG { display: inline-flex !important; align-items: center; order: 2; margin: 0 !important; padding: 2px 6px !important; min-height: 17px; border-radius: 10px; background: #eef0f2 !important; color: #5f6368 !important; font: 500 10px/1 Roboto,Arial,sans-serif !important; white-space: nowrap; }
+html[data-pks="on"] .aAy .aDG:empty { display: none !important; }
+html[data-pks="on"] .aAy[aria-selected="true"] .aDG { background: #fce8e6 !important; color: #b3261e !important; }
+html[data-pks="on"] .bkK .zA.zE :is(.yW,.bog,.bqe,.xW) { color: #202124 !important; font-weight: 700 !important; }
 
 /* Native rows keep all their semantics, handlers and selected/unread states. */
 html[data-pks="on"] .bkK .zA {
@@ -354,6 +360,17 @@ html[data-pks="on"][data-pks-native-control="gemini"] #gb [data-pks-utility="gem
 html[data-pks="on"][data-pks-native-control="availability"] #gb [data-pks-utility="availability"] {
   display: flex !important; position: fixed !important; left: calc(var(--pks-account-left) - 48px) !important; top: 8px !important; z-index: 130;
 }
+/* Invisible native Gmail hit targets sit on top of their compact-menu labels. */
+html[data-pks="on"][data-pks-quiet="true"][data-pks-menu-native="true"] #gb [data-pks-menu-native-key] {
+  display: block !important; position: fixed !important; inset: auto !important;
+  left: var(--pks-menu-left) !important; top: var(--pks-menu-top) !important;
+  width: var(--pks-menu-width) !important; height: var(--pks-menu-height) !important;
+  min-width: 0 !important; min-height: 0 !important; max-width: none !important;
+  margin: 0 !important; padding: 0 !important; opacity: 0 !important;
+  visibility: visible !important; pointer-events: auto !important; cursor: pointer !important; z-index: 191 !important;
+}
+html[data-pks="on"][data-pks-menu-native="true"] .bkK [data-pks-toolbar] { z-index: 190 !important; }
+html[data-pks="on"][data-pks-menu-native="true"] .bkK [data-pks-toolbar] :is(.apF,.apG,.d-Na-JG) { display: block !important; }
 html[data-pks="on"] #pks-menu-button,
 html[data-pks="on"] #pks-search-button {
   position: fixed; top: calc((var(--pks-header-height) - 40px)/2); width: 36px; height: 40px;
