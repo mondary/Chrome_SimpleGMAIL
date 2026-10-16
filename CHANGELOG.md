@@ -4,6 +4,20 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.27] - 2026-10-16
+
+### Fixed
+- Classique : le menu latéral passe en **blanc** (filet de séparation, texte gris, dossier actif à barre ambre) — la sidebar noire alourdissait l'ensemble.
+- Panneau : les 28 réglages Studio réapparaissent contextuellement — auto-réparation des états hérités (tweaks actifs sans thème → recontextualisés sous Studio) ; plus de liste orpheline.
+
+### Changed
+- Thèmes renommés en famille harmonieuse : **Natif · Studio · Simplify · Classique**. Extension en v2026.10.33.
+
+## [2026.10.26] - 2026-10-16
+
+### Changed
+- Retrait des six premières moutures de thèmes (OMP Terminal, Focus OS, Label Canvas, Paper Reader, K7 Médiathèque, K7 Clair) : de simples changements de couleurs, pas des layouts. Le panneau garde Gmail normal, PK Studio, Simplify (avec réglages) et SimpleMail Classique ; les suivantes seront de vraies transpositions de layout, une par une. Extension en v2026.10.32.
+
 ## [2026.10.25] - 2026-10-16
 
 ### Added

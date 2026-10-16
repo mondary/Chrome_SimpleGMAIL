@@ -219,8 +219,14 @@ function render(enabled, marginPct, theme, storedStyle) {
 }
 
 async function loadState() {
-  const { enabled = {}, marginPct = 5, theme = '', pkGmailStyle = {} } =
+  let { enabled = {}, marginPct = 5, theme = '', pkGmailStyle = {} } =
     await chrome.storage.local.get(['enabled', 'marginPct', 'theme', 'pkGmailStyle']);
+  // Auto-réparation : des tweaks actifs sans thème sélectionné → contexte Studio.
+  const known = self.LAB_THEMES.map((t) => t.id);
+  if (!known.includes(theme) && self.LAB_ITEMS.some((i) => enabled[i.id] !== false)) {
+    theme = 'theme-pk';
+    await chrome.storage.local.set({ theme });
+  }
   renderThemes(theme);
   render(enabled, marginPct, theme, pkGmailStyle);
 }

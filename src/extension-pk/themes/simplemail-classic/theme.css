@@ -2,7 +2,7 @@
    sidebar sombre avec compteurs, salutation, avatars initiales, groupes de dates,
    onglets et panneau Google masqués, rédaction en bouton flottant. */
 
-:root { --smc-side: #171717; --smc-ink: #202124; --smc-dim: #5f6368; --smc-faint: #9aa0a6; --smc-accent: #ea580c; }
+:root { --smc-side: #ffffff; --smc-ink: #202124; --smc-dim: #5f6368; --smc-faint: #9aa0a6; --smc-accent: #ea580c; }
 
 html, body { background: #fff !important; }
 .w-asV, .bkL, .bkK, .AO, .aeF, .Tm { background: #fff !important; background-image: none !important; }
@@ -19,12 +19,12 @@ html, body { background: #fff !important; }
   height: 44px !important;
 }
 
-/* ---- Navigation sombre façon V1 ---- */
-.aeN, .aqn.aIH, .wT, .aeN .bkL { background: var(--smc-side) !important; }
-.TO .n0, .TO .nU .n0 { color: #a4a4ab !important; font-size: 12.5px !important; }
-.TO .n0:hover { color: #fff !important; }
-.nZ .n0 { color: #fff !important; font-weight: 600 !important; box-shadow: inset 2px 0 0 #f59e0b !important; }
-.bsU, .un { color: #f59e0b !important; font-family: ui-monospace, Menlo, monospace !important; font-size: 11px !important; }
+/* ---- Navigation claire, séparée par un filet ---- */
+.aeN, .aqn.aIH, .wT, .aeN .bkL { background: var(--smc-side) !important; box-shadow: inset -1px 0 0 #ececec; }
+.TO .n0, .TO .nU .n0 { color: var(--smc-dim) !important; font-size: 12.5px !important; }
+.TO .n0:hover { color: var(--smc-ink) !important; }
+.nZ .n0 { color: var(--smc-ink) !important; font-weight: 600 !important; box-shadow: inset 2px 0 0 #f59e0b !important; }
+.bsU, .un { color: #b45309 !important; font-family: ui-monospace, Menlo, monospace !important; font-size: 11px !important; }
 .aeN .TN { min-height: 30px !important; }
 
 /* ---- Épuration : pas d'onglets, pas de panneau Google ---- */

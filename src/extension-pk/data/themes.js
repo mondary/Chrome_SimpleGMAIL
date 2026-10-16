@@ -4,25 +4,25 @@
 self.LAB_THEMES = [
   {
     id: '',
-    label: 'Gmail normal',
-    description: 'Aucun style appliqué.',
+    label: 'Natif',
+    description: 'Gmail sans retouche.',
   },
   {
     id: 'theme-pk',
-    label: 'PK — thème Studio',
-    description: 'Presets validés : les tweaks ci-dessous, cochables un à un.',
+    label: 'Studio',
+    description: 'Le look maison : 28 réglages cochables, presets validés.',
   },
   {
     id: 'theme-simplify',
     label: 'Simplify',
-    description: 'Surcouche V2 : en-tête à actions, recherche loupe, boîte vide.',
+    description: 'Surcouche épurée : en-tête, recherche loupe, fonds, boîte vide.',
     css: 'themes/simplify/theme.css',
     js: ['themes/simplify/settings.js', 'themes/simplify/content.js'],
   },
   {
     id: 'theme-simplemail-classic',
-    label: 'SimpleMail Classique',
-    description: 'Layout V1 : sidebar sombre, salutation, avatars initiales, groupes de dates.',
+    label: 'Classique',
+    description: 'La V1 : salutation, avatars initiales, groupes de dates.',
     css: 'themes/simplemail-classic/theme.css',
     js: ['themes/simplemail-classic/theme.js'],
   },
