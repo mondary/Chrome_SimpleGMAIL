@@ -26,49 +26,13 @@ self.LAB_THEMES = [
     css: 'themes/simplemail-classic/theme.css',
     js: ['themes/simplemail-classic/theme.js'],
   },
-  {
-    id: 'theme-omp-terminal',
-    label: 'OMP Terminal',
-    description: 'Noir & rose, hairlines, accents monospace.',
-    css: 'themes/omp-terminal/theme.css',
-  },
-  {
-    id: 'theme-focus-os',
-    label: 'Focus OS',
-    description: 'Liste compacte mono, accent orange (fusion des deux Focus OS).',
-    css: 'themes/focus-os/theme.css',
-  },
-  {
-    id: 'theme-label-canvas',
-    label: 'Label Canvas',
-    description: 'Fond toile, libellés en blocs verts, lignes façon cartes.',
-    css: 'themes/label-canvas/theme.css',
-  },
-  {
-    id: 'theme-paper-reader',
-    label: 'Paper Reader',
-    description: 'Lecture éditoriale : serif Georgia sur papier chaud.',
-    css: 'themes/paper-reader/theme.css',
-  },
-  {
-    id: 'theme-k7-dark',
-    label: 'K7 Médiathèque',
-    description: 'Bibliothèque sombre, lignes façon jaquettes, accent cuivre.',
-    css: 'themes/k7-dark/theme.css',
-  },
-  {
-    id: 'theme-k7-light',
-    label: 'K7 Clair',
-    description: 'Cartes claires sur fond chaud, accent cuivre clair.',
-    css: 'themes/k7-light/theme.css',
-  },
 ];
 
 // Tweaks « bonus », jamais actifs dans les presets du thème PK : opt-in uniquement.
 self.PRESET_OFF = ['js-custom-tabs'];
 
-// Thèmes du Lab en attente de transposition vers le DOM de Gmail.
-// (Les 8 thèmes du Lab ont été transposés en 6 — doublons fusionnés.)
+// (OMP Terminal, Focus OS, Label Canvas, Paper Reader, K7 : premières moutures retirées —
+// à retravailler en vrais layouts, une par une.)
 self.LAB_THEMES_UPCOMING = [];
 
 // Réglages par thème, affichés dans la section Scripts du panneau.
