@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PK Gmail Studio",
-  "version": "2026.10.28",
+  "version": "2026.10.29",
   "description": "Studio de thèmes pour Gmail : PK, Simplify et les thèmes du Lab.",
   "permissions": ["storage", "scripting", "sidePanel"],
   "host_permissions": ["https://mail.google.com/*"],

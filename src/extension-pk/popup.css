@@ -17,6 +17,7 @@ html, body { height: 100%; }
 body {
   width: 100%;
   min-width: 280px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: var(--panel);
@@ -25,14 +26,11 @@ body {
 }
 
 header {
-  position: sticky;
-  top: 0;
-  z-index: 5;
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   gap: 8px;
-  padding: 14px 16px;
+  padding: 14px 16px 10px;
   background: var(--panel);
   border-bottom: 1px solid var(--line);
 }
@@ -42,16 +40,40 @@ header {
   align-items: center;
   gap: 8px;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 15px;
   letter-spacing: 0.2px;
 }
+
+header .sub { font-size: 11px; color: var(--faint); }
 
 .dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--accent);
+  flex: 0 0 auto;
 }
+
+/* Barre d'outils de la section Scripts */
+.list-tools {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+.list-title {
+  font: 600 11px/1.2 ui-monospace, "SF Mono", Menlo, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--faint);
+}
+.list-title #count { color: var(--dim); }
 
 .actions { display: flex; gap: 6px; }
 

@@ -1,0 +1,50 @@
+/* K7 Médiathèque — bibliothèque média sombre, lignes façon jaquettes, accent cuivre.
+   Fusion de K7 Media Shelf et K7 Preview Deck du Lab. */
+
+:root { color-scheme: dark; }
+
+html, body, .w-asV, .bkL, .bkK, .aeF, .Tm, .aUx {
+  background: #0c1018 !important;
+  background-image: none !important;
+}
+.bkK > .nH { background: transparent !important; }
+
+/* Navigation */
+.aeN, .aqn.aIH, .wT { background: #0f131c !important; }
+.TO .n0 { color: #a49c93 !important; }
+.nZ .n0 { color: #cc7a3e !important; font-weight: 600 !important; }
+
+/* Lignes façon étagère */
+.zA {
+  background: #10151f !important;
+  border-radius: 10px !important;
+  margin: 4px 8px !important;
+  height: 46px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+}
+.zA:hover { background: #151b28 !important; }
+.zA.x7 { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), inset 2px 0 0 #cc7a3e !important; }
+.zA .yW, .zA .yP { color: #cfc6bd !important; }
+.zA .y2 { color: #767068 !important; }
+.zA .xW { color: #645d54 !important; }
+.zE .bog { color: #fff !important; }
+.yO .bog { color: #d9d2ca !important; }
+
+/* Accent cuivre */
+.aRz { background: transparent !important; color: #7d766d !important; }
+.aRz.J-KU-KO { color: #cc7a3e !important; }
+.z0 .T-I-KE { background: #cc7a3e !important; color: #1a0f06 !important; border-radius: 8px !important; }
+
+/* Recherche */
+#aso_search_form_anchor { background: #10151f !important; border-radius: 10px !important; }
+#aso_search_form_anchor input { color: #d9d2ca !important; }
+
+/* Lecture */
+[role="main"] { background: #0c1018 !important; }
+.hP { color: #f0e9e2 !important; }
+.a3s { color: #cfc6bd !important; line-height: 1.6 !important; }
+.gE, .hx .gD { color: #e5ddd4 !important; }
+a:link, .aju { color: #d99a5b !important; }
+
+/* Barre supérieure */
+#gb { background: transparent !important; border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important; }

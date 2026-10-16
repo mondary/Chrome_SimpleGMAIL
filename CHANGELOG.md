@@ -4,6 +4,14 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.24] - 2026-10-16
+
+### Added
+- **Les 8 thèmes du Lab transposés en 6 thèmes Gmail réels** (doublons fusionnés) : OMP Terminal (noir & rose), Focus OS (compact mono orange — fusion des deux Focus OS), Label Canvas (toile + libellés verts en cartes), Paper Reader (serif éditoriale sur papier chaud), K7 Médiathèque (sombre cuivre — fusion Media Shelf + Preview Deck) et K7 Clair. Chacun vit dans `themes/<nom>/theme.css`, sélectionnable depuis le panneau.
+
+### Changed
+- Les commandes Tout activer / Tout désactiver déménagent de l'en-tête du panneau vers la section Scripts (elles ne concernent que les tweaks). Extension en v2026.10.29.
+
 ## [2026.10.23] - 2026-10-16
 
 ### Changed
