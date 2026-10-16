@@ -28,7 +28,7 @@ visuelle aux onglets `mail.google.com`, sans backend ni compte supplémentaire.
 ## Construire les sources générées
 
 `tweaks/`, `scripts/` et `data/manifest.js` sont régénérés depuis la source CSS
-historique (`src/extension/src/gmail.css`) et les snippets ScriptCat :
+absorbée (`sources/gmail.css`, ex-extension SimpleMail) et les snippets ScriptCat :
 
 ```sh
 cd src/extension-pk

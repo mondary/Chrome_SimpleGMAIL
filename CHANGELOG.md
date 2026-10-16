@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.41] - 2026-10-16
+
+### Changed
+- **Arborescence — étape 3** : la source CSS des tweaks est absorbée dans `src/extension-pk/sources/gmail.css` — le build ne dépend plus de l'ancienne extension, dont le dossier gelé quitte le dépôt (miré intégralement dans `archives/versions/01-extension-simplemail-2026.08.01/`). L'icône de l'extension se synchronise désormais depuis l'icône de la racine, et les tweaks CSS du panneau reprennent le compteur de version unique (2026.10.25 → 2026.10.41).
+
 ## [2026.10.40] - 2026-10-16
 
 ### Changed

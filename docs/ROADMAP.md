@@ -46,6 +46,5 @@ sont retirées — `src/mobile/` porte la tentative Android.)
       lors du prochain passage là-bas.
 - [ ] `store/assets/` : ne garder que le ZIP courant ; les versions antérieures
       partent dans `archives/releases/`.
-- [ ] `src/extension/` : absorbée à terme dans `src/extension-pk/sources/` une
-      fois le miroir `archives/versions/01-extension-simplemail-2026.08.01/`
-      vérifié.
+- [x] `src/extension/` : absorbée dans `src/extension-pk/sources/` — le dossier
+      gelé quitte le git, miré dans `archives/versions/01-extension-simplemail-2026.08.01/`.

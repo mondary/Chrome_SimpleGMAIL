@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # PK Gmail Scripts Lab — build
 # Régénère tweaks/, scripts/ et data/manifest.js depuis :
-#   - gmail.css (source de vérité CSS)  : src/extension/src/gmail.css
+#   - gmail.css (source de vérité CSS)  : sources/gmail.css (absorbé de l'ancienne extension SimpleMail)
 #   - snippets ScriptCat (scripts JS)   : vendors/scriptcat-snippets (symlink)
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -14,7 +14,7 @@ if [ ! -d "$SNIPPETS" ]; then
   exit 1
 fi
 
-python3 - "$SG_ROOT/src/extension/src/gmail.css" "$SNIPPETS" << 'PYEOF'
+python3 - "$SG_ROOT/src/extension-pk/sources/gmail.css" "$SNIPPETS" << 'PYEOF'
 import re, sys, os
 
 gmail_css, snippets = sys.argv[1], sys.argv[2]
@@ -22,7 +22,7 @@ os.makedirs("tweaks", exist_ok=True)
 os.makedirs("scripts", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 
-BENCH_VERSION = "2026.10.25"
+BENCH_VERSION = "2026.10.41"
 
 # ---- 1. Découpage gmail.css en tweaks
 text = open(gmail_css, encoding="utf-8").read()
@@ -133,7 +133,7 @@ with open("data/manifest.js", "w", encoding="utf-8") as f:
 print(f"  ✓ data/manifest.js ({len(ordered)} items, v{BENCH_VERSION})")
 PYEOF
 
-# ---- 5. Icône
-cp -f "$SG_ROOT/src/extension/src/icon.png" icon.png 2>/dev/null || true
+# ---- 5. Icône : synchronisée depuis l'icône de l'app à la racine du dépôt
+cp -f "$SG_ROOT/icon.png" icon.png 2>/dev/null || true
 
 echo "Build terminé."
