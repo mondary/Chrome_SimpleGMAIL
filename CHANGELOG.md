@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.16] - 2026-10-16
+
+### Changed
+- Dédoublonnage réel des versions archivées : le snapshot `src/lab-atelier-2026.08.07` n'est plus servi ni suivi (montage et test de fumée retirés), et la branche `archive/v1.0.4` est supprimée du dépôt — son état reste atteignable depuis l'historique de `main`.
+
 ## [2026.10.15] - 2026-10-16
 
 ### Fixed
