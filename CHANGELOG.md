@@ -4,6 +4,12 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.12] - 2026-10-16
+
+### Added
+- « Sombre Mail » (`tools/mail-client/`) : client mail autonome FastAPI + IMAP/SMTP promu depuis les archives locales — multi-comptes, envoi réel, pièces jointes, temps réel IDLE, mots de passe par variables d'environnement et mode démo `MAIL_CLIENT_DEMO=1`.
+- Documentation du composant (`tools/mail-client/README.md`) et sections correspondantes dans les README FR/EN.
+
 ## [2026.10.11] - 2026-10-16
 
 ### Fixed

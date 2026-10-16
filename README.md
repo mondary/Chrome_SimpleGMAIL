@@ -6,7 +6,7 @@
 
 Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla. Packagé en application native (macOS · Windows · Linux).
 
-**Version 2026.10.11** — [Changelog](CHANGELOG.md)
+**Version 2026.10.12** — [Changelog](CHANGELOG.md)
 
 [![Aperçu de l’extension Gmail](store/screenshots/05-ocean.png)](store/index.html)
 [![Réglages de l’extension Gmail](store/screenshots/02-reglages.png)](store/index.html)
@@ -41,6 +41,10 @@ Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla
 ### Extension Chrome — Gmail simplifié
 - **PK Gmail — Simplify Style** : surcouche CSS indépendante pour Gmail, avec fonds photo, état de boîte vide, menu compact près du compte, actions natives réunies dans l’en-tête, séparateurs par date et volet de lecture. Densité et largeur réglables, bouton de rédaction flottant.
 - Guide d’installation et de confidentialité : [`src/extension-simplify/`](src/extension-simplify/README.md). L’extension n’est pas publiée sur le Chrome Web Store.
+
+### Sombre Mail — client mail autonome (`tools/mail-client/`)
+- **Interface mail indépendante** : serveur FastAPI local relié directement à vos boîtes IMAP/SMTP — multi-comptes, lecture, envoi réel, favoris, suppression, pièces jointes et temps réel (IMAP IDLE). Gmail n'est jamais ouvert, là où l'extension Chrome se contente de l'habiller.
+- Mots de passe par variables d'environnement (`start.sh`), mode démo intégré (`MAIL_CLIENT_DEMO=1`) : aucune identification requise pour l'essayer. Documentation : [`tools/mail-client/`](tools/mail-client/README.md).
 
 ### Interface classique — V1
 - Interface blanche immersive sans cartes, responsive du mobile aux grands écrans
@@ -232,6 +236,7 @@ La première ouverture crée automatiquement les dossiers de données utilisateu
 ├── releases/macos            ← Builds macOS (.app)
 ├── releases/windows          ← Builds Windows (.exe)
 ├── releases/linux            ← Builds Linux
+├── tools/mail-client/        ← Sombre Mail (client mail autonome)
 ├── archives/                 ← Anciennes versions
 ├── SimpleMail.command        ← Lanceur développement (macOS)
 └── README.md
