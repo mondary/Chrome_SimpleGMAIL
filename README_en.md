@@ -6,7 +6,7 @@
 
 Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Packaged as native desktop app (macOS · Windows · Linux).
 
-**Version 2026.10.36** — [Changelog](CHANGELOG.md)
+**Version 2026.10.37** — [Changelog](CHANGELOG.md)
 
 [![Gmail extension preview](store/screenshots/05-ocean.png)](store/index.html)
 [![Gmail extension settings](store/screenshots/02-reglages.png)](store/index.html)
@@ -39,7 +39,8 @@ Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Package
 - **Local PWA + Chrome**: installable from `127.0.0.1:8000`, permission-free extension; Android is paused
 
 ### Chrome extension — PK Gmail Studio
-- **PK Gmail Studio**: the canonical extension, with a side panel (drawer) and **themes** — *Gmail normal*, *PK — Studio theme* (validated presets, 28 toggleable tweaks) and *Simplify* (the V2 layer: photo backgrounds, inbox zero, compact menu next to the account, native Gmail actions in their own toolbar, date separators, reading pane). The Lab themes (OMP Terminal, Focus OS, K7…) are listed as pending transposition.
+- **PK Gmail Studio**: the canonical extension, with a side panel and five themes — *Natif*, *Studio* (28 toggleable tweaks), *Simplify* (photo backgrounds, inbox zero and reading pane), *Classique* and **Focus OS** (900 px monospace list, category icons, 35 px rows, black selection and keyboard shortcuts). The other Lab concepts still await transposition.
+- **Focus OS**: [guide and activation](src/extension-pk/themes/focus-os/README.md) · [screenshot with fictional messages](store/screenshots/10-focus-os.png) · local preview in `tools/focus-os-preview/`.
 - Guide: [`src/extension-pk/`](src/extension-pk/). Simplify now lives as a theme (`src/extension-pk/themes/simplify/`); its standalone extension is archived (`archives/versions/05-simplify-2026.10.16/`, untracked). Not published on the Chrome Web Store.
 
 ### Sombre Mail — standalone mail client (`tools/mail-client/`)

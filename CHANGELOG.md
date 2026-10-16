@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.37] - 2026-10-16
+
+### Fixed
+- **Focus OS** : la sélection active survit aux mises à jour de la liste, les commandes du thème ne déclenchent plus les boutons Gmail eux-mêmes et les groupes de dates sont nettoyés sur boîte vide. Guide du thème ajouté et vérifications élargies (lecteur natif, statut, mobile).
+
 ## [2026.10.36] - 2026-10-16
 
 ### Added

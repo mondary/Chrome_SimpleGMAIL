@@ -42,6 +42,9 @@ export async function verify(page) {
   await page.click('#fos-cmd button[aria-label="ouvrir"]');
   await page.waitForFunction(() => document.documentElement.hasAttribute('data-fos-reading'));
   assert.equal(await page.evaluate(() => document.querySelectorAll('[data-fos-main]').length), 1);
+  await page.keyboard.press('e');
+  // No native reader archive in the fixture: show feedback, never call our footer recursively.
+  assert.equal(await page.evaluate(() => document.querySelector('#fos-status')?.textContent), 'Sélectionnez un message à archiver.');
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => !document.documentElement.hasAttribute('data-fos-reading'));
 
@@ -58,6 +61,7 @@ export async function verify(page) {
     document.querySelector('tbody').prepend(copy);
   });
   await page.waitForFunction(() => document.querySelectorAll('.fos-day').length === 4);
+  assert.equal(await page.evaluate(() => document.querySelectorAll('.fos-active').length), 1);
   await page.cdp('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
   assert.equal(await page.evaluate(() => {
     const r = document.querySelector('[data-fos-main]').getBoundingClientRect();
@@ -66,5 +70,11 @@ export async function verify(page) {
   await page.keyboard.press(',');
   assert.equal(await page.evaluate(() => document.querySelector('dialog')?.open), true);
   await page.keyboard.press('Escape');
+  await page.evaluate(() => document.querySelectorAll('.zA').forEach(row => row.remove()));
+  await page.waitForFunction(() => document.querySelector('#fos-total')?.textContent === '0');
+  assert.equal(await page.evaluate(() => document.querySelectorAll('.fos-active').length), 0);
+  assert.equal(await page.evaluate(() => document.querySelectorAll('.fos-day').length), 0);
+  await page.keyboard.press('e');
+  assert.equal(await page.evaluate(() => document.querySelector('#fos-archive-total')?.textContent), '1');
   console.log('Focus OS: geometry, idle observer, navigation, search, reader, synthetic archive, date updates and mobile layout passed.');
 }

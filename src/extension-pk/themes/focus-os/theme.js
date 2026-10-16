@@ -61,7 +61,7 @@
   }
   function nativeButton(pattern, parent = document) {
     return all('[role="button"], button, [data-tooltip]', parent || document)
-      .find(node => visible(node) && pattern.test(node.getAttribute('aria-label') || node.getAttribute('data-tooltip') || ''));
+      .find(node => !node.closest('[data-fos-ui]') && visible(node) && pattern.test(node.getAttribute('aria-label') || node.getAttribute('data-tooltip') || node.getAttribute('title') || ''));
   }
   function route(hash) {
     closeDialog(); root.removeAttribute('data-fos-native-header');
@@ -75,6 +75,7 @@
   function switchCategory(category) {
     const [id, fr, en] = category;
     closeDialog();
+    if (reading) return route(id === 'primary' ? '#inbox' : '#search/' + encodeURIComponent(id === 'newsletter' ? 'in:inbox {category:updates list:unsubscribe}' : `in:inbox category:${id}`));
     const tab = all('.aKh [role="tab"]').find(node => [fr, en].includes(node.getAttribute('aria-label')));
     if (tab) { activate(tab); schedule(); }
     else if (id === 'primary') route('#inbox');
@@ -175,8 +176,8 @@
     document.body.append(dialog); dialog.showModal();
   }
   function select(row, scroll = false) {
-    if (!row) return;
     all('.fos-active').forEach(node => { if (node !== row) node.classList.remove('fos-active'); });
+    if (!row) { activeRow = null; return; }
     row.classList.add('fos-active'); activeRow = row;
     if (scroll) row.scrollIntoView({ block: 'nearest' });
   }
@@ -201,7 +202,7 @@
       return;
     }
     if (action === 'archive') {
-      const target = reading ? nativeButton(/^(Archiver|Archive)$/i) : $('.brq', activeRow || main);
+      const target = reading ? nativeButton(/^(Archiver|Archive)$/i) : activeRow && $('.brq', activeRow);
       if (!target) return notice('Sélectionnez un message à archiver.');
       pendingArchive = { row: activeRow, hash: location.hash, reading, time: Date.now() };
       activate(target); schedule(); return;
@@ -223,7 +224,7 @@
   const months = { jan: 0, janv: 0, feb: 1, fev: 1, fevr: 1, mar: 2, mars: 2, apr: 3, avr: 3, may: 4, mai: 4, jun: 5, juin: 5, jul: 6, juil: 6, aug: 7, aout: 7, sep: 8, sept: 8, oct: 9, nov: 10, dec: 11 };
   function day(row) {
     const cell = $('.xW', row), value = cell?.textContent.trim() || '';
-    if (/^\d{1,2}:\d{2}(?:\s*[AP]M)?$/i.test(value)) return "Aujourd’hui";
+    if (/^\d{1,2}:\d{2}(?:\s*[AP]M)?$/i.test(value)) return "Aujourd'hui";
     if (/^(hier|yesterday)/i.test(value)) return 'Hier';
     const hint = $('[title]', cell || row)?.getAttribute('title') || value;
     const clean = hint.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -237,13 +238,14 @@
       const today = new Date(); today.setHours(0, 0, 0, 0);
       const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
       date.setHours(0, 0, 0, 0);
-      if (+date === +today) return 'Aujourd’hui';
+      if (+date === +today) return "Aujourd'hui";
       if (+date === +yesterday) return 'Hier';
       return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', ...(date.getFullYear() !== today.getFullYear() ? { year: 'numeric' } : {}) });
     }
     return value;
   }
   function decorate() {
+    if (!rows.length) all('.fos-day', main).forEach(node => node.remove());
     for (const row of rows) {
       const cell = $('.yX', row);
       if (cell && !$('.fos-fav', cell)) {
@@ -303,7 +305,7 @@
         if ((!p.reading && location.hash === p.hash && !p.row?.isConnected) || (p.reading && !reading && location.hash !== p.hash)) { archived++; pendingArchive = null; }
         else if (Date.now() - p.time > 5000 || (!p.reading && p.hash !== location.hash)) pendingArchive = null;
       }
-      if (!rows.includes(activeRow) || lastHash !== location.hash) select(rows[0]);
+      select(rows.includes(activeRow) && lastHash === location.hash ? activeRow : rows[0]);
       lastHash = location.hash;
       decorate();
       let head = $('#fos-list-head', main);
