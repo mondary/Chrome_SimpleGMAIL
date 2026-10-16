@@ -121,7 +121,8 @@ function renderTweaks(enabled, marginPct) {
     listEl.appendChild(h);
     for (const item of items) {
       const { row } = makeRow(item.label, `${item.type === 'css' ? 'CSS' : 'Script'} · v${item.version}`);
-      row.classList.add(item.status === 'ko' ? 'ko' : item.status === 'new' ? 'new' : '');
+      if (item.status === 'ko') row.classList.add('ko');
+      else if (item.status === 'new') row.classList.add('new');
       row.appendChild(switchEl(enabled[item.id] !== false, (on) => toggle(item.id, on)));
       listEl.appendChild(row);
 

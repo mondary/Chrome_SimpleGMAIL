@@ -26,12 +26,19 @@ self.LAB_THEMES = [
     css: 'themes/simplemail-classic/theme.css',
     js: ['themes/simplemail-classic/theme.js'],
   },
+  {
+    id: 'theme-focus-os',
+    label: 'Focus OS',
+    description: 'Lab 01 : liste mono de 900 px, catégories en icônes, sélection noire et raccourcis.',
+    css: 'themes/focus-os/theme.css',
+    js: ['themes/focus-os/theme.js'],
+  },
 ];
 
 // Tweaks « bonus », jamais actifs dans les presets du thème PK : opt-in uniquement.
 self.PRESET_OFF = ['js-custom-tabs'];
 
-// (OMP Terminal, Focus OS, Label Canvas, Paper Reader, K7 : premières moutures retirées —
+// (OMP Terminal, Label Canvas, Paper Reader, K7 : premières moutures retirées —
 // à retravailler en vrais layouts, une par une.)
 self.LAB_THEMES_UPCOMING = [];
 
@@ -58,6 +65,18 @@ self.THEME_SETTINGS = {
       ['width', 'Largeur', [['balanced', 'Centrée'], ['wide', 'Large'], ['full', 'Toute la largeur']]],
       ['background', 'Arrière-plan', [['native', 'Thème Gmail'], ['white', 'Blanc'], ['ocean', 'Océan'], ['night', 'Lac de nuit']]],
     ],
+  },
+  'theme-simplemail-classic': {
+    storage: 'smcStyle',
+    defaults: { greeting: true, avatars: true, dateGroups: true, floatingCompose: true, hideTabs: true },
+    toggles: [
+      ['greeting', 'Salutation « Bonjour »'],
+      ['avatars', 'Avatars initiales'],
+      ['dateGroups', 'Groupes de dates'],
+      ['floatingCompose', 'Bouton de rédaction flottant'],
+      ['hideTabs', 'Masquer onglets et panneau Google'],
+    ],
+    choices: [],
   },
 };
 

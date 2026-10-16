@@ -27,9 +27,9 @@ html, body { background: #fff !important; }
 .bsU, .un { color: #b45309 !important; font-family: ui-monospace, Menlo, monospace !important; font-size: 11px !important; }
 .aeN .TN { min-height: 30px !important; }
 
-/* ---- Épuration : pas d'onglets, pas de panneau Google ---- */
-.aKh { display: none !important; }
-.aUx { display: none !important; }
+/* ---- Épuration : onglets et panneau Google paramétrables ---- */
+html[data-smc-tabs="hidden"] .aKh { display: none !important; }
+html[data-smc-tabs="hidden"] .aUx { display: none !important; }
 
 /* ---- Salutation (injectée par theme.js) ---- */
 .smc-greeting { padding: 18px 24px 4px; }
@@ -76,9 +76,9 @@ html, body { background: #fff !important; }
 /* ---- Libellés pastilles ---- */
 .ar.as { border-radius: 999px !important; padding: 2px 9px !important; font-size: 11px !important; font-weight: 600 !important; }
 
-/* ---- Rédaction : bouton flottant rond ---- */
+/* ---- Rédaction : bouton flottant rond (paramétrable) ---- */
 .z0 { position: static !important; }
-.z0 .T-I-KE {
+html[data-smc-fab="on"] .z0 .T-I-KE {
   position: fixed !important;
   right: 26px !important;
   bottom: 26px !important;
@@ -92,8 +92,8 @@ html, body { background: #fff !important; }
   font-size: 0 !important;
   z-index: 50;
 }
-.z0 .T-I-KE::after { content: "+"; font-size: 26px !important; color: #fff !important; line-height: 1 !important; }
-.z0 .T-I-KE:hover { box-shadow: 0 8px 24px rgba(234, 88, 12, 0.45) !important; }
+html[data-smc-fab="on"] .z0 .T-I-KE::after { content: "+"; font-size: 26px !important; color: #fff !important; line-height: 1 !important; }
+html[data-smc-fab="on"] .z0 .T-I-KE:hover { box-shadow: 0 8px 24px rgba(234, 88, 12, 0.45) !important; }
 
 /* ---- Compteur de la barre d'outils ---- */
 .G-atb .Dj { font-family: ui-monospace, Menlo, monospace !important; font-size: 11px !important; color: var(--smc-faint) !important; }

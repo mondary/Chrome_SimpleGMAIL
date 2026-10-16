@@ -4,6 +4,14 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.35] - 2026-10-16
+
+### Fixed
+- Panneau : le rendu de la liste Studio plantait sur `classList.add('')` (token vide interdit par Chrome) — seuls les 3 tweaks « nouveau » apparaissaient. Les 28 réglages s'affichent à nouveau, groupés par statut.
+
+### Added
+- **Réglages du thème Classique** : salutation, avatars initiales, groupes de dates, bouton de rédaction flottant, masquage des onglets et du panneau Google — pilotés en direct via le stockage `smcStyle`, comme ceux de Simplify.
+
 ## [2026.10.34] - 2026-10-16
 
 ### Fixed

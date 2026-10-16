@@ -1,22 +1,32 @@
-/* SimpleMail Classique — couche DOM : salutation, avatars initiales,
-   groupes de dates. Monde isolé, aucune préférence requise. */
+/* Classique — couche DOM paramétrable : salutation, avatars initiales,
+   groupes de dates, bouton flottant, onglets. Réglages : storage smcStyle. */
 (() => {
   "use strict";
   if (globalThis.__smClassicLoaded) return;
   globalThis.__smClassicLoaded = true;
 
+  const DEFAULTS = { greeting: true, avatars: true, dateGroups: true, floatingCompose: true, hideTabs: true };
+  let settings = { ...DEFAULTS };
   const $ = (s, p = document) => p.querySelector(s);
   const all = (s, p = document) => [...p.querySelectorAll(s)];
+  const root = document.documentElement;
   let frame = 0;
   const schedule = () => { if (!frame) frame = requestAnimationFrame(() => { frame = 0; apply(); }); };
   const observer = new MutationObserver(schedule);
 
   const MONTHS = { jan: 0, "fév": 1, fev: 1, mar: 2, avr: 3, apr: 3, mai: 4, may: 4, juin: 5, jun: 5, juil: 6, jul: 6, "aoû": 7, aug: 7, sep: 8, oct: 9, nov: 10, "déc": 11, dec: 11 };
 
+  function attrs() {
+    root.dataset.smcFab = settings.floatingCompose ? "on" : "off";
+    root.dataset.smcTabs = settings.hideTabs ? "hidden" : "shown";
+  }
+
   function greeting() {
+    const existing = $(".smc-greeting");
+    if (!settings.greeting) { existing?.remove(); return; }
     const main = $(".bkK [role='main']") || $("[role='main']");
     if (!main) return;
-    let head = $(".smc-greeting");
+    let head = existing;
     if (!head) {
       const toolbar = $(".G-atb", main);
       head = document.createElement("div");
@@ -41,6 +51,10 @@
   }
 
   function avatars() {
+    if (!settings.avatars) {
+      for (const cell of all(".zA .yX[data-initial]")) delete cell.dataset.initial;
+      return;
+    }
     for (const row of all(".zA")) {
       const cell = $(".yX", row);
       const name = $(".yW", cell || row);
@@ -74,6 +88,10 @@
   }
 
   function dateGroups() {
+    if (!settings.dateGroups) {
+      all(".smc-date-row").forEach((el) => el.remove());
+      return;
+    }
     const rows = all("table.F.cf.zt .zA");
     all(".smc-date-row").forEach((el) => el.remove());
     let last = "";
@@ -94,12 +112,23 @@
 
   function apply() {
     if (!document.body) return;
+    attrs();
     greeting();
     avatars();
     dateGroups();
   }
 
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== "local" || !changes.smcStyle) return;
+    settings = { ...DEFAULTS, ...changes.smcStyle.newValue };
+    apply();
+  });
+
+  chrome.storage.local.get("smcStyle").then((stored) => {
+    settings = { ...DEFAULTS, ...(stored.smcStyle || {}) };
+    apply();
+  }).catch(() => apply());
+
   observer.observe(document.documentElement, { childList: true, subtree: true });
   window.addEventListener("hashchange", schedule);
-  apply();
 })();
