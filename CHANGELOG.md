@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.36] - 2026-10-16
+
+### Added
+- **Thème Focus OS** reconstruit en transposition fidèle du snapshot Lab (`archives/versions/03`) : rail d'icônes seules, liste mono compacte, polices JetBrains Mono embarquées, couche DOM dédiée — avec son harnais de prévisualisation locale (`tools/focus-os-preview/`) et sa capture de démonstration (`store/screenshots/10-focus-os.png`). L'entrée était déjà référencée dans le panneau ; les fichiers suivent.
+
 ## [2026.10.35] - 2026-10-16
 
 ### Fixed
