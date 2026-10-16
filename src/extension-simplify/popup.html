@@ -19,6 +19,9 @@
     <form id="settings">
       <fieldset id="appearance" disabled>
         <legend>Affichage</legend>
+        <label class="field" for="background"><span>Arrière-plan</span><select id="background"><option value="native">Thème Gmail</option><option value="white">Blanc</option><option value="ocean">Océan</option><option value="night">Lac de nuit</option><option value="custom">Mon image</option></select></label>
+        <label class="field" for="backgroundScope"><span>Afficher le fond</span><select id="backgroundScope"><option value="always">Toujours</option><option value="empty">Boîte vide</option></select></label>
+        <label class="file-field" for="backgroundFile">Choisir une image personnelle<input id="backgroundFile" type="file" accept="image/jpeg,image/png,image/webp"></label>
         <label class="field" for="density"><span>Densité des messages</span>
           <select id="density"><option value="compact">Compacte</option><option value="comfortable">Confortable</option><option value="spacious">Aérée</option></select>
         </label>
@@ -26,6 +29,9 @@
           <select id="width"><option value="balanced">Centrée</option><option value="wide">Large</option><option value="full">Toute la largeur</option></select>
         </label>
         <div class="separator"></div>
+        <label class="toggle-row" for="headerActions"><span><strong>Actions dans l’en-tête</strong><small>Les commandes Gmail sur une seule ligne.</small></span><span class="switch"><input id="headerActions" type="checkbox" role="switch"><span></span></span></label>
+        <label class="toggle-row" for="inboxZero"><span><strong>Boîte vide immersive</strong><small>Le fond et un discret « Aucun nouveau message ».</small></span><span class="switch"><input id="inboxZero" type="checkbox" role="switch"><span></span></span></label>
+        <label class="toggle-row" for="groupDates"><span><strong>Séparer par date</strong><small>Aujourd’hui, hier, cette semaine…</small></span><span class="switch"><input id="groupDates" type="checkbox" role="switch"><span></span></span></label>
         <label class="toggle-row" for="quietHeader"><span><strong>Interface épurée</strong><small>Masquer le logo, Chat, Meet et les outils secondaires.</small></span><span class="switch"><input id="quietHeader" type="checkbox" role="switch"><span></span></span></label>
         <label class="toggle-row" for="hideAddons"><span><strong>Masquer le panneau latéral</strong><small>Agenda, Keep, Tasks et extensions.</small></span><span class="switch"><input id="hideAddons" type="checkbox" role="switch"><span></span></span></label>
         <label class="toggle-row" for="floatingCompose"><span><strong>Bouton de rédaction flottant</strong><small>Un bouton + en bas à droite.</small></span><span class="switch"><input id="floatingCompose" type="checkbox" role="switch"><span></span></span></label>

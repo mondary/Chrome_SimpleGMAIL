@@ -1,6 +1,6 @@
 # PK Gmail — Simplify Style
 
-Version **2026.10.2** · Licence MIT · [Confidentialité](PRIVACY.md)
+Version **2026.10.4** · Licence MIT · [Confidentialité](PRIVACY.md)
 
 Une extension Chrome autonome qui applique une surcouche visuelle à **Gmail web**,
 inspirée des captures Simplify du dossier `../../benchmark/`.

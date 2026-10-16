@@ -12,6 +12,7 @@ manifest = json.loads((root / "manifest.json").read_text())
 runtime = ["manifest.json", "gmail.css", "settings.js", "content.js",
            "popup.html", "popup.css", "popup.js", "README.md", "PRIVACY.md"]
 runtime += [f"icons/{size}.png" for size in (16, 32, 48, 128)]
+runtime += ["backgrounds/ocean.jpg", "backgrounds/night.jpg", "backgrounds/CREDITS.md"]
 for name in runtime:
     if not (root / name).is_file():
         raise SystemExit(f"Missing runtime file: {name}")

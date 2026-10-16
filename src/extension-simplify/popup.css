@@ -17,6 +17,8 @@ strong { display: block; font-weight: 500; }
 small { display: block; margin-top: 3px; font-size: 11px; color: #777c80; line-height: 1.5; }
 .switch { position: relative; display: inline-flex; width: 34px; height: 20px; flex: 0 0 34px; cursor: pointer; }
 .switch input { appearance: none; position: absolute; inset: 0; margin: 0; width: 34px; height: 20px; cursor: pointer; z-index: 1; border-radius: 20px; }
+.file-field { display: grid; gap: 8px; font-size: 11px; margin-bottom: 18px; color: #777c80; }
+.file-field input { max-width: 100%; font: inherit; }
 .switch > span { width: 34px; height: 20px; background: #dadce0; border-radius: 20px; transition: background-color 140ms ease; }
 .switch > span::before { content: ""; display: block; width: 14px; height: 14px; margin: 3px; background: #fff; border-radius: 50%; transition: transform 140ms ease; }
 .switch input:checked + span { background: #d74738; }

@@ -1,10 +1,11 @@
 {
   "manifest_version": 3,
   "name": "PK Gmail — Simplify Style",
-  "version": "2026.10.2",
+  "version": "2026.10.4",
   "description": "Une surcouche visuelle pour Gmail : interface blanche, messages aérés, recherche centrée et rédaction flottante.",
   "minimum_chrome_version": "120",
   "permissions": ["storage"],
+  "web_accessible_resources": [{ "resources": ["backgrounds/*.jpg"], "matches": ["https://mail.google.com/*"] }],
   "action": {
     "default_title": "PK Gmail — Simplify Style",
     "default_popup": "popup.html",

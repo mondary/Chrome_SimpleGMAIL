@@ -4,6 +4,20 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+### [2026.10.4] - 2026-10-16
+
+#### Added
+- Fonds de l'extension : « Océan » et « Lac de nuit » packagés (photos Unsplash, crédits dans `backgrounds/CREDITS.md`), import d'une image personnelle redimensionnée et stockée localement, fond permanent ou réservé à la boîte vide.
+- Menu compact « ⋮ » à gauche du compte : apparence, paramètres, aide, applications, Gemini et options de volet selon les contrôles natifs présents — navigation clavier, fermeture Escape, délégation réelle à Gmail.
+- Actions Gmail natives fixées dans l'en-tête ; la recherche se replie en loupe dès qu'un message est sélectionné ou en lecture.
+- État « boîte vide » immersif (fond + statut discret) annoncé uniquement quand Gmail confirme une boîte ou catégorie vide, jamais pour une recherche sans résultat.
+- Séparateurs de dates (aujourd'hui, hier, cette semaine…) insérés sans remplacer les lignes Gmail.
+- `REFERENCES.md` documentant les dix captures de référence (`benchmark/`) et l'analyse de l'archive Simplify 3.4.9, dont le code propriétaire reste hors paquet.
+
+#### Changed
+- `content.js` réécrit : les contrôles natifs Gmail restent en place (annotés) au lieu d'être clonés, la pause retire toute l'UI injectée et l'extension démarre sous la politique Trusted Types de Gmail.
+- Tests d'intégration étendus (menu clavier, thèmes, sélection, boîte vide, import d'image, Trusted Types) et `build.py` embarque les fonds dans l'archive.
+
 ### [2026.10.3] - 2026-10-15
 
 #### Changed

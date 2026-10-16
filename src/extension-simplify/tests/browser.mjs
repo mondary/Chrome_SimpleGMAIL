@@ -145,6 +145,62 @@ try {
     await popup.setViewportSize({ width: 352, height: 650 });
     await popup.screenshot({ path: path.join(artifacts, "settings.png") });
   }
+  // New reference states: native controls, themes, empty views and Gmail's Trusted Types.
+  await page.evaluate(() => {
+    const native = document.createElement("button"); native.className = "FH"; native.setAttribute("aria-label", "Paramètres");
+    native.onclick = () => { window.nativeSettingsClicks = (window.nativeSettingsClicks || 0) + 1; };
+    document.querySelector("#gb").append(native);
+  });
+  await page.locator("#pks-menu-button").click();
+  await page.getByRole("menuitem", { name: "Paramètres Gmail", exact: true }).click();
+  check(await page.evaluate(() => window.nativeSettingsClicks === 1), "Compact menu delegates once to Gmail settings");
+  await page.locator("#pks-menu-button").click();
+  await page.keyboard.press("End");
+  check(await page.evaluate(() => document.activeElement === document.querySelector("#pks-menu button:last-child")), "Compact menu supports keyboard navigation");
+  await page.keyboard.press("Escape");
+  check(await page.locator("#pks-menu-button").evaluate(el => el === document.activeElement), "Escape restores focus to the menu trigger");
+  await page.locator("#pks-menu-button").click();
+  await page.getByRole("menuitem", { name: "Apparence de Gmail", exact: true }).click();
+  await page.locator('#pks-preferences select[name="background"]').selectOption("ocean");
+  await page.waitForFunction(() => document.documentElement.dataset.pksBackground === "ocean");
+  check(await page.evaluate(() => getComputedStyle(document.body).backgroundImage.includes("backgrounds/ocean.jpg")), "Ocean background is applied to Gmail's outer shell");
+  check(await page.evaluate(async () => { const i = new Image(); i.src = getComputedStyle(document.body).backgroundImage.slice(5,-2); await i.decode(); return i.naturalWidth > 1000; }), "Packaged background is accessible from the Gmail page");
+  if (artifacts) { await page.keyboard.press("Escape"); await page.screenshot({ path: path.join(artifacts, "theme.png") }); }
+  await page.keyboard.press("Escape");
+  await page.evaluate(() => document.querySelector(".zA .T-Jo").setAttribute("aria-checked", "true"));
+  await page.waitForFunction(() => document.documentElement.dataset.pksSelected === "true");
+  check(await page.locator("#aso_search_form_anchor").isHidden() && await page.locator("#pks-search-button").isVisible(), "Selecting mail gives the header to the native actions");
+  await page.locator("#pks-search-button").click();
+  check(await page.locator('input[name="q"]').evaluate(el => el === document.activeElement), "Search remains accessible with messages selected");
+  await page.keyboard.press("Escape");
+  await page.evaluate(() => document.querySelector(".zA .T-Jo").setAttribute("aria-checked", "false"));
+  await page.waitForFunction(() => document.documentElement.dataset.pksSelected === "false");
+  check(await page.locator("[data-pks-date]").count() >= 1, "Date separators are inserted without replacing mail rows");
+  await page.evaluate(() => {
+    window.savedRows = [...document.querySelectorAll(".zA")]; window.savedRows.forEach(row => row.remove());
+    const empty = document.createElement("div"); empty.className = "TC"; empty.textContent = "Aucun message"; document.querySelector("#list").append(empty);
+  });
+  await page.waitForFunction(() => document.documentElement.dataset.pksEmpty === "true");
+  check(await page.locator("#pks-status").innerText() === "Aucun nouveau message !", "Inbox zero requires a confirmed native empty state");
+  if (artifacts) await page.screenshot({ path: path.join(artifacts, "empty.png") });
+  await page.evaluate(() => { location.hash = "#search/empty"; });
+  await page.waitForFunction(() => document.documentElement.dataset.pksEmpty === "false");
+  check(!(await page.locator("#pks-status").innerText()).includes("Aucun nouveau"), "Empty search results never claim the inbox is empty");
+  await page.evaluate(() => { document.querySelector(".TC").remove(); document.querySelector("table.F tbody").append(...window.savedRows); location.hash = "#inbox"; });
+  await page.waitForFunction(() => document.documentElement.dataset.pksView === "list");
+  await popup.locator("#backgroundFile").setInputFiles(path.join(extension, "backgrounds/ocean.jpg"));
+  await page.waitForFunction(() => document.documentElement.dataset.pksBackground === "custom");
+  check(await page.evaluate(() => getComputedStyle(document.body).backgroundImage.startsWith('url("data:image/jpeg;base64,')), "Personal background import is processed and stored locally");
+  await popup.locator("#enabled").uncheck();
+  await page.waitForFunction(() => !document.documentElement.hasAttribute("data-pks"));
+  check(await page.locator('[data-pks-ui],[data-pks-date],[data-pks-toolbar]').count() === 0, "Pause removes injected UI and native-control annotations");
+  await popup.locator("#reset").click();
+  await context.route("**/mail/u/2/**", route => route.fulfill({ contentType: "text/html", headers: { "Content-Security-Policy": "require-trusted-types-for 'script'" }, body: fixture }));
+  const strictPage = await context.newPage(); strictPage.on("pageerror", error => errors.push(error.message));
+  await strictPage.goto("https://mail.google.com/mail/u/2/#inbox");
+  await strictPage.waitForSelector("#pks-menu-button");
+  check(await strictPage.locator("#pks-compose").isVisible(), "Extension starts under Gmail's Trusted Types policy");
+  await strictPage.close();
   check(errors.length === 0, `No JavaScript errors: ${errors.join(", ")}`);
   console.log(`${checks} integration checks passed.`);
 } finally {
