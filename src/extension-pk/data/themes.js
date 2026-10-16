@@ -20,6 +20,13 @@ self.LAB_THEMES = [
     js: ['themes/simplify/settings.js', 'themes/simplify/content.js'],
   },
   {
+    id: 'theme-simplemail-classic',
+    label: 'SimpleMail Classique',
+    description: 'Layout V1 : sidebar sombre, salutation, avatars initiales, groupes de dates.',
+    css: 'themes/simplemail-classic/theme.css',
+    js: ['themes/simplemail-classic/theme.js'],
+  },
+  {
     id: 'theme-omp-terminal',
     label: 'OMP Terminal',
     description: 'Noir & rose, hairlines, accents monospace.',
@@ -63,3 +70,30 @@ self.PRESET_OFF = ['js-custom-tabs'];
 // Thèmes du Lab en attente de transposition vers le DOM de Gmail.
 // (Les 8 thèmes du Lab ont été transposés en 6 — doublons fusionnés.)
 self.LAB_THEMES_UPCOMING = [];
+
+// Réglages par thème, affichés dans la section Scripts du panneau.
+// storage = clé chrome.storage.local que le thème écoute en direct.
+self.THEME_SETTINGS = {
+  'theme-simplify': {
+    storage: 'pkGmailStyle',
+    defaults: {
+      headerActions: true, inboxZero: true, groupDates: true,
+      quietHeader: true, hideAddons: true, floatingCompose: true,
+      density: 'comfortable', width: 'balanced', background: 'native',
+    },
+    toggles: [
+      ['headerActions', 'Actions dans l’en-tête'],
+      ['inboxZero', 'Boîte vide immersive'],
+      ['groupDates', 'Séparer par date'],
+      ['quietHeader', 'Interface épurée'],
+      ['hideAddons', 'Masquer le panneau Google'],
+      ['floatingCompose', 'Bouton de rédaction flottant'],
+    ],
+    choices: [
+      ['density', 'Densité', [['compact', 'Compacte'], ['comfortable', 'Confortable'], ['spacious', 'Aérée']]],
+      ['width', 'Largeur', [['balanced', 'Centrée'], ['wide', 'Large'], ['full', 'Toute la largeur']]],
+      ['background', 'Arrière-plan', [['native', 'Thème Gmail'], ['white', 'Blanc'], ['ocean', 'Océan'], ['night', 'Lac de nuit']]],
+    ],
+  },
+};
+

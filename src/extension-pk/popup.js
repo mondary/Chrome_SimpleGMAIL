@@ -1,7 +1,8 @@
-// PK Gmail Studio — popup
+// PK Gmail Studio — panneau latéral. Section Scripts relative au thème actif.
 const listEl = document.getElementById('list');
 const countEl = document.getElementById('count');
 const themesEl = document.getElementById('themes');
+const toolsEl = document.querySelector('.list-tools');
 
 function renderThemes(active) {
   if (!themesEl) return;
@@ -56,7 +57,7 @@ function renderThemes(active) {
 
 async function setTheme(id) {
   const enabled = {};
-  // PK applique ses presets ; Gmail normal et Simplify coupent les tweaks.
+  // PK applique ses presets ; les autres thèmes coupent les tweaks du Studio.
   if (id === 'theme-pk') {
     for (const item of self.LAB_ITEMS) {
       enabled[item.id] = (item.status || 'ok') !== 'ko' && !(self.PRESET_OFF || []).includes(item.id);
@@ -69,11 +70,46 @@ async function setTheme(id) {
   await loadState();
 }
 
-function render(enabled, marginPct = 5) {
+/* ---------- Section Scripts : relative au thème ---------- */
+
+function switchEl(checked, onChange) {
+  const sw = document.createElement('label');
+  sw.className = 'sw';
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.checked = checked;
+  input.addEventListener('change', () => onChange(input.checked));
+  const track = document.createElement('span');
+  track.className = 'track';
+  sw.appendChild(input);
+  sw.appendChild(track);
+  return sw;
+}
+
+function makeRow(nameText, metaText) {
+  const row = document.createElement('div');
+  row.className = 'row';
+  const label = document.createElement('div');
+  label.className = 'label';
+  const name = document.createElement('div');
+  name.className = 'name';
+  name.textContent = nameText;
+  label.appendChild(name);
+  if (metaText) {
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.textContent = metaText;
+    label.appendChild(meta);
+  }
+  row.appendChild(label);
+  return { row, label };
+}
+
+function renderTweaks(enabled, marginPct) {
   listEl.innerHTML = '';
   const groups = [
     { key: 'new', title: '✦ Nouveau — à tester' },
-    { key: 'ok', title: '✓ Indispensables — validés au test' },
+    { key: 'ok', title: '✓ Presets validés' },
     { key: 'ko', title: '? À retester — KO présumé' },
   ];
   for (const g of groups) {
@@ -84,34 +120,9 @@ function render(enabled, marginPct = 5) {
     h.textContent = g.title;
     listEl.appendChild(h);
     for (const item of items) {
-      const row = document.createElement('div');
-      row.className = 'row' + (item.status === 'ko' ? ' ko' : '') + (item.status === 'new' ? ' new' : '');
-
-      const label = document.createElement('div');
-      label.className = 'label';
-      const name = document.createElement('div');
-      name.className = 'name';
-      name.textContent = item.label;
-      const meta = document.createElement('div');
-      meta.className = 'meta';
-      const kind = item.type === 'css' ? 'CSS' : 'Script';
-      meta.textContent = `${kind} · v${item.version}`;
-      label.appendChild(name);
-      label.appendChild(meta);
-
-      const sw = document.createElement('label');
-      sw.className = 'sw';
-      const input = document.createElement('input');
-      input.type = 'checkbox';
-      input.checked = enabled[item.id] !== false;
-      input.addEventListener('change', () => toggle(item.id, input.checked));
-      const track = document.createElement('span');
-      track.className = 'track';
-      sw.appendChild(input);
-      sw.appendChild(track);
-
-      row.appendChild(label);
-      row.appendChild(sw);
+      const { row } = makeRow(item.label, `${item.type === 'css' ? 'CSS' : 'Script'} · v${item.version}`);
+      row.classList.add(item.status === 'ko' ? 'ko' : item.status === 'new' ? 'new' : '');
+      row.appendChild(switchEl(enabled[item.id] !== false, (on) => toggle(item.id, on)));
       listEl.appendChild(row);
 
       if (item.setting === 'margin-pct') {
@@ -143,15 +154,75 @@ function render(enabled, marginPct = 5) {
   updateCount(enabled);
 }
 
+function renderThemeSettings(theme, stored) {
+  const spec = (self.THEME_SETTINGS || {})[theme];
+  const style = { ...(spec.defaults || {}), ...stored };
+  listEl.innerHTML = '';
+  const h = document.createElement('div');
+  h.className = 'group';
+  h.textContent = 'Réglages du thème';
+  listEl.appendChild(h);
+
+  const save = async (key, value) => {
+    style[key] = value;
+    await chrome.storage.local.set({ [spec.storage]: { ...style } });
+  };
+
+  for (const [key, label] of spec.toggles) {
+    const { row } = makeRow(label);
+    row.appendChild(switchEl(style[key] !== false, (on) => save(key, on)));
+    listEl.appendChild(row);
+  }
+  for (const [key, label, options] of spec.choices) {
+    const { row } = makeRow(label);
+    const select = document.createElement('select');
+    for (const [value, name] of options) {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = name;
+      option.selected = style[key] === value;
+      select.appendChild(option);
+    }
+    select.addEventListener('change', () => save(key, select.value));
+    row.appendChild(select);
+    listEl.appendChild(row);
+  }
+  const note = document.createElement('div');
+  note.className = 'empty';
+  note.textContent = 'Appliqué en direct sur Gmail, sans rechargement.';
+  listEl.appendChild(note);
+}
+
+function renderEmpty(message) {
+  listEl.innerHTML = '';
+  const el = document.createElement('div');
+  el.className = 'empty';
+  el.textContent = message;
+  listEl.appendChild(el);
+}
+
 function updateCount(enabled) {
   const on = self.LAB_ITEMS.filter((i) => enabled[i.id] !== false).length;
-  countEl.textContent = `${on}/${self.LAB_ITEMS.length} scripts actifs`;
+  countEl.textContent = `${on}/${self.LAB_ITEMS.length}`;
+}
+
+function render(enabled, marginPct, theme, storedStyle) {
+  if (theme === 'theme-pk') {
+    toolsEl.style.display = '';
+    renderTweaks(enabled, marginPct);
+  } else {
+    toolsEl.style.display = 'none';
+    if (!theme) renderEmpty('Gmail normal — aucun style appliqué.');
+    else if ((self.THEME_SETTINGS || {})[theme]) renderThemeSettings(theme, storedStyle || {});
+    else renderEmpty('Ce thème s’applique tel quel — aucun réglage.');
+  }
 }
 
 async function loadState() {
-  const { enabled = {}, marginPct = 5, theme = '' } = await chrome.storage.local.get(['enabled', 'marginPct', 'theme']);
+  const { enabled = {}, marginPct = 5, theme = '', pkGmailStyle = {} } =
+    await chrome.storage.local.get(['enabled', 'marginPct', 'theme', 'pkGmailStyle']);
   renderThemes(theme);
-  render(enabled, marginPct);
+  render(enabled, marginPct, theme, pkGmailStyle);
 }
 
 async function persist(enabled) {
@@ -170,7 +241,7 @@ async function setAll(on) {
   const enabled = {};
   for (const item of self.LAB_ITEMS) enabled[item.id] = on;
   await persist(enabled);
-  render(enabled);
+  render(enabled, 5, 'theme-pk', {});
   await chrome.runtime.sendMessage({ type: 'sync' });
 }
 

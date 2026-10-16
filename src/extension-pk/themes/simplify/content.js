@@ -172,7 +172,7 @@
   function background(empty) {
     const mode = settings.backgroundScope === "empty" && !empty ? "native" : settings.background;
     let image = "";
-    if (["ocean", "night"].includes(mode)) image = chrome.runtime.getURL(`backgrounds/${mode}.jpg`);
+    if (["ocean", "night"].includes(mode)) image = chrome.runtime.getURL(`themes/simplify/backgrounds/${mode}.jpg`);
     else if (mode === "custom") image = settings.imageData;
     cssVar("background", image ? `url("${image}")` : "none");
     if (image) {

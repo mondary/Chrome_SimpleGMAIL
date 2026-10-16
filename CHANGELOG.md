@@ -4,6 +4,12 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.25] - 2026-10-16
+
+### Added
+- **Thème SimpleMail Classique** — première vraie transposition de layout (archives 01/02) : sidebar sombre avec compteurs ambre, salutation « Bonjour », avatars initiales colorées, groupes de dates, onglets et panneau Google masqués, rédaction en bouton flottant (`themes/simplemail-classic/`, CSS + couche DOM).
+- **Section Scripts relative au thème** : sous PK Studio, les 28 tweaks ; sous Simplify, ses réglages propres (actions en-tête, boîte vide, dates, densité, largeur, arrière-plan Océan/Nuit) écrits en direct dans `pkGmailStyle` et appliqués sans rechargement ; les thèmes sans réglages affichent un état calme. Les fonds Océan/Nuit sont embarqués et accessibles.
+
 ## [2026.10.24] - 2026-10-16
 
 ### Added
