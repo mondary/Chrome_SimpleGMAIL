@@ -8,7 +8,7 @@
     quietHeader: true,
     hideAddons: true,
     floatingCompose: true,
-    headerActions: true,
+    headerActions: false,
     inboxZero: true,
     groupDates: true,
     background: "native",
@@ -19,7 +19,7 @@
   function normalize(value) {
     const source = value && typeof value === "object" ? value : {};
     const result = { ...defaults };
-    for (const key of ["enabled", "quietHeader", "hideAddons", "floatingCompose", "headerActions", "inboxZero", "groupDates"]) {
+    for (const key of ["enabled", "quietHeader", "hideAddons", "floatingCompose", "inboxZero", "groupDates"]) {
       if (typeof source[key] === "boolean") result[key] = source[key];
     }
     if (["compact", "comfortable", "spacious"].includes(source.density)) result.density = source.density;

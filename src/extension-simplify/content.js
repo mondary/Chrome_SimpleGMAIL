@@ -89,7 +89,7 @@
     const upload = element("label", "pks-image-label", tr("Choisir une image…", "Choose an image…"));
     const input = document.createElement("input"); input.type = "file"; input.accept = "image/jpeg,image/png,image/webp";
     input.onchange = async () => { try { const imageData = await readBackground(input.files[0]); await save({ imageData, background: "custom" }); $("select[name=background]", preferences).value = "custom"; } catch (e) { $("[role=status]", preferences).textContent = e.message; } }; upload.append(input); preferences.append(upload);
-    for (const [key, title] of [["inboxZero", tr("État de boîte vide", "Inbox zero")], ["headerActions", tr("Actions dans l’en-tête", "Actions in the header")], ["groupDates", tr("Séparer par date", "Group by date")], ["hideAddons", tr("Masquer le panneau Google", "Hide Google side panel")]]) {
+    for (const [key, title] of [["inboxZero", tr("État de boîte vide", "Inbox zero")], ["groupDates", tr("Séparer par date", "Group by date")], ["hideAddons", tr("Masquer le panneau Google", "Hide Google side panel")]]) {
       const label = element("label", null, title), toggle = document.createElement("input"); toggle.type = "checkbox"; toggle.checked = settings[key]; toggle.onchange = () => save({ [key]: toggle.checked }); label.append(toggle); preferences.append(label);
     }
     const feedback = element("p", null, tr("Réglages enregistrés sur cet appareil.", "Preferences saved on this device.")); feedback.setAttribute("role", "status"); preferences.append(feedback);
@@ -185,7 +185,7 @@
     const header = $("#gb"), mains = all('.bkK [role="main"], .bkK .aia').filter(visible);
     if (!header || !mains.length || /^(#settings|#chat|#meet|#contacts)/.test(location.hash)) { removeUI(); return; }
     root.setAttribute("data-pks", "on");
-    for (const [key, value] of Object.entries({ density:settings.density, width:settings.width, quiet:settings.quietHeader, addons:settings.hideAddons, actions:settings.headerActions })) set(key,value);
+    for (const [key, value] of Object.entries({ density:settings.density, width:settings.width, quiet:settings.quietHeader, addons:settings.hideAddons })) set(key,value);
     const nav = header.querySelector('[data-ogmb], [aria-label="Main menu"], [aria-label="Menu principal"]');
     set("nav", nav?.getAttribute("aria-expanded") === "false" ? "closed" : "open");
     const rows = all('.bkK .zA').filter(visible);

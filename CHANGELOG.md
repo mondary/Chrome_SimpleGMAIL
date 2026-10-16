@@ -4,6 +4,15 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.15] - 2026-10-16
+
+### Fixed
+- L’en-tête Gmail reste aligné sur la référence : la recherche et le compte gardent leur place, les actions restent dans leur barre native.
+- Les anciennes préférences qui déplaçaient les actions dans l’en-tête sont ignorées ; les compteurs non lus restent visibles.
+
+### Changed
+- Archive Chrome et liens de téléchargement mis à jour en v2026.10.15.
+
 ## [2026.10.14] - 2026-10-16
 
 ### Changed

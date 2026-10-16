@@ -59,6 +59,7 @@ try {
   const rowHeight = () => page.locator(".zA").first().evaluate(el => el.getBoundingClientRect().height);
   const set = (key, value) => popup.evaluate(({ key, value }) => chrome.storage.local.set({ [key]: value }), { key: "pkGmailStyle", value: { [key]: value } });
   const check = (condition, label) => { assert.ok(condition, label); checks++; console.log(`✓ ${label}`); };
+  check(await popup.evaluate(() => PKGmailStyle.normalize({ headerActions: true }).headerActions === false), "Legacy header-actions preference is migrated off");
 
   check(await rowHeight() === 48, "Default density is applied to native rows");
   check(await page.locator(".aqn").evaluate(el => getComputedStyle(el).visibility === "hidden"), "Closed Gmail menu does not leave an empty rail");

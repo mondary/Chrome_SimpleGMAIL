@@ -1,6 +1,6 @@
 # PK Gmail — Simplify Style
 
-Version **2026.10.13** · Licence MIT · [Confidentialité](PRIVACY.md)
+Version **2026.10.15** · Licence MIT · [Confidentialité](PRIVACY.md)
 
 Une extension Chrome autonome qui applique une surcouche visuelle à **Gmail web**,
 inspirée des dix captures Simplify du dossier `../../benchmark/`.
@@ -68,8 +68,8 @@ restent telles quelles, sans séparateur ajouté ni modification du tri.
 | `REFERENCES.md` | Correspondance des captures et sources retrouvées |
 | `build.py` | Archive ZIP des fichiers nécessaires |
 
-Les nœuds natifs Gmail ne sont ni déplacés ni remplacés. La barre d’actions est
-positionnée par CSS, avec ses gestionnaires conservés. Le script lit les dates et
+Les nœuds natifs Gmail ne sont ni déplacés ni remplacés. La barre d’actions
+reste dans sa rangée native, avec ses gestionnaires conservés. Le script lit les dates et
 compteurs affichés pour la présentation ; il n’analyse pas les corps des messages,
 n’intercepte pas l’envoi et ne crée aucune requête réseau. L’observateur est
 déconnecté lorsque la surcouche est en pause.

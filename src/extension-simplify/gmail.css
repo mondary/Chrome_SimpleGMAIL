@@ -393,23 +393,6 @@ html[data-pks="on"] #pks-image-label input { font: inherit; width: 100%; }
 html[data-pks="on"] #pks-preferences :is(p,a) { color: #777c80; font-size: 11px; }
 html[data-pks="on"] :is(#pks-menu-button,#pks-search-button,#pks-menu button,#pks-preferences button,#pks-preferences select,#pks-preferences input,#pks-preferences a):focus-visible { outline: 2px solid #4285f4; outline-offset: 2px; }
 
-/* A single native action row in the header. No cloned mail-action buttons. */
-html[data-pks="on"][data-pks-actions="true"] .bkK [data-pks-toolbar] {
-  position: fixed !important; top: 8px !important; left: 68px !important; right: calc(100vw - var(--pks-account-left) + 80px) !important;
-  width: auto !important; max-width: none !important; min-width: 0 !important; height: 48px !important;
-  margin: 0 !important; padding: 0 !important; background: transparent !important; z-index: 105;
-}
-html[data-pks="on"][data-pks-actions="true"] .bkK [data-pks-toolbar] .aqK { display: flex !important; justify-content: space-between; width: 100%; }
-html[data-pks="on"][data-pks-actions="true"] .bkK [data-pks-toolbar] :is(.aqJ,.aqL) { background: transparent !important; }
-html[data-pks="on"][data-pks-actions="true"] .bkK [data-pks-toolbar] :is(.apF,.apG,.d-Na-JX-I) { display: none !important; }
-html[data-pks="on"][data-pks-actions="true"] .bkK [data-pks-toolbar] .Dj { display: none !important; }
-html[data-pks="on"][data-pks-actions="true"][data-pks-view="list"][data-pks-selected="false"] .bkK [data-pks-toolbar] { opacity: .28; }
-html[data-pks="on"][data-pks-actions="true"][data-pks-view="list"][data-pks-selected="false"] .bkK [data-pks-toolbar]:is(:hover,:focus-within) { opacity: 1; }
-html[data-pks="on"][data-pks-actions="true"] #aso_search_form_anchor { z-index: 110; }
-html[data-pks="on"][data-pks-actions="true"]:is([data-pks-reading="true"],[data-pks-selected="true"]) #aso_search_form_anchor { visibility: hidden !important; pointer-events: none; }
-html[data-pks="on"][data-pks-actions="true"]:is([data-pks-reading="true"],[data-pks-selected="true"]) #pks-search-button { display: grid; }
-html[data-pks="on"][data-pks-actions="true"][data-pks-search-open="true"] #aso_search_form_anchor { visibility: visible !important; pointer-events: auto; background: #fff !important; box-shadow: 0 2px 16px #0002 !important; }
-html[data-pks="on"][data-pks-search-open="true"] [data-pks-toolbar] { visibility: hidden !important; }
 html[data-pks="on"] #pks-status { position: fixed; bottom: 22px; left: calc(var(--pks-work-left) + 24px); z-index: 104; padding: 12px 20px; border-radius: 24px; background: #f1f3f4dd; color: #62666b; font: 12px/1.5 Roboto,Arial,sans-serif; backdrop-filter: blur(8px); }
 html[data-pks="on"] #pks-status[hidden] { display: none; }
 html[data-pks="on"][data-pks-empty="true"] #pks-status { border-radius: 7px; background: #ffffff30; color: #3c4043; }

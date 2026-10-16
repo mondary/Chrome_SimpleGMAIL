@@ -6,7 +6,7 @@
 
 Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla. Packagé en application native (macOS · Windows · Linux).
 
-**Version 2026.10.14** — [Changelog](CHANGELOG.md)
+**Version 2026.10.15** — [Changelog](CHANGELOG.md)
 
 [![Aperçu de l’extension Gmail](store/screenshots/05-ocean.png)](store/index.html)
 [![Réglages de l’extension Gmail](store/screenshots/02-reglages.png)](store/index.html)
@@ -39,7 +39,7 @@ Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla
 - **PWA + Chrome en local** : installable depuis `127.0.0.1:8000`, extension sans permission sensible ; Android en pause
 
 ### Extension Chrome — Gmail simplifié
-- **PK Gmail — Simplify Style** : surcouche CSS indépendante pour Gmail, avec fonds photo, état de boîte vide, menu compact près du compte, actions natives réunies dans l’en-tête, séparateurs par date et volet de lecture. Densité et largeur réglables, bouton de rédaction flottant.
+- **PK Gmail — Simplify Style** : surcouche CSS indépendante pour Gmail, avec fonds photo, état de boîte vide, menu compact près du compte, actions Gmail conservées dans leur barre native, séparateurs par date et volet de lecture. Densité et largeur réglables, bouton de rédaction flottant.
 - Guide d’installation et de confidentialité : [`src/extension-simplify/`](src/extension-simplify/README.md). L’extension n’est pas publiée sur le Chrome Web Store.
 
 ### Sombre Mail — client mail autonome (`tools/mail-client/`)
