@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.23] - 2026-10-16
+
+### Changed
+- Les presets du thème PK (première installation et sélection « PK — thème Studio ») n'activent plus les tweaks « bonus » : **Custom Tabs** devient opt-in (liste `PRESET_OFF` dans `data/themes.js`, le manifest restant généré). Extension en v2026.10.28.
+
 ## [2026.10.22] - 2026-10-16
 
 ### Added

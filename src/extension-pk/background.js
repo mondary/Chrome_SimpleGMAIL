@@ -110,9 +110,11 @@ chrome.tabs.onUpdated.addListener((tabId, info, tab) => {
 chrome.runtime.onInstalled.addListener(async () => {
   const { enabled = {} } = await chrome.storage.local.get(['enabled', 'theme']);
   if (Object.keys(enabled).length === 0) {
-    // Premier install : thème PK avec ses presets (les tweaks validés)
+    // Premier install : thème PK avec ses presets (les tweaks validés, hors bonus)
     const all = {};
-    for (const item of self.LAB_ITEMS) all[item.id] = (item.status || 'ok') !== 'ko';
+    for (const item of self.LAB_ITEMS) {
+      all[item.id] = (item.status || 'ok') !== 'ko' && !(self.PRESET_OFF || []).includes(item.id);
+    }
     await chrome.storage.local.set({ enabled: all, theme: 'theme-pk' });
   }
   await syncRegistrations();

@@ -58,7 +58,9 @@ async function setTheme(id) {
   const enabled = {};
   // PK applique ses presets ; Gmail normal et Simplify coupent les tweaks.
   if (id === 'theme-pk') {
-    for (const item of self.LAB_ITEMS) enabled[item.id] = (item.status || 'ok') !== 'ko';
+    for (const item of self.LAB_ITEMS) {
+      enabled[item.id] = (item.status || 'ok') !== 'ko' && !(self.PRESET_OFF || []).includes(item.id);
+    }
   } else {
     for (const item of self.LAB_ITEMS) enabled[item.id] = false;
   }

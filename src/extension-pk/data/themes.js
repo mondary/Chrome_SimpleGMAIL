@@ -21,6 +21,9 @@ self.LAB_THEMES = [
   },
 ];
 
+// Tweaks « bonus », jamais actifs dans les presets du thème PK : opt-in uniquement.
+self.PRESET_OFF = ['js-custom-tabs'];
+
 // Thèmes du Lab en attente de transposition vers le DOM de Gmail.
 self.LAB_THEMES_UPCOMING = [
   { label: 'OMP Terminal', note: 'noir & rose' },
