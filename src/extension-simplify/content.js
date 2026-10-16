@@ -16,7 +16,6 @@
   let compose, menuButton, menuPanel, status, preferences, searchButton, backgroundLayer;
   let dateSignature = "", dateRows = [];
   let pending = Promise.resolve();
-  const nativeOverlayListeners = new Map();
   const observer = new MutationObserver(records => {
     if (records.some(r => !r.target.closest?.('[data-pks-ui]') && (r.type === 'attributes' || ![...r.addedNodes, ...r.removedNodes].every(n => n.nodeType === 1 && n.hasAttribute('data-pks-ui'))))) schedule();
   });
@@ -51,69 +50,20 @@
     }).catch(() => { if (preferences) $("[role=status]", preferences).textContent = tr("Enregistrement impossible.", "Could not save preferences."); });
     return pending;
   }
-  function clearNativeOverlayTargets() {
-    for (const [target, listener] of nativeOverlayListeners) {
-      target.removeEventListener(listener.type, listener.handler);
-      delete target.dataset.pksMenuNativeKey;
-      for (const name of ["left", "top", "width", "height"]) target.style.removeProperty(`--pks-menu-${name}`);
-      if (target.dataset.pksSavedTabindex === "unset") target.removeAttribute("tabindex");
-      else if (target.dataset.pksSavedTabindex != null) target.tabIndex = Number(target.dataset.pksSavedTabindex);
-      delete target.dataset.pksSavedTabindex;
-      if (target.dataset.pksSavedAriaHidden === "unset") target.removeAttribute("aria-hidden");
-      else if (target.dataset.pksSavedAriaHidden != null) target.setAttribute("aria-hidden", target.dataset.pksSavedAriaHidden);
-      delete target.dataset.pksSavedAriaHidden;
-    }
-    nativeOverlayListeners.clear();
-    root.style.removeProperty("--pks-menu-toolbar-z");
-  }
-  function syncNativeMenuTargets() {
-    if (!menuPanel) return;
-    const desired = all("button[data-pks-menu-key]", menuPanel).flatMap(trigger => {
-      const key = trigger.dataset.pksMenuKey;
-      const target = all(selectors[key]).find(el => el.closest('[data-pks-toolbar]')) || $(selectors[key]);
-      return target ? [{ key, trigger, target }] : [];
-    });
-    const unchanged = desired.length === nativeOverlayListeners.size && desired.every(({ key, trigger, target }) => {
-      const prior = nativeOverlayListeners.get(target);
-      if (!prior || prior.key !== key || prior.trigger !== trigger) return false;
-      const rect = trigger.getBoundingClientRect();
-      return Math.abs(parseFloat(target.style.getPropertyValue("--pks-menu-left")) - rect.left) < .25 &&
-        Math.abs(parseFloat(target.style.getPropertyValue("--pks-menu-top")) - rect.top) < .25;
-    });
-    if (unchanged) return;
-    clearNativeOverlayTargets();
-    for (const { key, trigger, target } of desired) {
-      const rect = trigger.getBoundingClientRect();
-      target.dataset.pksMenuNativeKey = key;
-      target.dataset.pksSavedTabindex = target.hasAttribute("tabindex") ? String(target.tabIndex) : "unset";
-      target.dataset.pksSavedAriaHidden = target.hasAttribute("aria-hidden") ? target.getAttribute("aria-hidden") : "unset";
-      target.tabIndex = -1;
-      target.setAttribute("aria-hidden", "true");
-      for (const [name, value] of Object.entries({ left: rect.left, top: rect.top, width: rect.width, height: rect.height })) {
-        target.style.setProperty(`--pks-menu-${name}`, `${value}px`);
-      }
-      const type = ["pane", "paneOptions", "input"].includes(key) ? "mouseup" : "click";
-      const handler = () => closeMenu();
-      target.addEventListener(type, handler, { once: true });
-      nativeOverlayListeners.set(target, { key, trigger, type, handler });
-    }
-    root.style.setProperty("--pks-menu-toolbar-z", "190");
-    root.setAttribute("data-pks-menu-native", "true");
-  }
   function closeMenu(focus = false) {
     menuPanel?.remove(); menuPanel = null;
-    root.removeAttribute("data-pks-menu-native");
-    clearNativeOverlayTargets();
     menuButton?.setAttribute("aria-expanded", "false");
     if (focus) menuButton?.focus();
   }
   function closePreferences() { preferences?.remove(); preferences = null; }
   function nativeAction(key) {
-    // Keyboard activation uses Gmail's native target without exposing its header icon.
+    // Temporarily expose the native target at its original location for Gmail's popovers.
     closeMenu();
     const candidates = all(selectors[key]);
     const target = candidates.find(el => el.closest('[data-pks-toolbar]')) || candidates[0];
     if (!target) return;
+    set("native-control", key);
+    target.focus();
     // Gmail's Closure toolbar controls activate on mouseup; header links use click.
     if (['pane', 'paneOptions', 'input'].includes(key)) {
       for (const type of ['mousedown', 'mouseup']) target.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window, button: 0 }));
@@ -149,24 +99,17 @@
   function openMenu() {
     if (menuPanel) { closeMenu(true); return; }
     menuPanel = element("div", "pks-menu"); menuPanel.setAttribute("role", "menu"); menuPanel.setAttribute("aria-label", tr("Options Gmail", "Gmail options"));
-    const nativeItems = [];
-    function item(title, action, key) {
-      const b = button(null, title, title); b.setAttribute("role", "menuitem"); b.onclick = action; menuPanel.append(b);
-      if (key) b.dataset.pksMenuKey = key;
-    }
+    function item(title, action) { const b = button(null, title, title); b.setAttribute("role", "menuitem"); b.onclick = action; menuPanel.append(b); }
     item(tr("Apparence de Gmail", "Gmail appearance"), openPreferences);
     for (const [key, title] of [["settings", tr("Paramètres Gmail", "Gmail settings")], ["apps", tr("Applications Google", "Google apps")], ["help", tr("Aide", "Help")], ["gemini", "Gemini"], ["availability", tr("Disponibilité", "Availability")], ["pane", tr("Activer / désactiver le volet de lecture", "Toggle reading pane")], ["paneOptions", tr("Position du volet de lecture", "Reading pane position")], ["input", tr("Outils de saisie", "Input tools")]]) {
-      const target = all(selectors[key]).find(el => el.closest('[data-pks-toolbar]')) || $(selectors[key]);
-      if (target) item(title, () => nativeAction(key), key);
+      if ($(selectors[key])) item(title, () => nativeAction(key));
     }
     item(settings.hideAddons ? tr("Afficher le panneau Google", "Show Google side panel") : tr("Masquer le panneau Google", "Hide Google side panel"), () => { save({ hideAddons: !settings.hideAddons }); closeMenu(true); });
     menuPanel.addEventListener("keydown", e => {
       const items = all("button", menuPanel); const i = items.indexOf(document.activeElement);
       if (["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) { e.preventDefault(); items[e.key === "Home" ? 0 : e.key === "End" ? items.length - 1 : (i + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length]?.focus(); }
     });
-    document.body.append(menuPanel);
-    syncNativeMenuTargets();
-    menuButton.setAttribute("aria-expanded", "true"); $("button", menuPanel).focus();
+    document.body.append(menuPanel); menuButton.setAttribute("aria-expanded", "true"); $("button", menuPanel).focus();
   }
   function removeUI() {
     for (const el of [compose, menuButton, status, searchButton, backgroundLayer]) el?.remove();
@@ -294,7 +237,6 @@
       compose.onclick=()=>$('.z0 [role="button"], .z0 .T-I-KE')?.click();document.body.append(compose);
     } else if (!floating) { compose?.remove();compose=null; }
     groupDates(view === 'reading' || empty ? [] : rows);
-    if (menuPanel) syncNativeMenuTargets();
   }
   function apply() {
     if (!ready || stopped) return;

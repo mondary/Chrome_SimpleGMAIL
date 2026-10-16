@@ -4,6 +4,15 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.13] - 2026-10-16
+
+### Fixed
+- En-tête et menu compact restaurés à la base v2026.10.6, dernière version documentée comme vérifiée sur Gmail réel.
+- Compteurs de messages non lus conservés sur les onglets de catégories.
+
+### Changed
+- Archive Chrome et liens de téléchargement mis à jour en v2026.10.13.
+
 ## [2026.10.12] - 2026-10-16
 
 ### Added
