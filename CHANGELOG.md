@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.40] - 2026-10-16
+
+### Changed
+- **Arborescence — étape 2** : `tools/` rangé par usage — harnais d'aperçu regroupés sous `tools/previews/` (Focus OS, SimpleMail Original), page de test des versions sous `tools/tester/`, client Himalaya regroupé sous `tools/pkmail/` (CLI, interface Next.js, config `.himalaya/`, README). Chemins internes, `.gitignore` et documentation mis à jour.
+
 ## [2026.10.39] - 2026-10-16
 
 ### Changed

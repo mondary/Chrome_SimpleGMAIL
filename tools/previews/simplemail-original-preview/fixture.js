@@ -1,5 +1,5 @@
 /* The five fictional conversations shown in archive 01. No mailbox connection. */
-window.chrome = { runtime: { getURL: path => new URL('../../src/extension-pk/' + path, location.href).href } };
+window.chrome = { runtime: { getURL: path => new URL('../../../src/extension-pk/' + path, location.href).href } };
 const fixtureMessages = [
   ['Sophie Mercier', "Re: Appel d'offres — Félicitations !", 3, 'À lire', "C'est officiel : vous êtes retenu pour la refonte de notre C", '15 oct.', false, false],
   ['Marc Leblanc', 'Compte-rendu Sprint Planning #24', 2, 'Clients', 'Voici le compte-rendu du sprint planning. 18 tickets chargés', '14 oct.', false, false],

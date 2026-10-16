@@ -39,10 +39,10 @@ Depuis la racine du dépôt :
 python3 -m http.server 8769 --bind 127.0.0.1
 ```
 
-Ouvrir `http://127.0.0.1:8769/tools/focus-os-preview/#inbox` pour l’aperçu fictif
+Ouvrir `http://127.0.0.1:8769/tools/previews/focus-os-preview/#inbox` pour l’aperçu fictif
 (les huit messages de l’archive). Cette page charge les vrais fichiers du thème,
 sur une structure DOM de test ; elle ne se connecte à aucune boîte mail.
-`tools/focus-os-preview/verify.mjs` exporte `verify(page)` pour une Page Ego.
+`tools/previews/focus-os-preview/verify.mjs` exporte `verify(page)` pour une Page Ego.
 
 Vérifications : mesures à 1440 × 900, stabilité de l’observateur, navigation,
 recherche, lecture et retour, archivage fictif, recalcul des groupes de dates,

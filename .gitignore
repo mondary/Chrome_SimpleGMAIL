@@ -35,7 +35,7 @@ __pycache__/
 *.sqlite
 *.sqlite3
 releases/
-tools/.himalaya/
+tools/pkmail/.himalaya/
 scriptcat-backup-*.zip
 
 # symlinks locaux vers projets voisins (non versionnés)

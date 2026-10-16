@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 
 export async function verify(page) {
-  await page.goto('http://127.0.0.1:8769/tools/focus-os-preview/#inbox');
+  await page.goto('http://127.0.0.1:8769/tools/previews/focus-os-preview/#inbox');
   await page.reload();
   await page.cdp('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
   await page.waitForSelector('#fos-list-head');

@@ -6,7 +6,7 @@
 
 Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla. Packagé en application native (macOS · Windows · Linux).
 
-**Version 2026.10.39** — [Changelog](CHANGELOG.md)
+**Version 2026.10.40** — [Changelog](CHANGELOG.md)
 
 [![Aperçu de l’extension Gmail](store/screenshots/05-ocean.png)](store/index.html)
 [![Réglages de l’extension Gmail](store/screenshots/02-reglages.png)](store/index.html)
@@ -40,7 +40,7 @@ Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla
 
 ### Extension Chrome — PK Gmail Studio
 - **PK Gmail Studio** : l'extension canonique, avec panneau latéral et six thèmes — *Natif*, *Studio* (28 tweaks cochables), *Simplify* (fonds photo, boîte vide et volet de lecture), *Classique*, **Focus OS** (liste mono de 900 px, catégories en icônes, lignes de 35 px, sélection noire et raccourcis) et **SimpleMail Original** (rail de 64 px, recherche large, composer noir, liste aérée). Les autres concepts du Lab restent à transposer.
-- **Focus OS** : [guide et activation](src/extension-pk/themes/focus-os/README.md) · [capture avec données fictives](store/screenshots/10-focus-os.png) · aperçu local dans `tools/focus-os-preview/`.
+- **Focus OS** : [guide et activation](src/extension-pk/themes/focus-os/README.md) · [capture avec données fictives](store/screenshots/10-focus-os.png) · aperçu local dans `tools/previews/focus-os-preview/`.
 - Guide : [`src/extension-pk/`](src/extension-pk/). Simplify vit désormais comme thème (`src/extension-pk/themes/simplify/`) ; son extension autonome est archivée (`archives/versions/05-simplify-2026.10.16/`, hors git). Non publiée sur le Chrome Web Store.
 
 ### Sombre Mail — client mail autonome (`tools/mail-client/`)

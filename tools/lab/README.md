@@ -10,4 +10,4 @@ déplace, on archive, on fusionne.
 
 Les montages sont dans `../../src/desktop/main.py` (`_static_asset_dir`),
 le point d'entrée est `atelier-actuel/index.html`, et la page de test des
-versions est `../tester-server.py` (port 9900).
+versions est `../tester/tester-server.py` (port 9900).

@@ -1,5 +1,5 @@
 /* Inject the real theme files into Gmail inside an isolated Ego Page.
-   Usage: ego-browser nodejs < tools/simplemail-original-preview/test-gmail.mjs */
+   Usage: ego-browser nodejs < tools/previews/simplemail-original-preview/test-gmail.mjs */
 import { readFile } from 'node:fs/promises';
 
 const root = '/Users/clm/Documents/GitHub/PROJECTS/-pkMAIL/Chrome_SimpleGMAIL/src/extension-pk/';

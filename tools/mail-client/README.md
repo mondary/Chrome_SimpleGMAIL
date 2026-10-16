@@ -41,4 +41,4 @@ répond explicitement qu'aucun compte n'est actif.
 
 Version finale v1 du projet « mail-client » (24–26 juin 2026), promue depuis
 les archives locales vers `tools/`. Successeurs en ligne de commande :
-[`tools/pkmail`](../PKMAIL.md) et `tools/pkmail-ui`.
+[`tools/pkmail`](../pkmail/README.md) et `tools/pkmail/ui`.
