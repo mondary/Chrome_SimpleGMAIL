@@ -4,6 +4,12 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.38] - 2026-10-16
+
+### Added
+- **Thème Classique** : nouvelle option « Masquer Mail, Chat et Meet » — la barre latérale gauche (rail + dossiers) et la fenêtre Chat/Meet disparaissent, comme dans Studio et Focus OS. Désactivée par défaut, pilotée en direct via `smcStyle`.
+- **Thème SimpleMail Original** : transposition de l'archive 01 — rail de 64 px, recherche large, composer noir et liste aérée, polices Outfit et Material Symbols embarquées, avec son harnais d'aperçu fictif (`tools/simplemail-original-preview/`).
+
 ## [2026.10.37] - 2026-10-16
 
 ### Fixed

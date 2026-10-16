@@ -5,7 +5,7 @@
   if (globalThis.__smClassicLoaded) return;
   globalThis.__smClassicLoaded = true;
 
-  const DEFAULTS = { greeting: true, avatars: true, dateGroups: true, floatingCompose: true, hideTabs: true };
+  const DEFAULTS = { greeting: true, avatars: true, dateGroups: true, floatingCompose: true, hideTabs: true, hideRail: false };
   let settings = { ...DEFAULTS };
   const $ = (s, p = document) => p.querySelector(s);
   const all = (s, p = document) => [...p.querySelectorAll(s)];
@@ -19,6 +19,7 @@
   function attrs() {
     root.dataset.smcFab = settings.floatingCompose ? "on" : "off";
     root.dataset.smcTabs = settings.hideTabs ? "hidden" : "shown";
+    root.dataset.smcRail = settings.hideRail ? "hidden" : "shown";
   }
 
   function greeting() {

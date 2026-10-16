@@ -31,6 +31,9 @@ html, body { background: #fff !important; }
 html[data-smc-tabs="hidden"] .aKh { display: none !important; }
 html[data-smc-tabs="hidden"] .aUx { display: none !important; }
 
+/* ---- Option : masquer la barre Mail / Chat / Meet (comme Studio) ---- */
+html[data-smc-rail="hidden"] :is(.aeN, .brC-aT5-aOt-Jw) { display: none !important; }
+
 /* ---- Salutation (injectée par theme.js) ---- */
 .smc-greeting { padding: 18px 24px 4px; }
 .smc-hello { font-size: 19px; font-weight: 700; color: var(--smc-ink); }

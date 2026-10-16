@@ -33,6 +33,13 @@ self.LAB_THEMES = [
     css: 'themes/focus-os/theme.css',
     js: ['themes/focus-os/theme.js'],
   },
+  {
+    id: 'theme-simplemail-original',
+    label: 'SimpleMail Original',
+    description: 'Archive 01 : rail de 64 px, recherche large, Composer noir et liste aérée.',
+    css: 'themes/simplemail-original/theme.css',
+    js: ['themes/simplemail-original/theme.js'],
+  },
 ];
 
 // Tweaks « bonus », jamais actifs dans les presets du thème PK : opt-in uniquement.
@@ -68,13 +75,14 @@ self.THEME_SETTINGS = {
   },
   'theme-simplemail-classic': {
     storage: 'smcStyle',
-    defaults: { greeting: true, avatars: true, dateGroups: true, floatingCompose: true, hideTabs: true },
+    defaults: { greeting: true, avatars: true, dateGroups: true, floatingCompose: true, hideTabs: true, hideRail: false },
     toggles: [
       ['greeting', 'Salutation « Bonjour »'],
       ['avatars', 'Avatars initiales'],
       ['dateGroups', 'Groupes de dates'],
       ['floatingCompose', 'Bouton de rédaction flottant'],
       ['hideTabs', 'Masquer onglets et panneau Google'],
+      ['hideRail', 'Masquer Mail, Chat et Meet (barre latérale)'],
     ],
     choices: [],
   },
