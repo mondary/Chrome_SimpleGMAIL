@@ -52,6 +52,18 @@ self.LAB_THEMES_UPCOMING = [];
 // Réglages par thème, affichés dans la section Scripts du panneau.
 // storage = clé chrome.storage.local que le thème écoute en direct.
 self.THEME_SETTINGS = {
+  'theme-focus-os': {
+    storage: 'fosStyle',
+    defaults: { primary: true, promotions: true, social: true, updates: true, forums: true, newsletter: true, tabsAlign: 'left' },
+    toggles: [
+      ['primary', 'Afficher Principale'], ['promotions', 'Afficher Promotions'],
+      ['social', 'Afficher Réseaux'], ['updates', 'Afficher Notifications'],
+      ['forums', 'Afficher Forums'], ['newsletter', 'Afficher Newsletters'],
+    ],
+    choices: [
+      ['tabsAlign', 'Alignement des catégories', [['left', 'À gauche'], ['center', 'Au centre'], ['right', 'À droite']]],
+    ],
+  },
   'theme-simplify': {
     storage: 'pkGmailStyle',
     defaults: {

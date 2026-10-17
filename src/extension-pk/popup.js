@@ -165,18 +165,21 @@ function renderThemeSettings(theme, stored) {
   listEl.appendChild(h);
 
   const save = async (key, value) => {
-    style[key] = value;
-    await chrome.storage.local.set({ [spec.storage]: { ...style } });
+    const latest = await chrome.storage.local.get(spec.storage);
+    await chrome.storage.local.set({ [spec.storage]: { ...spec.defaults, ...latest[spec.storage], [key]: value } });
   };
 
   for (const [key, label] of spec.toggles) {
     const { row } = makeRow(label);
-    row.appendChild(switchEl(style[key] !== false, (on) => save(key, on)));
+    const control = switchEl(style[key] !== false, (on) => save(key, on));
+    control.querySelector('input').setAttribute('aria-label', label);
+    row.appendChild(control);
     listEl.appendChild(row);
   }
   for (const [key, label, options] of spec.choices) {
     const { row } = makeRow(label);
     const select = document.createElement('select');
+    select.setAttribute('aria-label', label);
     for (const [value, name] of options) {
       const option = document.createElement('option');
       option.value = value;
@@ -220,8 +223,9 @@ function render(enabled, marginPct, theme, storedStyle) {
 }
 
 async function loadState() {
-  let { enabled = {}, marginPct = 5, theme = '', pkGmailStyle = {} } =
-    await chrome.storage.local.get(['enabled', 'marginPct', 'theme', 'pkGmailStyle']);
+  const styleKeys = Object.values(self.THEME_SETTINGS || {}).map(spec => spec.storage);
+  const stored = await chrome.storage.local.get(['enabled', 'marginPct', 'theme', ...styleKeys]);
+  let { enabled = {}, marginPct = 5, theme = '' } = stored;
   // Auto-réparation : des tweaks actifs sans thème sélectionné → contexte Studio.
   const known = self.LAB_THEMES.map((t) => t.id);
   if (!known.includes(theme) && self.LAB_ITEMS.some((i) => enabled[i.id] !== false)) {
@@ -229,8 +233,25 @@ async function loadState() {
     await chrome.storage.local.set({ theme });
   }
   renderThemes(theme);
-  render(enabled, marginPct, theme, pkGmailStyle);
+  render(enabled, marginPct, theme, stored[self.THEME_SETTINGS?.[theme]?.storage] || {});
 }
+
+// Reflect changes made from a theme's own settings dialog without stealing focus.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local') return;
+  const theme = document.querySelector('input[name="theme"]:checked')?.value;
+  const spec = self.THEME_SETTINGS?.[theme];
+  if (!spec || !changes[spec.storage]) return;
+  const style = { ...spec.defaults, ...changes[spec.storage].newValue };
+  for (const [key, label] of spec.toggles) {
+    const input = [...listEl.querySelectorAll('input[type=checkbox]')].find(el => el.getAttribute('aria-label') === label);
+    if (input) input.checked = style[key] !== false;
+  }
+  for (const [key, label] of spec.choices) {
+    const select = [...listEl.querySelectorAll('select')].find(el => el.getAttribute('aria-label') === label);
+    if (select) select.value = style[key];
+  }
+});
 
 async function persist(enabled) {
   await chrome.storage.local.set({ enabled });

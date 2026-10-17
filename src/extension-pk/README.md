@@ -14,7 +14,7 @@ visuelle aux onglets `mail.google.com`, sans backend ni compte supplémentaire.
 | *Studio* | 28 tweaks cochables historiques. |
 | *Simplify* | Fonds photo, boîte vide et volet de lecture (`themes/simplify/`). |
 | *Classique* | Transposition V1 : salutation, avatars, groupes de dates (`themes/simplemail-classic/`). |
-| *Focus* | Liste mono de 900 px, catégories en icônes, raccourcis (`themes/focus-os/`). |
+| *Focus* | Liste mono de 900 px, catégories masquables et alignables, compteur total Gmail et raccourcis (`themes/focus-os/`). |
 | *Original* | Transposition de l'archive 01 : rail 64 px, recherche large, Composer noir, liste aérée (`themes/simplemail-original/`). |
 
 ## Installer

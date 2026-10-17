@@ -4,6 +4,18 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.46] - 2026-10-17
+
+### Added
+- **Focus — catégories personnalisables** : afficher ou masquer indépendamment Principale, Promotions, Réseaux, Notifications, Forums et Newsletters ; aligner la barre à gauche, au centre ou à droite. Réglages disponibles dans le menu Focus et le panneau de l'extension, enregistrés dans `fosStyle` et synchronisés en direct, sans rechargement.
+
+### Fixed
+- **Focus — total Gmail** : le compteur reprend la pagination native de la vue active (« 1–100 sur 286 » donne 286), au lieu de compter uniquement les lignes chargées. Les totaux estimés restent signalés ; en l'absence de total, le libellé indique explicitement les messages chargés. Le compteur de liste et celui de l'en-tête concordent, y compris après pagination et pendant la lecture.
+- **Panneau — préférences du thème actif** : chargement de la bonne clé de stockage plutôt que systématiquement `pkGmailStyle`, prise en compte des changements externes et conservation des préférences lors d'une modification depuis l'autre interface.
+
+### Changed
+- Harnais : tests des réglages persistants, des trois alignements à 1440 et 390 px, du panneau réel sur stockage fictif, des totaux exacts/estimés/indisponibles et des anciennes vues conservées par Gmail. Capture des réglages ajoutée.
+
 ## [2026.10.45] - 2026-10-17
 
 ### Fixed

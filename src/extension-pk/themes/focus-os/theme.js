@@ -15,7 +15,10 @@
     ['forums', 'Forums', 'Forums', '\uf086'],
     ['newsletter', 'Newsletters', 'Newsletters', '\uf1ea'],
   ];
-  let main, activeRow, rows = [], frame = 0, archived = 0, pendingArchive, listCount = 0;
+  const DEFAULTS = { primary: true, promotions: true, social: true, updates: true, forums: true, newsletter: true, tabsAlign: 'left' };
+  let settings = { ...DEFAULTS };
+  let main, activeRow, rows = [], frame = 0, archived = 0, pendingArchive;
+  let listTotal = { value: '0', label: 'messages', detail: 'Total de cette vue' };
   let returnHash = '#inbox', lastHash = location.hash, reading = false, noticeTimer, replyAfterOpen = false;
   let pendingPrimary = false, searchBar = null;
   const searchResize = new ResizeObserver(schedule);
@@ -47,6 +50,59 @@
     return node;
   }
   function text(node, value) { if (node && node.textContent !== value) node.textContent = value; }
+  function applySettings() {
+    const nav = $('#fos-categories');
+    if (nav) {
+      nav.dataset.align = ['left', 'center', 'right'].includes(settings.tabsAlign) ? settings.tabsAlign : 'left';
+      all('button', nav).forEach(b => { b.hidden = settings[b.dataset.category] === false; });
+    }
+    all('#fos-dialog [data-fos-setting]').forEach(control => {
+      const key = control.dataset.fosSetting;
+      if (control.type === 'checkbox') control.checked = settings[key] !== false;
+      else control.value = settings[key];
+    });
+  }
+  async function saveSetting(key, value) {
+    settings = { ...settings, [key]: value };
+    applySettings();
+    try { await chrome.storage.local.set({ fosStyle: settings }); }
+    catch { notice('Le réglage est appliqué, mais sa sauvegarde a échoué.'); }
+  }
+  function settingsForm(dialog) {
+    const fieldset = el('fieldset', 'fos-preferences');
+    fieldset.append(el('legend', '', 'Catégories visibles'));
+    const grid = el('div', 'fos-preference-grid');
+    categories.forEach(([id, label]) => {
+      const item = el('label'), input = el('input');
+      input.type = 'checkbox'; input.dataset.fosSetting = id;
+      input.checked = settings[id] !== false;
+      input.addEventListener('change', () => saveSetting(id, input.checked));
+      item.append(input, document.createTextNode(label)); grid.append(item);
+    });
+    fieldset.append(grid);
+    const alignment = el('label', 'fos-alignment', 'Alignement des catégories');
+    const select = el('select'); select.dataset.fosSetting = 'tabsAlign';
+    for (const [value, label] of [['left', 'À gauche'], ['center', 'Au centre'], ['right', 'À droite']]) {
+      const option = el('option', '', label); option.value = value; select.append(option);
+    }
+    select.value = settings.tabsAlign;
+    select.addEventListener('change', () => saveSetting('tabsAlign', select.value));
+    alignment.append(select); fieldset.append(alignment); dialog.append(fieldset);
+  }
+  function messageTotal() {
+    // Read the active view's native pagination, even though Focus hides its
+    // toolbar. Cached views elsewhere in Gmail must never supply this total.
+    for (const pager of all('.G-atb .Dj', main)) {
+      const source = pager.textContent.trim();
+      const match = source.match(/[\d\s.,\u00a0\u202f]+[–—-][\d\s.,\u00a0\u202f]+\s+(?:sur|of)\s+(?:(environ|about|approximately)\s+)?([\d][\d\s.,\u00a0\u202f]*)(\+)?\s*$/i);
+      if (!match) continue;
+      const count = Number(match[2].replace(/\D/g, ''));
+      if (!Number.isSafeInteger(count) || count < rows.length) continue;
+      const value = (match[1] ? '≈ ' : '') + count.toLocaleString('fr-FR') + (match[3] || '');
+      return { value, label: 'messages', detail: `Total indiqué par Gmail : ${source}` };
+    }
+    return { value: String(rows.length), label: rows.length ? 'messages chargés' : 'messages', detail: rows.length ? 'Gmail ne fournit pas de total pour cette vue ; nombre de messages chargés.' : 'Aucun message dans cette vue.' };
+  }
   function notice(message) {
     text($('#fos-status'), message);
     clearTimeout(noticeTimer);
@@ -123,8 +179,8 @@
     const right = el('div', 'fos-right');
     const total = el('span', 'fos-total');
     const count = el('span', 'fos-n', '0'); count.id = 'fos-total';
-    total.append(count, document.createTextNode(' messages'));
-    total.title = 'Messages chargés dans cette vue';
+    const countLabel = el('span', '', 'messages'); countLabel.id = 'fos-total-label';
+    total.append(count, document.createTextNode(' '), countLabel);
     const archive = button('Tous les messages · archives de cette session', '\uf187 ', () => route('#all'));
     archive.className = 'fos-archive-total';
     const archiveCount = el('span', 'fos-n', '0'); archiveCount.id = 'fos-archive-total'; archive.append(archiveCount);
@@ -141,6 +197,7 @@
     const cmd = ui('footer', 'fos-cmd'); cmd.setAttribute('aria-label', 'Commandes Focus');
     const status = ui('div', 'fos-status'); status.setAttribute('role', 'status');
     document.body.append(hud, nav, cmd, status);
+    applySettings();
     commands();
   }
   function commands() {
@@ -176,6 +233,7 @@
     const header = el('header'), title = el('h2', '', help ? 'Raccourcis Focus' : 'Focus · Gmail');
     title.id = 'fos-dialog-title';
     header.append(title, button('Fermer', '×', closeDialog)); dialog.append(header);
+    if (!help) settingsForm(dialog);
     if (help) dialog.append(el('p', '', 'J / K ou ↓ / ↑ : naviguer · Entrée : ouvrir · E : archiver · L : libellés · R : répondre · C : nouveau message · / : rechercher · Échap : retour · , : réglages.'));
     const grid = el('div', 'fos-menu');
     const actions = [
@@ -345,7 +403,7 @@
       rows = all('.zA', main).filter(visible);
       const nextReading = rows.length === 0 && !!all('.hP, .a3s', main).find(visible);
       if (reading !== nextReading) { reading = nextReading; commands(); }
-      if (!reading && $('.Cp', main)) listCount = rows.length;
+      if (!reading) listTotal = messageTotal();
       root.toggleAttribute('data-fos-reading', reading);
       root.toggleAttribute('data-fos-settings', location.hash.startsWith('#settings'));
       if (reading && replyAfterOpen) { replyAfterOpen = false; requestAnimationFrame(() => run('reply')); }
@@ -365,9 +423,14 @@
         const archive = button('Archives de cette session · tous les messages', '', () => route('#all')); archive.className = 'fos-archived'; head.append(archive);
         main.prepend(head);
       }
-      text($('.fos-folder', head), folderTitle()); text($('.fos-n', head), String(rows.length));
+      text($('.fos-folder', head), folderTitle());
+      const headCount = $('.fos-n', head);
+      text(headCount, listTotal.value + (listTotal.label === 'messages chargés' ? ' chargés' : ''));
+      headCount.title = listTotal.detail;
       text($('.fos-archived', head), `${archived} archivés`);
-      text($('#fos-total'), String(reading ? listCount : rows.length)); text($('#fos-archive-total'), String(archived));
+      text($('#fos-total'), listTotal.value); text($('#fos-total-label'), listTotal.label);
+      $('.fos-total').title = listTotal.detail;
+      text($('#fos-archive-total'), String(archived));
       const category = currentCategory();
       all('#fos-categories button').forEach(b => b.setAttribute('aria-current', String(b.dataset.category === category?.[0])));
     } finally { observe(); }
@@ -416,5 +479,14 @@
   }, true);
   window.addEventListener('hashchange', schedule);
   window.addEventListener('resize', schedule);
+  if (chrome.storage?.local) {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area !== 'local' || !changes.fosStyle) return;
+      settings = { ...DEFAULTS, ...changes.fosStyle.newValue }; applySettings();
+    });
+    chrome.storage.local.get('fosStyle').then(stored => {
+      settings = { ...DEFAULTS, ...stored.fosStyle }; applySettings();
+    }).catch(() => {});
+  }
   observe(); apply();
 })();

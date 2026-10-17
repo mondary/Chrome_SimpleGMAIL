@@ -1,5 +1,4 @@
 /* Synthetic Gmail-shaped DOM: no account, network mailbox, or personal data. */
-window.chrome = { runtime: { getURL: path => new URL('../../../src/extension-pk/' + path, location.href).href } };
 const fixtureMessages = [
   ['Camille Durand', 'camille@atelier-nord.fr', 'Compte rendu — réunion de cadrage lundi', '09:42', true],
   ['OVHcloud', 'noreply@ovhcloud.net', 'Facture FR-2026-0812 disponible', '08:15', false],
