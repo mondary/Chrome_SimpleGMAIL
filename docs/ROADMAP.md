@@ -5,7 +5,8 @@ décrit ce qui est livré ; ce fichier décrit ce qui vient après.
 
 ## Chantiers côté extension (PK Gmail Studio)
 
-- [x] Six thèmes au panneau : Natif, Studio, Simplify, Classique, Focus OS, Original.
+- [x] Six thèmes au panneau : Natif, Studio, Simplify, Classique, Focus, Original.
+- [x] Focus : retour à Principale, navigation répétée entre catégories et filtres de recherche sans chevauchement.
 - [ ] Transposer les concepts restants du Lab, un vrai layout à la fois
       (atelier-actuel : Label Canvas, Paper Reader, K7 — voir `tools/lab/atelier-actuel/`).
 - [ ] Guide utilisateur de l'extension dans un README unique (les thèmes ont

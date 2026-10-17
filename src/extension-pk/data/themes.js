@@ -28,7 +28,7 @@ self.LAB_THEMES = [
   },
   {
     id: 'theme-focus-os',
-    label: 'Focus OS',
+    label: 'Focus',
     description: 'Lab 01 : liste mono de 900 px, catégories en icônes, sélection noire et raccourcis.',
     css: 'themes/focus-os/theme.css',
     js: ['themes/focus-os/theme.js'],

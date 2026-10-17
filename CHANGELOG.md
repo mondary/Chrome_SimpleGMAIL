@@ -4,6 +4,17 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.45] - 2026-10-17
+
+### Fixed
+- **Focus — retour vers Principale** : les onglets conservés dans une ancienne vue Gmail ne sont plus cliqués depuis une recherche. Le retour ouvre la boîte de réception puis sélectionne Principale, même si Gmail avait mémorisé Promotions ou Forums. Les catégories désactivées restent accessibles par recherche. Les noms d’onglets contenant un compteur de nouveaux messages sont reconnus.
+- **Focus — filtres visibles** : la bande native Messagerie / Conversations / Espaces et ses filtres disposent de leur propre espace sous les catégories. La liste et le lecteur tiennent compte de sa hauteur réelle, y compris après redimensionnement. Les attributs de dates inchangés ne sont plus réécrits, pour laisser les menus natifs ouverts.
+- **Focus — navigation répétée** : les séparateurs de dates passent en pseudo-éléments CSS. Les lignes artificielles ajoutées aux tableaux perturbaient le réaffichage des recherches mises en cache par Gmail. La mise en forme des anciennes vues est aussi retirée dès qu'elles perdent leur rôle principal.
+
+### Changed
+- **Focus OS devient Focus** dans le panneau et l'interface, sans changement d'identifiant interne ni perte du thème sélectionné.
+- **Vérifications** : aller-retour depuis chaque catégorie, boîte native à trois onglets, recherches et filtres accessibles, géométrie desktop / 390 px et stabilité des observateurs. Capture fictive actualisée ; navigation des catégories vérifiée sur Gmail en session Ego isolée.
+
 ## [2026.10.44] - 2026-10-16
 
 ### Fixed

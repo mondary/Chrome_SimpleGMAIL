@@ -1,10 +1,10 @@
-# Focus OS
+# Focus
 
 Transposition du thème 01 de `archives/versions/03-lab-focus-os-2026.08.01/`
-dans le DOM réel de Gmail. Sélectionner **Focus OS** dans le panneau PK Gmail
+dans le DOM réel de Gmail. Sélectionner **Focus** dans le panneau PK Gmail
 Studio après avoir rechargé l’extension depuis `chrome://extensions`.
 
-![Focus OS — données fictives](../../../../store/screenshots/10-focus-os.png)
+![Focus — données fictives](../../../../store/screenshots/10-focus-os.png)
 
 Les deux fontes JetBrains Mono Nerd Font de l’archive sont embarquées. La liste
 fait 900 px au maximum, avec des lignes de 35 px, un en-tête de 44 px, une barre
@@ -31,6 +31,14 @@ thème. La catégorie Newsletters utilise la recherche
 native supplémentaire de Gmail. Les catégories désactivées dans Gmail passent
 également par sa recherche.
 
+**Principale** revient toujours à l'onglet principal de la boîte de réception,
+même après une recherche ou une visite de Promotions / Forums. Les filtres natifs
+de recherche (Messagerie, Conversations, Espaces, De, date, etc.) occupent une
+bande dédiée sous les catégories ; la liste se décale selon leur hauteur.
+Les séparateurs de dates sont purement visuels, afin de préserver les tableaux
+et les vues mises en cache par Gmail. L'identifiant `theme-focus-os` est conservé
+pour garder la sélection enregistrée lors du renommage en **Focus**.
+
 ## Vérification locale
 
 Depuis la racine du dépôt :
@@ -43,6 +51,8 @@ Ouvrir `http://127.0.0.1:8769/tools/previews/focus-os-preview/#inbox` pour l’a
 (les huit messages de l’archive). Cette page charge les vrais fichiers du thème,
 sur une structure DOM de test ; elle ne se connecte à aucune boîte mail.
 `tools/previews/focus-os-preview/verify.mjs` exporte `verify(page)` pour une Page Ego.
+`verify-categories.mjs` exporte `verifyCategories(page)` pour les allers-retours
+de catégories, les onglets mis en cache et les filtres à 1440 et 390 px.
 
 Vérifications : mesures à 1440 × 900, stabilité de l’observateur, navigation,
 recherche, lecture et retour, archivage fictif, recalcul des groupes de dates,

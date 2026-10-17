@@ -14,7 +14,7 @@ visuelle aux onglets `mail.google.com`, sans backend ni compte supplémentaire.
 | *Studio* | 28 tweaks cochables historiques. |
 | *Simplify* | Fonds photo, boîte vide et volet de lecture (`themes/simplify/`). |
 | *Classique* | Transposition V1 : salutation, avatars, groupes de dates (`themes/simplemail-classic/`). |
-| *Focus OS* | Liste mono de 900 px, catégories en icônes, raccourcis (`themes/focus-os/`). |
+| *Focus* | Liste mono de 900 px, catégories en icônes, raccourcis (`themes/focus-os/`). |
 | *Original* | Transposition de l'archive 01 : rail 64 px, recherche large, Composer noir, liste aérée (`themes/simplemail-original/`). |
 
 ## Installer
@@ -49,7 +49,7 @@ Les fichiers `data/*.js` portent l'en-tête « Généré par build.sh » : ne pa
 
 ## Vérifications
 
-- Harnais d'aperçu fictif : `tools/previews/focus-os-preview/` (Focus OS),
+- Harnais d'aperçu fictif : `tools/previews/focus-os-preview/` (Focus),
   `tools/previews/simplemail-original-preview/` (Original).
 - Les polices et le logo d'un thème vivent dans la page Gmail : ils doivent être
   déclarés dans `web_accessible_resources` (`manifest.json`), sinon Chrome les

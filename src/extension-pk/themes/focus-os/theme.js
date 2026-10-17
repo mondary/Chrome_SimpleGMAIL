@@ -1,4 +1,4 @@
-/* Focus OS — native Gmail adapter. Local fonts; sender favicons as in Lab 01. */
+/* Focus — native Gmail adapter. Local fonts; sender favicons as in Lab 01. */
 (() => {
   'use strict';
   if (globalThis.__focusOSLoaded) return;
@@ -17,13 +17,14 @@
   ];
   let main, activeRow, rows = [], frame = 0, archived = 0, pendingArchive, listCount = 0;
   let returnHash = '#inbox', lastHash = location.hash, reading = false, noticeTimer, replyAfterOpen = false;
-  const groups = new WeakMap();
+  let pendingPrimary = false, searchBar = null;
+  const searchResize = new ResizeObserver(schedule);
   const observer = new MutationObserver(records => {
     if (records.some(r => !r.target.closest?.('[data-fos-ui]'))) schedule();
   });
   const observe = () => observer.observe(root, {
     childList: true, subtree: true, characterData: true, attributes: true,
-    attributeFilter: ['class', 'aria-selected', 'aria-checked', 'style', 'email', 'title'],
+    attributeFilter: ['class', 'role', 'hidden', 'aria-selected', 'aria-checked', 'style', 'email', 'title'],
   });
   function schedule() {
     if (!frame) frame = requestAnimationFrame(() => { frame = 0; apply(); });
@@ -64,6 +65,7 @@
       .find(node => !node.closest('[data-fos-ui]') && visible(node) && pattern.test(node.getAttribute('aria-label') || node.getAttribute('data-tooltip') || node.getAttribute('title') || ''));
   }
   function route(hash) {
+    pendingPrimary = false;
     closeDialog(); root.removeAttribute('data-fos-native-header');
     location.hash = hash; schedule();
   }
@@ -72,13 +74,28 @@
     closeDialog(); root.setAttribute('data-fos-native-header', '');
     window.dispatchEvent(new Event('resize'));
   }
+  function tabCategory(tab) {
+    // Gmail appends unread counts to aria-label, e.g. "Forums, 2 nouveaux messages,".
+    const label = tab?.getAttribute('aria-label')?.split(',')[0].trim();
+    return categories.find(c => c[1] === label || c[2] === label)
+      || (label === 'Réseaux sociaux' ? categories[2] : null);
+  }
   function switchCategory(category) {
-    const [id, fr, en] = category;
+    const [id] = category;
     closeDialog();
-    if (reading) return route(id === 'primary' ? '#inbox' : '#search/' + encodeURIComponent(id === 'newsletter' ? 'in:inbox {category:updates list:unsubscribe}' : `in:inbox category:${id}`));
-    const tab = all('.aKh [role="tab"]').find(node => [fr, en].includes(node.getAttribute('aria-label')));
+    root.removeAttribute('data-fos-native-header');
+    pendingPrimary = false;
+    // Gmail caches the inbox tabs while search/reader views are active. Clicking
+    // those detached-from-view controls does not navigate back to the inbox.
+    const inInbox = /^#(?:inbox)?$/.test(location.hash) && !reading;
+    const tab = inInbox && main && all('.aKh [role="tab"]', main).find(node => tabCategory(node)?.[0] === id);
     if (tab) { activate(tab); schedule(); }
-    else if (id === 'primary') route('#inbox');
+    else if (id === 'primary') {
+      route('#inbox');
+      // Once Gmail mounts its inbox, select Primary even if it remembers a
+      // different category from the previous visit.
+      pendingPrimary = true;
+    }
     else route('#search/' + encodeURIComponent(id === 'newsletter' ? 'in:inbox {category:updates list:unsubscribe}' : `in:inbox category:${id}`));
   }
   function currentCategory() {
@@ -88,8 +105,7 @@
     const query = hash.match(/category:(\w+)/)?.[1] || hash.match(/#category\/(\w+)/)?.[1];
     if (query) return categories.find(c => c[0] === query);
     if (!/^#(?:inbox|$)/.test(hash)) return null;
-    const label = $('.aKh [role="tab"][aria-selected="true"]')?.getAttribute('aria-label');
-    return categories.find(c => c[1] === label || c[2] === label) || categories[0];
+    return (main && tabCategory($('.aKh [role="tab"][aria-selected="true"]', main))) || categories[0];
   }
   function folderTitle() {
     const category = currentCategory();
@@ -102,7 +118,7 @@
     const hud = ui('header', 'fos-hud');
     hud.append(el('span', 'fos-mark', 'SIMPLEMAIL·LAB'));
     const title = el('span', 'fos-title', 'THEME ');
-    title.append(el('b', '', '01 / FOCUS OS'));
+    title.append(el('b', '', '01 / FOCUS'));
     hud.append(title, el('span', 'fos-live', 'GMAIL'));
     const right = el('div', 'fos-right');
     const total = el('span', 'fos-total');
@@ -122,7 +138,7 @@
       const b = button(c[1], c[3], () => switchCategory(c));
       b.dataset.category = c[0]; nav.append(b);
     });
-    const cmd = ui('footer', 'fos-cmd'); cmd.setAttribute('aria-label', 'Commandes Focus OS');
+    const cmd = ui('footer', 'fos-cmd'); cmd.setAttribute('aria-label', 'Commandes Focus');
     const status = ui('div', 'fos-status'); status.setAttribute('role', 'status');
     document.body.append(hud, nav, cmd, status);
     commands();
@@ -157,7 +173,7 @@
     closeDialog();
     const dialog = ui('dialog', 'fos-dialog');
     dialog.setAttribute('aria-labelledby', 'fos-dialog-title');
-    const header = el('header'), title = el('h2', '', help ? 'Raccourcis Focus OS' : 'Focus OS · Gmail');
+    const header = el('header'), title = el('h2', '', help ? 'Raccourcis Focus' : 'Focus · Gmail');
     title.id = 'fos-dialog-title';
     header.append(title, button('Fermer', '×', closeDialog)); dialog.append(header);
     if (help) dialog.append(el('p', '', 'J / K ou ↓ / ↑ : naviguer · Entrée : ouvrir · E : archiver · L : libellés · R : répondre · C : nouveau message · / : rechercher · Échap : retour · , : réglages.'));
@@ -171,7 +187,7 @@
       ['Compte Google / recherche', () => showNativeHeader()], ['Actualiser', () => run('refresh')],
     ];
     actions.forEach(([label, action]) => grid.append(button(label, label, action)));
-    dialog.append(grid, el('p', '', 'Le compteur d’archives correspond aux messages archivés avec Focus OS pendant cette session. Les actions et la recherche sont celles de Gmail.'));
+    dialog.append(grid, el('p', '', 'Le compteur d’archives correspond aux messages archivés avec Focus pendant cette session. Les actions et la recherche sont celles de Gmail.'));
     dialog.addEventListener('click', e => { if (e.target === dialog) { const r = dialog.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closeDialog(); } });
     document.body.append(dialog); dialog.showModal();
   }
@@ -245,7 +261,6 @@
     return value;
   }
   function decorate() {
-    if (!rows.length) all('.fos-day', main).forEach(node => node.remove());
     for (const row of rows) {
       const cell = $('.yX', row);
       if (cell && !$('.fos-fav', cell)) {
@@ -266,22 +281,33 @@
       if (!table) continue;
       const list = rows.filter(r => r.closest('table') === table);
       const labels = list.map(day);
-      const old = groups.get(table);
-      if (old && old.rows.length === list.length && old.rows.every((row, i) => row === list[i] && old.labels[i] === labels[i]) && old.headers.every(h => h.isConnected)) continue;
-      all('.fos-day', table).forEach(node => node.remove());
-      const headers = []; let previous;
+      let previous;
       list.forEach((row, i) => {
-        if (labels[i] && labels[i] !== previous) {
-          const tr = ui('tr', ''); tr.removeAttribute('id'); tr.className = 'fos-day'; tr.setAttribute('role', 'presentation');
-          const td = el('td', '', labels[i]); td.colSpan = row.children.length; tr.append(td); row.before(tr); headers.push(tr);
+        const heading = labels[i] && labels[i] !== previous ? labels[i] : '';
+        // Keep Gmail's tbody exclusively composed of its own message rows.
+        // Extra <tr> nodes break its cached-list lifecycle on return from search.
+        row.classList.toggle('fos-day', !!heading);
+        if (heading) {
+          if (row.dataset.fosDay !== heading) row.dataset.fosDay = heading;
+          const chars = String(heading.length);
+          if (row.style.getPropertyValue('--fos-day-chars') !== chars) row.style.setProperty('--fos-day-chars', chars);
+        } else {
+          if (row.hasAttribute('data-fos-day')) delete row.dataset.fosDay;
+          if (row.style.getPropertyValue('--fos-day-chars')) row.style.removeProperty('--fos-day-chars');
         }
         previous = labels[i];
       });
-      groups.set(table, { rows: list, labels, headers });
     }
   }
   function apply() {
     if (!document.body) return;
+    // Gmail removes role=main before hiding a cached view. Our display:flex
+    // must stop applying immediately, even while the next main is mounting.
+    all('[data-fos-main]').forEach(node => {
+      if (node.getAttribute('role') !== 'main' || node.style.display === 'none') {
+        delete node.dataset.fosMain; $('#fos-list-head', node)?.remove();
+      }
+    });
     const candidate = all('.bkK [role="main"], [role="main"]').find(visible);
     if (!candidate) return;
     // Disconnect during our own changes so date headings cannot trigger a render loop.
@@ -292,6 +318,30 @@
       });
       main = candidate; main.dataset.fosMain = '';
       root.setAttribute('data-focus-os', ''); makeShell();
+      if (pendingPrimary) {
+        if (!/^#(?:inbox)?$/.test(location.hash)) pendingPrimary = false;
+        else {
+          const primary = all('.aKh [role="tab"]', main).find(node => tabCategory(node)?.[0] === 'primary');
+          if (primary) {
+            pendingPrimary = false;
+            if (primary.getAttribute('aria-selected') !== 'true') {
+              activate(primary); schedule();
+            }
+          }
+        }
+      }
+      // Search chips live beside the main region, not inside it. Reserve their
+      // actual height, including wrapping/resizing, above the list and reader.
+      const bar = all('.bkK .biW').find(visible) || null;
+      if (bar !== searchBar) {
+        searchResize.disconnect();
+        searchBar?.removeAttribute('data-fos-search-bar');
+        searchBar = bar;
+        if (bar) { bar.dataset.fosSearchBar = ''; searchResize.observe(bar); }
+      }
+      const searchHeight = bar ? Math.max(0, Math.ceil(bar.getBoundingClientRect().bottom - 82)) : 0;
+      const searchSpace = `${searchHeight}px`;
+      if (root.style.getPropertyValue('--fos-search-height') !== searchSpace) root.style.setProperty('--fos-search-height', searchSpace);
       rows = all('.zA', main).filter(visible);
       const nextReading = rows.length === 0 && !!all('.hP, .a3s', main).find(visible);
       if (reading !== nextReading) { reading = nextReading; commands(); }
@@ -354,7 +404,7 @@
     // runtime.getURL resolves resources correctly in an isolated MV3 content script.
     const base = chrome.runtime.getURL('themes/focus-os/fonts/');
     await Promise.all([['Regular', '400'], ['SemiBold', '600']].map(async ([name, weight]) => {
-      const font = new FontFace('Focus OS Mono', `url("${base}JetBrainsMonoNerdFont-${name}.ttf")`, { weight, display: 'swap' });
+      const font = new FontFace('Focus Mono', `url("${base}JetBrainsMonoNerdFont-${name}.ttf")`, { weight, display: 'swap' });
       document.fonts.add(await font.load());
     }));
   }
