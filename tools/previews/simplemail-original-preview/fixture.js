@@ -22,7 +22,7 @@ for (const [i, [sender, subject, count, label, snippet, date, unread, attachment
   row.append(checkCell, from, cell, byZ, stamp, actions);
   row.addEventListener('click', () => {
     main.querySelector('.Nr').style.display = 'none';
-    const article = make('article', 'fixture-reader'); article.append(make('h2', 'hP', subject), make('div', 'gD', sender), make('p', 'a3s', 'Bonjour, ceci est un message fictif pour vérifier le lecteur SimpleMail Original.'));
+    const article = make('article', 'fixture-reader'); article.append(make('h2', 'hP', subject), make('div', 'gD', sender), make('p', 'a3s', 'Bonjour, ceci est un message fictif pour vérifier le lecteur Original.'));
     main.append(article); location.hash = '#inbox/original-demo-' + i;
   }); tbody.append(row);
 }

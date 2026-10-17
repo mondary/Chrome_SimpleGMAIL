@@ -4,6 +4,15 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.44] - 2026-10-16
+
+### Fixed
+- **Thème Original — menu de gauche réparé** : les polices du thème (`Outfit`, `Material Symbols`) et le logo n'étaient pas déclarés dans `web_accessible_resources`, donc bloqués dans Gmail — chaque icône du rail et de l'en-tête s'affichait en toutes lettres (`inbox`, `view_quilt`, `expand_more`…), débordait du rail de 64 px et le logo restait cassé. Les ressources passent en globs (`icon.png`, `themes/*/fonts/*.ttf`, `themes/*/backgrounds/*.jpg`) pour qu'un thème ajouté plus tard ne puisse plus oublier son entrée. Un échec de chargement des polices s'affiche désormais en avertissement console au lieu d'être avalé en silence.
+- **Harnais d'aperçu** : `tools/previews/focus-os-preview/` et `tools/previews/simplemail-original-preview/` chargeaient `theme.js` depuis un chemin d'un niveau trop court — le thème ne se montait jamais dans les aperçus fictifs. Le thème Original gagne sa capture de démonstration (`store/screenshots/11-original.png`) et son harnais vérifiable (`verify.mjs` : géométrie 1440×900 et 390 px, polices, pictos, logo, observateur au repos, navigation, lecteur, recherche, sélection, tiroir).
+
+### Changed
+- **Thème renommé « Original »** : « SimpleMail Original » devient « Original » dans le panneau, le dialogue du thème et la documentation, comme « Classique » avant lui — l'identifiant interne `theme-simplemail-original` est conservé pour ne pas perdre la sélection enregistrée.
+
 ## [2026.10.43] - 2026-10-16
 
 ### Changed

@@ -35,7 +35,7 @@ self.LAB_THEMES = [
   },
   {
     id: 'theme-simplemail-original',
-    label: 'SimpleMail Original',
+    label: 'Original',
     description: 'Archive 01 : rail de 64 px, recherche large, Composer noir et liste aérée.',
     css: 'themes/simplemail-original/theme.css',
     js: ['themes/simplemail-original/theme.js'],

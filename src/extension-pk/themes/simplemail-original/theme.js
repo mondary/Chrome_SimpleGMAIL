@@ -83,7 +83,7 @@
   }
   function menu(kind = 'actions') {
     closeMenu(); const dialog = ui('dialog', 'smo-menu'); dialog.setAttribute('aria-label', kind === 'labels' ? 'Libellés Gmail' : 'Commandes Gmail');
-    const header = node('header', '', kind === 'labels' ? 'Libellés' : 'SimpleMail Original');
+    const header = node('header', '', kind === 'labels' ? 'Libellés' : 'Original');
     header.append(button('Fermer', 'close', closeMenu)); dialog.append(header);
     const choices = kind === 'labels'
       ? all('.TO a[href*="#label/"]').map(a => [a.textContent.trim(), 'label', () => route(a.hash)])
@@ -239,7 +239,9 @@
       const font = new FontFace(family, `url("${base}${file}")`, { weight, display: 'swap' }); document.fonts.add(await font.load());
     }));
   }
-  fonts().catch(() => {});
+  // Silently losing the icon font turns every ligature name into visible text
+  // ("inbox", "view_quilt"…) instead of an icon: never swallow this failure.
+  fonts().catch(error => console.warn('[Original] polices du thème indisponibles', error));
   document.addEventListener('keydown', keydown, true);
   document.addEventListener('click', e => { if (e.target.closest?.('.zA') && main?.contains(e.target)) returnHash = location.hash; }, true);
   window.addEventListener('hashchange', schedule); window.addEventListener('resize', schedule);

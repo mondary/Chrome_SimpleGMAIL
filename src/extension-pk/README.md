@@ -15,7 +15,7 @@ visuelle aux onglets `mail.google.com`, sans backend ni compte supplémentaire.
 | *Simplify* | Fonds photo, boîte vide et volet de lecture (`themes/simplify/`). |
 | *Classique* | Transposition V1 : salutation, avatars, groupes de dates (`themes/simplemail-classic/`). |
 | *Focus OS* | Liste mono de 900 px, catégories en icônes, raccourcis (`themes/focus-os/`). |
-| *SimpleMail Original* | Transposition de l'archive 01 : rail 64 px, composer noir (`themes/simplemail-original/`). |
+| *Original* | Transposition de l'archive 01 : rail 64 px, recherche large, Composer noir, liste aérée (`themes/simplemail-original/`). |
 
 ## Installer
 
@@ -50,6 +50,9 @@ Les fichiers `data/*.js` portent l'en-tête « Généré par build.sh » : ne pa
 ## Vérifications
 
 - Harnais d'aperçu fictif : `tools/previews/focus-os-preview/` (Focus OS),
-  `tools/previews/simplemail-original-preview/` (SimpleMail Original).
+  `tools/previews/simplemail-original-preview/` (Original).
+- Les polices et le logo d'un thème vivent dans la page Gmail : ils doivent être
+  déclarés dans `web_accessible_resources` (`manifest.json`), sinon Chrome les
+  bloque et les icônes s'affichent en toutes lettres à la place des pictos.
 - La validation sur Gmail réel doit se faire dans un navigateur isolé
   (skill `ego-browser`), jamais dans le navigateur personnel.

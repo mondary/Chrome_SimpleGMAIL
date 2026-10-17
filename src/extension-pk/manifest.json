@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PK Gmail Studio",
-  "version": "2026.10.42",
+  "version": "2026.10.44",
   "description": "Studio de thèmes pour Gmail : PK, Simplify et les thèmes du Lab.",
   "permissions": [
     "storage",
@@ -14,8 +14,9 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "themes/simplify/backgrounds/*.jpg",
-        "themes/focus-os/fonts/*.ttf"
+        "icon.png",
+        "themes/*/backgrounds/*.jpg",
+        "themes/*/fonts/*.ttf"
       ],
       "matches": [
         "https://mail.google.com/*"

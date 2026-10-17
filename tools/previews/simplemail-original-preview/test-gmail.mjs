@@ -3,7 +3,7 @@
 import { readFile } from 'node:fs/promises';
 
 const root = '/Users/clm/Documents/GitHub/PROJECTS/-pkMAIL/Chrome_SimpleGMAIL/src/extension-pk/';
-const task = await taskSpace(4);
+const task = await taskSpace('Original — validation finale');
 const page = task.page('p1');
 await page.goto('https://mail.google.com/mail/u/0/#inbox');
 await page.reload();
