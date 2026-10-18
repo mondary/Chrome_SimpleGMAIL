@@ -25,14 +25,25 @@
   z-index: 990 !important;
 }
 
+/* Rangée message + action : tout est centré verticalement, sinon « Annuler »
+   s'affiche 10 px plus bas que le message (flex align normal = stretch). */
+.bAp .vh .aT {
+  display: flex !important;
+  align-items: center !important;
+}
+
 /* Message du toast. */
 .bAp .vh .bAq {
+  display: flex !important;
+  align-items: center !important;
   margin: 0 12px 0 0 !important;
   color: #ffffff !important;
 }
 
 /* Action « Annuler » : jaune, toujours cliquable. */
 .bAp .vh .bAo {
+  display: flex !important;
+  align-items: center !important;
   margin: 0 !important;
 }
 .bAp .vh #link_undo,

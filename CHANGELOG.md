@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.50] - 2026-10-18
+
+### Fixed
+- **Toast — « Annuler » aligné sur le message** : dans la pilule centrée, le libellé « Annuler » apparaissait 10 px plus bas que le message (la rangée `.aT` héritait d'un `align-items: stretch` : le message s'alignait en haut, l'action au centre). La rangée et ses deux blocs sont désormais centrés verticalement. Vérifié au pixel sur Gmail réel en session isolée : centres de texte message / « Annuler » à 910 / 920 px avant, 920 / 920 px après.
+
 ## [2026.10.49] - 2026-10-18
 
 ### Fixed
