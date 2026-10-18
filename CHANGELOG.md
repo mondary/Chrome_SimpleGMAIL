@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.49] - 2026-10-18
+
+### Fixed
+- **Composeur — bouton « Envoyer » de retour** : « Masquer outils de saisie » et « Masquer volet de lecture » masquaient tout le pied du composeur (`.aDh`/`.aDj` et `.aDg` enveloppent la barre de mise en forme **et** la ligne Envoyer). Seule la vraie barre de mise en forme (`.aDh .LUPmie`) et le bouton/menus du volet de lecture sont désormais masqués ; le bouton « Envoyer », les pièces jointes, les emojis et le lien restent visibles. Vérifié sur Gmail réel en session isolée.
+
 ## [2026.10.48] - 2026-10-18
 
 ### Fixed

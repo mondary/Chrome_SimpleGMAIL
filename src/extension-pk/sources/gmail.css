@@ -278,8 +278,11 @@ body { timeline-scope: --pkscroll; }
 /* 14) Barre supérieure en niveaux de gris (focus couleur sur les mails) */
 #gb { filter: grayscale(1) !important; }
 
-/* 15) Outil de saisie v2 — barre de mise en forme + bouton/menus outils de saisie */
-.aDh, .aDj, .aX .aDh,
+/* 15) Outil de saisie v3 — barre de mise en forme + menus outils de saisie */
+/* `.aDh` et `.aDj` enveloppent AUSSI la ligne Envoyer : on ne masque que la
+   vraie barre de mise en forme (`.aDh .LUPmie`), pas le pied du composeur. */
+.aDh .LUPmie,
+.aX .aDh,
 [aria-label*="Outils de saisie" i],
 [aria-label*="outil de saisie" i],
 [role="menuitem"][aria-label*="saisie" i],
@@ -287,13 +290,16 @@ body { timeline-scope: --pkscroll; }
   display: none !important;
 }
 
-/* 16) Volet de lecture v2 — bouton + entrées de menu, partout */
+/* 16) Volet de lecture v3 — bouton + entrées de menu, partout */
+/* `.aDg` est le pied du composeur (barre de mise en forme + Envoyer) :
+   le masquer supprimait le bouton Envoyer. Seuls le bouton et les menus
+   du volet de lecture sont masqués. */
 [aria-label*="volet" i],
 [role="menuitem"][aria-label*="volet" i],
 [role="menuitemradio"][aria-label*="volet" i],
 [role="menu"][aria-label*="volet" i],
 [role="button"][aria-label*="volet" i],
-.aDs, .aDg {
+.aDs {
   display: none !important;
 }
 

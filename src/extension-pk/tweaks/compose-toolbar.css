@@ -1,5 +1,8 @@
-/* 15) Outil de saisie v2 — barre de mise en forme + bouton/menus outils de saisie — généré depuis gmail.css */
-.aDh, .aDj, .aX .aDh,
+/* 15) Outil de saisie v3 — barre de mise en forme + menus outils de saisie — généré depuis gmail.css */
+/* `.aDh` et `.aDj` enveloppent AUSSI la ligne Envoyer : on ne masque que la
+   vraie barre de mise en forme (`.aDh .LUPmie`), pas le pied du composeur. */
+.aDh .LUPmie,
+.aX .aDh,
 [aria-label*="Outils de saisie" i],
 [aria-label*="outil de saisie" i],
 [role="menuitem"][aria-label*="saisie" i],

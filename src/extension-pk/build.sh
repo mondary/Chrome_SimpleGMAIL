@@ -22,7 +22,7 @@ os.makedirs("tweaks", exist_ok=True)
 os.makedirs("scripts", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 
-BENCH_VERSION = "2026.10.48"
+BENCH_VERSION = "2026.10.49"
 
 # ---- 1. Découpage gmail.css en tweaks
 text = open(gmail_css, encoding="utf-8").read()
@@ -47,8 +47,8 @@ CSS_DEFS = {
     12: ("status-pill", "Statut · masquer Actif/absent (à côté des réglages)", "ok"),
     13: ("header-autohide", "Header auto-hide v4 · header effacé au scroll (mise en page stable)", "ko"),
     14: ("grayscale-bar", "Barre supérieure en niveaux de gris", "ok"),
-    15: ("compose-toolbar", "Masquer outils de saisie (v2 : menus inclus)", "ok"),
-    16: ("reading-pane-btn", "Masquer volet de lecture (v2 : menus inclus)", "ok"),
+    15: ("compose-toolbar", "Masquer outils de saisie (v3 : Envoyer préservé)", "ok"),
+    16: ("reading-pane-btn", "Masquer volet de lecture (v3 : Envoyer préservé)", "ok"),
     17: ("toast-center", "Toast redesign · centré bas, pilule sombre (Annuler cliquable)", "new"),
     18: ("sidebar-composer", "Sidebar · Nouveau message à la largeur des dossiers", "new"),
     19: ("sidebar-gray", "Sidebar · niveaux de gris (libellés préservés)", "new"),

@@ -1,9 +1,12 @@
-/* 16) Volet de lecture v2 — bouton + entrées de menu, partout — généré depuis gmail.css */
+/* 16) Volet de lecture v3 — bouton + entrées de menu, partout — généré depuis gmail.css */
+/* `.aDg` est le pied du composeur (barre de mise en forme + Envoyer) :
+   le masquer supprimait le bouton Envoyer. Seuls le bouton et les menus
+   du volet de lecture sont masqués. */
 [aria-label*="volet" i],
 [role="menuitem"][aria-label*="volet" i],
 [role="menuitemradio"][aria-label*="volet" i],
 [role="menu"][aria-label*="volet" i],
 [role="button"][aria-label*="volet" i],
-.aDs, .aDg {
+.aDs {
   display: none !important;
 }
