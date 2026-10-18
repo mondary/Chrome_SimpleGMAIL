@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.51] - 2026-10-18
+
+### Changed
+- **Fiche Chrome Web Store — bloc marque** : résumé du paquet aligné sur le standard de recherche PK (« Made by PK-Labs · mondary.design », 72 caractères), description bilingue réécrite pour le Studio (six thèmes, tweaks activables) et terminée par les deux lignes standard `apps.pouark.com` / `mondary.design`, URL de la page d'accueil sur `https://mondary.design`. Justifications d'autorisations (`scripting`, `sidePanel`, `storage`) renseignées pour la soumission.
+
 ## [2026.10.50] - 2026-10-18
 
 ### Fixed
