@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.48] - 2026-10-18
+
+### Fixed
+- **Header auto-hide — la réponse ne disparaît plus au scroll** : le tweak ne force plus le header en `position: fixed` et n'anime plus le `padding-top` de `body` ni la marge de la barre d'action. Ces décalages faisaient recalculer toute la vue par Gmail au scroll (surtout dans une réponse en cours de rédaction) et laissaient un écran blanc masquant la fenêtre de réponse. Le header s'efface désormais au scroll par simple transformation, sans déplacer l'interface. Reproduit et vérifié sur Gmail réel en session isolée.
+
 ## [2026.10.47] - 2026-10-18
 
 ### Fixed
