@@ -318,26 +318,61 @@ body {
 }
 
 /* 17) Toast redesign v2 — centré en bas, pilule arrondie sombre */
-.bAp {
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 24px !important;
+/* Structure Gmail (vérifiée en session isolée) :
+   .bAp[role=alert] reste en flux et vide ; la boîte visible est son .vh
+   (position: fixed, bas-gauche) qui contient .bAq (message), .bAo >
+   #link_undo (Annuler) et .bBe > .bBf (fermeture). On ne touche qu'à .vh et
+   à son contenu : le bouton « Annuler » reste cliquable, centré en bas. */
+.bAp .vh {
+  position: fixed !important;
+  left: 50% !important;
+  right: auto !important;
   top: auto !important;
+  bottom: 24px !important;
+  margin: 0 !important;
+  transform: translateX(-50%) !important;
   display: flex !important;
-  justify-content: center !important;
-  pointer-events: none !important;
-}
-.bAn {
-  border-radius: 9999px !important;
+  align-items: center !important;
+  width: max-content !important;
+  max-width: calc(100vw - 32px) !important;
+  padding: 10px 52px 10px 20px !important; /* 52px : place du bouton de fermeture natif */
   background: #09090b !important;
   color: #ffffff !important;
+  border: 0 !important;
+  border-radius: 9999px !important;
   box-shadow: 0 12px 32px rgba(9,9,11,.28) !important;
-  padding: 10px 20px !important;
-  pointer-events: auto !important;
+  z-index: 990 !important;
 }
-.bAn button, .bAn [role="button"], .bAu, .bAv {
+
+/* Message du toast. */
+.bAp .vh .bAq {
+  margin: 0 12px 0 0 !important;
+  color: #ffffff !important;
+}
+
+/* Action « Annuler » : jaune, toujours cliquable. */
+.bAp .vh .bAo {
+  margin: 0 !important;
+}
+.bAp .vh #link_undo,
+.bAp .vh .a8k,
+.bAp .vh .ag,
+.bAp .vh .bAo [role="link"] {
   color: #ffd35c !important;
   font-weight: 600 !important;
+  pointer-events: auto !important;
+}
+
+/* Fermeture : on garde le positionnement natif (absolu, à droite), juste
+   recentré verticalement dans la pilule, icône blanche conservée. */
+.bAp .vh .bBe {
+  position: absolute !important;
+  top: 50% !important;
+  right: 16px !important;
+  transform: translateY(-50%) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  pointer-events: auto !important;
 }
 
 /* 18) Sidebar — « Nouveau message » à la même largeur que les dossiers */

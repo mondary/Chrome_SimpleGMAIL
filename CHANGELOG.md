@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.47] - 2026-10-18
+
+### Fixed
+- **Toast centré — bouton « Annuler » cliquable** : la boîte visible du toast (`.vh`, en `position: fixed`) est ramenée au centre bas en pilule sombre, et tout son contenu (message, « Annuler », fermeture) redevient cliquable. La cause était `pointer-events: none` sur `.bAp` neutralisé uniquement sur `.bAn` — une classe absente du DOM actuel : tout le toast, y compris « Annuler », héritait de `none`. Le conteneur `.bAp` n'est plus déplacé, seul `.vh` est recentré. Vérifié sur Gmail réel en session isolée : centrage exact, pastille sombre, clic sur « Annuler » et annulation effective. Le tweak s'appelle désormais « Toast redesign · centré bas, pilule sombre (Annuler cliquable) ».
+
 ## [2026.10.46] - 2026-10-17
 
 ### Added
