@@ -1,9 +1,9 @@
-# Roadmap — PKMail / PK Gmail Studio
+# Roadmap — PKMail / PK Simple Gmail
 
 Suivi des chantiers prévus, en cours et validés. Le changelog (`CHANGELOG.md`)
 décrit ce qui est livré ; ce fichier décrit ce qui vient après.
 
-## Chantiers côté extension (PK Gmail Studio)
+## Chantiers côté extension (PK Simple Gmail)
 
 - [x] Six thèmes au panneau : Natif, Studio, Simplify, Classique, Focus, Original.
 - [x] Focus : retour à Principale, navigation répétée entre catégories et filtres de recherche sans chevauchement.
@@ -31,7 +31,7 @@ Futur shell desktop de SimpleMail (macOS, peut-être multi-plateforme).
 Stack à décider entre **Go** et **Rust** avant tout code.
 
 Destination prévue : enchevêtrer l'extension canonique (`src/extension-pk/`,
-PK Gmail Studio), les thèmes des anciennes interfaces (`tools/lab/`) et les
+PK Simple Gmail), les thèmes des anciennes interfaces (`tools/lab/`) et les
 boîtes mail (`tools/mail-client/`, `tools/pkmail/`).
 
 Rien d'implémenté à ce jour. Conformément à la règle du projet : on ne

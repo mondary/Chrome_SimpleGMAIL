@@ -22,7 +22,7 @@ os.makedirs("tweaks", exist_ok=True)
 os.makedirs("scripts", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 
-BENCH_VERSION = "2026.10.51"
+BENCH_VERSION = "2026.10.55"
 
 # ---- 1. Découpage gmail.css en tweaks
 text = open(gmail_css, encoding="utf-8").read()
@@ -106,12 +106,16 @@ for src, fid, label, ver, status in JS_DEFS:
 
 # ---- 3. Ordre d'affichage : indispensables d'abord, à retester ensuite
 ALL = css_items + js_items
+ALL.append({"id": "js-studio-empty", "group": "js", "label": "Boîte à zéro · état vide des catégories",
+            "file": "themes/studio/empty-state.js", "css": ["themes/studio/empty-state.css"],
+            "type": "js", "world": "ISOLATED", "runAt": "document_end",
+            "version": BENCH_VERSION, "status": "new"})
 ORDER_OK = ["css-white-style", "css-background-white", "css-grayscale-bar", "css-scrollbar-grey",
             "js-keyword-highlighter", "js-filter-similar", "css-no-left-menu", "css-status-pill",
             "css-top-right", "js-sender-icons", "js-short-label", "css-unread-color",
             "css-searchbar", "css-sticky-topic", "css-stars-focus", "css-compose-toolbar",
             "css-reading-pane-btn", "css-margin", "js-new-message-button", "js-custom-tabs"]
-ORDER_NEW = ["css-toast-center", "css-sidebar-composer", "css-sidebar-gray"]
+ORDER_NEW = ["js-studio-empty", "css-toast-center", "css-sidebar-composer", "css-sidebar-gray"]
 ORDER_KO = ["css-theme-pkweb", "css-header-autohide", "js-icon-view",
             "js-inbox-strict", "js-no-spam-icon"]
 

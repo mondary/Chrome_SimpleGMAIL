@@ -6,10 +6,14 @@
 
 Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla. Packagé en application native (macOS · Windows · Linux).
 
-**Version 2026.10.51** — [Changelog](CHANGELOG.md)
+**Version 2026.10.55** — [Changelog](CHANGELOG.md)
 
 [![Aperçu de l’extension Gmail](store/screenshots/05-ocean.png)](store/index.html)
 [![Réglages de l’extension Gmail](store/screenshots/02-reglages.png)](store/index.html)
+
+![Aperçu fictif de la boîte à zéro Studio dans Promotions](store/screenshots/12-studio-empty.png)
+
+[Réseaux sociaux](store/screenshots/13-studio-social.png) · [Forums](store/screenshots/14-studio-forums.png) — autres pictogrammes Studio sur données fictives.
 
 ## Fonctionnalités
 
@@ -38,8 +42,8 @@ Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla
 - **Écran de chargement immersif** plein écran avec barre animée légère
 - **PWA + Chrome en local** : installable depuis `127.0.0.1:8000`, extension sans permission sensible ; Android en pause
 
-### Extension Chrome — PK Gmail Studio
-- **PK Gmail Studio** : l'extension canonique, avec panneau latéral et six thèmes — *Natif*, *Studio* (28 tweaks cochables), *Simplify* (fonds photo, boîte vide et volet de lecture), *Classique*, **Focus** (liste mono de 900 px, catégories en icônes, lignes de 35 px, sélection noire et raccourcis) et **Original** (rail de 64 px, recherche large, composer noir, liste aérée). Les autres concepts du Lab restent à transposer.
+### Extension Chrome — PK Simple Gmail
+- **PK Simple Gmail** : l'extension canonique, avec panneau latéral et six thèmes — *Natif*, *Studio* (29 tweaks cochables, dont « Boîte à zéro » : un pictogramme monochrome animé propre à chaque catégorie vide, avec lien vers les réglages Gmail préservé), *Simplify* (fonds photo, boîte vide et volet de lecture), *Classique*, **Focus** (liste mono de 900 px, catégories en icônes, lignes de 35 px, sélection noire et raccourcis) et **Original** (rail de 64 px, recherche large, composer noir, liste aérée). Les autres concepts du Lab restent à transposer.
 - **Focus** : catégories affichables/masquables, alignement gauche/centre/droite et compteur total Gmail · [guide et activation](src/extension-pk/themes/focus-os/README.md) · [capture avec données fictives](store/screenshots/10-focus-os.png) · aperçu local dans `tools/previews/focus-os-preview/`.
 - **Original** : [capture avec données fictives](store/screenshots/11-original.png) · aperçu local dans `tools/previews/simplemail-original-preview/`.
 - Guide : [`src/extension-pk/`](src/extension-pk/). Simplify vit désormais comme thème (`src/extension-pk/themes/simplify/`) ; son extension autonome est archivée (`archives/versions/05-simplify-2026.10.16/`, hors git). Non publiée sur le Chrome Web Store.
@@ -237,7 +241,7 @@ La première ouverture crée automatiquement les dossiers de données utilisateu
 │   │   ├── var/              ← Données locales de dev (config, secrets, cache — hors git)
 │   │   ├── config.example.json
 │   │   └── build_macos.sh / build_linux.sh / build_windows.ps1
-│   ├── extension-pk/         ← PK Gmail Studio — extension Chrome canonique (six thèmes)
+│   ├── extension-pk/         ← PK Simple Gmail — extension Chrome canonique (six thèmes)
 │   │   └── sources/gmail.css ← Source CSS des tweaks (absorbée de l'ex-extension SimpleMail)
 │   └── mobile/               ← Tentative mobile (Capacitor)
 ├── tools/

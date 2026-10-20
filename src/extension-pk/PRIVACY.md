@@ -1,6 +1,6 @@
-# Confidentialité — PK Gmail Studio
+# Confidentialité — PK Simple Gmail
 
-PK Gmail Studio modifie l'apparence de Gmail dans le navigateur.
+PK Simple Gmail modifie l'apparence de Gmail dans le navigateur.
 
 - Les scripts et feuilles de style s'exécutent uniquement sur `https://mail.google.com/*`
   (champ `host_permissions` du manifeste, `matches` des enregistrements `chrome.scripting`).

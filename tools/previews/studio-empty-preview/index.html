@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Studio — aperçu de la boîte à zéro</title>
+  <link rel="stylesheet" href="../../../src/extension-pk/themes/studio/empty-state.css">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #30343a; font: 14px Arial, sans-serif; background: #fff; }
+    header { height: 68px; display: flex; align-items: center; gap: 26px; padding: 0 28px; border-bottom: 1px solid #edf0f2; }
+    .brand { font-size: 22px; letter-spacing: -.07em; }
+    .search { width: min(620px, 60vw); padding: 14px 22px; border-radius: 25px; background: #f1f3f4; color: #69757b; }
+    .layout { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: calc(100vh - 68px); }
+    aside { padding: 24px 18px; border-right: 1px solid #edf0f2; color: #5c6970; }
+    .compose { margin-bottom: 24px; padding: 17px 22px; border-radius: 16px; background: #e8f1f4; color: #334d59; width: max-content; }
+    aside div:not(.compose) { padding: 12px 20px; }
+    aside .current { background: #e4ebf1; border-radius: 0 20px 20px 0; font-weight: 600; }
+    .toolbar { height: 57px; border-bottom: 1px solid #edf0f2; padding: 18px 24px; color: #637078; }
+    .tabs { display: flex; height: 64px; border-bottom: 1px solid #edf0f2; }
+    .tabs button { flex: 1; min-width: 0; padding: 20px 14px; border: 0; background: transparent; color: #6a767e; font: inherit; text-align: left; cursor: pointer; }
+    .tabs .selected { border-bottom: 3px solid #578a7b; color: #305549; font-weight: 600; }
+    .aRu { padding: 18px; text-align: center; }
+    .aRv { font-size: 20px; }
+    .aRq { color: #247363; }
+    @media (max-width: 640px) { .layout { display: block; } aside { display: none; } header { padding: 0 16px; } .tabs { overflow-x: auto; } .tabs button { flex: 0 0 auto; } }
+  </style>
+</head>
+<body>
+  <header><strong class="brand">Gmail</strong><div class="search">⌕ &nbsp; Rechercher dans les messages</div></header>
+  <div class="layout"><aside><div class="compose">＋ &nbsp; Nouveau message</div><div class="current">Boîte de réception</div><div>Messages suivis</div><div>En attente</div><div>Messages envoyés</div><div>Brouillons</div></aside>
+    <div class="bkK"><div role="main"><div class="toolbar">☐ &nbsp; ⟳ &nbsp; ⋮</div><div class="tabs"><button type="button">Principale</button><button type="button" class="selected">Promotions</button><button type="button">Réseaux sociaux</button><button type="button">Notifications</button><button type="button">Forums</button></div>
+      <div role="tabpanel"><div class="aVj"><div class="aRs"><div class="aRu"><div class="aRv">Votre onglet "Promotions" est vide</div><p>Les e-mails promotionnels s'afficheront ici.</p><p>Pour ajouter des onglets ou en supprimer, cliquez sur <span class="aRq" tabindex="0" role="button">Configurer la boîte de réception</span> dans les paramètres.</p></div></div></div></div>
+    </div></div>
+  <script>location.hash = 'inbox'; window.chrome = { storage: { local: { get: (_keys, callback) => callback({ theme: 'theme-pk', enabled: { 'js-studio-empty': true } }) }, onChanged: { addListener: () => {} } } }; document.querySelector('.aRq').onclick = () => alert('Réglages des catégories Gmail'); document.querySelectorAll('.tabs button').forEach(button => button.addEventListener('click', () => { document.querySelector('.tabs .selected').classList.remove('selected'); button.classList.add('selected'); document.querySelector('.aRv').textContent = `Votre onglet "${button.textContent}" est vide`; }));</script>
+  <script src="../../../src/extension-pk/themes/studio/empty-state.js"></script>
+</body>
+</html>

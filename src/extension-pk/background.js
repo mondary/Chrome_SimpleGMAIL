@@ -24,6 +24,7 @@ function registrationFor(item) {
   return {
     ...base,
     js: [item.file],
+    ...(item.css ? { css: item.css } : {}),
     world: item.world || 'MAIN',
     runAt: item.runAt || 'document_end',
   };

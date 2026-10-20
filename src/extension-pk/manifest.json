@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "PK Gmail Studio",
-  "version": "2026.10.51",
-  "description": "Studio de thèmes et tweaks pour Gmail — Made by PK-Labs · mondary.design",
+  "name": "PK Simple Gmail",
+  "version": "2026.10.55",
+  "description": "Une interface Gmail plus simple, six thèmes et des réglages à la carte — Made by PK-Labs · mondary.design",
   "permissions": [
     "storage",
     "scripting",
@@ -27,7 +27,7 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "PK Gmail Studio",
+    "default_title": "PK Simple Gmail",
     "default_icon": "icon.png"
   },
   "side_panel": {

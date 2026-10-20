@@ -1,0 +1,54 @@
+/* Studio: category-specific line art on white. Gmail owns the settings control. */
+.bkK .aRu.pk-studio-zero {
+  box-sizing: border-box;
+  width: min(100%, 600px);
+  margin: clamp(58px, 13vh, 140px) auto 60px;
+  padding: 0 24px;
+  text-align: center;
+  color: #171717;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.bkK .aRu.pk-studio-zero > .aRv,
+.bkK .aRu.pk-studio-zero > p:first-of-type { display: none; }
+.bkK .pk-studio-zero-art { display: flex; align-items: center; flex-direction: column; }
+.bkK .pk-studio-zero-illustration { width: 144px; height: 120px; margin: 0 auto 27px; }
+.bkK .pk-studio-zero-illustration svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.bkK .pk-zero-seal { fill: #fff; }
+.bkK .pk-zero-check { stroke-width: 2; }
+.bkK .pk-studio-zero-kicker { color: #777; font: 600 10px/1.4 Arial, sans-serif; letter-spacing: .22em; }
+.bkK .pk-studio-zero-title { margin-top: 12px; color: #171717; font: 500 clamp(27px, 3vw, 34px)/1.2 Arial, sans-serif; letter-spacing: -.045em; }
+.bkK .pk-studio-zero-detail { margin-top: 12px; color: #686868; font: 14px/1.6 Arial, sans-serif; }
+.bkK .aRu.pk-studio-zero > p:last-of-type { max-width: 450px; margin: 56px auto 0; color: #888; font: 12px/1.7 Arial, sans-serif; }
+.bkK .aRu.pk-studio-zero .aRq { color: #292929; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.bkK .aRu.pk-studio-zero .aRq:focus-visible { outline: 2px solid #171717; outline-offset: 3px; border-radius: 2px; }
+
+/* One short, category-specific gesture. No idle loops or layout animation. */
+@media (prefers-reduced-motion: no-preference) {
+  .bkK .pk-zero-primary { animation: pk-zero-rise 600ms cubic-bezier(.2,.75,.25,1) both; }
+  .bkK .pk-zero-seal { animation: pk-zero-pop 420ms ease-out 410ms both; transform-origin: center; transform-box: fill-box; }
+  .bkK .pk-zero-check { stroke-dasharray: 26; animation: pk-zero-check-draw 440ms ease-out 620ms both; }
+  .bkK .pk-zero-tag { animation: pk-zero-swing 750ms cubic-bezier(.2,.8,.2,1) both; transform-origin: 48px 47px; }
+  .bkK .pk-zero-connections { stroke-dasharray: 90; animation: pk-zero-draw 650ms ease-out 240ms both; }
+  .bkK .pk-zero-person { animation: pk-zero-pop 420ms cubic-bezier(.2,.8,.2,1) both; transform-origin: center; transform-box: fill-box; }
+  .bkK .pk-zero-person-left { animation-delay: 150ms; }
+  .bkK .pk-zero-person-right { animation-delay: 300ms; }
+  .bkK .pk-zero-bubble-back { animation: pk-zero-rise 480ms ease-out both; }
+  .bkK .pk-zero-bubble-front { animation: pk-zero-rise 540ms ease-out 200ms both; }
+  .bkK .pk-zero-bell { animation: pk-zero-ring 780ms ease-out both; transform-origin: 72px 24px; }
+  .bkK .pk-zero-bell-ring { animation: pk-zero-fade 460ms ease-out 380ms both; }
+  .bkK .pk-zero-paper { animation: pk-zero-rise 680ms ease-out both; }
+}
+@keyframes pk-zero-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pk-zero-pop { from { opacity: 0; transform: scale(.55); } to { opacity: 1; transform: scale(1); } }
+@keyframes pk-zero-draw { from { stroke-dashoffset: 90; opacity: 0; } to { stroke-dashoffset: 0; opacity: 1; } }
+@keyframes pk-zero-check-draw { from { stroke-dashoffset: 26; opacity: 0; } to { stroke-dashoffset: 0; opacity: 1; } }
+@keyframes pk-zero-swing { from { opacity: 0; transform: translateY(-12px) rotate(-15deg); } to { opacity: 1; transform: translateY(0) rotate(0); } }
+@keyframes pk-zero-ring { 0% { opacity: 0; transform: rotate(-12deg); } 30% { opacity: 1; transform: rotate(10deg); } 60% { transform: rotate(-5deg); } 100% { opacity: 1; transform: rotate(0); } }
+@keyframes pk-zero-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (max-width: 640px) {
+  .bkK .aRu.pk-studio-zero { width: 100%; margin: 46px auto; padding: 0 18px; }
+  .bkK .aRu.pk-studio-zero > p:last-of-type { margin-top: 44px; }
+}

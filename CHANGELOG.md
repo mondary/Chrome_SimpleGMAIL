@@ -4,6 +4,26 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.55] - 2026-10-20
+
+### Changed
+- **Nom public — PK Simple Gmail** : l'extension et son panneau retrouvent un nom explicite ; « Studio » reste le nom du thème maison et ses réglages ne changent pas. Résumé du paquet et documentation FR/EN synchronisés.
+
+## [2026.10.54] - 2026-10-20
+
+### Changed
+- **Studio — états vides par catégorie** : six pictogrammes monochromes distincts et animés une fois : enveloppe pour Principale, étiquette pour Promotions, réseau de personnes pour Réseaux sociaux, cloche pour Notifications, bulles pour Forums et feuille pour Newsletters. Aucun mouvement si la réduction des animations est demandée ; le lien Gmail des catégories demeure natif.
+
+## [2026.10.53] - 2026-10-20
+
+### Changed
+- **Studio — boîte à zéro monochrome** : suppression de la carte quadrillée et des accents colorés au profit d'un état vide directement sur le fond blanc. L'enveloppe en trait noir apparaît une fois, puis la coche se dessine ; l'animation est supprimée lorsque les mouvements sont réduits. Le lien natif vers les catégories reste intact.
+
+## [2026.10.52] - 2026-10-20
+
+### Added
+- **Studio — boîte à zéro** : état vide centré pour les catégories Gmail, avec grille en léger relief, enveloppe cochée et message de satisfaction. Le lien natif « Configurer la boîte de réception » reste cliquable. Tweak indépendant, désactivable dans le panneau ; sans effet sur les autres thèmes, les recherches ou les catégories contenant des messages.
+
 ## [2026.10.51] - 2026-10-18
 
 ### Changed

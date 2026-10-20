@@ -18,7 +18,7 @@ même service Google que l’archive, avec une icône locale en cas d’échec.
 
 ## Personnaliser les catégories
 
-Dans **réglages** (ou `,`) et dans le panneau PK Gmail Studio, choisir les catégories
+Dans **réglages** (ou `,`) et dans le panneau PK Simple Gmail, choisir les catégories
 à afficher puis leur alignement **à gauche**, **au centre** ou **à droite**.
 Chaque catégorie peut être masquée, y compris Principale. Ces préférences sont
 sauvegardées et synchronisées en direct entre les deux interfaces, sans recharger

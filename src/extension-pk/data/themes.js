@@ -10,7 +10,7 @@ self.LAB_THEMES = [
   {
     id: 'theme-pk',
     label: 'Studio',
-    description: 'Le look maison : 28 réglages cochables, presets validés.',
+    description: 'Le look maison : 29 réglages cochables, presets validés.',
   },
   {
     id: 'theme-simplify',
@@ -99,4 +99,3 @@ self.THEME_SETTINGS = {
     choices: [],
   },
 };
-
