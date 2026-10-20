@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Studio — aperçu du toast « Annuler » préservé</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 14px Arial, sans-serif; background: #fff; color: #202124; }
+    header { height: 64px; display: flex; align-items: center; gap: 24px; padding: 0 24px; border-bottom: 1px solid #edf0f2; font-size: 20px; letter-spacing: -.06em; }
+    main { max-width: 760px; margin: 40px auto; padding: 0 20px; }
+    h1 { font-size: 22px; }
+    p.hint { color: #5f6368; }
+    .controls { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0; }
+    button { padding: 10px 16px; border: 1px solid #dadce0; background: #fff; border-radius: 8px; font: 13px Arial, sans-serif; cursor: pointer; }
+    button:hover { background: #f6f8f9; }
+    #undo-count { margin-top: 14px; font-weight: 600; }
+    /* Réplique du toast Gmail : un seul nœud réutilisé, contenu remplacé. */
+    .b8.UC.bAp { position: fixed; left: 24px; bottom: 24px; z-index: 500; }
+    .bAp .vh { display: flex; align-items: center; gap: 10px; max-width: 480px; padding: 12px 16px; background: #f1f3f4; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,.12); }
+    .bAp .vh[hidden] { display: none; }
+    .bAp .aT { display: flex; align-items: center; gap: 10px; }
+    .bAp .bAq { color: #202124; }
+    .bAp #link_undo, .bAp .ag { color: #1a73e8; cursor: pointer; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <header>Gmail — banc de test toast</header>
+  <main>
+    <h1>Toast « Annuler » préservé</h1>
+    <p class="hint">Ce banc reproduit le comportement réel observé sur Gmail : un nœud <code>.bAp&nbsp;.vh</code> unique, dont le contenu est remplacé à chaque nouveau message, et qui disparaît après ~11,5&nbsp;s. Le tweak Studio doit faire réapparaître l'«&nbsp;Annuler&nbsp;» volé dans une pilule au-dessus du toast courant.</p>
+    <div class="controls">
+      <button id="fire-undo">Toast avec Annuler (suppression)</button>
+      <button id="fire-info">Toast sans Annuler (erreur traduction)</button>
+      <button id="expire">Forcer l'expiration</button>
+    </div>
+    <div id="undo-count">Annulations réelles : 0</div>
+  </main>
+
+  <div class="b8 UC bAp" role="alert" aria-live="polite"><div class="vh" hidden></div></div>
+
+  <script>
+    window.chrome = { storage: { local: { get: (_k, cb) => cb({ theme: 'theme-pk', enabled: { 'js-studio-toast-undo': true } }) }, onChanged: { addListener: () => {} } } };
+    const bap = document.querySelector('.bAp');
+    const vh = document.querySelector('.vh');
+    let ttlTimer = 0;
+    let undones = 0;
+    const count = document.getElementById('undo-count');
+
+    function showToast(message, withUndo) {
+      vh.replaceChildren();
+      const row = document.createElement('div'); row.className = 'aT';
+      const msg = document.createElement('span'); msg.className = 'bAq'; msg.textContent = message;
+      row.append(msg);
+      if (withUndo) {
+        const action = document.createElement('span'); action.className = 'bAo';
+        const link = document.createElement('a'); link.id = 'link_undo'; link.href = '#'; link.textContent = 'Annuler';
+        action.append(link); row.append(action);
+      }
+      vh.append(row);
+      vh.hidden = false;
+      clearTimeout(ttlTimer);
+      ttlTimer = setTimeout(() => { vh.hidden = true; }, 11500);
+    }
+
+    // Délégation comme Gmail : le handler vit au-dessus du nœud toast,
+    // donc un clone avec ascendance .bAp déclenche aussi l'annulation.
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest && e.target.closest('#link_undo');
+      if (link && link.closest('.bAp')) {
+        e.preventDefault();
+        undones += 1; count.textContent = 'Annulations réelles : ' + undones;
+        showToast('Action annulée.', false);
+      }
+    });
+
+    document.getElementById('fire-undo').addEventListener('click', () => showToast('Conversation supprimée.', true));
+    document.getElementById('fire-info').addEventListener('click', () => showToast('Impossible de traduire ce message pour le moment.', false));
+    document.getElementById('expire').addEventListener('click', () => { clearTimeout(ttlTimer); vh.hidden = true; });
+  </script>
+  <script src="../../../src/extension-pk/themes/studio/toast-undo.js"></script>
+</body>
+</html>

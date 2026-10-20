@@ -11,7 +11,7 @@ visuelle aux onglets `mail.google.com`, sans backend ni compte supplémentaire.
 | Thème | Contenu |
 | --- | --- |
 | *Natif* | Gmail tel quel, avec les scripts cochables du panneau. |
-| *Studio* | 29 tweaks cochables, dont « Boîte à zéro » : pictogrammes monochromes animés distincts selon la catégorie vide (lien de configuration natif conservé). |
+| *Studio* | 30 tweaks cochables, dont « Boîte à zéro » (pictogrammes monochromes animés selon la catégorie vide) et « Annuler préservé » (toast volé par un nouveau message) — lien de configuration natif conservé. |
 | *Simplify* | Fonds photo, boîte vide et volet de lecture (`themes/simplify/`). |
 | *Classique* | Transposition V1 : salutation, avatars, groupes de dates (`themes/simplemail-classic/`). |
 | *Focus* | Liste mono de 900 px, catégories masquables et alignables, compteur total Gmail et raccourcis (`themes/focus-os/`). |
@@ -50,8 +50,9 @@ Les fichiers `data/*.js` portent l'en-tête « Généré par build.sh » : ne pa
 ## Vérifications
 
 - Harnais d'aperçu fictif : `tools/previews/focus-os-preview/` (Focus),
-  `tools/previews/simplemail-original-preview/` (Original) et
-  `tools/previews/studio-empty-preview/` (Studio, Promotions vides).
+  `tools/previews/simplemail-original-preview/` (Original),
+  `tools/previews/studio-empty-preview/` (Studio, Promotions vides) et
+  `tools/previews/studio-toast-preview/` (Studio, toast « Annuler » préservé).
 - Les polices et le logo d'un thème vivent dans la page Gmail : ils doivent être
   déclarés dans `web_accessible_resources` (`manifest.json`), sinon Chrome les
   bloque et les icônes s'affichent en toutes lettres à la place des pictos.

@@ -6,7 +6,7 @@
 
 Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla. Packagé en application native (macOS · Windows · Linux).
 
-**Version 2026.10.55** — [Changelog](CHANGELOG.md)
+**Version 2026.10.56** — [Changelog](CHANGELOG.md)
 
 [![Aperçu de l’extension Gmail](store/screenshots/05-ocean.png)](store/index.html)
 [![Réglages de l’extension Gmail](store/screenshots/02-reglages.png)](store/index.html)
@@ -43,7 +43,7 @@ Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla
 - **PWA + Chrome en local** : installable depuis `127.0.0.1:8000`, extension sans permission sensible ; Android en pause
 
 ### Extension Chrome — PK Simple Gmail
-- **PK Simple Gmail** : l'extension canonique, avec panneau latéral et six thèmes — *Natif*, *Studio* (29 tweaks cochables, dont « Boîte à zéro » : un pictogramme monochrome animé propre à chaque catégorie vide, avec lien vers les réglages Gmail préservé), *Simplify* (fonds photo, boîte vide et volet de lecture), *Classique*, **Focus** (liste mono de 900 px, catégories en icônes, lignes de 35 px, sélection noire et raccourcis) et **Original** (rail de 64 px, recherche large, composer noir, liste aérée). Les autres concepts du Lab restent à transposer.
+- **PK Simple Gmail** : l'extension canonique, avec panneau latéral et six thèmes — *Natif*, *Studio* (30 tweaks cochables, dont « Boîte à zéro » : un pictogramme monochrome animé propre à chaque catégorie vide, et « Annuler préservé » : une action annulable reste disponible même si un nouveau toast remplace sa notification), *Simplify* (fonds photo, boîte vide et volet de lecture), *Classique*, **Focus** (liste mono de 900 px, catégories en icônes, lignes de 35 px, sélection noire et raccourcis) et **Original** (rail de 64 px, recherche large, composer noir, liste aérée). Les autres concepts du Lab restent à transposer.
 - **Focus** : catégories affichables/masquables, alignement gauche/centre/droite et compteur total Gmail · [guide et activation](src/extension-pk/themes/focus-os/README.md) · [capture avec données fictives](store/screenshots/10-focus-os.png) · aperçu local dans `tools/previews/focus-os-preview/`.
 - **Original** : [capture avec données fictives](store/screenshots/11-original.png) · aperçu local dans `tools/previews/simplemail-original-preview/`.
 - Guide : [`src/extension-pk/`](src/extension-pk/). Simplify vit désormais comme thème (`src/extension-pk/themes/simplify/`) ; son extension autonome est archivée (`archives/versions/05-simplify-2026.10.16/`, hors git). Non publiée sur le Chrome Web Store.

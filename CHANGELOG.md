@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.56] - 2026-10-20
+
+### Fixed
+- **Studio — « Annuler » préservé sur les toasts** : Gmail remplace le nœud d'un toast par le message suivant (erreur de traduction, autre notification), détruisant l'« Annuler » d'une suppression en cours. Le tweak clone secrètement le toast tant que son action est annulable et fait réapparaître une pilule « Annuler » fonctionnelle au-dessus du nouveau toast si celui-ci le vole (fenêtre native ~11,5 s mesurée, aucune manipulation du DOM de Gmail, délégation native préservée, `prefers-reduced-motion` respecté). Vérifié sur Gmail réel (réutilisation du nœud, remplacement de contenu, délégation via un clone `.bAp`) et sur un harnais déterministe (`tools/previews/studio-toast-preview/`) : vol simple, double vol, expiration naturelle et annulation déjà consommée.
+
 ## [2026.10.55] - 2026-10-20
 
 ### Changed

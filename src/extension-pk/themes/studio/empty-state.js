@@ -56,13 +56,23 @@
       if (!art) {
         art = document.createElement('div');
         art.className = 'pk-studio-zero-art';
-        art.innerHTML = '<div class="pk-studio-zero-illustration" aria-hidden="true"></div><div class="pk-studio-zero-kicker"></div><div class="pk-studio-zero-title"></div><div class="pk-studio-zero-detail"></div>';
+        // Trusted Types: Gmail forces a strict policy — build via DOM APIs only.
+        for (const cls of ['pk-studio-zero-illustration', 'pk-studio-zero-kicker', 'pk-studio-zero-title', 'pk-studio-zero-detail']) {
+          const node = document.createElement('div');
+          node.className = cls;
+          if (cls === 'pk-studio-zero-illustration') node.setAttribute('aria-hidden', 'true');
+          art.append(node);
+        }
         notice.prepend(art);
       }
       const illustration = art.querySelector('.pk-studio-zero-illustration');
       if (illustration.dataset.category !== kind) {
         illustration.dataset.category = kind;
-        illustration.innerHTML = `<svg viewBox="0 0 144 120" fill="none" stroke="#222" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${icons[kind]}</svg>`;
+        const svg = new DOMParser().parseFromString(
+          `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 120" fill="none" stroke="#222" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${icons[kind]}</svg>`,
+          'image/svg+xml'
+        ).documentElement;
+        illustration.replaceChildren(svg);
       }
       for (const [selector, value] of [['.pk-studio-zero-kicker', text.kicker], ['.pk-studio-zero-title', text.title], ['.pk-studio-zero-detail', text.detail(name)]]) {
         const node = art.querySelector(selector);

@@ -22,7 +22,7 @@ os.makedirs("tweaks", exist_ok=True)
 os.makedirs("scripts", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 
-BENCH_VERSION = "2026.10.55"
+BENCH_VERSION = "2026.10.56"
 
 # ---- 1. Découpage gmail.css en tweaks
 text = open(gmail_css, encoding="utf-8").read()
@@ -110,12 +110,16 @@ ALL.append({"id": "js-studio-empty", "group": "js", "label": "Boîte à zéro ·
             "file": "themes/studio/empty-state.js", "css": ["themes/studio/empty-state.css"],
             "type": "js", "world": "ISOLATED", "runAt": "document_end",
             "version": BENCH_VERSION, "status": "new"})
+ALL.append({"id": "js-studio-toast-undo", "group": "js", "label": "Toast · Annuler préservé (un nouveau toast ne le vole plus)",
+            "file": "themes/studio/toast-undo.js",
+            "type": "js", "world": "ISOLATED", "runAt": "document_end",
+            "version": BENCH_VERSION, "status": "new"})
 ORDER_OK = ["css-white-style", "css-background-white", "css-grayscale-bar", "css-scrollbar-grey",
             "js-keyword-highlighter", "js-filter-similar", "css-no-left-menu", "css-status-pill",
             "css-top-right", "js-sender-icons", "js-short-label", "css-unread-color",
             "css-searchbar", "css-sticky-topic", "css-stars-focus", "css-compose-toolbar",
             "css-reading-pane-btn", "css-margin", "js-new-message-button", "js-custom-tabs"]
-ORDER_NEW = ["js-studio-empty", "css-toast-center", "css-sidebar-composer", "css-sidebar-gray"]
+ORDER_NEW = ["js-studio-empty", "js-studio-toast-undo", "css-toast-center", "css-sidebar-composer", "css-sidebar-gray"]
 ORDER_KO = ["css-theme-pkweb", "css-header-autohide", "js-icon-view",
             "js-inbox-strict", "js-no-spam-icon"]
 
