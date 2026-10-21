@@ -11,7 +11,7 @@ visuelle aux onglets `mail.google.com`, sans backend ni compte supplémentaire.
 | Thème | Contenu |
 | --- | --- |
 | *Natif* | Gmail tel quel, avec les scripts cochables du panneau. |
-| *Studio* | 31 tweaks cochables, dont « Boîte à zéro » (pictogrammes monochromes animés selon la catégorie vide), « Annuler préservé » (toast volé par un nouveau message) et « Agenda intégré » (Calendar dans la même page, façon Outlook) — bouton apps Google conservé. |
+| *Studio* | 31 tweaks cochables, dont « Boîte à zéro », « Annuler préservé » et la bascule Mail / Google Agenda complet dans le même onglet — bouton apps Google conservé. |
 | *Simplify* | Fonds photo, boîte vide et volet de lecture (`themes/simplify/`). |
 | *Classique* | Transposition V1 : salutation, avatars, groupes de dates (`themes/simplemail-classic/`). |
 | *Focus* | Liste mono de 900 px, catégories masquables et alignables, compteur total Gmail et raccourcis (`themes/focus-os/`). |
@@ -26,6 +26,19 @@ visuelle aux onglets `mail.google.com`, sans backend ni compte supplémentaire.
    les réglages du thème actif et les scripts.
 
 ## Construire les sources générées
+
+### Mail / Google Agenda complet
+
+Activer **Modules · Mail / Google Agenda complet, même onglet** dans Studio.
+Le sélecteur Mail / Agenda est présent sur les deux sites. Il navigue vers le vrai
+Google Agenda (création d'événements, vues et paramètres natifs), puis retrouve
+la dernière URL Gmail du compte et de l'onglet. Chaque bascule charge la page cible.
+La préférence Studio existante est conservée ; l'extension demande désormais aussi
+l'accès à `https://calendar.google.com/*` pour y afficher le bouton de retour.
+Les retouches Gmail ne sont pas injectées dans Calendar. Le retour est mémorisé
+dans `chrome.storage.session`, supprimé avec l'onglet ou à la fermeture du navigateur.
+
+### Génération
 
 `tweaks/`, `scripts/` et `data/manifest.js` sont régénérés depuis la source CSS
 absorbée (`sources/gmail.css`, ex-extension SimpleMail) et les snippets ScriptCat :
@@ -49,6 +62,10 @@ Les fichiers `data/*.js` portent l'en-tête « Généré par build.sh » : ne pa
 
 ## Vérifications
 
+- `node --test tools/tests/studio-modules.test.mjs` depuis la racine : navigation,
+  comptes, isolation des onglets et actualisation des enregistrements.
+- `tools/tests/verify-modules-live.mjs` : aller-retour sur les vraies pages via Ego,
+  avec API Chrome simulée dans un monde isolé (aucun mail ni événement modifié).
 - Harnais d'aperçu fictif : `tools/previews/focus-os-preview/` (Focus),
   `tools/previews/simplemail-original-preview/` (Original),
   `tools/previews/studio-empty-preview/` (Studio, Promotions vides) et

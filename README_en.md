@@ -6,7 +6,7 @@
 
 Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Packaged as native desktop app (macOS · Windows · Linux).
 
-**Version 2026.10.57** — [Changelog](CHANGELOG.md)
+**Version 2026.10.58** — [Changelog](CHANGELOG.md)
 
 [![Gmail extension preview](store/screenshots/05-ocean.png)](store/index.html)
 [![Gmail extension settings](store/screenshots/02-reglages.png)](store/index.html)
@@ -43,7 +43,8 @@ Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Package
 - **Local PWA + Chrome**: installable from `127.0.0.1:8000`, permission-free extension; Android is paused
 
 ### Chrome extension — PK Simple Gmail
-- **PK Simple Gmail**: the canonical extension, with a side panel and six themes — *Natif*, *Studio* (31 toggleable tweaks, including “Inbox zero” with a distinct animated monochrome icon for each empty category, “Undo preserved”: an undoable action stays reachable even when a new toast replaces its notification, and “Integrated Calendar”: the account’s Google Calendar opens inside the same page, Outlook-style), *Simplify* (photo backgrounds, inbox zero and reading pane), *Classique*, **Focus** (900 px monospace list, category icons, 35 px rows, black selection and keyboard shortcuts) and **Original** (64 px rail, wide search, black composer, airy list). The other Lab concepts still await transposition.
+- **PK Simple Gmail**: the canonical extension, with a side panel and six themes — *Natif*, *Studio* (31 toggleable tweaks, including “Inbox zero” with a distinct animated monochrome icon for each empty category, “Undo preserved” and “Mail / full Google Calendar”), *Simplify* (photo backgrounds, inbox zero and reading pane), *Classique*, **Focus** (900 px monospace list, category icons, 35 px rows, black selection and keyboard shortcuts) and **Original** (64 px rail, wide search, black composer, airy list). The other Lab concepts still await transposition.
+- **Mail / Calendar (Studio)**: the left-hand switch opens the real Google Calendar in the same tab, with native event creation, views and settings. Mail returns to the last Gmail view for the same account. Each switch loads the corresponding Google page; the per-tab return location lasts only for the browser session. Enable “Modules · Mail / Google Agenda complet, même onglet” and allow `calendar.google.com` when updating the extension.
 - **Focus**: show/hide categories, left/center/right alignment and Gmail total count · [guide and activation](src/extension-pk/themes/focus-os/README.md) · [screenshot with fictional messages](store/screenshots/10-focus-os.png) · local preview in `tools/previews/focus-os-preview/`.
 - **Original**: [screenshot with fictional messages](store/screenshots/11-original.png) · local preview in `tools/previews/simplemail-original-preview/`.
 - Guide: [`src/extension-pk/`](src/extension-pk/). Simplify now lives as a theme (`src/extension-pk/themes/simplify/`); its standalone extension is archived (`archives/versions/05-simplify-2026.10.16/`, untracked). Not published on the Chrome Web Store.

@@ -2,7 +2,7 @@
 // Synchronise les enregistrements chrome.scripting avec l'état stocké,
 // puis recharge les onglets Gmail pour appliquer proprement.
 
-importScripts('data/manifest.js', 'data/themes.js');
+importScripts('data/manifest.js', 'data/themes.js', 'themes/studio/module-routing.js');
 
 // Le bouton de barre d'outils ouvre le panneau latéral (drawer).
 chrome.sidePanel?.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
@@ -15,7 +15,7 @@ const ALL_IDS = [...LAB_IDS, ...THEME_IDS];
 function registrationFor(item) {
   const base = {
     id: item.id,
-    matches: MATCH,
+    matches: item.matches || MATCH,
     persistAcrossSessions: false,
   };
   if (item.type === 'css') {
@@ -55,7 +55,6 @@ async function syncRegistrations() {
 
   const current = await chrome.scripting.getRegisteredContentScripts();
   const currentLab = current.filter((c) => ALL_IDS.includes(c.id));
-  const currentIds = new Set(currentLab.map((c) => c.id));
   const wantedIds = new Set(wanted.map((w) => w.id));
 
   // Désenregistre : les lab actifs devenus indésirables + tous ceux qui changent
@@ -79,6 +78,13 @@ async function syncRegistrations() {
       console.error('[lab] register échoué', e);
     }
   }
+  // A module can gain a second host while already enabled (Mail → Calendar).
+  // Keep existing registrations in sync, not just their enabled/disabled IDs.
+  const toUpdate = wanted.filter((w) => {
+    const previous = currentAfter.find((c) => c.id === w.id);
+    return previous && Object.keys(w).some((key) => JSON.stringify(previous[key]) !== JSON.stringify(w[key]));
+  });
+  if (toUpdate.length) await chrome.scripting.updateContentScripts(toUpdate);
   return { wanted: wanted.length, total: self.LAB_ITEMS.length, theme: theme || 'pk' };
 }
 
@@ -125,9 +131,15 @@ chrome.runtime.onStartup.addListener(() => {
   syncRegistrations();
 });
 
-chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+chrome.tabs.onRemoved.addListener((tabId) => {
+  self.PK_MODULES.forgetTab(tabId).catch(() => {});
+});
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
-    if (msg && msg.type === 'sync') {
+    if (msg && msg.type === 'pk-module-target') {
+      sendResponse(await self.PK_MODULES.target(msg, sender));
+    } else if (msg && msg.type === 'sync') {
       const res = await syncRegistrations();
       const reloaded = await reloadGmailTabs();
       const tabs = await chrome.tabs.query({ url: MATCH });
@@ -136,6 +148,6 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     } else {
       sendResponse({ ok: false });
     }
-  })();
+  })().catch(() => sendResponse({ ok: false }));
   return true; // réponse async
 });

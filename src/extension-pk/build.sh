@@ -22,7 +22,7 @@ os.makedirs("tweaks", exist_ok=True)
 os.makedirs("scripts", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 
-BENCH_VERSION = "2026.10.57"
+BENCH_VERSION = "2026.10.58"
 
 # ---- 1. Découpage gmail.css en tweaks
 text = open(gmail_css, encoding="utf-8").read()
@@ -114,8 +114,9 @@ ALL.append({"id": "js-studio-toast-undo", "group": "js", "label": "Toast · Annu
             "file": "themes/studio/toast-undo.js",
             "type": "js", "world": "ISOLATED", "runAt": "document_end",
             "version": BENCH_VERSION, "status": "new"})
-ALL.append({"id": "js-studio-modules", "group": "js", "label": "Modules · Agenda intégré dans la page (test façon Outlook)",
-            "file": "themes/studio/modules.js",
+ALL.append({"id": "js-studio-modules", "group": "js", "label": "Modules · Mail / Google Agenda complet, même onglet",
+            "file": "themes/studio/modules.js", "css": ["themes/studio/modules.css"],
+            "matches": ["https://mail.google.com/*", "https://calendar.google.com/*"],
             "type": "js", "world": "ISOLATED", "runAt": "document_end",
             "version": BENCH_VERSION, "status": "new"})
 ORDER_OK = ["css-white-style", "css-background-white", "css-grayscale-bar", "css-scrollbar-grey",

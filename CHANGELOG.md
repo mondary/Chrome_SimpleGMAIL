@@ -4,6 +4,12 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.58] - 2026-10-21
+
+### Changed
+- **Studio — Google Agenda complet** : la bascule Mail / Agenda charge les vraies pages Google dans le même onglet. L'aperçu Calendar embarqué est retiré ; l'agenda conserve la création d'événements, ses vues et ses paramètres natifs. Le bouton Mail retrouve la dernière URL Gmail du même compte et du même onglet.
+- **Comptes et permissions** : le compte actif est transmis à Google par `authuser` ; la vue de retour est conservée dans `chrome.storage.session` et effacée à la fermeture de l'onglet. Seul le module de navigation s'exécute sur `calendar.google.com`, ajouté aux hôtes autorisés. Les enregistrements existants sont actualisés lors de la synchronisation.
+
 ## [2026.10.57] - 2026-10-21
 
 ### Fixed

@@ -7,3 +7,5 @@
 | `ego-browser-user-policy` | Garder les interactions Gmail dans un navigateur isolé. | Validation sans utiliser les fenêtres personnelles. |
 | `premium-promo-media` | Préparer une landing, des captures fictives et leurs dérivés média. | `store/`. |
 | `pk-commits` | Synchroniser le CalVer, le changelog, les READMEs et la livraison. | `CHANGELOG.md`, `README.md`, `README_en.md`, commit et push. |
+| `fixing-accessibility` | Rendre la navigation Mail / Agenda accessible au clavier. | `themes/studio/modules.js`, `modules.css` : contrôles natifs, état courant et focus visible. |
+| `app-presence-sync` | Documenter la navigation vers Google Agenda complet et ses permissions. | README FR/EN, guide de l'extension et note locale de présentation. |
