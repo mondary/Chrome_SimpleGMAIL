@@ -22,7 +22,7 @@ os.makedirs("tweaks", exist_ok=True)
 os.makedirs("scripts", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 
-BENCH_VERSION = "2026.10.56"
+BENCH_VERSION = "2026.10.57"
 
 # ---- 1. Découpage gmail.css en tweaks
 text = open(gmail_css, encoding="utf-8").read()
@@ -39,7 +39,7 @@ CSS_DEFS = {
     4: ("stars-focus", "StarsFocus · ligne étoilée surlignée (jaune)", "ok"),
     5: ("margin", "Margin · colonne centrée (marges en %)", "ok"),
     6: ("unread-color", "UnreadColor · non-lus gris", "ok"),
-    7: ("top-right", "TopRight v2 · aide/apps/notifications masqués", "ok"),
+    7: ("top-right", "TopRight v3 · aide/notifications masqués (bouton apps conservé)", "ok"),
     8: ("no-left-menu", "NoLeftMenu · menu latéral masqué", "ok"),
     9: ("white-style", "WhiteStyle · padding des lignes", "ok"),
     10: ("scrollbar-grey", "ScrollBarGrey · scrollbar fine grise", "ok"),
@@ -114,12 +114,16 @@ ALL.append({"id": "js-studio-toast-undo", "group": "js", "label": "Toast · Annu
             "file": "themes/studio/toast-undo.js",
             "type": "js", "world": "ISOLATED", "runAt": "document_end",
             "version": BENCH_VERSION, "status": "new"})
+ALL.append({"id": "js-studio-modules", "group": "js", "label": "Modules · Agenda intégré dans la page (test façon Outlook)",
+            "file": "themes/studio/modules.js",
+            "type": "js", "world": "ISOLATED", "runAt": "document_end",
+            "version": BENCH_VERSION, "status": "new"})
 ORDER_OK = ["css-white-style", "css-background-white", "css-grayscale-bar", "css-scrollbar-grey",
             "js-keyword-highlighter", "js-filter-similar", "css-no-left-menu", "css-status-pill",
             "css-top-right", "js-sender-icons", "js-short-label", "css-unread-color",
             "css-searchbar", "css-sticky-topic", "css-stars-focus", "css-compose-toolbar",
             "css-reading-pane-btn", "css-margin", "js-new-message-button", "js-custom-tabs"]
-ORDER_NEW = ["js-studio-empty", "js-studio-toast-undo", "css-toast-center", "css-sidebar-composer", "css-sidebar-gray"]
+ORDER_NEW = ["js-studio-empty", "js-studio-toast-undo", "js-studio-modules", "css-toast-center", "css-sidebar-composer", "css-sidebar-gray"]
 ORDER_KO = ["css-theme-pkweb", "css-header-autohide", "js-icon-view",
             "js-inbox-strict", "js-no-spam-icon"]
 

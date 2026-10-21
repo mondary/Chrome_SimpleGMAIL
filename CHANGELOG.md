@@ -4,6 +4,14 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.57] - 2026-10-21
+
+### Fixed
+- **Studio — bouton « Applications Google » de retour** : le tweak TopRight masquait aussi le bento Google en plus de l'aide et des notifications. Il ne masque plus que l'aide, le support et les notifications ; le sélecteur d'applications Google reste visible (v3).
+
+### Added
+- **Studio — Modules · Agenda intégré (test)** : un bouton « Agenda » sur le bord gauche ouvre l'agenda Google Calendar du compte dans la même page (embed signé `/u/0/`, fuseau et langue du navigateur), façon Outlook : Échap ou « Revenir au mail » ramène à Gmail sans nouvel onglet. Lien de repli vers l'onglet complet conservé.
+
 ## [2026.10.56] - 2026-10-20
 
 ### Fixed
