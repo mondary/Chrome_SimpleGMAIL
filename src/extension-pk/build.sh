@@ -22,7 +22,7 @@ os.makedirs("tweaks", exist_ok=True)
 os.makedirs("scripts", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 
-BENCH_VERSION = "2026.10.58"
+BENCH_VERSION = "2026.10.71"
 
 # ---- 1. Découpage gmail.css en tweaks
 text = open(gmail_css, encoding="utf-8").read()
@@ -113,12 +113,27 @@ ALL.append({"id": "js-studio-empty", "group": "js", "label": "Boîte à zéro ·
 ALL.append({"id": "js-studio-toast-undo", "group": "js", "label": "Toast · Annuler préservé (un nouveau toast ne le vole plus)",
             "file": "themes/studio/toast-undo.js",
             "type": "js", "world": "ISOLATED", "runAt": "document_end",
-            "version": BENCH_VERSION, "status": "new"})
-ALL.append({"id": "js-studio-modules", "group": "js", "label": "Modules · Mail / Google Agenda complet, même onglet",
+            "version": BENCH_VERSION, "status": "new", "setting": "toast-seconds"})
+ALL.append({"id": "js-studio-category-labels", "group": "js", "label": "Catégories · renommer les onglets de la boîte de réception",
+            "file": "themes/studio/category-labels.js",
+            "type": "js", "world": "ISOLATED", "runAt": "document_end",
+            "version": BENCH_VERSION, "status": "new", "setting": "category-labels"})
+ALL.append({"id": "js-studio-modules", "group": "js", "label": "Modules · Mail / Google Agenda / Drive complet, même onglet",
             "file": "themes/studio/modules.js", "css": ["themes/studio/modules.css"],
-            "matches": ["https://mail.google.com/*", "https://calendar.google.com/*"],
+            "matches": ["https://mail.google.com/*", "https://calendar.google.com/*", "https://drive.google.com/*"],
             "type": "js", "world": "ISOLATED", "runAt": "document_end",
             "version": BENCH_VERSION, "status": "new"})
+ALL.append({"id": "css-studio-calendar", "group": "css", "label": "Agenda · accents Studio noirs (couleurs des agendas préservées)",
+            "file": "themes/studio/calendar.css",
+            "matches": ["https://calendar.google.com/*"],
+            "type": "css", "version": BENCH_VERSION, "status": "new"})
+ALL.append({"id": "css-studio-drive", "group": "css", "label": "Drive · accents Studio noirs (couleurs des fichiers préservées)",
+            "file": "themes/studio/drive.css",
+            "matches": ["https://drive.google.com/*"],
+            "type": "css", "version": BENCH_VERSION, "status": "new"})
+ALL.append({"id": "css-studio-compose", "group": "css", "label": "Composer · « Nouveau message » noir plein",
+            "file": "themes/studio/compose.css",
+            "type": "css", "version": BENCH_VERSION, "status": "new"})
 ORDER_OK = ["css-white-style", "css-background-white", "css-grayscale-bar", "css-scrollbar-grey",
             "js-keyword-highlighter", "js-filter-similar", "css-no-left-menu", "css-status-pill",
             "css-top-right", "js-sender-icons", "js-short-label", "css-unread-color",

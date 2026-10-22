@@ -1,0 +1,47 @@
+/* Studio — Google Drive : même langage que Gmail et Agenda.
+   Surfaces blanches, action principale noire, accents Google neutralisés.
+   Les couleurs des fichiers et des dossiers restent intactes. */
+
+html,
+body {
+  background: #ffffff !important;
+}
+
+/* « Nouveau » : noir plein, à la largeur du panneau, comme Gmail et Agenda. */
+button.brbsPe {
+  background-color: #09090b !important;
+  color: #ffffff !important;
+  border: 0 !important;
+  width: 100% !important;
+  box-shadow: 0 6px 16px rgba(9, 9, 11, .16) !important;
+}
+button.brbsPe * {
+  color: #ffffff !important;
+}
+
+/* Navigation active : gris Studio au lieu du bleu clair. */
+.a-U-xc-J {
+  background-color: #f4f4f5 !important;
+}
+.a-U-xc-J * {
+  color: #09090b !important;
+}
+
+/* Barre de stockage : noir. */
+.B-ZB7aWe-UvFRu {
+  background-color: #09090b !important;
+}
+
+/* Offres Google hors Studio. */
+button[aria-label="Mettre à niveau"],
+button[aria-label="Upgrade"] {
+  display: none !important;
+}
+
+/* Lien d'extension de stockage : gris au lieu du bleu. */
+a[href*="one.google.com"] {
+  color: #52525b !important;
+}
+a[href*="one.google.com"] * {
+  color: #52525b !important;
+}

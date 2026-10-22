@@ -1,43 +1,145 @@
-/* Only the module switch is styled. Calendar keeps its full native interface. */
+/* Only the module switch is styled. Calendar keeps its full native interface.
+   The switch replaces the app logo in the Google bar: one black capsule with
+   the Gmail and Calendar pictograms, the active app on a white segment. */
 #pk-studio-modules {
   all: initial;
   box-sizing: border-box;
-  position: fixed;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 602;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 6px;
-  border: 1px solid #e4e4e7;
-  border-left: 0;
-  border-radius: 0 12px 12px 0;
-  background: #fff;
-  color: #171717;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0 6px 0 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: #09090b;
+  box-shadow: none;
+  border: 0;
+  outline: 0;
+  vertical-align: middle;
   font: 12px/1.4 Arial, sans-serif;
+  animation: pk-modules-in .2s ease-out both;
 }
+
 #pk-studio-modules button {
   all: unset;
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  min-width: 54px;
-  min-height: 54px;
-  padding: 8px 4px;
-  border-radius: 7px;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
   cursor: pointer;
-  color: #52525b;
-  font: 500 10px/1.2 Arial, sans-serif;
+  color: rgba(255, 255, 255, .6);
+  transition: background .18s ease, color .18s ease;
 }
-#pk-studio-modules button[aria-current="page"] { background: #f4f4f5; color: #171717; cursor: default; }
-#pk-studio-modules button:not(:disabled):hover { background: #fafafa; color: #171717; }
-#pk-studio-modules button:focus-visible { outline: 2px solid #171717; outline-offset: -2px; }
-#pk-studio-modules[aria-busy="true"] button { cursor: progress; }
-#pk-studio-modules svg { display: block; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-#pk-studio-modules [role="status"]:empty { display: none; }
-#pk-studio-modules [role="status"] { position: absolute; left: 100%; top: 0; width: 200px; margin-left: 8px; padding: 12px; background: #fff; border: 1px solid #e4e4e7; border-radius: 8px; color: #171717; }
+
+#pk-studio-modules button[aria-current="page"] {
+  background: #ffffff;
+  color: #09090b;
+  cursor: default;
+}
+
+/* The active Gmail mark stays clickable: it returns to the inbox. */
+#pk-studio-modules button[aria-current="page"]:not(:disabled) {
+  cursor: pointer;
+}
+
+#pk-studio-modules button[aria-current="page"]:not(:disabled):hover {
+  background: #ffffff;
+  color: #09090b;
+}
+
+#pk-studio-modules button:not(:disabled):hover {
+  background: rgba(255, 255, 255, .14);
+  color: #ffffff;
+}
+
+#pk-studio-modules button:focus-visible {
+  outline: 2px solid #ffd35c;
+  outline-offset: -2px;
+}
+
+#pk-studio-modules[aria-busy="true"] {
+  opacity: .72;
+}
+
+#pk-studio-modules svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: none;
+}
+
+/* Drive only: a Studio burger that collapses the fixed rail. */
+#pk-drive-menu {
+  all: initial;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin: 0 2px 0 6px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #3f3f46;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+#pk-drive-menu:hover {
+  background: #f4f4f5;
+  color: #09090b;
+}
+
+#pk-drive-menu:focus-visible {
+  outline: 2px solid #09090b;
+  outline-offset: -2px;
+}
+
+#pk-drive-menu svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+/* The error/resume note opens under the switch, never over the search bar. */
+#pk-studio-modules [role="status"]:empty {
+  display: none;
+}
+
+#pk-studio-modules [role="status"] {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: max-content;
+  max-width: 320px;
+  padding: 10px 12px;
+  background: #09090b;
+  border-radius: 10px;
+  color: #ffffff;
+  font: 12px/1.4 Arial, sans-serif;
+  box-shadow: 0 8px 24px rgba(9, 9, 11, .22);
+}
+
+@keyframes pk-modules-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #pk-studio-modules { animation: none; }
+  #pk-studio-modules button { transition: none; }
+}
+
+/* Narrow windows: the native logo is already hidden by Gmail, keep both marks. */
+@media (max-width: 640px) {
+  #pk-studio-modules { margin-left: 0; }
+}

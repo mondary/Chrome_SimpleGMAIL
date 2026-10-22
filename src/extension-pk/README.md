@@ -11,7 +11,7 @@ visuelle aux onglets `mail.google.com`, sans backend ni compte supplémentaire.
 | Thème | Contenu |
 | --- | --- |
 | *Natif* | Gmail tel quel, avec les scripts cochables du panneau. |
-| *Studio* | 31 tweaks cochables, dont « Boîte à zéro », « Annuler préservé » et la bascule Mail / Google Agenda complet dans le même onglet — bouton apps Google conservé. |
+| *Studio* | 35 tweaks cochables, dont « Boîte à zéro », « Annuler préservé », le renommage des catégories, la bascule à triple logo Mail / Google Agenda / Drive complet et les accents Studio sur Agenda et Drive — bouton apps Google conservé. |
 | *Simplify* | Fonds photo, boîte vide et volet de lecture (`themes/simplify/`). |
 | *Classique* | Transposition V1 : salutation, avatars, groupes de dates (`themes/simplemail-classic/`). |
 | *Focus* | Liste mono de 900 px, catégories masquables et alignables, compteur total Gmail et raccourcis (`themes/focus-os/`). |
@@ -27,16 +27,25 @@ visuelle aux onglets `mail.google.com`, sans backend ni compte supplémentaire.
 
 ## Construire les sources générées
 
-### Mail / Google Agenda complet
+### Mail / Google Agenda / Drive
 
-Activer **Modules · Mail / Google Agenda complet, même onglet** dans Studio.
-Le sélecteur Mail / Agenda est présent sur les deux sites. Il navigue vers le vrai
-Google Agenda (création d'événements, vues et paramètres natifs), puis retrouve
-la dernière URL Gmail du compte et de l'onglet. Chaque bascule charge la page cible.
+Activer **Modules · Mail / Google Agenda / Drive complet, même onglet** dans Studio.
+Une bascule à triple logo, à la place du logo dans la barre supérieure des trois sites,
+propose **Gmail**, **Agenda** et **Drive** (pictogrammes officiels, segment actif blanc sur capsule noire).
+Elle navigue vers le vrai Google Agenda (création d'événements, vues et paramètres natifs),
+vers le vrai Drive sur « Mon Drive », puis ramène à la **boîte de réception** du compte actif.
+Le logo Gmail, même quand il est déjà le segment actif, rouvre aussi la boîte de réception.
+Chaque bascule charge la page cible.
+La bascule navigue sur place : un seul onglet, une seule fenêtre, le retour navigateur intact.
+Sur Drive, un burger Studio (à gauche de la bascule) replie ou déplie le panneau latéral ;
+l'état est mémorisé dans `pkDriveRailCollapsed`.
+Dans une fenêtre d'application installée (mode standalone), Chrome superpose sa propre barre
+d'URL « hors périmètre » ; ouvrir Gmail dans un onglet classique l'évite complètement.
+Agenda reçoit les accents Studio (`calendar.css`) : fond blanc, jour courant et boutons en noir ;
+les couleurs des calendriers et des événements restent intactes.
 La préférence Studio existante est conservée ; l'extension demande désormais aussi
-l'accès à `https://calendar.google.com/*` pour y afficher le bouton de retour.
-Les retouches Gmail ne sont pas injectées dans Calendar. Le retour est mémorisé
-dans `chrome.storage.session`, supprimé avec l'onglet ou à la fermeture du navigateur.
+l'accès à `https://calendar.google.com/*` et `https://drive.google.com/*` pour y afficher la bascule.
+Les retouches Gmail ne sont pas injectées dans Calendar.
 
 ### Génération
 

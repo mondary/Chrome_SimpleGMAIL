@@ -2,14 +2,19 @@
 // closes, keep a working mirror pill so the action can still be undone.
 // Mechanism (validated on real Gmail): the undo handler is delegated above the
 // toast node, so a clone of the whole alert wrapper — kept in the page DOM with
-// its .bAp ancestry — still triggers the native undo when clicked.
+// its .bAp ancestry — still triggers the native undo when clicked. The close
+// button has no delegated handler, so the pill wires its own.
 (() => {
   if (window.__pkStudioToastUndo) return;
   window.__pkStudioToastUndo = true;
 
   const UNDO_WINDOW = 10500; // native window measured at ~11.5 s
-  const MAX_PILLS = 3;
+  const MAX_VISIBLE = 2; // pills + live native toast, never more
+  const DEFAULT_HOLD = 6000; // pill lifetime, seconds setting lives in storage
+  const MIN_HOLD = 3000;
+  const MAX_HOLD = 12000;
   const UNDO_SELECTOR = '#link_undo, .bAo [role=link], .a8k, .ag';
+  const CLOSE_SELECTOR = '.bBe';
   const CSS = [
     '#pk-toast-stack{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;z-index:992;pointer-events:none}',
     '#pk-toast-stack > *{pointer-events:auto;position:static!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;transform:none!important;margin:0!important;width:max-content;max-width:calc(100vw - 32px)}',
@@ -18,7 +23,7 @@
     '#pk-toast-stack .vh .bAq{display:flex!important;align-items:center!important;margin:0 12px 0 0!important;color:#fff!important}',
     '#pk-toast-stack .vh .bAo{display:flex!important;align-items:center!important;margin:0!important}',
     '#pk-toast-stack .vh #link_undo,#pk-toast-stack .vh .a8k,#pk-toast-stack .vh .ag,#pk-toast-stack .vh .bAo [role=link]{color:#ffd35c!important;font-weight:600!important;cursor:pointer}',
-    '#pk-toast-stack .vh .bBe{position:absolute!important;top:50%!important;right:16px!important;transform:translateY(-50%)!important;margin:0!important;padding:0!important}',
+    '#pk-toast-stack .vh .bBe{position:absolute!important;top:50%!important;right:16px!important;transform:translateY(-50%)!important;margin:0!important;padding:0!important;cursor:pointer}',
     '@media (prefers-reduced-motion: reduce){#pk-toast-stack .vh{transition:none}}',
   ].join('\n');
 
@@ -26,7 +31,8 @@
   let scheduled = false;
   let stack = null;
   let styleEl = null;
-  let current = null; // { vh, message, bornAt, consumed, pill }
+  let holdMs = DEFAULT_HOLD;
+  let current = null; // { vh, message, bornAt, consumed, pill, timer }
 
   function visible(node) {
     return node.getClientRects().length > 0 && getComputedStyle(node).visibility !== 'hidden';
@@ -38,6 +44,12 @@
 
   function undoLink(vh) {
     return vh.querySelector(UNDO_SELECTOR);
+  }
+
+  function holdFrom(seconds) {
+    const value = Number(seconds);
+    if (!Number.isFinite(value) || value <= 0) return DEFAULT_HOLD;
+    return Math.min(Math.max(Math.round(value * 1000), MIN_HOLD), MAX_HOLD);
   }
 
   function ensureStack() {
@@ -55,15 +67,26 @@
     return stack;
   }
 
-  function retire(pill) {
+  // Fade a pill out, then drop it. Safe to call twice (timer + close + trim).
+  function dismiss(pill) {
+    if (!pill?.isConnected || pill.dataset.leaving) return;
+    pill.dataset.leaving = '1';
     pill.style.opacity = '0';
     pill.style.transform = 'translateY(6px)';
     setTimeout(() => pill.remove(), 260);
   }
 
+  function retire(entry) {
+    if (entry.timer) {
+      clearTimeout(entry.timer);
+      entry.timer = 0;
+    }
+    dismiss(entry.pill);
+  }
+
   function scheduleRetire(entry) {
-    const remaining = UNDO_WINDOW - (Date.now() - entry.bornAt);
-    setTimeout(() => { if (entry.pill.isConnected) retire(entry.pill); }, Math.max(remaining, 0) + 300);
+    clearTimeout(entry.timer);
+    entry.timer = setTimeout(() => retire(entry), holdMs);
   }
 
   function showPill(entry) {
@@ -73,8 +96,22 @@
     stack.append(pill);
     requestAnimationFrame(() => { pill.style.opacity = '1'; });
     pill.addEventListener('click', (e) => {
-      if (e.target?.closest?.(UNDO_SELECTOR)) setTimeout(() => retire(pill), 200);
-    }, { once: false });
+      if (e.target?.closest?.(UNDO_SELECTOR)) {
+        // The clone fires Gmail's delegated undo; the toast that follows is a
+        // result, not a stolen action — do not mirror it.
+        if (current) current.consumed = true;
+        setTimeout(() => retire(entry), 200);
+        return;
+      }
+      // The clone carries no listener of its own: the native close handler is
+      // bound to the original node, so wire the mirrored cross here.
+      if (e.target?.closest?.(CLOSE_SELECTOR)) {
+        e.preventDefault();
+        e.stopPropagation();
+        retire(entry);
+      }
+    });
+    scheduleRetire(entry);
   }
 
   function refresh() {
@@ -109,13 +146,15 @@
       pill.setAttribute('data-pk-toast-mirror', '');
       // Stay detached until a steal actually happens: a hidden alert clone in
       // the DOM makes Gmail skip subsequent toasts (dedupe on live alerts).
-      current = { vh: withUndo, message: messageOf(withUndo), bornAt: now, consumed: false, pill };
+      current = { vh: withUndo, message: messageOf(withUndo), bornAt: now, consumed: false, pill, timer: 0 };
     }
 
     if (stack) {
-      const pills = [...stack.children];
-      while (pills.length > MAX_PILLS) pills.shift().remove();
-      const nativeVisible = liveToasts.some((vh) => !stack.contains(vh));
+      // One live native toast already occupies a slot: keep the stack ≤ 2 tiles.
+      const nativeVisible = liveToasts.length > 0;
+      const room = Math.max(MAX_VISIBLE - (nativeVisible ? 1 : 0), 1);
+      const pills = [...stack.children].filter((pill) => !pill.dataset.leaving);
+      for (let i = 0; i < pills.length - room; i += 1) dismiss(pills[i]);
       stack.style.bottom = nativeVisible ? '92px' : '24px';
     }
   }
@@ -134,19 +173,19 @@
     requestAnimationFrame(refresh);
   }
 
-  chrome.storage.local.get(['theme', 'enabled'], (state) => {
+  function applyState(state) {
     active = state.theme === 'theme-pk' && state.enabled?.['js-studio-toast-undo'] !== false;
+    holdMs = holdFrom(state.toastSeconds);
     schedule();
-  });
+  }
+
+  chrome.storage.local.get(['theme', 'enabled', 'toastSeconds'], applyState);
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area !== 'local' || (!changes.theme && !changes.enabled)) return;
-    chrome.storage.local.get(['theme', 'enabled'], (state) => {
-      active = state.theme === 'theme-pk' && state.enabled?.['js-studio-toast-undo'] !== false;
-      schedule();
-    });
+    if (area !== 'local' || (!changes.theme && !changes.enabled && !changes.toastSeconds)) return;
+    chrome.storage.local.get(['theme', 'enabled', 'toastSeconds'], applyState);
   });
   new MutationObserver(schedule).observe(document.documentElement, {
-    childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class', 'aria-hidden'],
+    childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class', 'aria-hidden', 'hidden'],
   });
   window.addEventListener('hashchange', schedule);
   schedule();

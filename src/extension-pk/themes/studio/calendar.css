@@ -1,0 +1,77 @@
+/* Studio — Google Agenda monochrome.
+   Même langage que Gmail : surfaces blanches, noir plein pour les actions,
+   gris pour les séparations, aucune couleur d'accent Google. */
+
+html,
+body {
+  background: #ffffff !important;
+}
+
+/* « Créer » : bouton plein noir, comme le Composer de Gmail. */
+button.gPr58d {
+  background-color: #09090b !important;
+  color: #ffffff !important;
+  border-color: #09090b !important;
+}
+button.gPr58d * {
+  color: #ffffff !important;
+}
+
+/* Aujourd'hui : pastilles noires (mini-calendrier et en-tête de colonne),
+   au lieu du bleu #0b57d0. */
+button[aria-label*="aujourd"][class*="sOjuj"],
+button[aria-label*="aujourd"][class*="sVASAd"],
+button[aria-label*="today"][class*="sOjuj"],
+button[aria-label*="today"][class*="sVASAd"] {
+  background-color: #09090b !important;
+  color: #ffffff !important;
+  border-color: #09090b !important;
+}
+button[aria-label*="aujourd"][class*="sOjuj"] *,
+button[aria-label*="aujourd"][class*="sVASAd"] *,
+button[aria-label*="today"][class*="sOjuj"] *,
+button[aria-label*="today"][class*="sVASAd"] * {
+  color: #ffffff !important;
+}
+
+/* Libellé du jour courant dans l'en-tête de colonne (« JEU. »), bleu lui aussi. */
+[class*="F262Ye"] {
+  color: #09090b !important;
+}
+
+/* Vue mois : le numéro du jour courant devient une pastille noire. */
+h2[class*="ubOFEd"][class*="F262Ye"] {
+  background-color: #09090b !important;
+  color: #ffffff !important;
+}
+
+/* « Créer » à la largeur du panneau latéral, comme « Nouveau message » dans Gmail. */
+div.dwlvNd:has(button.gPr58d) {
+  width: 224px !important;
+}
+div.dwlvNd:has(button.gPr58d) > div,
+div.dwlvNd:has(button.gPr58d) > div > div {
+  width: 100% !important;
+}
+button.gPr58d {
+  width: 100% !important;
+}
+
+/* Action d'en-tête en bleu clair (#c2e7ff) -> noir. */
+button.nUt0vb.dg8yV.aOXrUc {
+  background-color: #09090b !important;
+  color: #ffffff !important;
+  border: 0 !important;
+}
+button.nUt0vb.dg8yV.aOXrUc * {
+  color: #ffffff !important;
+}
+
+/* L'offre « Mettre à niveau » sort du Studio. */
+button[aria-label="Mettre à niveau"],
+button[aria-label="Upgrade"] {
+  display: none !important;
+}
+
+/* Les couleurs restent : événements et pastilles de calendrier gardent
+   leurs teintes d'origine, seul le chrome de l'interface est monochrome. */

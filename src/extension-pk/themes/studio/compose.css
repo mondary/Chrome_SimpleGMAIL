@@ -1,0 +1,21 @@
+/* Studio — « Nouveau message » : le noir plein du bouton « Créer » d'Agenda,
+   au lieu du blanc bleuté natif de Gmail. */
+
+.T-I-KE {
+  background-color: #09090b !important;
+  color: #ffffff !important;
+  border: 0 !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 6px 16px rgba(9, 9, 11, .16) !important;
+}
+
+.T-I-KE:hover {
+  background-color: #18181b !important;
+}
+
+.T-I-KE .T-I-J3,
+.T-I-KE .T-I-J3 svg,
+.T-I-KE svg {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}

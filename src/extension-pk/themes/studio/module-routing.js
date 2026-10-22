@@ -1,16 +1,18 @@
-// Service worker only. Remember the Mail view per tab for this browser session.
-// The two full Google apps remain top-level pages; only navigation is shared.
+// Service worker only. The switch opens the other app for the active account,
+// always on its home page: Mail returns to the inbox, Calendar to its home view.
 (() => {
-  const hosts = { mail: 'mail.google.com', calendar: 'calendar.google.com' };
-  const keyFor = (tabId) => `pk-module-return:${tabId}`;
+  const hosts = { mail: 'mail.google.com', calendar: 'calendar.google.com', drive: 'drive.google.com' };
+  const prefixes = { mail: '/mail/', calendar: '/calendar/', drive: '/drive/' };
 
   function appOf(url) {
     try {
       const parsed = new URL(url);
       if (parsed.protocol !== 'https:' || parsed.port || parsed.username || parsed.password) return null;
       const app = Object.keys(hosts).find((name) => hosts[name] === parsed.hostname);
-      const prefix = app === 'mail' ? '/mail/' : '/calendar/';
-      return app && parsed.pathname.startsWith(prefix) ? { app, url: parsed } : null;
+      if (!app) return null;
+      // Drive also serves files from /file/… : any path is a valid source.
+      if (app !== 'drive' && !parsed.pathname.startsWith(prefixes[app])) return null;
+      return { app, url: parsed };
     } catch { return null; }
   }
 
@@ -25,6 +27,11 @@
   }
 
   function appUrl(app, email, slot) {
+    if (app === 'drive') {
+      const url = new URL(email ? 'https://drive.google.com/drive/my-drive' : `https://drive.google.com/drive/u/${slot}/my-drive`);
+      if (email) url.searchParams.set('authuser', email);
+      return url.href;
+    }
     const prefix = app === 'mail' ? 'mail' : 'calendar';
     const path = email ? `/${prefix}/` : `/${prefix}/u/${slot}/`;
     const url = new URL(`https://${hosts[app]}${path}`);
@@ -45,20 +52,7 @@
 
       const email = accountEmail(message.account) || accountEmail(source.url.searchParams.get('authuser'));
       const slot = accountSlot(source.url);
-      const key = keyFor(tabId);
-      if (source.app === 'mail') {
-        await chrome.storage.session.set({ [key]: { mail: source.url.href, email, slot } });
-      } else {
-        const previous = (await chrome.storage.session.get(key))[key];
-        // An account can be changed within Calendar. Never return to a different
-        // account's remembered conversation, even when their numeric slots differ.
-        const sameAccount = previous && (email ? previous.email === email : !previous.email && previous.slot === slot);
-        if (sameAccount && appOf(previous.mail)?.app === 'mail') return { ok: true, url: previous.mail };
-      }
       return { ok: true, url: appUrl(message.destination, email, slot) };
-    },
-    forgetTab(tabId) {
-      return chrome.storage.session.remove(keyFor(tabId));
     },
   };
 })();

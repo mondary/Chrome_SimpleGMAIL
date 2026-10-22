@@ -74,7 +74,8 @@
         ).documentElement;
         illustration.replaceChildren(svg);
       }
-      for (const [selector, value] of [['.pk-studio-zero-kicker', text.kicker], ['.pk-studio-zero-title', text.title], ['.pk-studio-zero-detail', text.detail(name)]]) {
+      const display = window.__pkStudioCategoryNames?.[kind] || name;
+      for (const [selector, value] of [['.pk-studio-zero-kicker', text.kicker], ['.pk-studio-zero-title', text.title], ['.pk-studio-zero-detail', text.detail(display)]]) {
         const node = art.querySelector(selector);
         if (node.textContent !== value) node.textContent = value;
       }

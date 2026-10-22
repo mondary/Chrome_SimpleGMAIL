@@ -3,56 +3,65 @@ const listEl = document.getElementById('list');
 const countEl = document.getElementById('count');
 const themesEl = document.getElementById('themes');
 const toolsEl = document.querySelector('.list-tools');
+let toastSeconds = 6;
+let categoryLabels = {};
+const CATEGORY_FIELDS = [
+  ['primary', 'Principale'],
+  ['promotions', 'Promotions'],
+  ['social', 'Réseaux sociaux'],
+  ['updates', 'Notifications'],
+  ['forums', 'Forums'],
+  ['newsletter', 'Newsletters'],
+];
+
+const THEME_ICONS = {
+  '': ['M3 6h18v12H3z', 'm3 7 9 6 9-6'],
+  'theme-pk': ['M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18z', 'M12 3v18'],
+  'theme-simplify': ['M4 7h16', 'M4 12h10', 'M4 17h16'],
+  'theme-simplemail-classic': ['M3 5h18v14H3z', 'M8 5v14'],
+  'theme-focus-os': ['M4 6h2', 'M4 12h2', 'M4 18h2', 'M10 6h10', 'M10 12h10', 'M10 18h10'],
+  'theme-simplemail-original': ['M4 5h6v14H4z', 'M12 7h8', 'M12 12h8', 'M12 17h5'],
+};
+
+function themeIcon(id) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  for (const d of THEME_ICONS[id] || THEME_ICONS['']) {
+    const path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', d);
+    svg.append(path);
+  }
+  return svg;
+}
 
 function renderThemes(active) {
   if (!themesEl) return;
   themesEl.innerHTML = '';
-  const h = document.createElement('div');
-  h.className = 'group';
-  h.textContent = '✦ Thème';
-  themesEl.appendChild(h);
+  const strip = document.createElement('div');
+  strip.className = 'theme-strip';
+  strip.setAttribute('role', 'group');
+  strip.setAttribute('aria-label', 'Thème');
   for (const t of self.LAB_THEMES) {
-    const row = document.createElement('label');
-    row.className = 'theme-row' + (active === t.id ? ' active' : '');
-    const input = document.createElement('input');
-    input.type = 'radio';
-    input.name = 'theme';
-    input.value = t.id;
-    input.checked = active === t.id;
-    input.addEventListener('change', () => setTheme(t.id));
-    const box = document.createElement('div');
-    const name = document.createElement('div');
-    name.className = 'name';
+    const tile = document.createElement('button');
+    tile.type = 'button';
+    tile.className = 'theme-tile' + (active === t.id ? ' active' : '');
+    tile.setAttribute('aria-pressed', String(active === t.id));
+    tile.setAttribute('aria-label', t.label);
+    tile.title = `${t.label} — ${t.description}`;
+    tile.append(themeIcon(t.id));
+    const name = document.createElement('span');
     name.textContent = t.label;
-    const meta = document.createElement('div');
-    meta.className = 'meta';
-    meta.textContent = t.description;
-    box.appendChild(name);
-    box.appendChild(meta);
-    row.appendChild(input);
-    row.appendChild(box);
-    themesEl.appendChild(row);
+    tile.append(name);
+    tile.addEventListener('click', () => setTheme(t.id));
+    strip.appendChild(tile);
   }
-  const upcoming = self.LAB_THEMES_UPCOMING || [];
-  if (upcoming.length) {
-    const h2 = document.createElement('div');
-    h2.className = 'group';
-    h2.textContent = '⋯ À transposer — thèmes du Lab';
-    themesEl.appendChild(h2);
-    for (const u of upcoming) {
-      const row = document.createElement('div');
-      row.className = 'theme-row upcoming';
-      const name = document.createElement('div');
-      name.className = 'name';
-      name.textContent = u.label;
-      const meta = document.createElement('div');
-      meta.className = 'meta';
-      meta.textContent = u.note + ' · en attente de transposition Gmail';
-      row.appendChild(name);
-      row.appendChild(meta);
-      themesEl.appendChild(row);
-    }
-  }
+  themesEl.appendChild(strip);
+  const note = document.createElement('div');
+  note.className = 'theme-note';
+  note.textContent = (self.LAB_THEMES.find((t) => t.id === active) || {}).description || '';
+  themesEl.appendChild(note);
 }
 
 async function setTheme(id) {
@@ -105,7 +114,68 @@ function makeRow(nameText, metaText) {
   return { row, label };
 }
 
-function renderTweaks(enabled, marginPct) {
+function rangeCtl(nameText, min, max, value, suffix, onInput, onCommit) {
+  const ctl = document.createElement('div');
+  ctl.className = 'pct-ctl';
+  const lbl = document.createElement('span');
+  lbl.textContent = nameText;
+  const range = document.createElement('input');
+  range.type = 'range';
+  range.min = String(min);
+  range.max = String(max);
+  range.step = '1';
+  range.value = String(value);
+  const val = document.createElement('span');
+  val.className = 'pct-val';
+  val.textContent = value + suffix;
+  range.addEventListener('input', () => {
+    val.textContent = range.value + suffix;
+    onInput(Number(range.value));
+  });
+  if (onCommit) range.addEventListener('change', onCommit);
+  ctl.appendChild(lbl);
+  ctl.appendChild(range);
+  ctl.appendChild(val);
+  return ctl;
+}
+
+function categoryEditor(labels) {
+  const box = document.createElement('div');
+  box.className = 'cat-edit';
+  const note = document.createElement('div');
+  note.className = 'cat-note';
+  note.textContent = 'Renommer les onglets de la boîte de réception. Vide = nom Gmail.';
+  box.appendChild(note);
+  for (const [id, name] of CATEGORY_FIELDS) {
+    const row = document.createElement('label');
+    row.className = 'cat-row';
+    const native = document.createElement('span');
+    native.textContent = name;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.maxLength = 24;
+    input.placeholder = name;
+    input.value = labels[id] || '';
+    input.setAttribute('aria-label', `Nom de la catégorie ${name}`);
+    let timer = 0;
+    const save = async () => {
+      clearTimeout(timer);
+      const { pkCategoryLabels = {} } = await chrome.storage.local.get('pkCategoryLabels');
+      await chrome.storage.local.set({ pkCategoryLabels: { ...pkCategoryLabels, [id]: input.value.trim() } });
+    };
+    input.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = setTimeout(save, 350);
+    });
+    input.addEventListener('change', save);
+    row.appendChild(native);
+    row.appendChild(input);
+    box.appendChild(row);
+  }
+  return box;
+}
+
+function renderTweaks(enabled, marginPct, toastSeconds) {
   listEl.innerHTML = '';
   const groups = [
     { key: 'new', title: '✦ Nouveau — à tester' },
@@ -127,28 +197,15 @@ function renderTweaks(enabled, marginPct) {
       listEl.appendChild(row);
 
       if (item.setting === 'margin-pct') {
-        const ctl = document.createElement('div');
-        ctl.className = 'pct-ctl';
-        const lbl = document.createElement('span');
-        lbl.textContent = 'Marges';
-        const range = document.createElement('input');
-        range.type = 'range';
-        range.min = '2';
-        range.max = '25';
-        range.step = '1';
-        range.value = marginPct;
-        const val = document.createElement('span');
-        val.className = 'pct-val';
-        val.textContent = marginPct + '%';
-        range.addEventListener('input', async () => {
-          val.textContent = range.value + '%';
-          await chrome.storage.local.set({ marginPct: Number(range.value) });
-        });
-        range.addEventListener('change', () => chrome.runtime.sendMessage({ type: 'sync' }));
-        ctl.appendChild(lbl);
-        ctl.appendChild(range);
-        ctl.appendChild(val);
-        listEl.appendChild(ctl);
+        listEl.appendChild(rangeCtl('Marges', 2, 25, marginPct, '%', async (value) => {
+          await chrome.storage.local.set({ marginPct: value });
+        }, () => chrome.runtime.sendMessage({ type: 'sync' })));
+      } else if (item.setting === 'toast-seconds') {
+        listEl.appendChild(rangeCtl('Durée d’affichage', 3, 12, toastSeconds, ' s', (value) => {
+          chrome.storage.local.set({ toastSeconds: value });
+        }));
+      } else if (item.setting === 'category-labels') {
+        listEl.appendChild(categoryEditor(categoryLabels));
       }
     }
   }
@@ -213,7 +270,7 @@ function updateCount(enabled) {
 function render(enabled, marginPct, theme, storedStyle) {
   if (theme === 'theme-pk') {
     toolsEl.style.display = '';
-    renderTweaks(enabled, marginPct);
+    renderTweaks(enabled, marginPct, toastSeconds);
   } else {
     toolsEl.style.display = 'none';
     if (!theme) renderEmpty('Gmail normal — aucun style appliqué.');
@@ -224,8 +281,10 @@ function render(enabled, marginPct, theme, storedStyle) {
 
 async function loadState() {
   const styleKeys = Object.values(self.THEME_SETTINGS || {}).map(spec => spec.storage);
-  const stored = await chrome.storage.local.get(['enabled', 'marginPct', 'theme', ...styleKeys]);
-  let { enabled = {}, marginPct = 5, theme = '' } = stored;
+  const stored = await chrome.storage.local.get(['enabled', 'marginPct', 'toastSeconds', 'pkCategoryLabels', 'theme', ...styleKeys]);
+  let { enabled = {}, marginPct = 5, toastSeconds: storedToast = 6, theme = '' } = stored;
+  toastSeconds = Number(storedToast) || 6;
+  categoryLabels = stored.pkCategoryLabels && typeof stored.pkCategoryLabels === 'object' ? stored.pkCategoryLabels : {};
   // Auto-réparation : des tweaks actifs sans thème sélectionné → contexte Studio.
   const known = self.LAB_THEMES.map((t) => t.id);
   if (!known.includes(theme) && self.LAB_ITEMS.some((i) => enabled[i.id] !== false)) {

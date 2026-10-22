@@ -4,6 +4,79 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.71] - 2026-10-22
+
+### Changed
+- **Panneau latéral — thèmes en bandeau** : les six thèmes (Natif, Studio, Simplify, Classique, Focus, Original) passent en pictogrammes horizontaux en haut du panneau, avec une ligne de description pour le thème actif. La section passe de ~75 % de la hauteur à 95 px ; les scripts et leurs réglages occupent tout le reste. Les rangées radio et le bloc « à transposer » vide sont supprimés.
+
+## [2026.10.70] - 2026-10-22
+
+### Added
+- **Studio — burger sur Drive** : Drive n'a pas de tiroir natif. Un burger Studio, à gauche de la bascule, replie ou déplie le rail latéral (première piste de grille ramenée à 0, contenu élargi) ; l'état est mémorisé (`pkDriveRailCollapsed`) et réappliqué après les re-rendus de Drive. La bascule retrouve la même position que dans Gmail et Agenda (burger puis segmented view).
+
+## [2026.10.69] - 2026-10-22
+
+### Added
+- **Studio — Drive** : Google Drive reçoit un skin monochrome (`themes/studio/drive.css`) — bouton « Nouveau » noir plein à la largeur du panneau, entrée de navigation active en gris Studio, barre de stockage noire, offres « Mettre à niveau » masquées, lien d'extension de stockage grisé. Les couleurs des fichiers et des dossiers restent intactes.
+
+### Changed
+- **Studio — bascule dans une seule fenêtre** : la bascule navigue de nouveau sur place (`location.assign`), sans fenêtre popup ni onglet externe. Gmail, Agenda et Drive se remplacent dans le même onglet et la même fenêtre. Dans une fenêtre d'application installée, Chrome affiche sa propre barre d'URL hors périmètre ; en onglet classique, aucune barre n'apparaît.
+
+## [2026.10.68] - 2026-10-22
+
+### Added
+- **Studio — Drive dans la bascule** : un troisième logo (Drive 2020 officiel) rejoint Gmail et Agenda. Il ouvre « Mon Drive » du compte actif dans le même onglet (ou la fenêtre Chrome sans interface en mode application installée). La bascule est aussi présente sur `drive.google.com`, y compris depuis une page de fichier, et permet de revenir à Gmail ou Agenda. Hôte `drive.google.com` ajouté aux permissions et au module.
+
+## [2026.10.67] - 2026-10-22
+
+### Changed
+- **Studio — Gmail, retour à la boîte de réception** : le logo Gmail du segmented view ramène toujours à la boîte de réception (`#inbox`), y compris quand Gmail est déjà l'application active. Depuis Agenda, le bouton Mail ouvre la boîte de réception du compte actif au lieu de la dernière vue visitée ; la mémoire de vue par onglet (`chrome.storage.session`) est retirée.
+
+## [2026.10.66] - 2026-10-22
+
+### Fixed
+- **Studio — Gmail installé en application** : la bascule n'ouvre plus l'autre application dans un onglet d'une autre fenêtre. Elle crée une fenêtre Chrome sans onglets ni barre d'adresse (`chrome.windows.create`, type popup, taille de l'écran), donc Agenda reste dans Chrome et garde l'allure d'une application, sans la barre d'URL « retour à l'application ». Dans un onglet classique, la navigation reste dans le même onglet.
+
+## [2026.10.65] - 2026-10-22
+
+### Fixed
+- **Studio — bascule Mail / Agenda** : le halo gris autour de la capsule disparaît (plus d'ombre, plus de liseré). Les logos couleur officiels sont conservés.
+- **Studio — Gmail installé en application** : Chrome affiche sa propre barre d'URL quand une fenêtre d'application sort de son domaine. Dans ce cas seulement, la bascule ouvre l'autre application dans un onglet normal (`chrome.tabs.create`) au lieu de naviguer sur place : la barre « retour à l'application » n'apparaît plus. Dans un onglet classique, la navigation reste dans le même onglet.
+
+## [2026.10.64] - 2026-10-22
+
+### Changed
+- **Studio — bascule à double logo** : les vrais logos Gmail (M multicolore) et Google Agenda (tuile « 31 ») remplacent les pictogrammes monochromes. Le liseré gris interne de la capsule est supprimé ; ombre seule.
+- **Studio — Agenda / Gmail, boutons alignés** : « Créer » dans Agenda prend toute la largeur du panneau latéral (224 px, mêmes marges que la liste des calendriers), comme « Nouveau message » dans Gmail. En retour, « Nouveau message » passe en noir plein avec texte et icône blancs, identique au « Créer » d'Agenda.
+
+## [2026.10.63] - 2026-10-22
+
+### Fixed
+- **Studio — Agenda** : les couleurs des calendriers et des événements sont de nouveau visibles. Le skin ne touche plus aux teintes (plus de niveaux de gris) ; seuls les accents d'interface restent noirs : jour courant, « Créer », action d'en-tête, offre « Mettre à niveau » masquée.
+
+## [2026.10.62] - 2026-10-22
+
+### Changed
+- **Studio — bascule Mail / Agenda dans l'en-tête** : la capsule flottante en bas à gauche est supprimée. Le logo de la barre Google est remplacé par une capsule noire à deux pictogrammes (enveloppe Gmail, calendrier) ; le segment actif est blanc et un clic bascule d'une application à l'autre dans le même onglet. La position du logo natif est conservée, donc la recherche et les actions de l'en-tête ne bougent pas.
+- **Studio — Agenda monochrome** : Google Agenda reçoit le thème Studio (`themes/studio/calendar.css`) — fond blanc plein, bouton « Créer » noir, jour courant en pastille noire en semaine comme en mois, libellé du jour courant en noir, action d'en-tête bleue passée en noir, offre « Mettre à niveau » masquée et événements en niveaux de gris.
+
+## [2026.10.61] - 2026-10-22
+
+### Added
+- **Studio — renommer les catégories** : les onglets de la boîte de réception (Principale, Promotions, Réseaux sociaux, Notifications, Forums, Newsletters) prennent les noms que vous choisissez — « Réseaux sociaux » devient « Créations », « Promotions » devient « Recherche d'emploi », etc. Champs dédiés dans le panneau, sous le tweak **Catégories** ; vide = nom Gmail. Le nom visible et l'étiquette lue par les lecteurs d'écran sont mis à jour en direct, sans toucher au compteur de non-lus ni aux descriptions d'origine.
+
+## [2026.10.60] - 2026-10-22
+
+### Changed
+- **Studio — bascule Mail / Agenda** : le rail blanc collé au bord gauche, illisible sur le fond clair de Gmail, devient une capsule noire flottante en bas à gauche. Deux segments icône + libellé, segment actif en blanc plein, anneau interne pour rester lisible sur fond sombre, entrée en fondu et focus jaune. Sur fenêtre étroite, libellés masqués (noms accessibles conservés). Le message d'erreur s'ouvre au-dessus de la capsule.
+
+## [2026.10.59] - 2026-10-22
+
+### Fixed
+- **Studio — pilules « Annuler »** : elles ne disparaissaient jamais (le minuteur était défini mais jamais armé). Elles s'effacent maintenant au bout de 6 s, durée réglable de 3 à 12 s dans le panneau (curseur sous « Toast · Annuler préservé »).
+- **Studio — empilement des toasts** : plafond de 2 tuiles visibles, toast natif compris, au lieu de 4. Les tuiles en trop s'effacent en fondu au lieu d'être retirées sèchement.
+- **Studio — croix de fermeture des pilules** : elle ne faisait rien, le clone n'héritant pas du gestionnaire lié au nœud natif. Elle ferme désormais la pilule. Une annulation lancée depuis une pilule ne fabrique plus de pilule fantôme.
+
 ## [2026.10.58] - 2026-10-21
 
 ### Changed

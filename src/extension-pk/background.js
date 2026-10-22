@@ -131,10 +131,6 @@ chrome.runtime.onStartup.addListener(() => {
   syncRegistrations();
 });
 
-chrome.tabs.onRemoved.addListener((tabId) => {
-  self.PK_MODULES.forgetTab(tabId).catch(() => {});
-});
-
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
     if (msg && msg.type === 'pk-module-target') {
