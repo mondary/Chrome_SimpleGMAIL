@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.73] - 2026-10-23
+
+### Fixed
+- **Landing boutique** : le titre, le pied de page et les deux boutons de téléchargement pointaient encore vers l'archive Simplify `2026.10.17` supprimée. Ils ciblent désormais PK Simple Gmail et le paquet `pk-simple-gmail-2026.10.73.zip`.
+
 ## [2026.10.72] - 2026-10-23
 
 ### Changed
