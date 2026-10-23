@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.72] - 2026-10-23
+
+### Changed
+- **Boutique — fiche PK Simple Gmail** : description FR/EN réécrite pour le thème Studio, la bascule Mail / Agenda / Drive et les six thèmes ; justification des permissions et lien vers la politique de confidentialité. Nouveau paquet `store/assets/pk-simple-gmail-2026.10.72.zip` (78 fichiers, version `2026.10.72`) en remplacement de l'archive Simplify 2026.10.17.
+
 ## [2026.10.71] - 2026-10-22
 
 ### Changed
