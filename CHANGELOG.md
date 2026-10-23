@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.74] - 2026-10-23
+
+### Changed
+- **Documentation** : le README FR/EN pointe vers la fiche Chrome Web Store (PK Simple Gmail, version publique 2026.10.56, mise à jour 2026.10.73 en attente d'examen) et ajoute un historique depuis janvier 2022. La landing et la fiche de boutique ne prétendent plus que l'extension n'est pas publiée.
+
 ## [2026.10.73] - 2026-10-23
 
 ### Fixed

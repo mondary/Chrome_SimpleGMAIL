@@ -6,7 +6,7 @@
 
 Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla. Packagé en application native (macOS · Windows · Linux).
 
-**Version 2026.10.73** — [Changelog](CHANGELOG.md)
+**Version 2026.10.74** — [Changelog](CHANGELOG.md)
 
 [![Aperçu de l’extension Gmail](store/screenshots/05-ocean.png)](store/index.html)
 [![Réglages de l’extension Gmail](store/screenshots/02-reglages.png)](store/index.html)
@@ -43,11 +43,12 @@ Client mail IMAP immersif — backend Python FastAPI + interface HTML/JS vanilla
 - **PWA + Chrome en local** : installable depuis `127.0.0.1:8000`, extension sans permission sensible ; Android en pause
 
 ### Extension Chrome — PK Simple Gmail
+- **Chrome Web Store** : [PK Simple Gmail](https://chromewebstore.google.com/detail/pk-simple-gmail/kijhhekofbbmdgnheepmjcenehmgepgl) — version publique 2026.10.56, mise à jour 2026.10.73 soumise à examen.
 - **PK Simple Gmail** : l'extension canonique, avec panneau latéral et six thèmes — *Natif*, *Studio* (35 tweaks cochables, dont « Boîte à zéro » : un pictogramme monochrome animé propre à chaque catégorie vide, « Annuler préservé », le renommage des onglets de catégories, « Mail / Google Agenda complet » avec bascule à triple logo (Mail, Agenda, Drive) dans l'en-tête et Agenda aux accents noirs), *Simplify* (fonds photo, boîte vide et volet de lecture), *Classique*, **Focus** (liste mono de 900 px, catégories en icônes, lignes de 35 px, sélection noire et raccourcis) et **Original** (rail de 64 px, recherche large, composer noir, liste aérée). Les autres concepts du Lab restent à transposer.
 - **Mail / Agenda / Drive (Studio)** : la bascule à triple logo (Gmail + Agenda + Drive) remplace le logo dans la barre supérieure, sur les trois sites ; le segment actif est blanc. Elle ouvre le vrai Google Agenda et le vrai Drive dans le même onglet et la même fenêtre, avec création d'événements, vues et paramètres natifs, et le vrai Drive sur « Mon Drive » du compte actif ; Agenda et Drive reprennent les accents Studio (boutons noirs, jour courant noir, couleurs des calendriers, des événements et des fichiers conservées). Le bouton Mail ramène à la boîte de réception du compte actif (le logo Gmail, même actif, aussi). Chaque bascule charge la page Google correspondante. Activer « Modules · Mail / Google Agenda / Drive complet, même onglet » et autoriser `calendar.google.com` et `drive.google.com` lors de la mise à jour de l'extension.
 - **Focus** : catégories affichables/masquables, alignement gauche/centre/droite et compteur total Gmail · [guide et activation](src/extension-pk/themes/focus-os/README.md) · [capture avec données fictives](store/screenshots/10-focus-os.png) · aperçu local dans `tools/previews/focus-os-preview/`.
 - **Original** : [capture avec données fictives](store/screenshots/11-original.png) · aperçu local dans `tools/previews/simplemail-original-preview/`.
-- Guide : [`src/extension-pk/`](src/extension-pk/). Simplify vit désormais comme thème (`src/extension-pk/themes/simplify/`) ; son extension autonome est archivée (`archives/versions/05-simplify-2026.10.16/`, hors git). Non publiée sur le Chrome Web Store.
+- Guide : [`src/extension-pk/`](src/extension-pk/). Simplify vit désormais comme thème (`src/extension-pk/themes/simplify/`) ; son extension autonome est archivée (`archives/versions/05-simplify-2026.10.16/`, hors git), distincte de PK Simple Gmail publiée sur le Chrome Web Store.
 
 ### Sombre Mail — client mail autonome (`tools/mail-client/`)
 - **Interface mail indépendante** : serveur FastAPI local relié directement à vos boîtes IMAP/SMTP — multi-comptes, lecture, envoi réel, favoris, suppression, pièces jointes et temps réel (IMAP IDLE). Gmail n'est jamais ouvert, là où l'extension Chrome se contente de l'habiller.
@@ -256,6 +257,15 @@ La première ouverture crée automatiquement les dossiers de données utilisateu
 ├── store/                    ← Landing et kit média bilingue
 └── README.md / CHANGELOG.md
 ```
+
+## Historique
+
+- **14 janvier 2022** — premier commit du dépôt ; l'extension est publiée le 15 janvier sur le Chrome Web Store.
+- **2022–2024** — versions « PK Gmail / Simplify » : recherche centrée, fonds photo, boîte vide, densité et largeur de liste.
+- **16 décembre 2024** — récupération des messages via API et refonte de la mise en forme côté client.
+- **Mai 2026** — restructuration du dépôt et du README.
+- **Août–septembre 2026** — PKMail (application native macOS, Windows, Linux), puis les thèmes du Lab : Focus OS, Label Canvas, Paper Reader, K7.
+- **Octobre 2026** — PK Simple Gmail : six thèmes, Studio (tweaks, toasts, catégories renommables), bascule Mail / Agenda / Drive, accents Studio sur Agenda et Drive ; paquet 2026.10.73 soumis au Chrome Web Store.
 
 ## Soutien
 
