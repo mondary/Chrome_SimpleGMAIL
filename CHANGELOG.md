@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.82] - 2026-10-26
+
+### Changed
+- **Studio — boîte vide** : les croix de repérage sont supprimées. Le fond devient un semis de micro-points et deux petits anneaux (7 à 12 % de noir) sur blanc pur, dessiné **derrière le contenu de la boîte à zéro** et fondu en bordure. Il reste visible même quand Gmail intercale un conteneur blanc, et ne passe jamais au-dessus du texte ni de l'illustration.
+
 ## [2026.10.81] - 2026-10-26
 
 ### Changed
