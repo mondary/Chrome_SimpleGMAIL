@@ -4,6 +4,12 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.81] - 2026-10-26
+
+### Changed
+- **Studio — boîte vide** : artefacts renforcés pour être réellement perceptibles sur blanc — croix à 16 % de noir, point à 13 %, tuile de 120 px (les marques restent à quelques dizaines de niveaux du blanc, sans teinte de fond).
+- **Mise à jour de l'extension** : le service worker compare la version appliquée à celle du manifeste à chaque démarrage et recharge une fois Gmail, Agenda et Drive quand elle change. Les pages déjà ouvertes ne peuvent donc plus rester bloquées sur une ancienne version des styles ou des scripts.
+
 ## [2026.10.80] - 2026-10-26
 
 ### Changed

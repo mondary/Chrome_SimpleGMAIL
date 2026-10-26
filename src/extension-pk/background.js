@@ -129,12 +129,23 @@ chrome.runtime.onInstalled.addListener(async () => {
     await chrome.storage.local.set({ enabled: all, theme: 'theme-pk' });
   }
   await syncRegistrations();
-  await reloadAppTabs();
 });
 
 chrome.runtime.onStartup.addListener(() => {
   syncRegistrations();
 });
+
+// Content scripts only reach pages loaded after an update. The service worker
+// starts on every extension reload/update: compare the applied version with
+// the manifest and reload the app pages once when it changed.
+async function ensureVersionApplied() {
+  const current = chrome.runtime.getManifest().version;
+  const { appliedVersion } = await chrome.storage.local.get('appliedVersion');
+  if (appliedVersion === current) return;
+  await chrome.storage.local.set({ appliedVersion: current });
+  await reloadAppTabs();
+}
+ensureVersionApplied().catch(() => {});
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
