@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.75] - 2026-10-26
+
+### Added
+- **Studio — décompte des toasts** : un anneau jaune se remplit autour de la croix des pilules « Annuler », sur la durée d'affichage réglée (3 à 12 s), puis disparaît avec la pilule. Il est désactivé quand `prefers-reduced-motion` est demandé.
+
 ## [2026.10.74] - 2026-10-23
 
 ### Changed

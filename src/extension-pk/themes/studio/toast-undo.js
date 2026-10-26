@@ -9,6 +9,7 @@
   window.__pkStudioToastUndo = true;
 
   const UNDO_WINDOW = 10500; // native window measured at ~11.5 s
+  const SVG_NS = 'http://www.w3.org/2000/svg';
   const MAX_VISIBLE = 2; // pills + live native toast, never more
   const DEFAULT_HOLD = 6000; // pill lifetime, seconds setting lives in storage
   const MIN_HOLD = 3000;
@@ -17,13 +18,15 @@
   const CLOSE_SELECTOR = '.bBe';
   const CSS = [
     '#pk-toast-stack{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;z-index:992;pointer-events:none}',
-    '#pk-toast-stack > *{pointer-events:auto;position:static!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;transform:none!important;margin:0!important;width:max-content;max-width:calc(100vw - 32px)}',
+    '#pk-toast-stack > *{pointer-events:auto;position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;transform:none!important;margin:0!important;width:max-content;max-width:calc(100vw - 32px)}',
     '#pk-toast-stack .vh{display:flex!important;align-items:center!important;position:static!important;left:auto!important;top:auto!important;bottom:auto!important;transform:none!important;width:max-content!important;max-width:calc(100vw - 32px)!important;padding:10px 52px 10px 20px!important;background:#09090b!important;color:#fff!important;border:0!important;border-radius:9999px!important;box-shadow:0 12px 32px rgba(9,9,11,.28)!important;font:13px/1.4 Arial,sans-serif!important;transition:opacity .25s ease,transform .25s ease}',
     '#pk-toast-stack .vh .aT{display:flex!important;align-items:center!important}',
     '#pk-toast-stack .vh .bAq{display:flex!important;align-items:center!important;margin:0 12px 0 0!important;color:#fff!important}',
     '#pk-toast-stack .vh .bAo{display:flex!important;align-items:center!important;margin:0!important}',
     '#pk-toast-stack .vh #link_undo,#pk-toast-stack .vh .a8k,#pk-toast-stack .vh .ag,#pk-toast-stack .vh .bAo [role=link]{color:#ffd35c!important;font-weight:600!important;cursor:pointer}',
     '#pk-toast-stack .vh .bBe{position:absolute!important;top:50%!important;right:16px!important;transform:translateY(-50%)!important;margin:0!important;padding:0!important;cursor:pointer}',
+    '#pk-toast-stack .pk-pill-timer{position:absolute!important;top:50%!important;transform:translateY(-50%)!important;pointer-events:none!important;overflow:visible!important}',
+    '#pk-toast-stack .pk-pill-timer circle{fill:none!important;stroke:#ffd35c!important;stroke-width:2!important;stroke-linecap:round!important}',
     '@media (prefers-reduced-motion: reduce){#pk-toast-stack .vh{transition:none}}',
   ].join('\n');
 
@@ -89,11 +92,45 @@
     entry.timer = setTimeout(() => retire(entry), holdMs);
   }
 
+  function attachCountdown(pill) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const close = pill.querySelector(CLOSE_SELECTOR);
+    if (!close) return;
+    const box = close.getBoundingClientRect();
+    const frame = pill.getBoundingClientRect();
+    if (!box.width || !frame.width) return;
+    const size = Math.round(Math.max(box.width, box.height) + 8);
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('class', 'pk-pill-timer');
+    svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+    svg.setAttribute('aria-hidden', 'true');
+    svg.style.width = `${size}px`;
+    svg.style.height = `${size}px`;
+    svg.style.right = `${Math.round(frame.right - (box.left + box.width / 2) - size / 2)}px`;
+    const radius = size / 2 - 1;
+    const circle = document.createElementNS(SVG_NS, 'circle');
+    circle.setAttribute('cx', size / 2);
+    circle.setAttribute('cy', size / 2);
+    circle.setAttribute('r', radius);
+    svg.append(circle);
+    pill.append(svg);
+    const length = 2 * Math.PI * radius;
+    circle.style.strokeDasharray = `${length}`;
+    circle.style.strokeDashoffset = `${length}`;
+    if (typeof circle.animate === 'function') {
+      circle.animate(
+        [{ strokeDashoffset: length }, { strokeDashoffset: 0 }],
+        { duration: holdMs, easing: 'linear', fill: 'forwards' },
+      );
+    }
+  }
+
   function showPill(entry) {
     ensureStack();
     const pill = entry.pill;
     pill.style.opacity = '0';
     stack.append(pill);
+    attachCountdown(pill);
     requestAnimationFrame(() => { pill.style.opacity = '1'; });
     pill.addEventListener('click', (e) => {
       if (e.target?.closest?.(UNDO_SELECTOR)) {
