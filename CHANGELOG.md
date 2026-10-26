@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.80] - 2026-10-26
+
+### Changed
+- **Studio — boîte vide** : le fond redevient **blanc pur**. Le grain et le dégradé radial sont supprimés ; il ne reste que de petits artefacts espacés (croix de repérage, point, tiret) à 5–8 % de noir, tuilés tous les 132 px. La surface entre les marques reste à `#fff`, sans teinte ni fondu.
+
 ## [2026.10.79] - 2026-10-26
 
 ### Added
