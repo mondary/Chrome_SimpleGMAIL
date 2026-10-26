@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.83] - 2026-10-26
+
+### Changed
+- **Studio — boîte vide** : le fond reprend la recette du fichier de référence `getvolt.html` — grain `feTurbulence` flouté à 1 px + semis de points de 6 px dont la densité est modulée par un masque de turbulence basse fréquence, inversé pour fond blanc. Plus aucune croix ni motif répété ; la surface reste blanche entre les points.
+
 ## [2026.10.82] - 2026-10-26
 
 ### Changed
