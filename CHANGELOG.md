@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.77] - 2026-10-26
+
+### Fixed
+- **Studio — décompte des toasts** : l'anneau est aussi dessiné sur le **toast natif** de Gmail, dès qu'une action est annulable, et plus seulement sur les pilules miroir. Il se vide sur la fenêtre native (~10,5 s) puis suit la pilule si le toast est volé. Une action unique affiche donc désormais le décompte.
+
 ## [2026.10.76] - 2026-10-26
 
 ### Changed

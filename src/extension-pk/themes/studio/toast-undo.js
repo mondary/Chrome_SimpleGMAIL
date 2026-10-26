@@ -25,8 +25,8 @@
     '#pk-toast-stack .vh .bAo{display:flex!important;align-items:center!important;margin:0!important}',
     '#pk-toast-stack .vh #link_undo,#pk-toast-stack .vh .a8k,#pk-toast-stack .vh .ag,#pk-toast-stack .vh .bAo [role=link]{color:#ffd35c!important;font-weight:600!important;cursor:pointer}',
     '#pk-toast-stack .vh .bBe{position:absolute!important;top:50%!important;right:16px!important;transform:translateY(-50%)!important;margin:0!important;padding:0!important;cursor:pointer}',
-    '#pk-toast-stack .pk-pill-timer{position:absolute!important;top:50%!important;transform:translateY(-50%) rotate(-90deg)!important;transform-origin:center!important;pointer-events:none!important;overflow:visible!important}',
-    '#pk-toast-stack .pk-pill-timer circle{fill:none!important;stroke:#ffd35c!important;stroke-width:2!important;stroke-linecap:round!important}',
+    '#pk-toast-stack .pk-pill-timer,.bAp .vh .pk-pill-timer{position:absolute!important;top:50%!important;transform:translateY(-50%) rotate(-90deg)!important;transform-origin:center!important;pointer-events:none!important;overflow:visible!important}',
+    '#pk-toast-stack .pk-pill-timer circle,.bAp .vh .pk-pill-timer circle{fill:none!important;stroke:#ffd35c!important;stroke-width:2!important;stroke-linecap:round!important}',
     '@media (prefers-reduced-motion: reduce){#pk-toast-stack .vh{transition:none}}',
   ].join('\n');
 
@@ -92,13 +92,13 @@
     entry.timer = setTimeout(() => retire(entry), holdMs);
   }
 
-  function attachCountdown(pill) {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const close = pill.querySelector(CLOSE_SELECTOR);
-    if (!close) return;
+  function attachCountdown(host, closeHost, duration) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
+    const close = closeHost.querySelector(CLOSE_SELECTOR);
+    if (!close) return null;
     const box = close.getBoundingClientRect();
-    const frame = pill.getBoundingClientRect();
-    if (!box.width || !frame.width) return;
+    const frame = host.getBoundingClientRect();
+    if (!box.width || !frame.width) return null;
     const size = Math.round(Math.max(box.width, box.height) + 8);
     const svg = document.createElementNS(SVG_NS, 'svg');
     svg.setAttribute('class', 'pk-pill-timer');
@@ -113,7 +113,7 @@
     circle.setAttribute('cy', size / 2);
     circle.setAttribute('r', radius);
     svg.append(circle);
-    pill.append(svg);
+    host.append(svg);
     const length = 2 * Math.PI * radius;
     circle.style.strokeDasharray = `${length}`;
     // Full ring on the first frame, then the arc empties: the countdown is
@@ -122,9 +122,10 @@
     if (typeof circle.animate === 'function') {
       circle.animate(
         [{ strokeDashoffset: 0 }, { strokeDashoffset: length }],
-        { duration: holdMs, easing: 'linear', fill: 'forwards' },
+        { duration, easing: 'linear', fill: 'forwards' },
       );
     }
+    return svg;
   }
 
   function showPill(entry) {
@@ -132,7 +133,7 @@
     const pill = entry.pill;
     pill.style.opacity = '0';
     stack.append(pill);
-    attachCountdown(pill);
+    attachCountdown(pill, pill, holdMs);
     requestAnimationFrame(() => { pill.style.opacity = '1'; });
     pill.addEventListener('click', (e) => {
       if (e.target?.closest?.(UNDO_SELECTOR)) {
@@ -174,6 +175,7 @@
         const stolen = !current.consumed && now - current.bornAt < UNDO_WINDOW;
         if (stolen) showPill(current);
         else current.pill.remove();
+        current.ring?.remove();
         current = null;
       }
     }
@@ -185,7 +187,8 @@
       pill.setAttribute('data-pk-toast-mirror', '');
       // Stay detached until a steal actually happens: a hidden alert clone in
       // the DOM makes Gmail skip subsequent toasts (dedupe on live alerts).
-      current = { vh: withUndo, message: messageOf(withUndo), bornAt: now, consumed: false, pill, timer: 0 };
+      const ring = attachCountdown(withUndo, withUndo, UNDO_WINDOW);
+      current = { vh: withUndo, message: messageOf(withUndo), bornAt: now, consumed: false, pill, timer: 0, ring };
     }
 
     if (stack) {
