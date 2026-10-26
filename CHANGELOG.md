@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.79] - 2026-10-26
+
+### Added
+- **Studio — boîte vide** : fond d'artefacts très légers derrière l'illustration — grain de papier et croix espacées, gris à quelques pour cent sur blanc, masqué en dégradé radial pour s'éteindre avant les bords. Le contenu (illustration, titres, lien de réglages) reste au-dessus et cliquable.
+
 ## [2026.10.78] - 2026-10-26
 
 ### Changed
