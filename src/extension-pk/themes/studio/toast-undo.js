@@ -93,20 +93,18 @@
   }
 
   function attachCountdown(host, closeHost, duration) {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
     const close = closeHost.querySelector(CLOSE_SELECTOR);
-    if (!close) return null;
-    const box = close.getBoundingClientRect();
     const frame = host.getBoundingClientRect();
-    if (!box.width || !frame.width) return null;
-    const size = Math.round(Math.max(box.width, box.height) + 8);
+    if (!frame.width) return null;
+    const box = close?.getBoundingClientRect();
+    const size = Math.round((box?.width ? Math.max(box.width, box.height) : 22) + 8);
     const svg = document.createElementNS(SVG_NS, 'svg');
     svg.setAttribute('class', 'pk-pill-timer');
     svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
     svg.setAttribute('aria-hidden', 'true');
     svg.style.width = `${size}px`;
     svg.style.height = `${size}px`;
-    svg.style.right = `${Math.round(frame.right - (box.left + box.width / 2) - size / 2)}px`;
+    svg.style.right = `${box?.width ? Math.round(frame.right - (box.left + box.width / 2) - size / 2) : 12}px`;
     const radius = size / 2 - 1;
     const circle = document.createElementNS(SVG_NS, 'circle');
     circle.setAttribute('cx', size / 2);
@@ -120,9 +118,11 @@
     // readable from the very beginning of the pill's life.
     circle.style.strokeDashoffset = '0';
     if (typeof circle.animate === 'function') {
+      // Reduced motion: stepped countdown instead of a continuous sweep.
+      const easing = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'steps(12, end)' : 'linear';
       circle.animate(
         [{ strokeDashoffset: 0 }, { strokeDashoffset: length }],
-        { duration, easing: 'linear', fill: 'forwards' },
+        { duration, easing, fill: 'forwards' },
       );
     }
     return svg;
@@ -191,7 +191,12 @@
       current = { vh: withUndo, message: messageOf(withUndo), bornAt: now, consumed: false, pill, timer: 0, ring };
     }
 
+    if (current && !current.ring) current.ring = attachCountdown(current.vh, current.vh, UNDO_WINDOW);
     if (stack) {
+      // A pill cloned before its close button existed gets its ring here.
+      for (const pill of stack.children) {
+        if (!pill.querySelector('.pk-pill-timer')) attachCountdown(pill, pill, holdMs);
+      }
       // One live native toast already occupies a slot: keep the stack ≤ 2 tiles.
       const nativeVisible = liveToasts.length > 0;
       const room = Math.max(MAX_VISIBLE - (nativeVisible ? 1 : 0), 1);

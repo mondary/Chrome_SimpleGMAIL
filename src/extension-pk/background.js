@@ -8,6 +8,7 @@ importScripts('data/manifest.js', 'data/themes.js', 'themes/studio/module-routin
 chrome.sidePanel?.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
 
 const MATCH = ['https://mail.google.com/*'];
+const APP_TABS = ['https://mail.google.com/*', 'https://calendar.google.com/*', 'https://drive.google.com/*'];
 const LAB_IDS = self.LAB_ITEMS.map((i) => i.id);
 const THEME_IDS = self.LAB_THEMES.map((t) => t.id);
 const ALL_IDS = [...LAB_IDS, ...THEME_IDS];
@@ -88,8 +89,11 @@ async function syncRegistrations() {
   return { wanted: wanted.length, total: self.LAB_ITEMS.length, theme: theme || 'pk' };
 }
 
-async function reloadGmailTabs() {
-  const tabs = await chrome.tabs.query({ url: MATCH });
+async function reloadAppTabs() {
+  // Content scripts only reach pages loaded after a registration change:
+  // reload the Gmail / Calendar / Drive pages (including installed-app
+  // windows) so a freshly updated extension is actually running there.
+  const tabs = await chrome.tabs.query({ url: APP_TABS });
   for (const tab of tabs) {
     chrome.tabs.reload(tab.id).catch(() => {});
   }
@@ -125,6 +129,7 @@ chrome.runtime.onInstalled.addListener(async () => {
     await chrome.storage.local.set({ enabled: all, theme: 'theme-pk' });
   }
   await syncRegistrations();
+  await reloadAppTabs();
 });
 
 chrome.runtime.onStartup.addListener(() => {
@@ -137,7 +142,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       sendResponse(await self.PK_MODULES.target(msg, sender));
     } else if (msg && msg.type === 'sync') {
       const res = await syncRegistrations();
-      const reloaded = await reloadGmailTabs();
+      const reloaded = await reloadAppTabs();
       const tabs = await chrome.tabs.query({ url: MATCH });
       await Promise.allSettled(tabs.map((t) => applyMarginVar(t.id)));
       sendResponse({ ok: true, ...res, reloaded });

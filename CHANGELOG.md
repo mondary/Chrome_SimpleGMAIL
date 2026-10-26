@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.78] - 2026-10-26
+
+### Changed
+- **Mise à jour de l'extension** : les pages Gmail, Agenda et Drive (y compris les fenêtres d'application installée) sont rechargées automatiquement après une installation ou une mise à jour. Sans ce rechargement, une fenêtre PWA ouverte depuis longtemps continuait d'exécuter l'ancienne version des content scripts — d'où l'anneau de décompte absent malgré la mise à jour.
+
 ## [2026.10.77] - 2026-10-26
 
 ### Fixed
