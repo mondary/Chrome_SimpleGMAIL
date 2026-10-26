@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.85] - 2026-10-26
+
+### Changed
+- **Studio — boîte vide** : le grain se fond désormais vers le **blanc pur** avant les bords et sous l'état vide (masque radial en unités écran, 42 vw × 40 vh). Le voile gris général disparaît (grain à 28 %, points à 28 % × 0,6), les coins du panneau sont à `255,255,255` et il ne reste plus de séparation visible entre le contenu mail et les bords.
+
 ## [2026.10.84] - 2026-10-26
 
 ### Changed
