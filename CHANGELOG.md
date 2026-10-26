@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.76] - 2026-10-26
+
+### Changed
+- **Studio — décompte des toasts** : l'anneau démarre **plein** dès l'apparition de la pilule puis se vide jusqu'à sa disparition, au lieu de se remplir depuis zéro (le début était illisible). Durée par défaut portée à 8 s (réglable 3–12 s) et départ de l'anneau à midi.
+
 ## [2026.10.75] - 2026-10-26
 
 ### Added

@@ -3,7 +3,7 @@ const listEl = document.getElementById('list');
 const countEl = document.getElementById('count');
 const themesEl = document.getElementById('themes');
 const toolsEl = document.querySelector('.list-tools');
-let toastSeconds = 6;
+let toastSeconds = 8;
 let categoryLabels = {};
 const CATEGORY_FIELDS = [
   ['primary', 'Principale'],
@@ -282,8 +282,8 @@ function render(enabled, marginPct, theme, storedStyle) {
 async function loadState() {
   const styleKeys = Object.values(self.THEME_SETTINGS || {}).map(spec => spec.storage);
   const stored = await chrome.storage.local.get(['enabled', 'marginPct', 'toastSeconds', 'pkCategoryLabels', 'theme', ...styleKeys]);
-  let { enabled = {}, marginPct = 5, toastSeconds: storedToast = 6, theme = '' } = stored;
-  toastSeconds = Number(storedToast) || 6;
+  let { enabled = {}, marginPct = 5, toastSeconds: storedToast = 8, theme = '' } = stored;
+  toastSeconds = Number(storedToast) || 8;
   categoryLabels = stored.pkCategoryLabels && typeof stored.pkCategoryLabels === 'object' ? stored.pkCategoryLabels : {};
   // Auto-réparation : des tweaks actifs sans thème sélectionné → contexte Studio.
   const known = self.LAB_THEMES.map((t) => t.id);

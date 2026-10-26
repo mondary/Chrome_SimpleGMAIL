@@ -11,7 +11,7 @@
   const UNDO_WINDOW = 10500; // native window measured at ~11.5 s
   const SVG_NS = 'http://www.w3.org/2000/svg';
   const MAX_VISIBLE = 2; // pills + live native toast, never more
-  const DEFAULT_HOLD = 6000; // pill lifetime, seconds setting lives in storage
+  const DEFAULT_HOLD = 8000; // pill lifetime, seconds setting lives in storage
   const MIN_HOLD = 3000;
   const MAX_HOLD = 12000;
   const UNDO_SELECTOR = '#link_undo, .bAo [role=link], .a8k, .ag';
@@ -25,7 +25,7 @@
     '#pk-toast-stack .vh .bAo{display:flex!important;align-items:center!important;margin:0!important}',
     '#pk-toast-stack .vh #link_undo,#pk-toast-stack .vh .a8k,#pk-toast-stack .vh .ag,#pk-toast-stack .vh .bAo [role=link]{color:#ffd35c!important;font-weight:600!important;cursor:pointer}',
     '#pk-toast-stack .vh .bBe{position:absolute!important;top:50%!important;right:16px!important;transform:translateY(-50%)!important;margin:0!important;padding:0!important;cursor:pointer}',
-    '#pk-toast-stack .pk-pill-timer{position:absolute!important;top:50%!important;transform:translateY(-50%)!important;pointer-events:none!important;overflow:visible!important}',
+    '#pk-toast-stack .pk-pill-timer{position:absolute!important;top:50%!important;transform:translateY(-50%) rotate(-90deg)!important;transform-origin:center!important;pointer-events:none!important;overflow:visible!important}',
     '#pk-toast-stack .pk-pill-timer circle{fill:none!important;stroke:#ffd35c!important;stroke-width:2!important;stroke-linecap:round!important}',
     '@media (prefers-reduced-motion: reduce){#pk-toast-stack .vh{transition:none}}',
   ].join('\n');
@@ -116,10 +116,12 @@
     pill.append(svg);
     const length = 2 * Math.PI * radius;
     circle.style.strokeDasharray = `${length}`;
-    circle.style.strokeDashoffset = `${length}`;
+    // Full ring on the first frame, then the arc empties: the countdown is
+    // readable from the very beginning of the pill's life.
+    circle.style.strokeDashoffset = '0';
     if (typeof circle.animate === 'function') {
       circle.animate(
-        [{ strokeDashoffset: length }, { strokeDashoffset: 0 }],
+        [{ strokeDashoffset: 0 }, { strokeDashoffset: length }],
         { duration: holdMs, easing: 'linear', fill: 'forwards' },
       );
     }
