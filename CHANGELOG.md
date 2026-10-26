@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.84] - 2026-10-26
+
+### Changed
+- **Studio — boîte vide** : le grain n'est plus limité au bloc de 600 px, il couvre **tout le panneau vide** (pseudo-élément du `tabpanel`, au-dessus des conteneurs blancs de Gmail). Semis de points renforcé (30 %, pas de 6 px, opacité 0,7) et grain à 50 %, toujours modulés par la turbulence ; l'état vide reste au-dessus.
+
 ## [2026.10.83] - 2026-10-26
 
 ### Changed
