@@ -11,7 +11,7 @@ visuelle aux onglets `mail.google.com`, sans backend ni compte supplémentaire.
 | Thème | Contenu |
 | --- | --- |
 | *Natif* | Gmail tel quel, avec les scripts cochables du panneau. |
-| *Studio* | 35 tweaks cochables, dont « Boîte à zéro », « Annuler préservé », le renommage des catégories, la bascule à triple logo Mail / Google Agenda / Drive complet et les accents Studio sur Agenda et Drive — bouton apps Google conservé. |
+| *Studio* | 36 tweaks cochables, dont « Boîte à zéro », « Annuler préservé », le renommage des catégories, la bascule à triple logo Mail / Google Agenda / Drive complet et les accents Studio sur Agenda et Drive — bouton apps Google conservé. |
 | *Simplify* | Fonds photo, boîte vide et volet de lecture (`themes/simplify/`). |
 | *Classique* | Transposition V1 : salutation, avatars, groupes de dates (`themes/simplemail-classic/`). |
 | *Focus* | Liste mono de 900 px, catégories masquables et alignables, compteur total Gmail et raccourcis (`themes/focus-os/`). |

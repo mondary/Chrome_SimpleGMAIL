@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.87] - 2026-10-26
+
+### Changed
+- **Guide extension** : le tableau des thèmes mentionne 36 tweaks (l'onglet de libellés ajouté en 2026.10.86).
+
 ## [2026.10.86] - 2026-10-26
 
 ### Added
