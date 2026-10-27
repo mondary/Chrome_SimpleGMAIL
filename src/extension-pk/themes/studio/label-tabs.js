@@ -14,6 +14,20 @@
       .find((list) => list.querySelector('[role="tab"] .aKz')) || null;
   }
 
+  const PICTOS = {
+    bag: ['M6 8h12l-1.2 12H7.2L6 8Z', 'M9 8V6.5a3 3 0 0 1 6 0V8'],
+    news: ['M5 5h10v14H5z', 'M8 9.5h4M8 13h4M15 5v14'],
+    tag: ['M4 4h7l9 9-7 7-9-9z', 'M8.2 8.2h.01'],
+  };
+
+  function pictoFor(label) {
+    const key = label.toLowerCase();
+    const paths = /achat|purchase|commande|shop|panier/.test(key) ? PICTOS.bag
+      : /newsletter|news|actu/.test(key) ? PICTOS.news : PICTOS.tag;
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='#5f6368' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'>${paths.map((d) => `<path d='${d}'/>`).join('')}</svg>`;
+    return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+  }
+
   function slug(label) {
     return label.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -68,8 +82,8 @@
           node.removeAttribute('data-tooltip');
           node.removeAttribute('aria-controls');
         }
-        // Drop the copied category pictogram, unread badge and stale renaming data.
-        clone.querySelectorAll('.aKp, .bsU, .aio').forEach((node) => node.remove());
+        // Keep the pictogram slot, swap in our own mark; drop badges and stale data.
+        clone.querySelectorAll('.bsU, .aio').forEach((node) => node.remove());
         clone.removeAttribute('data-pk-original');
         clone.removeAttribute('data-pk-aria-name');
         clone.querySelectorAll('[data-pk-original], [data-pk-aria-name]').forEach((node) => {
@@ -78,7 +92,14 @@
         });
         inner.setAttribute('aria-selected', 'false');
         decorate(inner, label);
-        sourceCell.parentElement.insertBefore(clone, sourceCell);
+        const picto = clone.querySelector('.aKp');
+        if (picto) {
+          picto.style.backgroundImage = pictoFor(label);
+          picto.style.backgroundSize = 'contain';
+          picto.style.backgroundPosition = 'center';
+          picto.style.backgroundRepeat = 'no-repeat';
+        }
+        sourceCell.parentElement.insertBefore(clone, sourceCell.nextSibling);
       } else {
         decorate(tab, label);
       }

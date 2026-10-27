@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.89] - 2026-10-26
+
+### Fixed
+- **Studio — onglet de libellés** : il s'insère désormais **après le dernier onglet natif** (fin de barre) au lieu de passer devant. Il récupère aussi un **pictogramme** dans l'emplacement `.aKp` natif — sac pour « Achats », journal pour « Newsletters », étiquette sinon — au lieu d'être vide.
+
 ## [2026.10.88] - 2026-10-26
 
 ### Fixed
