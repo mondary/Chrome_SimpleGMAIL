@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.91] - 2026-10-26
+
+### Fixed
+- **Studio — onglet de libellés** : Gmail supprime la barre de catégories sur les vues de libellé, donc l'onglet Achats disparaissait au clic. Un **bandeau persistant** est maintenant affiché au-dessus de la liste quand un libellé configuré est ouvert : catégories natives (libellés renommés compris, via `data-pk-original`) puis onglet Achats actif. Les clics ramènent aux catégories (`#inbox`, `#category/...`) et le bandeau s'efface hors vue libellé.
+
 ## [2026.10.90] - 2026-10-26
 
 ### Fixed
