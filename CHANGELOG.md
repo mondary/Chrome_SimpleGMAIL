@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.86] - 2026-10-26
+
+### Added
+- **Studio — onglets de libellés** : Gmail ne déclare que cinq catégories ; les autres libellés système (« Achats », « Newsletters »…) n'ont jamais d'onglet. Un nouvel onglet les injecte dans la barre des catégories (clone du dernier onglet natif, badges retirés) et ouvre `#label/<nom>`. Liste configurable dans le panneau (« Achats » par défaut en français, « Purchases » sinon), jusqu'à six libellés.
+
 ## [2026.10.85] - 2026-10-26
 
 ### Changed

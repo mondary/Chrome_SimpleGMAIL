@@ -22,7 +22,7 @@ os.makedirs("tweaks", exist_ok=True)
 os.makedirs("scripts", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 
-BENCH_VERSION = "2026.10.85"
+BENCH_VERSION = "2026.10.86"
 
 # ---- 1. Découpage gmail.css en tweaks
 text = open(gmail_css, encoding="utf-8").read()
@@ -118,6 +118,10 @@ ALL.append({"id": "js-studio-category-labels", "group": "js", "label": "Catégor
             "file": "themes/studio/category-labels.js",
             "type": "js", "world": "ISOLATED", "runAt": "document_end",
             "version": BENCH_VERSION, "status": "new", "setting": "category-labels"})
+ALL.append({"id": "js-studio-label-tabs", "group": "js", "label": "Onglets · libellés en plus (Achats, Newsletters…)",
+            "file": "themes/studio/label-tabs.js",
+            "type": "js", "world": "ISOLATED", "runAt": "document_end",
+            "version": BENCH_VERSION, "status": "new", "setting": "label-tabs"})
 ALL.append({"id": "js-studio-modules", "group": "js", "label": "Modules · Mail / Google Agenda / Drive complet, même onglet",
             "file": "themes/studio/modules.js", "css": ["themes/studio/modules.css"],
             "matches": ["https://mail.google.com/*", "https://calendar.google.com/*", "https://drive.google.com/*"],

@@ -65,6 +65,8 @@
   function refresh() {
     scheduled = false;
     for (const tab of document.querySelectorAll('[role="tab"]')) {
+      // Injected label tabs (Achats, …) are not Gmail categories.
+      if (tab.hasAttribute('data-pk-label-tab')) continue;
       const label = tab.querySelector('.aKz');
       if (!label) continue;
       rename(tab, label);

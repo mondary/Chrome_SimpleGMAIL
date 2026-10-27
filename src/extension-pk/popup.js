@@ -5,6 +5,7 @@ const themesEl = document.getElementById('themes');
 const toolsEl = document.querySelector('.list-tools');
 let toastSeconds = 8;
 let categoryLabels = {};
+let labelTabs = [];
 const CATEGORY_FIELDS = [
   ['primary', 'Principale'],
   ['promotions', 'Promotions'],
@@ -175,6 +176,31 @@ function categoryEditor(labels) {
   return box;
 }
 
+function labelTabsEditor(values) {
+  const box = document.createElement('div');
+  box.className = 'cat-edit';
+  const note = document.createElement('div');
+  note.className = 'cat-note';
+  note.textContent = 'Libellés ouverts comme onglets, séparés par des virgules. Vide = aucun.';
+  const row = document.createElement('label');
+  row.className = 'cat-row';
+  const name = document.createElement('span');
+  name.textContent = 'Libellés';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.placeholder = /^fr/i.test(navigator.language) ? 'Achats' : 'Purchases';
+  input.value = values.join(', ');
+  input.addEventListener('change', () => {
+    const next = input.value.split(',').map((value) => value.trim()).filter(Boolean).slice(0, 6);
+    chrome.storage.local.set({ pkLabelTabs: next });
+  });
+  row.appendChild(name);
+  row.appendChild(input);
+  box.appendChild(note);
+  box.appendChild(row);
+  return box;
+}
+
 function renderTweaks(enabled, marginPct, toastSeconds) {
   listEl.innerHTML = '';
   const groups = [
@@ -206,6 +232,8 @@ function renderTweaks(enabled, marginPct, toastSeconds) {
         }));
       } else if (item.setting === 'category-labels') {
         listEl.appendChild(categoryEditor(categoryLabels));
+      } else if (item.setting === 'label-tabs') {
+        listEl.appendChild(labelTabsEditor(labelTabs));
       }
     }
   }
@@ -281,10 +309,11 @@ function render(enabled, marginPct, theme, storedStyle) {
 
 async function loadState() {
   const styleKeys = Object.values(self.THEME_SETTINGS || {}).map(spec => spec.storage);
-  const stored = await chrome.storage.local.get(['enabled', 'marginPct', 'toastSeconds', 'pkCategoryLabels', 'theme', ...styleKeys]);
+  const stored = await chrome.storage.local.get(['enabled', 'marginPct', 'toastSeconds', 'pkCategoryLabels', 'pkLabelTabs', 'theme', ...styleKeys]);
   let { enabled = {}, marginPct = 5, toastSeconds: storedToast = 8, theme = '' } = stored;
   toastSeconds = Number(storedToast) || 8;
   categoryLabels = stored.pkCategoryLabels && typeof stored.pkCategoryLabels === 'object' ? stored.pkCategoryLabels : {};
+  labelTabs = Array.isArray(stored.pkLabelTabs) ? stored.pkLabelTabs : (/^fr/i.test(navigator.language) ? ['Achats'] : ['Purchases']);
   // Auto-réparation : des tweaks actifs sans thème sélectionné → contexte Studio.
   const known = self.LAB_THEMES.map((t) => t.id);
   if (!known.includes(theme) && self.LAB_ITEMS.some((i) => enabled[i.id] !== false)) {
