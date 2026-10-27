@@ -8,6 +8,16 @@
   let active = false;
   let labels = [];
   let scheduled = false;
+  let tabObserver = null;
+
+  function watchTabs(list) {
+    if (!tabObserver) tabObserver = new MutationObserver(schedule);
+    tabObserver.disconnect();
+    tabObserver.observe(list, {
+      childList: true, subtree: true, attributes: true,
+      attributeFilter: ['class', 'aria-selected'],
+    });
+  }
 
   function tablist() {
     return [...document.querySelectorAll('[role="tablist"]')]
@@ -33,19 +43,37 @@
       .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   }
 
-  function decorate(tab, label) {
+  function isSelected(label) {
+    return decodeURIComponent(location.hash) === `#label/${label}`;
+  }
+
+  function select(tab, label, on) {
+    tab.classList.toggle('J-KU-KO', on);
+    tab.setAttribute('aria-selected', String(on));
+    if (on) {
+      const list = tab.closest('[role="tablist"]');
+      for (const other of list ? list.querySelectorAll('[role="tab"]:not([data-pk-label-tab])') : []) {
+        other.classList.remove('J-KU-KO');
+        other.setAttribute('aria-selected', 'false');
+      }
+    }
+  }
+
+  function decorate(tab, label, nativeSelected) {
     const key = slug(label);
     const text = tab.querySelector('.aKz');
     if (text) text.textContent = label;
     tab.setAttribute('data-pk-label-tab', key);
     tab.setAttribute('aria-label', label);
-    tab.setAttribute('aria-selected', String(decodeURIComponent(location.hash) === `#label/${label}`));
+    // A selected native tab always wins: never show two selected tabs.
+    select(tab, label, !nativeSelected && isSelected(label));
     if (!tab.dataset.pkLabelWired) {
       tab.dataset.pkLabelWired = '1';
       tab.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
         location.hash = `#label/${encodeURIComponent(label)}`;
+        select(tab, label, true);
       }, true);
     }
   }
@@ -62,8 +90,11 @@
     }
     const list = tablist();
     if (!list) return;
+    watchTabs(list);
     const nativeTabs = [...list.querySelectorAll('[role="tab"]:not([data-pk-label-tab])')];
     if (!nativeTabs.length) return;
+    const nativeSelected = nativeTabs.some((tab) =>
+      tab.classList.contains('J-KU-KO') || tab.getAttribute('aria-selected') === 'true');
     // Gmail lays the category bar out as a table: clone the whole cell so the
     // injected tab keeps the native padding, separator and hit area.
     const sourceCell = cellOf(nativeTabs[nativeTabs.length - 1]);
@@ -91,7 +122,7 @@
           node.removeAttribute('data-pk-aria-name');
         });
         inner.setAttribute('aria-selected', 'false');
-        decorate(inner, label);
+        decorate(inner, label, nativeSelected);
         const picto = clone.querySelector('.aKp');
         if (picto) {
           picto.style.backgroundImage = pictoFor(label);
@@ -101,7 +132,7 @@
         }
         sourceCell.parentElement.insertBefore(clone, sourceCell.nextSibling);
       } else {
-        decorate(tab, label);
+        decorate(tab, label, nativeSelected);
       }
     }
     for (const tab of list.querySelectorAll('[data-pk-label-tab]')) {

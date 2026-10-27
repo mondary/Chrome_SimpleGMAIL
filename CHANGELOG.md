@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.90] - 2026-10-26
+
+### Fixed
+- **Studio — onglet de libellés** : un seul onglet sélectionné à la fois. Cliquer sur l'onglet de libellé désélectionne les onglets natifs ; cliquer sur un onglet natif (ou tout re-rendu qui le sélectionne) désélectionne l'onglet injecté. Un observateur dédié suit les changements de classe/`aria-selected` de la barre.
+
 ## [2026.10.89] - 2026-10-26
 
 ### Fixed
