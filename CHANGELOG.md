@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.88] - 2026-10-26
+
+### Fixed
+- **Studio — onglet de libellés** : l'onglet injecté cassait la mise en page de la barre des catégories (une `div` ajoutée hors de la table). Il clone désormais la **cellule complète** (`td.aRz`) du dernier onglet natif : même padding, même séparateur, même zone de clic, et il s'insère avant le dernier onglet.
+
 ## [2026.10.87] - 2026-10-26
 
 ### Changed

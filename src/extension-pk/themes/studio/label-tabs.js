@@ -36,25 +36,31 @@
     }
   }
 
+  function cellOf(tab) {
+    return tab.closest('td') || tab;
+  }
+
   function refresh() {
     scheduled = false;
     if (!active) {
-      document.querySelectorAll('[data-pk-label-tab]').forEach((tab) => tab.remove());
+      document.querySelectorAll('[data-pk-label-tab]').forEach((tab) => cellOf(tab).remove());
       return;
     }
     const list = tablist();
     if (!list) return;
     const nativeTabs = [...list.querySelectorAll('[role="tab"]:not([data-pk-label-tab])')];
     if (!nativeTabs.length) return;
-    const source = nativeTabs[nativeTabs.length - 1];
+    // Gmail lays the category bar out as a table: clone the whole cell so the
+    // injected tab keeps the native padding, separator and hit area.
+    const sourceCell = cellOf(nativeTabs[nativeTabs.length - 1]);
     for (const label of labels) {
       const key = slug(label);
       if (!key) continue;
       let tab = list.querySelector(`[data-pk-label-tab="${key}"]`);
       if (!tab) {
-        tab = source.cloneNode(true);
-        tab.removeAttribute('id');
-        for (const node of [tab, ...tab.querySelectorAll('[id], [jsaction], [jscontroller], [jsname]')]) {
+        const clone = sourceCell.cloneNode(true);
+        const inner = clone.querySelector('[role="tab"]') || clone;
+        for (const node of [clone, ...clone.querySelectorAll('[id], [jsaction], [jscontroller], [jsname], [role="tab"]')]) {
           node.removeAttribute('id');
           node.removeAttribute('jsaction');
           node.removeAttribute('jscontroller');
@@ -62,23 +68,23 @@
           node.removeAttribute('data-tooltip');
           node.removeAttribute('aria-controls');
         }
-        // Drop the copied category pictogram, unread badge and selection state.
-        tab.querySelectorAll('.aKp, .bsU, .aio').forEach((node) => node.remove());
-        tab.removeAttribute('data-pk-original');
-        tab.removeAttribute('data-pk-aria-name');
-        tab.querySelectorAll('[data-pk-original], [data-pk-aria-name]').forEach((node) => {
+        // Drop the copied category pictogram, unread badge and stale renaming data.
+        clone.querySelectorAll('.aKp, .bsU, .aio').forEach((node) => node.remove());
+        clone.removeAttribute('data-pk-original');
+        clone.removeAttribute('data-pk-aria-name');
+        clone.querySelectorAll('[data-pk-original], [data-pk-aria-name]').forEach((node) => {
           node.removeAttribute('data-pk-original');
           node.removeAttribute('data-pk-aria-name');
         });
-        tab.setAttribute('aria-selected', 'false');
-        decorate(tab, label);
-        list.append(tab);
+        inner.setAttribute('aria-selected', 'false');
+        decorate(inner, label);
+        sourceCell.parentElement.insertBefore(clone, sourceCell);
       } else {
         decorate(tab, label);
       }
     }
     for (const tab of list.querySelectorAll('[data-pk-label-tab]')) {
-      if (!labels.some((label) => slug(label) === tab.dataset.pkLabelTab)) tab.remove();
+      if (!labels.some((label) => slug(label) === tab.dataset.pkLabelTab)) cellOf(tab).remove();
     }
   }
 
