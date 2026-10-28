@@ -4,6 +4,12 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.95] - 2026-10-28
+
+### Fixed
+- **Studio — onglets compacts** : réduction réelle des cellules en mode pictogramme (`32px`), avec padding réduit et centrage de l'icône au lieu de simplement masquer le texte.
+- **Studio — Achats** : pictogramme sac restauré et clic délégué au document pour survivre aux re-rendus de Gmail.
+
 ## [2026.10.94] - 2026-10-28
 
 ### Fixed

@@ -53,15 +53,7 @@
     tab.setAttribute('data-pk-label-tab', key);
     tab.setAttribute('aria-label', label);
     select(tab, label, !nativeSelected && isSelected(label));
-    if (!tab.dataset.pkLabelWired) {
-      tab.dataset.pkLabelWired = '1';
-      tab.addEventListener('click', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        location.hash = `#label/${encodeURIComponent(label)}`;
-        select(tab, label, true);
-      }, true);
-    }
+    if (!tab.dataset.pkLabelWired) tab.dataset.pkLabelWired = '1';
   }
 
   function cellOf(tab) {
@@ -78,13 +70,33 @@
     return '#inbox';
   }
 
+  function pictoFor(label) {
+    const key = label.toLowerCase();
+    if (!/achat|purchase|commande|shop|panier/.test(key)) return '';
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#5f6368" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.2 12H7.2L6 8Z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>';
+    return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+  }
+
+  document.addEventListener('click', (event) => {
+    const tab = event.target.closest?.('[data-pk-label-tab]');
+    if (!tab) return;
+    const label = tab.getAttribute('aria-label');
+    if (!label) return;
+    event.preventDefault();
+    event.stopPropagation();
+    location.hash = `#label/${encodeURIComponent(label)}`;
+    select(tab, label, true);
+  }, true);
+
   function installResponsive(list) {
     if (!responsiveStyle) {
       responsiveStyle = document.createElement('style');
       responsiveStyle.textContent = [
         '[role="tablist"][data-pk-tabs-compact] .aKz{display:none!important}',
-        '[role="tablist"][data-pk-tabs-compact] .aKx{margin-inline:auto!important}',
-        '[role="tablist"][data-pk-tabs-compact] [role="tab"]{min-width:0!important}',
+        '[role="tablist"][data-pk-tabs-compact] td{width:32px!important;min-width:32px!important;padding-inline:3px!important}',
+        '[role="tablist"][data-pk-tabs-compact] [role="tab"]{width:28px!important;min-width:28px!important;max-width:28px!important;padding:0!important}',
+        '[role="tablist"][data-pk-tabs-compact] .aKx{display:flex!important;justify-content:center!important;margin:0!important}',
+        '[role="tablist"][data-pk-tabs-compact] .aKp{margin-inline:0!important}',
       ].join('\\n');
       document.head.append(responsiveStyle);
     }
@@ -92,11 +104,14 @@
     if (owner && !barTemplate) barTemplate = owner.cloneNode(true);
     if (!owner || owner.dataset.pkResponsiveWired) return;
     owner.dataset.pkResponsiveWired = '1';
-    const available = () => owner.parentElement?.clientWidth || owner.clientWidth;
+    const available = () => Math.min(owner.clientWidth || Infinity, owner.parentElement?.clientWidth || Infinity);
     const apply = () => {
       const wasCompact = list.hasAttribute('data-pk-tabs-compact');
       if (wasCompact) list.removeAttribute('data-pk-tabs-compact');
-      const overflowing = owner.scrollWidth > available() + 1;
+      const cellsWidth = [...list.querySelectorAll(':scope > td')]
+        .reduce((sum, cell) => sum + cell.scrollWidth, 0);
+      const naturalWidth = Math.max(owner.scrollWidth, cellsWidth);
+      const overflowing = naturalWidth > available() + 1;
       if (overflowing) list.setAttribute('data-pk-tabs-compact', '');
     };
     if (typeof ResizeObserver === 'function') {
@@ -148,6 +163,9 @@
         node.removeAttribute('data-tooltip');
         node.removeAttribute('aria-controls');
       }
+      const picto = cell.querySelector('.aKp');
+      const customPicto = pictoFor(label);
+      if (picto && customPicto) picto.style.backgroundImage = customPicto;
       decorate(tab, label, false);
       sourceCell.parentElement.append(cell);
     }
@@ -185,6 +203,9 @@
           node.removeAttribute('aria-controls');
         }
         inner.setAttribute('aria-selected', 'false');
+        const picto = clone.querySelector('.aKp');
+        const customPicto = pictoFor(label);
+        if (picto && customPicto) picto.style.backgroundImage = customPicto;
         decorate(inner, label, nativeSelected);
         sourceCell.parentElement.insertBefore(clone, sourceCell.nextSibling);
       } else {
