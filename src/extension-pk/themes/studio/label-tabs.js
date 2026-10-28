@@ -1,12 +1,17 @@
 // Studio: extra inbox tabs that open a Gmail label (Achats, Newsletters…).
 // The injected tab is a native Gmail cell clone; Gmail remains the source of truth for its geometry.
+// Gmail drops the whole tab strip on label views, so a persistent clone of the strip is
+// re-inserted at the exact recorded slot (same wrapper, same labels, same state),
+// synchronously from the mutation observers: the bar never flickers, moves or relabels.
 (() => {
   if (window.__pkStudioLabelTabs) return;
   window.__pkStudioLabelTabs = true;
 
   let active = false;
   let labels = [];
-  let barTemplate = null;
+  let barTemplate = null;   // fresh clone of the native tabs table, injected cells removed
+  let shellTemplate = null; // shallow clone of the native tabs wrapper (.aKh), for geometry
+  let barSlot = null;       // exact DOM position of the native tabs wrapper
   let scheduled = false;
   let tabObserver = null;
   let responsiveStyle = null;
@@ -22,7 +27,8 @@
 
   function tablist() {
     return [...document.querySelectorAll('[role="tablist"]')]
-      .find((list) => list.querySelector('[role="tab"] .aKz')) || null;
+      .find((list) => !list.closest('[data-pk-label-bar-clone]')
+        && list.querySelector('[role="tab"] .aKz')) || null;
   }
 
   function slug(label) {
@@ -32,6 +38,11 @@
 
   function isSelected(label) {
     return decodeURIComponent(location.hash) === `#label/${label}`;
+  }
+
+  function onOurLabel() {
+    const hash = decodeURIComponent(location.hash);
+    return labels.some((label) => hash === `#label/${label}`);
   }
 
   function select(tab, label, on) {
@@ -102,7 +113,6 @@
       document.head.append(responsiveStyle);
     }
     const owner = list.closest('table') || list.parentElement;
-    if (owner && !barTemplate) barTemplate = owner.cloneNode(true);
     if (!owner || owner.dataset.pkResponsiveWired) return;
     owner.dataset.pkResponsiveWired = '1';
     const available = () => Math.min(owner.clientWidth || Infinity, owner.parentElement?.clientWidth || Infinity);
@@ -123,27 +133,65 @@
     apply();
   }
 
+  // Snapshot of the live strip: fresh labels (renames included), fresh selection
+  // and compact state, plus the exact wrapper/parent/sibling where it sits.
+  function captureBar(owner) {
+    const wrapper = owner.closest('.aKh') || owner;
+    const table = owner.cloneNode(true);
+    table.querySelectorAll('[data-pk-label-tab]').forEach((tab) => cellOf(tab).remove());
+    for (const node of table.querySelectorAll('[id], [jsaction], [jscontroller], [jsname], [data-tooltip], [aria-controls]')) {
+      node.removeAttribute('id');
+      node.removeAttribute('jsaction');
+      node.removeAttribute('jscontroller');
+      node.removeAttribute('jsname');
+      node.removeAttribute('data-tooltip');
+      node.removeAttribute('aria-controls');
+    }
+    barTemplate = table;
+    shellTemplate = wrapper === owner ? null : wrapper.cloneNode(false);
+    if (shellTemplate) {
+      shellTemplate.removeAttribute('id');
+      shellTemplate.removeAttribute('jsaction');
+    }
+    barSlot = { wrapper, parent: wrapper.parentElement, next: wrapper.nextSibling };
+  }
+
   function persistentBar() {
     return document.querySelector('[data-pk-label-bar-clone]');
   }
 
-  function ensurePersistentBar() {
-    const hash = decodeURIComponent(location.hash);
-    const onOurLabel = labels.some((label) => hash === `#label/${label}`);
-    if (!onOurLabel) {
-      persistentBar()?.remove();
-      return;
+  // Where the clone must land: back inside the surviving wrapper if Gmail kept it,
+  // otherwise at the wrapper's recorded position, wrapped in a geometry-identical shell.
+  function hostForClone() {
+    if (!barSlot) return null;
+    const { wrapper, parent, next } = barSlot;
+    if (wrapper.isConnected) return { host: wrapper, before: null, shell: false };
+    if (parent?.isConnected) {
+      return { host: parent, before: next?.isConnected ? next : parent.firstElementChild, shell: true };
     }
-    if (!barTemplate || persistentBar()) return;
-    const host = document.querySelector('.bkK') || document.querySelector('[role="main"]');
-    if (!host) return;
+    return null;
+  }
+
+  function ensurePersistentBar() {
+    if (!onOurLabel() || !barTemplate) return;
+    if (persistentBar()) return;
+    if (tablist()) return; // native strip still mounted: nothing to replace yet
+    let target = hostForClone();
+    if (!target) {
+      const canvas = document.querySelector('.bkK') || document.querySelector('[role="main"]');
+      if (canvas) target = { host: canvas, before: canvas.firstElementChild, shell: true };
+    }
+    if (!target) return;
+    let shell = null;
+    if (target.shell && shellTemplate) {
+      shell = shellTemplate.cloneNode(false);
+      shell.removeAttribute('id');
+    }
     const bar = barTemplate.cloneNode(true);
-    bar.setAttribute('data-pk-label-bar-clone', '');
-    bar.querySelectorAll('[id]').forEach((node) => node.removeAttribute('id'));
     const list = bar.querySelector('[role="tablist"]');
     const sourceTab = list?.querySelector('[role="tab"]');
     if (!list || !sourceTab) return;
-    for (const nativeTab of list.querySelectorAll('[role="tab"]')) {
+    for (const nativeTab of list.querySelectorAll('[role="tab"]:not([data-pk-label-tab])')) {
       const text = nativeTab.querySelector('.aKz');
       const key = text?.dataset.pkOriginal || text?.textContent || '';
       nativeTab.addEventListener('click', (event) => {
@@ -170,8 +218,24 @@
       decorate(tab, label, false);
       sourceCell.parentElement.append(cell);
     }
-    host.prepend(bar);
+    const node = shell || bar;
+    node.setAttribute('data-pk-label-bar-clone', '');
+    if (shell) shell.append(bar);
+    target.host.insertBefore(node, target.before);
   }
+
+  // Synchronous pass, run from the mutation observers before the browser paints:
+  // swap the persistent bar in/out the instant Gmail tears down or restores the strip.
+  function fastPath() {
+    if (!active) return;
+    if (!onOurLabel()) {
+      persistentBar()?.remove();
+      return;
+    }
+    if (persistentBar()) return;
+    ensurePersistentBar();
+  }
+
   function refresh() {
     scheduled = false;
     if (!active) {
@@ -180,9 +244,13 @@
       return;
     }
     const list = tablist();
-    if (!list) return;
+    if (!list) {
+      ensurePersistentBar();
+      return;
+    }
     watchTabs(list);
     installResponsive(list);
+    captureBar(list.closest('table') || list.parentElement);
     const nativeTabs = [...list.querySelectorAll('[role="tab"]:not([data-pk-label-tab])')];
     if (!nativeTabs.length) return;
     const nativeSelected = nativeTabs.some((tab) =>
@@ -216,10 +284,10 @@
     for (const tab of list.querySelectorAll('[data-pk-label-tab]')) {
       if (!labels.some((label) => slug(label) === tab.dataset.pkLabelTab)) cellOf(tab).remove();
     }
-    ensurePersistentBar();
   }
 
   function schedule() {
+    fastPath();
     if (scheduled) return;
     scheduled = true;
     requestAnimationFrame(refresh);

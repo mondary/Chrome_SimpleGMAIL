@@ -4,6 +4,13 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.97] - 2026-10-28
+
+### Fixed
+- **Studio — onglet Achats immobile** : la barre persistante de la vue libellé ne clignote plus ni ne bouge. Elle est réinsérée **avant le paint** (passe synchrone déclenchée par les observateurs de mutations, plus par `requestAnimationFrame`), exactement dans le slot enregistré de la barre native — enveloppe `.aKh` conservée, sinon enveloppe clonée à l'identique à la position du wrapper d'origine, en repli `.bkK`.
+- **Studio — onglet Achats fidèle** : le template de la barre est re-capturé à chaque passage sur la boîte (libellés renommés par le tweak Catégories, état de sélection, mode compact), donc la barre de la vue libellé affiche exactement les mêmes libellés que la barre native.
+- **Studio — barre persistante fiable** : `refresh()` ne s'arrête plus quand la barre native a disparu ; la réinsertion est idempotente et retente à chaque mutation tant que l'hôte n'existe pas encore.
+
 ## [2026.10.96] - 2026-10-28
 
 ### Fixed
