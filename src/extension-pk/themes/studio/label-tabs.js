@@ -92,11 +92,18 @@
     if (owner && !barTemplate) barTemplate = owner.cloneNode(true);
     if (!owner || owner.dataset.pkResponsiveWired) return;
     owner.dataset.pkResponsiveWired = '1';
+    const available = () => owner.parentElement?.clientWidth || owner.clientWidth;
     const apply = () => {
-      const overflowing = owner.scrollWidth > owner.clientWidth + 1;
-      list.toggleAttribute('data-pk-tabs-compact', overflowing);
+      const wasCompact = list.hasAttribute('data-pk-tabs-compact');
+      if (wasCompact) list.removeAttribute('data-pk-tabs-compact');
+      const overflowing = owner.scrollWidth > available() + 1;
+      if (overflowing) list.setAttribute('data-pk-tabs-compact', '');
     };
-    if (typeof ResizeObserver === 'function') new ResizeObserver(apply).observe(owner);
+    if (typeof ResizeObserver === 'function') {
+      const observer = new ResizeObserver(apply);
+      observer.observe(owner);
+      if (owner.parentElement) observer.observe(owner.parentElement);
+    }
     apply();
   }
 

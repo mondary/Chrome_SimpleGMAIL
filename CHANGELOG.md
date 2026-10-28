@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.94] - 2026-10-28
+
+### Fixed
+- **Studio — responsive des onglets** : le calcul compare maintenant la largeur naturelle de la barre à celle de son parent, en retirant temporairement le mode compact pendant la mesure pour éviter les oscillations compact/texte. Le parent est aussi observé au redimensionnement.
+
 ## [2026.10.93] - 2026-10-28
 
 ### Fixed
