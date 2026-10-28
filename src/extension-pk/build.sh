@@ -22,7 +22,7 @@ os.makedirs("tweaks", exist_ok=True)
 os.makedirs("scripts", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 
-BENCH_VERSION = "2026.10.97"
+BENCH_VERSION = "2026.10.100"
 
 # ---- 1. Découpage gmail.css en tweaks
 text = open(gmail_css, encoding="utf-8").read()
@@ -118,7 +118,7 @@ ALL.append({"id": "js-studio-category-labels", "group": "js", "label": "Catégor
             "file": "themes/studio/category-labels.js",
             "type": "js", "world": "ISOLATED", "runAt": "document_end",
             "version": BENCH_VERSION, "status": "new", "setting": "category-labels"})
-ALL.append({"id": "js-studio-label-tabs", "group": "js", "label": "Onglets · libellés en plus (Achats, Newsletters…)",
+ALL.append({"id": "js-studio-label-tabs", "group": "js", "label": "Onglets · catégories + libellés (Achats, Newsletters…)",
             "file": "themes/studio/label-tabs.js",
             "type": "js", "world": "ISOLATED", "runAt": "document_end",
             "version": BENCH_VERSION, "status": "new", "setting": "label-tabs"})

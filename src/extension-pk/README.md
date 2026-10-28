@@ -47,7 +47,23 @@ La préférence Studio existante est conservée ; l'extension demande désormais
 l'accès à `https://calendar.google.com/*` et `https://drive.google.com/*` pour y afficher la bascule.
 Les retouches Gmail ne sont pas injectées dans Calendar.
 
-### Génération
+### Onglets Studio
+
+Activer **Onglets · catégories + libellés** dans Studio. Une seule barre réunit les
+catégories Gmail détectées et jusqu'à six libellés configurés. Chaque catégorie
+s'ouvre par la recherche `in:inbox category:<id>` : seuls les messages de la boîte
+de réception apparaissent, donc archiver un message le retire de l'onglet.
+**Achats** utilise `category:purchases`, même quand Gmail ne lui donne pas d'onglet,
+et reste présent même sans libellé configuré. Aucun libellé n'est ouvert par défaut.
+La barre se cale sur la largeur de la colonne des mails et suit le réglage des marges.
+Les catégories sont mémorisées dans la session par compte/langue : visiter la
+boîte de réception une première fois pour découvrir les catégories activées.
+La barre reste présente au changement de vue. Les noms renommés sont repris.
+Quand le texte ne tient plus, tous les boutons passent à l'icône seule : 20 px
++ 4 px de padding de chaque côté. Les infobulles gardent le nom complet.
+Le clavier utilise les flèches, Début/Fin puis Entrée/Espace pour activer.
+
+### Génération des fichiers
 
 `tweaks/`, `scripts/` et `data/manifest.js` sont régénérés depuis la source CSS
 absorbée (`sources/gmail.css`, ex-extension SimpleMail) et les snippets ScriptCat :
@@ -71,6 +87,10 @@ Les fichiers `data/*.js` portent l'en-tête « Généré par build.sh » : ne pa
 
 ## Vérifications
 
+- `node tools/tests/studio-tabs.test.mjs` : tests de navigation, géométrie,
+  responsive et clavier dans un Chrome headless à profil jetable, DOM Gmail fictif.
+  `CHROME_BIN` permet de préciser le binaire ; `CAPTURE_TABS=1` régénère les deux
+  captures Studio. Le test ne prouve pas la compatibilité avec le DOM Gmail actuel.
 - `node --test tools/tests/studio-modules.test.mjs` depuis la racine : navigation,
   comptes, isolation des onglets et actualisation des enregistrements.
 - `tools/tests/verify-modules-live.mjs` : aller-retour sur les vraies pages via Ego,

@@ -4,6 +4,28 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.100] - 2026-10-28
+
+### Fixed
+- **Catégories — même règle partout** : Promotions, Réseaux sociaux, Notifications et Forums passent aussi par `in:inbox category:<id>` au lieu de `#category/<id>`. Archiver un message le retire de l'onglet.
+- **Sélection** : les routes natives (`#category/<id>`, `#purchases`) restent reconnues comme alias, donc l'onglet actif suit Gmail même quand il ouvre sa propre vue.
+
+## [2026.10.99] - 2026-10-28
+
+### Fixed
+- **Achats — vraie catégorie Gmail** : l'onglet ne dépend plus d'un libellé nommé « Achats ». Il ouvre la catégorie native par la recherche `in:inbox category:purchases`, y compris quand Gmail ne lui donne aucun onglet. Comme les autres onglets de catégorie, la vue ne montre que les messages non archivés : archiver un achat le fait disparaître. Un libellé homonyme est ignoré pour éviter un doublon, et aucun libellé n'est plus ouvert par défaut.
+- **Largeur de la barre** : la barre se cale sur la colonne des mails (largeur et alignement) au lieu d'occuper tout le conteneur, et suit en direct le réglage des marges. La détection du mode icônes utilise la somme réelle des onglets, donc les libellés restent affichés tant qu'ils tiennent.
+- **Réglages** : « Achats » rejoint les catégories renommables du panneau. La barre conserve son ordre et sa sélection sur le hash de recherche comme sur la vue native `#purchases`.
+
+## [2026.10.98] - 2026-10-28
+
+### Fixed
+- **Studio — barre unique** : remplacement des clones alternés par une barre conservée dans le conteneur de courriels. Catégories et libellés utilisent les mêmes boutons, styles et règles de sélection ; ordre et noms sont indépendants de la vue ouverte. Les catégories observées sont mémorisées par compte/langue dans la session pour les rechargements directs.
+- **Achats** : ouverture de la route réelle trouvée dans la navigation Gmail (y compris les libellés système), avec repli sur `#label/<nom>` ; sélection pilotée par la route, même si une ancienne boîte de réception reste cachée dans le DOM.
+- **Responsive** : texte + icône à largeur suffisante, icônes seules de 20 px dans des boutons de 28 px (4 px de padding latéral) à largeur réduite. Défilement horizontal seulement si même les icônes ne tiennent plus. Mesure indépendante du mode compact, sans boucle de mutations.
+- **Clavier et réglages** : flèches, Début/Fin, activation Entrée/Espace, focus visible, noms accessibles en mode icône ; modifications des libellés en direct et restauration native à la désactivation.
+- **Vérification** : suite Chromium isolée sur DOM fictif, géométrie stable, historique, boîte cachée, remplacement de conteneur, rechargement direct, cinq largeurs compactes et arrêt des observateurs au repos. Captures de simulation ajoutées. Validation Gmail authentifié en attente de reconnexion Ego ; aucune publication de cette build.
+
 ## [2026.10.97] - 2026-10-28
 
 ### Fixed

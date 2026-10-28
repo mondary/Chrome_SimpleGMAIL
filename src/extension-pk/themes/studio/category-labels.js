@@ -11,6 +11,7 @@
     ['social', /^(reseaux sociaux|social)$/],
     ['updates', /^(notifications?|updates?)$/],
     ['forums', /^forums?$/],
+    ['purchases', /^(achats?|purchases?)$/],
     ['newsletter', /^newsletters?$/],
   ];
   // Gmail's own tab classes survive a label rewrite; used when text is ambiguous.

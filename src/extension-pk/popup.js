@@ -12,6 +12,7 @@ const CATEGORY_FIELDS = [
   ['social', 'Réseaux sociaux'],
   ['updates', 'Notifications'],
   ['forums', 'Forums'],
+  ['purchases', 'Achats'],
   ['newsletter', 'Newsletters'],
 ];
 
@@ -188,7 +189,7 @@ function labelTabsEditor(values) {
   name.textContent = 'Libellés';
   const input = document.createElement('input');
   input.type = 'text';
-  input.placeholder = /^fr/i.test(navigator.language) ? 'Achats' : 'Purchases';
+  input.placeholder = 'Newsletters';
   input.value = values.join(', ');
   input.addEventListener('change', () => {
     const next = input.value.split(',').map((value) => value.trim()).filter(Boolean).slice(0, 6);
@@ -313,7 +314,7 @@ async function loadState() {
   let { enabled = {}, marginPct = 5, toastSeconds: storedToast = 8, theme = '' } = stored;
   toastSeconds = Number(storedToast) || 8;
   categoryLabels = stored.pkCategoryLabels && typeof stored.pkCategoryLabels === 'object' ? stored.pkCategoryLabels : {};
-  labelTabs = Array.isArray(stored.pkLabelTabs) ? stored.pkLabelTabs : (/^fr/i.test(navigator.language) ? ['Achats'] : ['Purchases']);
+  labelTabs = Array.isArray(stored.pkLabelTabs) ? stored.pkLabelTabs : [];
   // Auto-réparation : des tweaks actifs sans thème sélectionné → contexte Studio.
   const known = self.LAB_THEMES.map((t) => t.id);
   if (!known.includes(theme) && self.LAB_ITEMS.some((i) => enabled[i.id] !== false)) {

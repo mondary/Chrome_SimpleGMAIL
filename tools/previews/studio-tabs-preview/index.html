@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<title>Studio — test des onglets (simulation)</title>
+<style>
+  *{box-sizing:border-box}body{margin:0;background:#f5f5f5;color:#18181b;font:14px system-ui}header{padding:22px 32px;background:#fff;border-bottom:1px solid #ddd}header small{color:#71717a;margin-left:24px}.bkK{width:100%;padding:20px}.bkK>.nH{padding:20px;background:#fff;border-radius:12px}.G-atb{height:40px;border-bottom:1px solid #eee;color:#71717a}.mail{padding:18px 0;border-bottom:1px solid #eee}.aKz{white-space:nowrap}.aKh table{width:100%}.aKh td{padding:12px}.sidebar{display:none}
+  :root{--pk-margin-side:8%}
+  #view{max-width:calc(100% - (2 * var(--pk-margin-side)));margin-inline:auto}
+</style>
+<header>PK Simple Gmail · Studio <small>Simulation — données fictives</small></header>
+<aside class="sidebar"><a href="#label/Newsletters">Newsletters</a></aside>
+<div class="bkK"><div class="nH"><div id="view" role="main"></div></div></div>
+<script>
+  window.state = { theme:'theme-pk', enabled:{}, pkLabelTabs:['Newsletters'], pkCategoryLabels:{promotions:'Recherche d’emploi'} };
+  const listeners = [];
+  window.chrome = {storage:{local:{get:async()=>state}, onChanged:{addListener:fn=>listeners.push(fn)}}};
+  window.updateSettings = values => {Object.assign(state,values);listeners.forEach(fn=>fn(Object.fromEntries(Object.keys(values).map(k=>[k,{}])),'local'));};
+  const categories = [['primary','Principale'],['promotions','Promotions'],['social','Réseaux sociaux'],['updates','Notifications'],['forums','Forums']];
+  function nativeStrip() {
+    const shell=document.createElement('div');shell.className='aKh';
+    shell.innerHTML='<table><tbody><tr role="tablist">'+categories.map(([id,name])=>`<td><div role="tab" data-pk-category="${id}" aria-label="${name}" aria-selected="${id==='primary'}"><div class="aKx"><span class="aKp"></span><span class="aKz">${name}</span></div></div></td>`).join('')+'</tr></tbody></table>';
+    shell.querySelectorAll('[role=tab]').forEach(tab=>tab.addEventListener('click',()=>{
+      shell.querySelectorAll('[role=tab]').forEach(other=>other.setAttribute('aria-selected',String(tab===other)));
+    }));return shell;
+  }
+  window.renderView = () => {
+    const view = document.querySelector('#view');
+    view.replaceChildren();
+    const toolbar=document.createElement('div');toolbar.className='G-atb';toolbar.textContent='☐     Actualiser     ···';view.append(toolbar);
+    const route=decodeURIComponent(location.hash||'#inbox');
+    if(route==='#inbox'||route.startsWith('#category/')) {
+      const native=nativeStrip();view.append(native);
+      const id=route.startsWith('#category/')?route.split('/')[1]:'primary';
+      native.querySelectorAll('[role=tab]').forEach(tab=>tab.setAttribute('aria-selected',String(tab.dataset.pkCategory===id)));
+    }
+    const title = route.includes('category:purchases') ? 'Achats' : route.startsWith('#label/') ? route.slice(7) : route.startsWith('#search/') ? 'Recherche' : 'Boîte de réception';
+    for(const subject of [title, 'Atelier — votre reçu de commande', 'Librairie — votre colis est en route']) {
+      const row=document.createElement('div');row.className='mail';row.textContent=subject;view.append(row);
+    }
+    document.body.dataset.view=route;
+  };
+  if(!location.hash) history.replaceState(null,'','#inbox');
+  renderView();
+  addEventListener('hashchange',()=>setTimeout(renderView,30));
+</script>
+<script src="../../../src/extension-pk/themes/studio/category-labels.js"></script>
+<script src="../../../src/extension-pk/themes/studio/label-tabs.js"></script>
+</html>
