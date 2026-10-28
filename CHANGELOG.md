@@ -4,6 +4,12 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.93] - 2026-10-28
+
+### Fixed
+- **Studio — onglet Achats** : restauration de l'injection dans la barre native, avec persistance de la barre clonée sur la vue du libellé. L'onglet ajouté reprend la cellule Gmail existante sans redessin custom.
+- **Studio — responsive des onglets** : quand la barre déborde, les libellés textuels passent automatiquement en `display:none` tandis que les pictogrammes restent visibles. `ResizeObserver` réévalue le mode compact à chaque redimensionnement.
+
 ## [2026.10.92] - 2026-10-28
 
 ### Fixed

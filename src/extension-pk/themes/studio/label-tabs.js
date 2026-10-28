@@ -1,28 +1,28 @@
 // Studio: extra inbox tabs that open a Gmail label (Achats, Newsletters…).
-// Gmail only declares five inbox categories; other system labels (Purchases)
-// never get a tab, so we mirror them next to the native category tabs.
+// The injected tab is a native Gmail cell clone; Gmail remains the source of truth for its geometry.
 (() => {
   if (window.__pkStudioLabelTabs) return;
   window.__pkStudioLabelTabs = true;
 
   let active = false;
   let labels = [];
-  let nativeLabels = [];
   let barTemplate = null;
   let scheduled = false;
   let tabObserver = null;
-
-  function tablists() {
-    return [...document.querySelectorAll('[role="tablist"]')].filter((list) =>
-      list.classList.contains('aAA') || list.querySelector('[role="tab"] .aKz'));
-  }
+  let responsiveStyle = null;
 
   function watchTabs(list) {
     if (!tabObserver) tabObserver = new MutationObserver(schedule);
+    tabObserver.disconnect();
     tabObserver.observe(list, {
       childList: true, subtree: true, attributes: true,
       attributeFilter: ['class', 'aria-selected'],
     });
+  }
+
+  function tablist() {
+    return [...document.querySelectorAll('[role="tablist"]')]
+      .find((list) => list.querySelector('[role="tab"] .aKz')) || null;
   }
 
   function slug(label) {
@@ -60,7 +60,6 @@
         event.stopPropagation();
         location.hash = `#label/${encodeURIComponent(label)}`;
         select(tab, label, true);
-        schedule();
       }, true);
     }
   }
@@ -79,22 +78,87 @@
     return '#inbox';
   }
 
-  function injectInto(list) {
+  function installResponsive(list) {
+    if (!responsiveStyle) {
+      responsiveStyle = document.createElement('style');
+      responsiveStyle.textContent = [
+        '[role="tablist"][data-pk-tabs-compact] .aKz{display:none!important}',
+        '[role="tablist"][data-pk-tabs-compact] .aKx{margin-inline:auto!important}',
+        '[role="tablist"][data-pk-tabs-compact] [role="tab"]{min-width:0!important}',
+      ].join('\\n');
+      document.head.append(responsiveStyle);
+    }
+    const owner = list.closest('table') || list.parentElement;
+    if (owner && !barTemplate) barTemplate = owner.cloneNode(true);
+    if (!owner || owner.dataset.pkResponsiveWired) return;
+    owner.dataset.pkResponsiveWired = '1';
+    const apply = () => {
+      const overflowing = owner.scrollWidth > owner.clientWidth + 1;
+      list.toggleAttribute('data-pk-tabs-compact', overflowing);
+    };
+    if (typeof ResizeObserver === 'function') new ResizeObserver(apply).observe(owner);
+    apply();
+  }
+
+  function persistentBar() {
+    return document.querySelector('[data-pk-label-bar-clone]');
+  }
+
+  function ensurePersistentBar() {
+    const hash = decodeURIComponent(location.hash);
+    const onOurLabel = labels.some((label) => hash === `#label/${label}`);
+    if (!onOurLabel) {
+      persistentBar()?.remove();
+      return;
+    }
+    if (!barTemplate || persistentBar()) return;
+    const host = document.querySelector('.bkK') || document.querySelector('[role="main"]');
+    if (!host) return;
+    const bar = barTemplate.cloneNode(true);
+    bar.setAttribute('data-pk-label-bar-clone', '');
+    bar.querySelectorAll('[id]').forEach((node) => node.removeAttribute('id'));
+    const list = bar.querySelector('[role="tablist"]');
+    const sourceTab = list?.querySelector('[role="tab"]');
+    if (!list || !sourceTab) return;
+    for (const nativeTab of list.querySelectorAll('[role="tab"]')) {
+      const text = nativeTab.querySelector('.aKz');
+      const key = text?.dataset.pkOriginal || text?.textContent || '';
+      nativeTab.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        location.hash = categoryHash(key.trim());
+      }, true);
+    }
+    const sourceCell = cellOf(sourceTab);
+    for (const label of labels) {
+      const cell = sourceCell.cloneNode(true);
+      const tab = cell.querySelector('[role="tab"]') || cell;
+      for (const node of [cell, ...cell.querySelectorAll('[id], [jsaction], [jscontroller], [jsname], [role="tab"]')]) {
+        node.removeAttribute('id');
+        node.removeAttribute('jsaction');
+        node.removeAttribute('jscontroller');
+        node.removeAttribute('jsname');
+        node.removeAttribute('data-tooltip');
+        node.removeAttribute('aria-controls');
+      }
+      decorate(tab, label, false);
+      sourceCell.parentElement.append(cell);
+    }
+    host.prepend(bar);
+  }
+  function refresh() {
+    scheduled = false;
+    if (!active) {
+      document.querySelectorAll('[data-pk-label-tab]').forEach((tab) => cellOf(tab).remove());
+      persistentBar()?.remove();
+      return;
+    }
+    const list = tablist();
+    if (!list) return;
+    watchTabs(list);
+    installResponsive(list);
     const nativeTabs = [...list.querySelectorAll('[role="tab"]:not([data-pk-label-tab])')];
     if (!nativeTabs.length) return;
-    if (!nativeLabels.length) {
-      nativeLabels = nativeTabs.map((tab) => {
-        const el = tab.querySelector('.aKz');
-        return {
-          text: (el?.textContent || '').trim(),
-          key: (el?.dataset.pkOriginal || el?.textContent || '').trim(),
-        };
-      }).filter((item) => item.text);
-    }
-    if (!barTemplate) {
-      const owner = list.closest('table') || list.parentElement;
-      if (owner) barTemplate = owner.cloneNode(true);
-    }
     const nativeSelected = nativeTabs.some((tab) =>
       tab.classList.contains('J-KU-KO') || tab.getAttribute('aria-selected') === 'true');
     const sourceCell = cellOf(nativeTabs[nativeTabs.length - 1]);
@@ -122,78 +186,6 @@
     }
     for (const tab of list.querySelectorAll('[data-pk-label-tab]')) {
       if (!labels.some((label) => slug(label) === tab.dataset.pkLabelTab)) cellOf(tab).remove();
-    }
-  }
-
-  function persistentBar() {
-    return document.querySelector('[data-pk-label-bar-clone]');
-  }
-
-  function wireClonedBar(bar) {
-    const list = bar.querySelector('[role="tablist"]');
-    if (!list || list.dataset.pkCloneWired) return;
-    list.dataset.pkCloneWired = '1';
-    for (const tab of list.querySelectorAll('[role="tab"]:not([data-pk-label-tab])')) {
-      const text = tab.querySelector('.aKz');
-      const key = text?.dataset.pkOriginal || text?.textContent || '';
-      tab.addEventListener('click', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        location.hash = categoryHash(key.trim());
-      }, true);
-    }
-  }
-
-  function ensurePersistentBar() {
-    const hash = decodeURIComponent(location.hash);
-    const onOurLabel = labels.some((label) => hash === `#label/${label}`);
-    if (!onOurLabel) {
-      persistentBar()?.remove();
-      return;
-    }
-    const template = barTemplate || tablists()[0]?.closest('table') || tablists()[0]?.parentElement;
-    if (!template) return;
-    if (persistentBar()) return;
-    const host = document.querySelector('.bkK') || document.querySelector('[role="main"]');
-    if (!host) return;
-    const bar = template.cloneNode(true);
-    bar.setAttribute('data-pk-label-bar-clone', '');
-    bar.querySelectorAll('[id]').forEach((node) => node.removeAttribute('id'));
-    const cloneList = bar.querySelector('[role="tablist"]');
-    if (!cloneList) return;
-    for (const node of cloneList.querySelectorAll('[data-pk-label-tab]')) cellOf(node).remove();
-    const sourceTab = cloneList.querySelector('[role="tab"]');
-    if (!sourceTab) return;
-    const sourceCell = cellOf(sourceTab);
-    for (const label of labels) {
-      const cell = sourceCell.cloneNode(true);
-      const tab = cell.querySelector('[role="tab"]') || cell;
-      tab.removeAttribute('id');
-      tab.removeAttribute('jsaction');
-      tab.removeAttribute('jscontroller');
-      tab.removeAttribute('jsname');
-      tab.removeAttribute('data-tooltip');
-      tab.removeAttribute('aria-controls');
-      decorate(tab, label, false);
-      sourceCell.parentElement.append(cell);
-    }
-    wireClonedBar(bar);
-    host.prepend(bar);
-  }
-
-  function refresh() {
-    scheduled = false;
-    if (!active) {
-      document.querySelectorAll('[data-pk-label-tab]').forEach((tab) => cellOf(tab).remove());
-      persistentBar()?.remove();
-      return;
-    }
-    const lists = tablists();
-    for (const list of lists) {
-      if (!list.closest('[data-pk-label-bar-clone]')) {
-        watchTabs(list);
-        injectInto(list);
-      }
     }
     ensurePersistentBar();
   }
