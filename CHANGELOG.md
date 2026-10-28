@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.92] - 2026-10-28
+
+### Fixed
+- **Studio — onglet Achats** : suppression du bandeau custom. La barre affichée sur la vue du libellé est maintenant un clone du conteneur natif Gmail, et l'onglet Achats est cloné depuis une cellule d'onglet officielle. Les classes, pictogrammes, dimensions, espacements et états visuels proviennent donc du DOM Gmail existant.
+
 ## [2026.10.91] - 2026-10-26
 
 ### Fixed
