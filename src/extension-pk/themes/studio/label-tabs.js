@@ -92,12 +92,13 @@
     if (!responsiveStyle) {
       responsiveStyle = document.createElement('style');
       responsiveStyle.textContent = [
+        '[role="tablist"][data-pk-tabs-compact]{display:flex!important;width:100%!important;overflow:visible!important}',
+        '[role="tablist"][data-pk-tabs-compact] > td{display:flex!important;flex:1 1 0!important;width:auto!important;min-width:0!important;padding:0!important;overflow:visible!important}',
         '[role="tablist"][data-pk-tabs-compact] .aKz{display:none!important}',
-        '[role="tablist"][data-pk-tabs-compact] td{width:32px!important;min-width:32px!important;padding-inline:3px!important}',
-        '[role="tablist"][data-pk-tabs-compact] [role="tab"]{width:28px!important;min-width:28px!important;max-width:28px!important;padding:0!important}',
+        '[role="tablist"][data-pk-tabs-compact] [role="tab"]{display:flex!important;align-items:center!important;justify-content:center!important;flex:1 1 auto!important;width:auto!important;min-width:0!important;max-width:none!important;padding:0!important}',
         '[role="tablist"][data-pk-tabs-compact] .aKx{display:flex!important;justify-content:center!important;margin:0!important}',
         '[role="tablist"][data-pk-tabs-compact] .aKp{margin-inline:0!important}',
-      ].join('\\n');
+      ].join('\n');
       document.head.append(responsiveStyle);
     }
     const owner = list.closest('table') || list.parentElement;

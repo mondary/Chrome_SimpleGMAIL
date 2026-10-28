@@ -4,6 +4,11 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.96] - 2026-10-28
+
+### Fixed
+- **Studio — responsive des onglets** : le mode pictogramme devient une rangée flex pleine largeur ; toutes les cellules restent visibles et se partagent l'espace disponible, au lieu d'être coupées par le layout table de Gmail.
+
 ## [2026.10.95] - 2026-10-28
 
 ### Fixed
