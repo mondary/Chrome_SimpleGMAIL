@@ -4,6 +4,12 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.104] - 2026-10-29
+
+### Fixed
+- **Vrais non-lus** : les compteurs viennent désormais des badges de la barre latérale Gmail (total non lu par catégorie et par libellé), et non du badge « nouveaux » des onglets. Les libellés configurés (par exemple « Job ») affichent aussi leur compteur.
+- **Lisibilité** : pastille agrandie au-dessus de l'icône, avec une infobulle explicite « N non lus » ou « N nouveaux » selon la source disponible.
+
 ## [2026.10.103] - 2026-10-29
 
 ### Fixed

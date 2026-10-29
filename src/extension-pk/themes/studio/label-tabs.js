@@ -44,6 +44,8 @@
   let renames = {};
   let categories = ensurePurchases([{ id: 'primary', name: NAMES.primary }]);
   let counts = new Map();
+  let newCounts = new Set();
+  let labelCounts = new Map();
   let routes = new Map();
   let host = null;
   let signature = '';
@@ -73,11 +75,11 @@
     #pk-studio-tabs .pk-studio-tab[aria-selected="true"]:hover{background:#18181b;color:#fff}
     #pk-studio-tabs .pk-studio-tab:focus-visible{outline:2px solid #18181b;outline-offset:-4px}
     #pk-studio-tabs .pk-studio-tab[aria-selected="true"]:focus-visible{outline-color:#fff}
-    #pk-studio-tabs .pk-studio-tab-icon{position:relative;display:block;flex:none;width:20px;height:20px}
+    #pk-studio-tabs .pk-studio-tab-icon{position:relative;display:grid;place-items:center;flex:none;width:24px;height:24px}
     #pk-studio-tabs svg{display:block;width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;color:var(--pk-tab-color,#52525b)}
     #pk-studio-tabs .pk-studio-tab[aria-selected="true"] svg{color:#fff}
     #pk-studio-tabs .pk-studio-tab-text{display:block;flex:none}
-    #pk-studio-tabs .pk-studio-tab-count{position:absolute;top:-4px;right:-5px;display:grid;place-items:center;min-width:14px;height:14px;padding:0 4px;border-radius:999px;background:var(--pk-tab-color,#52525b);color:var(--pk-tab-ink,#fff);font-size:10px;font-weight:700;line-height:1;box-shadow:0 0 0 1px #fff;font-variant-numeric:tabular-nums}
+    #pk-studio-tabs .pk-studio-tab-count{position:absolute;top:-8px;right:-3px;display:grid;place-items:center;min-width:15px;height:15px;padding:0 4px;border-radius:999px;background:var(--pk-tab-color,#52525b);color:var(--pk-tab-ink,#fff);font-size:10px;font-weight:700;line-height:1;box-shadow:0 0 0 1px #fff;font-variant-numeric:tabular-nums}
     #pk-studio-tabs .pk-studio-tab-count[hidden]{display:none}
     #pk-studio-tabs[data-compact] .pk-studio-tab{flex:0 0 28px;width:28px;min-width:28px;padding:0 4px;gap:0}
     #pk-studio-tabs[data-compact] .pk-studio-tab-text{display:none}
@@ -86,6 +88,7 @@
   const decode = value => { try { return decodeURIComponent(value); } catch { return value; } };
   const hash = () => decode(location.hash || '#inbox');
   const normal = text => (text || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  const canonical = value => value.replace(/\+/g, ' ');
   const attr = (node, key, value) => { if (node.getAttribute(key) !== value) node.setAttribute(key, value); };
 
   function categoryOf(tab) {
@@ -109,9 +112,9 @@
     return id && NAMES[id] ? id : '';
   }
 
-  // Gmail puts the unread count in the native tab's badge (.aDG), while its
-  // aria-label may announce only the "new" count. Prefer the badge, then an
-  // explicit "unread" phrase, then the "new messages" phrasing.
+  // Gmail's native tab badge (.aDG) may announce only the "new" count, while
+  // the sidebar carries the true unread total. Read both: explicit unread
+  // wording first, then the badge, then the "new messages" phrasing.
   function digitsOf(value) {
     const count = Number((value || '').replace(/\D/g, ''));
     return Number.isSafeInteger(count) && count > 0 ? count : 0;
@@ -129,11 +132,39 @@
     return created ? digitsOf(created[1]) : 0;
   }
 
+  function countIn(text) {
+    const unread = text.match(/([\d][\d\s.,]*)\s*(?:non\s+lus?|unread)/i);
+    if (unread) return digitsOf(unread[1]);
+    const created = text.match(/([\d][\d\s.,]*)\s*(?:nouveaux?|new)/i);
+    return created ? digitsOf(created[1]) : 0;
+  }
+
+  // Gmail's sidebar carries the true unread totals for categories and labels
+  // (e.g. "Job 1"). Read them locally; no network request.
+  function sidebarCounts() {
+    const map = new Map();
+    const nav = document.querySelector('[role="navigation"]') || document;
+    for (const link of nav.querySelectorAll('a[href*="#"]')) {
+      if (link.closest('#pk-studio-tabs')) continue;
+      const hash = canonical(decode(link.hash || ''));
+      if (!/^#(?:category\/[a-z]+|label\/.+|purchases)$/.test(hash)) continue;
+      const badge = link.querySelector('.bsU');
+      let value = badge ? digitsOf(badge.textContent) : 0;
+      if (!value) {
+        value = countIn(`${link.getAttribute('aria-label') || ''} ${link.getAttribute('title') || ''} ${link.textContent || ''}`);
+      }
+      map.set(hash, value);
+    }
+    return map;
+  }
+
   function nativeLists() {
     return [...document.querySelectorAll('[role="tablist"]')].filter(list => list !== strip && list.querySelector('[role="tab"] .aKz'));
   }
 
   function readCategories(lists) {
+    const side = sidebarCounts();
+    labelCounts = side;
     // Ignore a cached inbox inside an explicitly hidden Gmail view.
     const list = lists.find(el => !el.closest('[aria-hidden="true"]') && el.closest('[role="main"]')?.getClientRects().length) || lists[0];
     if (!list) return;
@@ -142,10 +173,21 @@
       count: unreadOf(tab),
     })).filter(c => c.id && c.name);
     if (!found.length) return;
-    counts = new Map(found.map(c => [c.id, c.count]));
     const unique = ensurePurchases(found
       .filter((c, i) => found.findIndex(other => other.id === c.id) === i)
       .map(({ id, name }) => ({ id, name })));
+    const next = new Map();
+    const fresh = new Set();
+    for (const item of unique) {
+      const hash = item.id === 'purchases' ? '#purchases' : `#category/${item.id}`;
+      const tab = found.find(c => c.id === item.id);
+      const fromSide = side.has(hash);
+      const value = fromSide ? side.get(hash) : (tab?.count || 0);
+      next.set(item.id, value);
+      if (!fromSide && value > 0) fresh.add(item.id);
+    }
+    counts = next;
+    newCounts = fresh;
     if (JSON.stringify(categories) !== JSON.stringify(unique)) {
       categories = unique;
       try { sessionStorage.setItem(cacheKey, JSON.stringify(categories)); } catch {}
@@ -171,6 +213,7 @@
     const items = categories.map(c => ({
       key: c.id, name: renames[c.id] || c.name, route: categoryRoute(c.id),
       icon: c.id, color: COLORS[c.id] || COLORS.label, count: counts.get(c.id) || 0,
+      kind: newCounts.has(c.id) ? 'new' : 'unread',
     }));
     // Purchases is now a category: a stored label with the same name would only
     // duplicate its tab (even when the category has been renamed).
@@ -182,7 +225,8 @@
       if (items.some(item => decode(item.route) === decode(route))) continue;
       const icon = /achat|purchase|commande|shop|panier/.test(normal(label)) ? 'purchases' : /newsletter/.test(normal(label)) ? 'newsletter' : 'label';
       const color = icon === 'purchases' ? COLORS.purchases : icon === 'newsletter' ? COLORS.newsletter : COLORS.label;
-      items.push({ key: `label:${label}`, name: label, route, icon, color, count: 0 });
+      const count = labelCounts.get(canonical(decode(route))) || 0;
+      items.push({ key: `label:${label}`, name: label, route, icon, color, count, kind: 'unread' });
     }
     return items;
   }
@@ -196,7 +240,7 @@
     const widths = [...buttons.values()].map(button => {
       context.font = getComputedStyle(button).font;
       const text = button.querySelector('.pk-studio-tab-text');
-      return context.measureText(text.textContent).width + 20 + 8 + 24;
+      return context.measureText(text.textContent).width + 24 + 8 + 24;
     });
     const compact = widths.reduce((total, width) => total + width, 0) > strip.clientWidth;
     if (strip.hasAttribute('data-compact') !== compact) {
@@ -302,16 +346,19 @@
         if (button.style.getPropertyValue('--pk-tab-color') !== item.color) button.style.setProperty('--pk-tab-color', item.color);
         const ink = inkOf(item.color);
         if (button.style.getPropertyValue('--pk-tab-ink') !== ink) button.style.setProperty('--pk-tab-ink', ink);
-        const aria = label ? `${item.name}, ${label} ${fr ? (item.count > 1 ? 'non lus' : 'non lu') : 'unread'}` : item.name;
+        const kind = item.kind === 'new'
+          ? (fr ? (item.count > 1 ? 'nouveaux' : 'nouveau') : 'new')
+          : (fr ? (item.count > 1 ? 'non lus' : 'non lu') : 'unread');
+        const aria = label ? `${item.name}, ${label} ${kind}` : item.name;
+        button.dataset.name = item.name;
         attr(button, 'aria-label', aria);
-        attr(button, 'title', item.name);
+        attr(button, 'title', label ? `${item.name} · ${label} ${kind}` : item.name);
         button.dataset.route = item.route;
         if (strip.children[index] !== button) strip.insertBefore(button, strip.children[index] || null);
       });
     }
     const current = hash();
-    // Gmail writes spaces as `+` in hashes (search and label paths).
-    const canonical = value => value.replace(/\+/g, ' ');
+    // Gmail's native category views are the same buckets as the inbox searches.
     const currentKey = canonical(current);
     // Gmail's native category views are the same buckets as the inbox searches.
     const aliases = {

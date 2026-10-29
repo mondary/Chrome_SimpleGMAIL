@@ -8,14 +8,14 @@
   #view{max-width:calc(100% - (2 * var(--pk-margin-side)));margin-inline:auto}
 </style>
 <header>PK Simple Gmail · Studio <small>Simulation — données fictives</small></header>
-<aside class="sidebar"><a href="#label/Newsletters">Newsletters</a></aside>
+<aside class="sidebar" role="navigation"><a href="#category/promotions"><span class="bsU">20</span>Promotions</a><a href="#category/updates"><span class="bsU">1</span>Notifications</a><a href="#category/forums"><span class="bsU">3</span>Forums</a><a href="#purchases"><span class="bsU">7</span>Achats</a><a href="#label/Newsletters"><span class="bsU">2</span>Newsletters</a></aside>
 <div class="bkK"><div class="nH"><div id="view" role="main"></div></div></div>
 <script>
   window.state = { theme:'theme-pk', enabled:{}, pkLabelTabs:['Newsletters'], pkCategoryLabels:{promotions:'Recherche d’emploi'} };
   const listeners = [];
   window.chrome = {storage:{local:{get:async()=>state}, onChanged:{addListener:fn=>listeners.push(fn)}}};
   window.updateSettings = values => {Object.assign(state,values);listeners.forEach(fn=>fn(Object.fromEntries(Object.keys(values).map(k=>[k,{}])),'local'));};
-  const categories = [['primary','Principale',2,2],['promotions','Promotions',5,20],['social','Réseaux sociaux',0,0],['updates','Notifications',1,1],['forums','Forums',3,3]];
+  const categories = [['primary','Principale',2,2],['promotions','Promotions',5,1],['social','Réseaux sociaux',0,0],['updates','Notifications',1,1],['forums','Forums',3,3]];
   function nativeStrip() {
     const shell=document.createElement('div');shell.className='aKh';
     shell.innerHTML='<table><tbody><tr role="tablist">'+categories.map(([id,name,created,unread])=>{

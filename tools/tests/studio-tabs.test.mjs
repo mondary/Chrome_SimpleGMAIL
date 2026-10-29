@@ -63,15 +63,17 @@ try {
   assert.deepEqual(narrower, [narrower[1], narrower[1], narrower[3], narrower[3]]);
   await evaluate(`document.documentElement.style.setProperty('--pk-margin-side','8%')`);
   await wait(`Math.abs(document.querySelector('#pk-studio-tabs').getBoundingClientRect().width - document.querySelector('#view').getBoundingClientRect().width) < 1`);
-  const geometry = () => evaluate(`Array.from(document.querySelectorAll('#pk-studio-tabs button'),b=>{const r=b.getBoundingClientRect();return [b.title,r.x+document.querySelector('#pk-studio-tabs').scrollLeft,r.y,r.width,r.height]})`);
-  const selected = () => evaluate(`Array.from(document.querySelectorAll('#pk-studio-tabs [aria-selected=true]'),b=>b.title)`);
+  const geometry = () => evaluate(`Array.from(document.querySelectorAll('#pk-studio-tabs button'),b=>{const r=b.getBoundingClientRect();return [b.dataset.name,r.x+document.querySelector('#pk-studio-tabs').scrollLeft,r.y,r.width,r.height]})`);
+  const selected = () => evaluate(`Array.from(document.querySelectorAll('#pk-studio-tabs [aria-selected=true]'),b=>b.dataset.name)`);
   assert.equal(await evaluate(`document.querySelector('[data-key=promotions] .pk-studio-tab-count').textContent`), '20');
   assert.equal(await evaluate(`document.querySelector('[data-key=social] .pk-studio-tab-count').hidden`), true);
+  assert.equal(await evaluate(`document.querySelector('[data-key="label:Newsletters"] .pk-studio-tab-count').textContent`), '2');
+  assert.equal(await evaluate(`document.querySelector('[data-key=purchases] .pk-studio-tab-count').textContent`), '7');
   assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key=promotions] svg')).color`), 'rgb(217, 48, 117)');
-  // The visible badge (unread total) wins over the aria-label "new" count (5).
-  await evaluate(`document.querySelector('#view .aKh [data-pk-category="promotions"] .aDG').textContent='21'`);
+  // The sidebar unread total wins over the native "new" badge (1) and aria (5).
+  await evaluate(`document.querySelector('.sidebar a[href="#category/promotions"] .bsU').textContent='21'`);
   await wait(`document.querySelector('[data-key=promotions] .pk-studio-tab-count').textContent==='21'`);
-  await evaluate(`document.querySelector('#view .aKh [data-pk-category="promotions"] .aDG').textContent='20'`);
+  await evaluate(`document.querySelector('.sidebar a[href="#category/promotions"] .bsU').textContent='20'`);
   await wait(`document.querySelector('[data-key=promotions] .pk-studio-tab-count').textContent==='20'`);
   await evaluate(`window.originalStrip=document.querySelector('#pk-studio-tabs');window.originalPurchase=document.querySelector('[data-key="purchases"]')`);
   const initial = await geometry();
@@ -116,7 +118,7 @@ try {
     const compact = await geometry();
     assert.ok(compact.every(tab => tab[3] === 28), `28px icon cells at viewport ${width}`);
     const style = await evaluate(`(()=>{const b=document.querySelector('#pk-studio-tabs button');return [getComputedStyle(b).paddingLeft,getComputedStyle(b.querySelector('.pk-studio-tab-text')).display,b.getAttribute('aria-label')]})()`);
-    assert.deepEqual(style, ['4px', 'none', 'Principale, 2 non lus']);
+    assert.deepEqual(style, ['4px', 'none', 'Principale, 2 nouveaux']);
     assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key=promotions] .pk-studio-tab-count')).backgroundColor`), 'rgb(217, 48, 117)');
     await navigate('#inbox');
     assert.deepEqual(await geometry(), compact);
@@ -129,7 +131,7 @@ try {
   assert.deepEqual(await geometry(), initial);
   // Keyboard navigation and accessible names survive icon-only presentation.
   await evaluate(`originalPurchase.focus();originalPurchase.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}))`);
-  assert.equal(await evaluate(`document.activeElement.title`), 'Forums');
+  assert.equal(await evaluate(`document.activeElement.dataset.name`), 'Forums');
   await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', text: '\r', windowsVirtualKeyCode: 13 });
   await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
   await wait(`document.body.dataset.view==='#search/in:inbox category:forums'`);
