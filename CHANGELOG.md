@@ -4,6 +4,12 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.103] - 2026-10-29
+
+### Fixed
+- **Compteurs lisibles** : le compteur passe en pastille sur l'icône de l'onglet, toujours visible. Cela libère la largeur des libellés et évite la troncature quand la barre est étroite.
+- **Bon nombre** : lecture prioritaire du badge visible de Gmail (`.aDG`, total non lu) au lieu de l'`aria-label`, qui peut annoncer seulement les nouveaux messages. Une mention explicite « non lus » reste prioritaire, et le compteur suit les changements du badge.
+
 ## [2026.10.102] - 2026-10-29
 
 ### Fixed

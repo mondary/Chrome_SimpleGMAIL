@@ -73,16 +73,14 @@
     #pk-studio-tabs .pk-studio-tab[aria-selected="true"]:hover{background:#18181b;color:#fff}
     #pk-studio-tabs .pk-studio-tab:focus-visible{outline:2px solid #18181b;outline-offset:-4px}
     #pk-studio-tabs .pk-studio-tab[aria-selected="true"]:focus-visible{outline-color:#fff}
+    #pk-studio-tabs .pk-studio-tab-icon{position:relative;display:block;flex:none;width:20px;height:20px}
     #pk-studio-tabs svg{display:block;width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;color:var(--pk-tab-color,#52525b)}
     #pk-studio-tabs .pk-studio-tab[aria-selected="true"] svg{color:#fff}
     #pk-studio-tabs .pk-studio-tab-text{display:block;flex:none}
-    #pk-studio-tabs .pk-studio-tab-count{display:block;flex:none;font-size:11px;font-weight:600;line-height:1;color:color-mix(in srgb,var(--pk-tab-color,#52525b) 72%,#18181b);font-variant-numeric:tabular-nums}
+    #pk-studio-tabs .pk-studio-tab-count{position:absolute;top:-4px;right:-5px;display:grid;place-items:center;min-width:14px;height:14px;padding:0 4px;border-radius:999px;background:var(--pk-tab-color,#52525b);color:var(--pk-tab-ink,#fff);font-size:10px;font-weight:700;line-height:1;box-shadow:0 0 0 1px #fff;font-variant-numeric:tabular-nums}
     #pk-studio-tabs .pk-studio-tab-count[hidden]{display:none}
-    #pk-studio-tabs .pk-studio-tab[aria-selected="true"] .pk-studio-tab-count{color:#fff}
     #pk-studio-tabs[data-compact] .pk-studio-tab{flex:0 0 28px;width:28px;min-width:28px;padding:0 4px;gap:0}
     #pk-studio-tabs[data-compact] .pk-studio-tab-text{display:none}
-    #pk-studio-tabs[data-compact] .pk-studio-tab-count{position:absolute;top:2px;right:0;display:grid;place-items:center;min-width:13px;height:13px;padding:0 3px;border-radius:999px;background:var(--pk-tab-color,#52525b);color:var(--pk-tab-ink,#fff);font-size:9px;line-height:1;box-shadow:0 0 0 1px #fff}
-    #pk-studio-tabs[data-compact] .pk-studio-tab-count[hidden]{display:none}
   `;
 
   const decode = value => { try { return decodeURIComponent(value); } catch { return value; } };
@@ -111,13 +109,24 @@
     return id && NAMES[id] ? id : '';
   }
 
-  // Gmail puts the unread count in the native tab's label, e.g.
-  // "Forums, 2 nouveaux messages," / "Forums, 2 new messages,".
+  // Gmail puts the unread count in the native tab's badge (.aDG), while its
+  // aria-label may announce only the "new" count. Prefer the badge, then an
+  // explicit "unread" phrase, then the "new messages" phrasing.
+  function digitsOf(value) {
+    const count = Number((value || '').replace(/\D/g, ''));
+    return Number.isSafeInteger(count) && count > 0 ? count : 0;
+  }
   function unreadOf(tab) {
     const text = `${tab.getAttribute('aria-label') || ''} ${tab.textContent || ''}`;
-    const match = text.match(/([\d][\d\s.,]*)\s*(?:nouveaux?|new|non\s+lus?|unread)/i);
-    const value = match ? Number(match[1].replace(/\D/g, '')) : 0;
-    return Number.isSafeInteger(value) && value > 0 ? value : 0;
+    const total = text.match(/([\d][\d\s.,]*)\s*(?:non\s+lus?|unread)/i);
+    if (total) return digitsOf(total[1]);
+    const badge = tab.querySelector('.aDG');
+    if (badge && badge.style.display !== 'none') {
+      const raw = (badge.textContent || '').trim();
+      if (/^\d[\d\s.,]*\+?$/.test(raw)) return digitsOf(raw);
+    }
+    const created = text.match(/([\d][\d\s.,]*)\s*(?:nouveaux?|new)/i);
+    return created ? digitsOf(created[1]) : 0;
   }
 
   function nativeLists() {
@@ -186,9 +195,8 @@
     if (!context) return;
     const widths = [...buttons.values()].map(button => {
       context.font = getComputedStyle(button).font;
-      const count = button.querySelector('.pk-studio-tab-count');
-      const gaps = count && !count.hidden ? 16 : 8;
-      return context.measureText(button.textContent).width + 20 + 24 + gaps;
+      const text = button.querySelector('.pk-studio-tab-text');
+      return context.measureText(text.textContent).width + 20 + 8 + 24;
     });
     const compact = widths.reduce((total, width) => total + width, 0) > strip.clientWidth;
     if (strip.hasAttribute('data-compact') !== compact) {
@@ -279,7 +287,10 @@
           count.className = 'pk-studio-tab-count';
           count.setAttribute('aria-hidden', 'true');
           count.hidden = true;
-          button.append(svg, text, count);
+          const icon = document.createElement('span');
+          icon.className = 'pk-studio-tab-icon';
+          icon.append(svg, count);
+          button.append(icon, text);
           buttons.set(item.key, button);
         }
         const label = item.count ? (item.count > 999 ? '999+' : String(item.count)) : '';

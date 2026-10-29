@@ -65,14 +65,14 @@ try {
   await wait(`Math.abs(document.querySelector('#pk-studio-tabs').getBoundingClientRect().width - document.querySelector('#view').getBoundingClientRect().width) < 1`);
   const geometry = () => evaluate(`Array.from(document.querySelectorAll('#pk-studio-tabs button'),b=>{const r=b.getBoundingClientRect();return [b.title,r.x+document.querySelector('#pk-studio-tabs').scrollLeft,r.y,r.width,r.height]})`);
   const selected = () => evaluate(`Array.from(document.querySelectorAll('#pk-studio-tabs [aria-selected=true]'),b=>b.title)`);
-  assert.equal(await evaluate(`document.querySelector('[data-key=promotions] .pk-studio-tab-count').textContent`), '5');
+  assert.equal(await evaluate(`document.querySelector('[data-key=promotions] .pk-studio-tab-count').textContent`), '20');
   assert.equal(await evaluate(`document.querySelector('[data-key=social] .pk-studio-tab-count').hidden`), true);
   assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key=promotions] svg')).color`), 'rgb(217, 48, 117)');
-  // Live count refresh from Gmail's own tab label.
-  await evaluate(`document.querySelector('#view .aKh [data-pk-category="promotions"]').setAttribute('aria-label','Promotions, 9 nouveaux messages,')`);
-  await wait(`document.querySelector('[data-key=promotions] .pk-studio-tab-count').textContent==='9'`);
-  await evaluate(`document.querySelector('#view .aKh [data-pk-category="promotions"]').setAttribute('aria-label','Promotions, 5 nouveaux messages,')`);
-  await wait(`document.querySelector('[data-key=promotions] .pk-studio-tab-count').textContent==='5'`);
+  // The visible badge (unread total) wins over the aria-label "new" count (5).
+  await evaluate(`document.querySelector('#view .aKh [data-pk-category="promotions"] .aDG').textContent='21'`);
+  await wait(`document.querySelector('[data-key=promotions] .pk-studio-tab-count').textContent==='21'`);
+  await evaluate(`document.querySelector('#view .aKh [data-pk-category="promotions"] .aDG').textContent='20'`);
+  await wait(`document.querySelector('[data-key=promotions] .pk-studio-tab-count').textContent==='20'`);
   await evaluate(`window.originalStrip=document.querySelector('#pk-studio-tabs');window.originalPurchase=document.querySelector('[data-key="purchases"]')`);
   const initial = await geometry();
   await evaluate(`originalPurchase.click()`);
