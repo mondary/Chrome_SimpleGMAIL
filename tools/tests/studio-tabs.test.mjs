@@ -63,13 +63,15 @@ try {
   assert.deepEqual(narrower, [narrower[1], narrower[1], narrower[3], narrower[3]]);
   await evaluate(`document.documentElement.style.setProperty('--pk-margin-side','8%')`);
   await wait(`Math.abs(document.querySelector('#pk-studio-tabs').getBoundingClientRect().width - document.querySelector('#view').getBoundingClientRect().width) < 1`);
-  const geometry = () => evaluate(`Array.from(document.querySelectorAll('#pk-studio-tabs button'),b=>{const r=b.getBoundingClientRect();return [b.title,r.x,r.y,r.width,r.height]})`);
+  const geometry = () => evaluate(`Array.from(document.querySelectorAll('#pk-studio-tabs button'),b=>{const r=b.getBoundingClientRect();return [b.title,r.x+document.querySelector('#pk-studio-tabs').scrollLeft,r.y,r.width,r.height]})`);
   const selected = () => evaluate(`Array.from(document.querySelectorAll('#pk-studio-tabs [aria-selected=true]'),b=>b.title)`);
   await evaluate(`window.originalStrip=document.querySelector('#pk-studio-tabs');window.originalPurchase=document.querySelector('[data-key="purchases"]')`);
   const initial = await geometry();
   await evaluate(`originalPurchase.click()`);
   await wait(`document.body.dataset.view==='#search/in:inbox category:purchases'`);
   assert.deepEqual(await selected(), ['Achats']);
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key="purchases"]')).backgroundColor`), 'rgb(24, 24, 27)');
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key="purchases"]')).color`), 'rgb(255, 255, 255)');
   assert.equal(await evaluate(`!document.querySelector('[data-key="label:Achats"]')`), true);
   assert.deepEqual(await geometry(), initial, 'navigation must not move, resize or rename tabs');
   assert.equal(await evaluate(`originalStrip===document.querySelector('#pk-studio-tabs') && originalPurchase===document.querySelector('[data-key="purchases"]')`), true);
@@ -82,6 +84,10 @@ try {
   assert.deepEqual(await selected(), ['Achats']);
   await evaluate(`history.forward()`);
   await wait(`document.body.dataset.view==='#search/in:inbox category:promotions'`);
+  assert.deepEqual(await selected(), ['Recherche d’emploi']);
+  // Gmail rewrites spaces as "+" in search hashes; the tab must stay selected.
+  await evaluate(`location.hash='#search/in%3Ainbox+category:promotions'`);
+  await wait(`document.body.dataset.view==='#search/in:inbox+category:promotions'`);
   assert.deepEqual(await selected(), ['Recherche d’emploi']);
 
   // Gmail may keep a hidden inbox tree while a label is shown.
@@ -104,6 +110,7 @@ try {
     await navigate('#inbox');
     assert.deepEqual(await geometry(), compact);
     await navigate('#search/in:inbox category:purchases');
+    await wait(`(()=>{const s=document.querySelector('#pk-studio-tabs').getBoundingClientRect(),b=document.querySelector('#pk-studio-tabs [aria-selected=true]').getBoundingClientRect();return b.left>=s.left-1&&b.right<=s.right+1})()`);
     assert.deepEqual(await geometry(), compact);
   }
   await cdp('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
@@ -126,6 +133,10 @@ try {
   await wait(`document.querySelector('[data-key="label:Équipe / été"]')`);
   await evaluate(`document.querySelector('[data-key="label:Équipe / été"]').click()`);
   await wait(`document.body.dataset.view==='#label/Équipe / été'`);
+  assert.deepEqual(await selected(), ['Équipe / été']);
+  // Gmail rewrites label spaces as "+" too.
+  await evaluate(`location.hash='#label/%C3%89quipe+%2F+%C3%A9t%C3%A9'`);
+  await wait(`document.body.dataset.view==='#label/Équipe+/+été'`);
   assert.deepEqual(await selected(), ['Équipe / été']);
   await evaluate(`updateSettings({pkCategoryLabels:{promotions:'Offres'},pkLabelTabs:['Achats','Newsletters']})`);
   await wait(`document.querySelector('[data-key=promotions]').title==='Offres'`);

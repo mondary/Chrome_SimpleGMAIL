@@ -56,6 +56,8 @@ de réception apparaissent, donc archiver un message le retire de l'onglet.
 **Achats** utilise `category:purchases`, même quand Gmail ne lui donne pas d'onglet,
 et reste présent même sans libellé configuré. Aucun libellé n'est ouvert par défaut.
 La barre se cale sur la largeur de la colonne des mails et suit le réglage des marges.
+L'onglet actif est un segment noir plein ; en mode icônes, la barre le ramène
+automatiquement dans la zone visible.
 Les catégories sont mémorisées dans la session par compte/langue : visiter la
 boîte de réception une première fois pour découvrir les catégories activées.
 La barre reste présente au changement de vue. Les noms renommés sont repris.

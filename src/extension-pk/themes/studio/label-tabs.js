@@ -55,8 +55,10 @@
     #pk-studio-tabs{display:flex!important;align-items:stretch;gap:0;box-sizing:border-box;width:100%;min-width:0;max-width:100%;height:44px;flex:none;overflow-x:auto;overflow-y:hidden;margin:0 0 12px;padding:0;border:1px solid #e4e4e7;border-radius:10px;background:#fff;scrollbar-width:thin;color:#52525b}
     #pk-studio-tabs .pk-studio-tab{appearance:none;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:8px;flex:1 1 0;min-width:0;max-width:none;height:42px;margin:0;padding:0 12px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:inherit;font:500 13px -apple-system,"Segoe UI",Roboto,sans-serif;white-space:nowrap;cursor:pointer}
     #pk-studio-tabs .pk-studio-tab:hover{background:#f4f4f5;color:#18181b}
-    #pk-studio-tabs .pk-studio-tab[aria-selected="true"]{background:#f4f4f5;color:#09090b;border-bottom-color:#09090b}
+    #pk-studio-tabs .pk-studio-tab[aria-selected="true"]{background:#18181b;color:#fff;border-bottom-color:transparent}
+    #pk-studio-tabs .pk-studio-tab[aria-selected="true"]:hover{background:#18181b;color:#fff}
     #pk-studio-tabs .pk-studio-tab:focus-visible{outline:2px solid #18181b;outline-offset:-4px}
+    #pk-studio-tabs .pk-studio-tab[aria-selected="true"]:focus-visible{outline-color:#fff}
     #pk-studio-tabs svg{display:block;width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
     #pk-studio-tabs .pk-studio-tab-text{display:block;flex:none}
     #pk-studio-tabs[data-compact] .pk-studio-tab{flex:0 0 28px;width:28px;min-width:28px;padding:0 4px;gap:0}
@@ -78,6 +80,15 @@
       ['purchases', /^(achats?|purchases?)$/], ['newsletter', /^newsletters?$/],
     ];
     return matchers.find(([, pattern]) => pattern.test(name))?.[0] || '';
+  }
+
+  // Gmail rewrites search hashes with `+` for spaces (and may reorder terms),
+  // so a strict route comparison loses the selected tab after navigation.
+  function categoryFromSearch(value) {
+    const match = value.match(/^#search\/(.+)$/);
+    if (!match) return '';
+    const id = match[1].replace(/\+/g, ' ').match(/(?:^|\s)category:([a-z]+)(?:\s|$)/i)?.[1];
+    return id && NAMES[id] ? id : '';
   }
 
   function nativeLists() {
@@ -141,7 +152,20 @@
       return context.measureText(button.getAttribute('aria-label')).width + 20 + 8 + 24;
     });
     const compact = widths.reduce((total, width) => total + width, 0) > strip.clientWidth;
-    if (strip.hasAttribute('data-compact') !== compact) strip.toggleAttribute('data-compact', compact);
+    if (strip.hasAttribute('data-compact') !== compact) {
+      strip.toggleAttribute('data-compact', compact);
+      revealButton([...buttons.values()].find(button => button.getAttribute('aria-selected') === 'true'));
+    }
+  }
+
+  // Keep the active tab visible when the strip scrolls horizontally.
+  let lastSelected = '';
+  function revealButton(button) {
+    if (!button || !strip.isConnected || strip.scrollWidth <= strip.clientWidth) return;
+    const view = strip.getBoundingClientRect();
+    const rect = button.getBoundingClientRect();
+    if (rect.left < view.left) strip.scrollLeft -= view.left - rect.left;
+    else if (rect.right > view.right) strip.scrollLeft += rect.right - view.right;
   }
   const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(resize) : null;
   observer?.observe(strip);
@@ -223,6 +247,9 @@
       });
     }
     const current = hash();
+    // Gmail writes spaces as `+` in hashes (search and label paths).
+    const canonical = value => value.replace(/\+/g, ' ');
+    const currentKey = canonical(current);
     // Gmail's native category views are the same buckets as the inbox searches.
     const aliases = {
       purchases: ['#purchases', '#category/purchases'],
@@ -231,9 +258,14 @@
     };
     let selected = [...items].sort((a, b) => b.route.length - a.route.length)
       .find(item => {
-        const route = decode(item.route);
-        return current === route || current.startsWith(`${route}/`) || (aliases[item.key] || []).includes(current);
+        const route = canonical(decode(item.route));
+        return currentKey === route || currentKey.startsWith(`${route}/`)
+          || (aliases[item.key] || []).some(alias => canonical(alias) === currentKey);
       })?.key;
+    if (!selected) {
+      const fromSearch = categoryFromSearch(current);
+      selected = items.some(item => item.key === fromSearch) ? fromSearch : '';
+    }
     // Gmail can change the native category without changing #inbox.
     if (current === '#inbox' && !pendingPrimary) {
       const native = lists.flatMap(list => [...list.querySelectorAll('[role="tab"][aria-selected="true"], [role="tab"].J-KU-KO')]);
@@ -242,6 +274,11 @@
     for (const [key, button] of buttons) {
       attr(button, 'aria-selected', String(key === selected));
       attr(button, 'tabindex', key === (selected || items[0]?.key) ? '0' : '-1');
+    }
+    if (!selected) lastSelected = '';
+    else if (selected !== lastSelected) {
+      lastSelected = selected;
+      revealButton(buttons.get(selected));
     }
     resize();
   }

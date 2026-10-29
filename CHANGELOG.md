@@ -4,6 +4,12 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.101] - 2026-10-29
+
+### Fixed
+- **Onglet actif lisible** : la sélection devient un segment noir plein avec texte et icône blancs, au lieu du fond gris discret. L'onglet reste sélectionné quand Gmail réécrit l'URL de recherche avec `+` à la place des espaces.
+- **Barre défilante** : l'onglet actif est automatiquement ramené dans la zone visible quand la barre passe en mode icônes ou change de largeur.
+
 ## [2026.10.100] - 2026-10-28
 
 ### Fixed
