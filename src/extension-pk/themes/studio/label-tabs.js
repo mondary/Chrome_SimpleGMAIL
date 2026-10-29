@@ -18,6 +18,19 @@
     label: 'M3 3h8l10 10-8 8L3 11z M7 7h.01',
     newsletter: 'M4 3h16v18H4z M8 7h8 M8 11h8 M8 15h5',
   };
+  // Gmail's category accents, kept on the icon, unread count and active underline.
+  const COLORS = {
+    primary: '#1a73e8', promotions: '#d93075', social: '#f9ab00',
+    updates: '#188038', forums: '#7b4bb7', purchases: '#e08a00',
+    newsletter: '#0891b2', label: '#52525b',
+  };
+  function inkOf(hex) {
+    const value = parseInt(hex.slice(1), 16);
+    const lum = [value >> 16 & 255, value >> 8 & 255, value & 255]
+      .map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; })
+      .reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i], 0);
+    return lum > 0.3 ? '#18181b' : '#fff';
+  }
   // Every category opens the same explicit inbox search. Gmail's native tabs are
   // inbox-only too, but the search keeps the rule visible and covers
   // `category:purchases`, which has no tab of its own.
@@ -30,6 +43,7 @@
   let labels = [];
   let renames = {};
   let categories = ensurePurchases([{ id: 'primary', name: NAMES.primary }]);
+  let counts = new Map();
   let routes = new Map();
   let host = null;
   let signature = '';
@@ -53,16 +67,22 @@
     [data-pk-studio-tabs-host] .aKh,
     [data-pk-studio-tabs-native]{display:none!important}
     #pk-studio-tabs{display:flex!important;align-items:stretch;gap:0;box-sizing:border-box;width:100%;min-width:0;max-width:100%;height:44px;flex:none;overflow-x:auto;overflow-y:hidden;margin:0 0 12px;padding:0;border:1px solid #e4e4e7;border-radius:10px;background:#fff;scrollbar-width:thin;color:#52525b}
-    #pk-studio-tabs .pk-studio-tab{appearance:none;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:8px;flex:1 1 0;min-width:0;max-width:none;height:42px;margin:0;padding:0 12px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:inherit;font:500 13px -apple-system,"Segoe UI",Roboto,sans-serif;white-space:nowrap;cursor:pointer}
+    #pk-studio-tabs .pk-studio-tab{position:relative;appearance:none;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:8px;flex:1 1 0;min-width:0;max-width:none;height:42px;margin:0;padding:0 12px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:inherit;font:500 13px -apple-system,"Segoe UI",Roboto,sans-serif;white-space:nowrap;cursor:pointer}
     #pk-studio-tabs .pk-studio-tab:hover{background:#f4f4f5;color:#18181b}
-    #pk-studio-tabs .pk-studio-tab[aria-selected="true"]{background:#18181b;color:#fff;border-bottom-color:transparent}
+    #pk-studio-tabs .pk-studio-tab[aria-selected="true"]{background:#18181b;color:#fff;border-bottom-color:var(--pk-tab-color,#18181b)}
     #pk-studio-tabs .pk-studio-tab[aria-selected="true"]:hover{background:#18181b;color:#fff}
     #pk-studio-tabs .pk-studio-tab:focus-visible{outline:2px solid #18181b;outline-offset:-4px}
     #pk-studio-tabs .pk-studio-tab[aria-selected="true"]:focus-visible{outline-color:#fff}
-    #pk-studio-tabs svg{display:block;width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+    #pk-studio-tabs svg{display:block;width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;color:var(--pk-tab-color,#52525b)}
+    #pk-studio-tabs .pk-studio-tab[aria-selected="true"] svg{color:#fff}
     #pk-studio-tabs .pk-studio-tab-text{display:block;flex:none}
+    #pk-studio-tabs .pk-studio-tab-count{display:block;flex:none;font-size:11px;font-weight:600;line-height:1;color:color-mix(in srgb,var(--pk-tab-color,#52525b) 72%,#18181b);font-variant-numeric:tabular-nums}
+    #pk-studio-tabs .pk-studio-tab-count[hidden]{display:none}
+    #pk-studio-tabs .pk-studio-tab[aria-selected="true"] .pk-studio-tab-count{color:#fff}
     #pk-studio-tabs[data-compact] .pk-studio-tab{flex:0 0 28px;width:28px;min-width:28px;padding:0 4px;gap:0}
     #pk-studio-tabs[data-compact] .pk-studio-tab-text{display:none}
+    #pk-studio-tabs[data-compact] .pk-studio-tab-count{position:absolute;top:2px;right:0;display:grid;place-items:center;min-width:13px;height:13px;padding:0 3px;border-radius:999px;background:var(--pk-tab-color,#52525b);color:var(--pk-tab-ink,#fff);font-size:9px;line-height:1;box-shadow:0 0 0 1px #fff}
+    #pk-studio-tabs[data-compact] .pk-studio-tab-count[hidden]{display:none}
   `;
 
   const decode = value => { try { return decodeURIComponent(value); } catch { return value; } };
@@ -91,6 +111,15 @@
     return id && NAMES[id] ? id : '';
   }
 
+  // Gmail puts the unread count in the native tab's label, e.g.
+  // "Forums, 2 nouveaux messages," / "Forums, 2 new messages,".
+  function unreadOf(tab) {
+    const text = `${tab.getAttribute('aria-label') || ''} ${tab.textContent || ''}`;
+    const match = text.match(/([\d][\d\s.,]*)\s*(?:nouveaux?|new|non\s+lus?|unread)/i);
+    const value = match ? Number(match[1].replace(/\D/g, '')) : 0;
+    return Number.isSafeInteger(value) && value > 0 ? value : 0;
+  }
+
   function nativeLists() {
     return [...document.querySelectorAll('[role="tablist"]')].filter(list => list !== strip && list.querySelector('[role="tab"] .aKz'));
   }
@@ -101,9 +130,13 @@
     if (!list) return;
     const found = [...list.querySelectorAll('[role="tab"]:not([data-pk-label-tab])')].map(tab => ({
       id: categoryOf(tab), name: tab.querySelector('.aKz')?.dataset.pkOriginal || tab.querySelector('.aKz')?.textContent?.trim(),
+      count: unreadOf(tab),
     })).filter(c => c.id && c.name);
     if (!found.length) return;
-    const unique = ensurePurchases(found.filter((c, i) => found.findIndex(other => other.id === c.id) === i));
+    counts = new Map(found.map(c => [c.id, c.count]));
+    const unique = ensurePurchases(found
+      .filter((c, i) => found.findIndex(other => other.id === c.id) === i)
+      .map(({ id, name }) => ({ id, name })));
     if (JSON.stringify(categories) !== JSON.stringify(unique)) {
       categories = unique;
       try { sessionStorage.setItem(cacheKey, JSON.stringify(categories)); } catch {}
@@ -126,7 +159,10 @@
   }
 
   function model() {
-    const items = categories.map(c => ({ key: c.id, name: renames[c.id] || c.name, route: categoryRoute(c.id), icon: c.id }));
+    const items = categories.map(c => ({
+      key: c.id, name: renames[c.id] || c.name, route: categoryRoute(c.id),
+      icon: c.id, color: COLORS[c.id] || COLORS.label, count: counts.get(c.id) || 0,
+    }));
     // Purchases is now a category: a stored label with the same name would only
     // duplicate its tab (even when the category has been renamed).
     const shown = new Set(items.map(item => normal(item.name)));
@@ -136,7 +172,8 @@
       const route = labelRoute(label);
       if (items.some(item => decode(item.route) === decode(route))) continue;
       const icon = /achat|purchase|commande|shop|panier/.test(normal(label)) ? 'purchases' : /newsletter/.test(normal(label)) ? 'newsletter' : 'label';
-      items.push({ key: `label:${label}`, name: label, route, icon });
+      const color = icon === 'purchases' ? COLORS.purchases : icon === 'newsletter' ? COLORS.newsletter : COLORS.label;
+      items.push({ key: `label:${label}`, name: label, route, icon, color, count: 0 });
     }
     return items;
   }
@@ -149,7 +186,9 @@
     if (!context) return;
     const widths = [...buttons.values()].map(button => {
       context.font = getComputedStyle(button).font;
-      return context.measureText(button.getAttribute('aria-label')).width + 20 + 8 + 24;
+      const count = button.querySelector('.pk-studio-tab-count');
+      const gaps = count && !count.hidden ? 16 : 8;
+      return context.measureText(button.textContent).width + 20 + 24 + gaps;
     });
     const compact = widths.reduce((total, width) => total + width, 0) > strip.clientWidth;
     if (strip.hasAttribute('data-compact') !== compact) {
@@ -236,13 +275,26 @@
           svg.append(path);
           const text = document.createElement('span');
           text.className = 'pk-studio-tab-text';
-          button.append(svg, text);
+          const count = document.createElement('span');
+          count.className = 'pk-studio-tab-count';
+          count.setAttribute('aria-hidden', 'true');
+          count.hidden = true;
+          button.append(svg, text, count);
           buttons.set(item.key, button);
         }
-        attr(button, 'aria-label', item.name);
+        const label = item.count ? (item.count > 999 ? '999+' : String(item.count)) : '';
+        const text = button.querySelector('.pk-studio-tab-text');
+        const count = button.querySelector('.pk-studio-tab-count');
+        if (text.textContent !== item.name) text.textContent = item.name;
+        if (count.textContent !== label) count.textContent = label;
+        if (count.hidden !== !label) count.hidden = !label;
+        if (button.style.getPropertyValue('--pk-tab-color') !== item.color) button.style.setProperty('--pk-tab-color', item.color);
+        const ink = inkOf(item.color);
+        if (button.style.getPropertyValue('--pk-tab-ink') !== ink) button.style.setProperty('--pk-tab-ink', ink);
+        const aria = label ? `${item.name}, ${label} ${fr ? (item.count > 1 ? 'non lus' : 'non lu') : 'unread'}` : item.name;
+        attr(button, 'aria-label', aria);
         attr(button, 'title', item.name);
         button.dataset.route = item.route;
-        if (button.lastElementChild.textContent !== item.name) button.lastElementChild.textContent = item.name;
         if (strip.children[index] !== button) strip.insertBefore(button, strip.children[index] || null);
       });
     }
@@ -362,8 +414,16 @@
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && KEYS.some(key => key in changes)) load();
   });
-  new MutationObserver(schedule).observe(document.body || document.documentElement, {
-    childList: true, subtree: true, attributes: true, attributeFilter: ['aria-selected', 'aria-hidden', 'class'],
+  new MutationObserver(records => {
+    // Ignore the strip's own label/count rewrites; follow Gmail's tabs.
+    const outside = records.some(record => {
+      const node = record.target.nodeType === 1 ? record.target : record.target.parentElement;
+      return !node?.closest('#pk-studio-tabs');
+    });
+    if (outside) schedule();
+  }).observe(document.body || document.documentElement, {
+    childList: true, subtree: true, characterData: true,
+    attributes: true, attributeFilter: ['aria-selected', 'aria-hidden', 'class', 'aria-label'],
   });
   window.addEventListener('hashchange', schedule);
   load();

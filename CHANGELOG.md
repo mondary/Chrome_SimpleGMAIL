@@ -4,6 +4,12 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.102] - 2026-10-29
+
+### Fixed
+- **Compteurs de non-lus** : chaque onglet reprend le compteur de sa catégorie Gmail, affiché en texte à côté du nom et en pastille sur l'icône en mode compact. Les compteurs suivent les mises à jour des onglets natifs.
+- **Couleurs par catégorie** : icônes et compteurs reprennent les accents Gmail (Principale bleu, Promotions rose, Réseaux ambre, Notifications vert, Forums violet, Achats orange, Newsletters cyan). L'onglet actif garde le segment noir, souligné de la couleur de sa catégorie.
+
 ## [2026.10.101] - 2026-10-29
 
 ### Fixed

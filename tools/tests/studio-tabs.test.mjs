@@ -65,6 +65,14 @@ try {
   await wait(`Math.abs(document.querySelector('#pk-studio-tabs').getBoundingClientRect().width - document.querySelector('#view').getBoundingClientRect().width) < 1`);
   const geometry = () => evaluate(`Array.from(document.querySelectorAll('#pk-studio-tabs button'),b=>{const r=b.getBoundingClientRect();return [b.title,r.x+document.querySelector('#pk-studio-tabs').scrollLeft,r.y,r.width,r.height]})`);
   const selected = () => evaluate(`Array.from(document.querySelectorAll('#pk-studio-tabs [aria-selected=true]'),b=>b.title)`);
+  assert.equal(await evaluate(`document.querySelector('[data-key=promotions] .pk-studio-tab-count').textContent`), '5');
+  assert.equal(await evaluate(`document.querySelector('[data-key=social] .pk-studio-tab-count').hidden`), true);
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key=promotions] svg')).color`), 'rgb(217, 48, 117)');
+  // Live count refresh from Gmail's own tab label.
+  await evaluate(`document.querySelector('#view .aKh [data-pk-category="promotions"]').setAttribute('aria-label','Promotions, 9 nouveaux messages,')`);
+  await wait(`document.querySelector('[data-key=promotions] .pk-studio-tab-count').textContent==='9'`);
+  await evaluate(`document.querySelector('#view .aKh [data-pk-category="promotions"]').setAttribute('aria-label','Promotions, 5 nouveaux messages,')`);
+  await wait(`document.querySelector('[data-key=promotions] .pk-studio-tab-count').textContent==='5'`);
   await evaluate(`window.originalStrip=document.querySelector('#pk-studio-tabs');window.originalPurchase=document.querySelector('[data-key="purchases"]')`);
   const initial = await geometry();
   await evaluate(`originalPurchase.click()`);
@@ -72,6 +80,8 @@ try {
   assert.deepEqual(await selected(), ['Achats']);
   assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key="purchases"]')).backgroundColor`), 'rgb(24, 24, 27)');
   assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key="purchases"]')).color`), 'rgb(255, 255, 255)');
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key="purchases"]')).borderBottomColor`), 'rgb(224, 138, 0)');
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key="purchases"] svg')).color`), 'rgb(255, 255, 255)');
   assert.equal(await evaluate(`!document.querySelector('[data-key="label:Achats"]')`), true);
   assert.deepEqual(await geometry(), initial, 'navigation must not move, resize or rename tabs');
   assert.equal(await evaluate(`originalStrip===document.querySelector('#pk-studio-tabs') && originalPurchase===document.querySelector('[data-key="purchases"]')`), true);
@@ -105,8 +115,9 @@ try {
     await wait(`document.querySelector('#pk-studio-tabs').hasAttribute('data-compact') && Math.abs(document.querySelector('#pk-studio-tabs').getBoundingClientRect().width - document.querySelector('#view').getBoundingClientRect().width) < 1`);
     const compact = await geometry();
     assert.ok(compact.every(tab => tab[3] === 28), `28px icon cells at viewport ${width}`);
-    const style = await evaluate(`(()=>{const b=document.querySelector('#pk-studio-tabs button');return [getComputedStyle(b).paddingLeft,getComputedStyle(b.lastElementChild).display,b.getAttribute('aria-label')]})()`);
-    assert.deepEqual(style, ['4px', 'none', 'Principale']);
+    const style = await evaluate(`(()=>{const b=document.querySelector('#pk-studio-tabs button');return [getComputedStyle(b).paddingLeft,getComputedStyle(b.querySelector('.pk-studio-tab-text')).display,b.getAttribute('aria-label')]})()`);
+    assert.deepEqual(style, ['4px', 'none', 'Principale, 2 non lus']);
+    assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key=promotions] .pk-studio-tab-count')).backgroundColor`), 'rgb(217, 48, 117)');
     await navigate('#inbox');
     assert.deepEqual(await geometry(), compact);
     await navigate('#search/in:inbox category:purchases');

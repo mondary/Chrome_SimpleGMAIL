@@ -15,10 +15,10 @@
   const listeners = [];
   window.chrome = {storage:{local:{get:async()=>state}, onChanged:{addListener:fn=>listeners.push(fn)}}};
   window.updateSettings = values => {Object.assign(state,values);listeners.forEach(fn=>fn(Object.fromEntries(Object.keys(values).map(k=>[k,{}])),'local'));};
-  const categories = [['primary','Principale'],['promotions','Promotions'],['social','Réseaux sociaux'],['updates','Notifications'],['forums','Forums']];
+  const categories = [['primary','Principale',2],['promotions','Promotions',5],['social','Réseaux sociaux',0],['updates','Notifications',1],['forums','Forums',3]];
   function nativeStrip() {
     const shell=document.createElement('div');shell.className='aKh';
-    shell.innerHTML='<table><tbody><tr role="tablist">'+categories.map(([id,name])=>`<td><div role="tab" data-pk-category="${id}" aria-label="${name}" aria-selected="${id==='primary'}"><div class="aKx"><span class="aKp"></span><span class="aKz">${name}</span></div></div></td>`).join('')+'</tr></tbody></table>';
+    shell.innerHTML='<table><tbody><tr role="tablist">'+categories.map(([id,name,count])=>`<td><div role="tab" data-pk-category="${id}" aria-label="${name}${count?`, ${count} nouveaux messages,`:''}" aria-selected="${id==='primary'}"><div class="aKx"><span class="aKp"></span><span class="aKz">${name}</span></div></div></td>`).join('')+'</tr></tbody></table>';
     shell.querySelectorAll('[role=tab]').forEach(tab=>tab.addEventListener('click',()=>{
       shell.querySelectorAll('[role=tab]').forEach(other=>other.setAttribute('aria-selected',String(tab===other)));
     }));return shell;
