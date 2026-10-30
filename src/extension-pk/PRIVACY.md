@@ -44,8 +44,13 @@ exact est transmis à l'interface Studio. Les en-têtes et jetons ne quittent pa
 script de page, ne sont ni journalisés ni enregistrés. Les totaux restent en mémoire,
 sans stockage durable. Les requêtes s'arrêtent lorsque les onglets Studio sont
 désactivés ou la page masquée ; elles reprennent quand la page est visible.
-Le protocole est interne à Gmail et peut changer : une estimation ou une erreur
-affiche `…` plutôt qu'un faux zéro.
+Le protocole est interne à Gmail et peut changer : si aucun total exact n'a encore
+été obtenu, `…` remplace un faux zéro.
+Les gros totaux sont résolus par des sondes bornées de pages de recherche ; seule la
+page utile est mémorisée, pas les conversations. Si la session n'est pas encore prête,
+le bouton Gmail Actualiser est déclenché sur la liste visible, sans navigation,
+ouverture de mail ou interruption d'une saisie. Un échec temporaire conserve le
+dernier total vérifié, signalé comme en attente d'actualisation dans l'infobulle.
 
 **EN.** With Studio tabs enabled, a page script reuses Gmail request-session headers
 in memory to send only `in:inbox category:<id> is:unread` searches to the same account's
@@ -55,8 +60,12 @@ the module neither retains nor uses those summaries. Only the exact total reache
 the Studio UI. Headers and tokens never leave the page script and are neither logged
 nor stored. Totals remain in memory without persistent storage. Searches pause when
 Studio tabs are disabled or the page is hidden and resume when it becomes visible.
-This is an internal Gmail protocol and may change: estimates or errors show `…`,
-not a false zero.
+This is an internal Gmail protocol and may change: if no exact total has been
+obtained yet, the badge shows `…`, not a false zero.
+Large totals use bounded search-page probes; only the useful page number is retained,
+not conversations. If the session is not ready, Gmail's Refresh control is triggered
+on the visible list without navigation, opening mail or interrupting text entry.
+Temporary errors keep the last verified count and label its tooltip “refresh pending”.
 
 Comme tout script de contenu, l'extension a techniquement accès au DOM de la page
 autorisée. Chrome peut donc afficher un avertissement d'accès aux données de

@@ -6,7 +6,7 @@
 
 Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Packaged as native desktop app (macOS · Windows · Linux).
 
-**Local version 2026.10.106** — [Changelog](CHANGELOG.md)
+**Local version 2026.10.107** — [Changelog](CHANGELOG.md)
 
 [![Gmail extension preview](store/screenshots/05-ocean.png)](store/index.html)
 [![Gmail extension settings](store/screenshots/02-reglages.png)](store/index.html)
@@ -44,6 +44,7 @@ Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Package
 
 ### Chrome extension — PK Simple Gmail
 - **Studio tabs (local build)**: one strip for categories and labels, aligned with the mail column. Standard categories use Gmail’s real inbox tabs for category-to-category drag-and-drop; archived conversations stay excluded. Purchases keeps `in:inbox category:purchases`. Coloured badges show exact unread conversation totals in the inbox using read-only Gmail searches, with no third-party server; an estimate or error displays `…`, never a false zero. Labels reuse their Gmail badges. Selection uses a coloured underline, without black fill; illustrated empty states remain. Arrow keys then Enter/Space, compact icons and margin-aware sizing. [Desktop preview](store/screenshots/studio-tabs-desktop.png) · [compact](store/screenshots/studio-tabs-compact.png), fictional data. Counts and Primary drop-target hover checked on authenticated Gmail; no server-side drop performed on personal mail. [Privacy and limitations](src/extension-pk/PRIVACY.md).
+  Counters also initialise when Gmail loads from cache; large categories use bounded page probes to obtain an exact total. A temporary failure keeps the last verified number, with a “refresh pending” tooltip.
 - **Chrome Web Store**: [PK Simple Gmail](https://chromewebstore.google.com/detail/pk-simple-gmail/kijhhekofbbmdgnheepmjcenehmgepgl) — public version 2026.10.56, update 2026.10.73 submitted for review.
 - **PK Simple Gmail**: the canonical extension, with a side panel and six themes — *Natif*, *Studio* (36 toggleable tweaks, including “Inbox zero” with a distinct animated monochrome icon for each empty category, “Undo preserved”, category tab renaming, “Mail / full Google Calendar” with a triple-logo header switch (Mail, Calendar, Drive) and black Calendar accents), *Simplify* (photo backgrounds, inbox zero and reading pane), *Classique*, **Focus** (900 px monospace list, category icons, 35 px rows, black selection and keyboard shortcuts) and **Original** (64 px rail, wide search, black composer, airy list). The other Lab concepts still await transposition.
 - **Mail / Calendar / Drive (Studio)**: the triple-logo switch (Gmail + Calendar + Drive) replaces the logo in the top bar on all three sites; the active segment is white. It opens the real Google Calendar and Drive in the same tab and the same window, with native event creation, views and settings, and the real Drive on the active account's My Drive; Calendar and Drive pick up the Studio accents (black buttons, black today marker, calendar, event and file colours preserved). Mail returns to the inbox of the active account (the Gmail mark does too, even when it is active). Each switch loads the corresponding Google page. Enable “Modules · Mail / Google Agenda / Drive complet, même onglet” and allow `calendar.google.com` and `drive.google.com` when updating the extension.

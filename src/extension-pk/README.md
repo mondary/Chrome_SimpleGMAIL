@@ -69,9 +69,15 @@ vient d'une recherche Gmail en lecture seule `in:inbox category:<id> is:unread` 
 le compte actif : seules les conversations non lues et non archivées sont comptées.
 Le transport interne Gmail démarre avant l'application ; il attend la session Gmail
 et se rafraîchit après ses actions et toutes les 45 secondes quand la page est visible.
+Si Gmail n'émet aucune requête au démarrage, le bouton natif Actualiser de la liste
+initialise la session, sans navigation ni ouverture de message et hors saisie.
 Une liste visible complète constitue aussi une source exacte. Aucun repli vers les
 « nouveaux » ou les totaux de catégorie incluant les archives. Si Gmail ne fournit
-qu'une estimation ou une erreur, `…` remplace le nombre jusqu'au prochain résultat exact.
+qu'une estimation, le module sonde un nombre borné de pages natives jusqu'à obtenir
+le total exact. Il mémorise la page utile, pas les conversations. Les compteurs sont
+publiés individuellement, sans attendre les autres catégories. Lors d'un échec, le
+dernier chiffre vérifié reste affiché avec la mention « actualisation en attente »
+dans l'infobulle ; `…` apparaît uniquement si aucun total exact n'a encore été obtenu.
 Les libellés configurés conservent leur badge de navigation Gmail. Voir [confidentialité](PRIVACY.md).
 L'onglet actif est repéré par le soulignement de sa couleur, sans fond noir ; en mode
 icônes, la barre le ramène automatiquement dans la zone visible.
@@ -115,7 +121,8 @@ Les fichiers `data/*.js` portent l'en-tête « Généré par build.sh » : ne pa
 - `node --test tools/tests/studio-modules.test.mjs` depuis la racine : navigation,
   comptes, isolation des onglets et actualisation des enregistrements.
 - `node --test tools/tests/studio-counts.test.mjs` : décomptes exacts, estimations
-  rejetées, isolation de compte et absence de requêtes quand le module est inactif.
+  résolues par pagination, démarrage depuis le cache, sessions XHR/fetch, synchronisation
+  pendant le décompte, isolation de compte et absence de requêtes quand le module est inactif.
 - QA Gmail du 30 octobre : totaux Principale et Réseaux vérifiés ; drag Promotions
   vers Principale reconnu comme « Déplacer 1 conversation », annulé avant dépôt.
   Aucun message personnel reclassé pour ce test ; les dépôts effectifs sont testés

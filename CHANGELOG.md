@@ -4,6 +4,14 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.107] - 2026-10-30
+
+### Fixed
+- **Compteurs bloqués sur `…`** : initialisation même quand Gmail ouvre sa boîte depuis le cache sans requête réseau. Le module utilise discrètement le bouton natif Actualiser sur la liste, sans ouvrir de mail, naviguer ou interrompre une saisie. Capture des sessions Gmail utilisant `fetch` en plus de XHR.
+- **Grosses catégories** : lorsqu'un total est estimé, recherche bornée d'une page native au-delà des résultats afin d'obtenir le total exact, sans télécharger toute la catégorie. La page trouvée est réutilisée aux actualisations suivantes.
+- **Synchronisation** : publication de chaque compteur dès qu'il est disponible ; les synchronisations Gmail n'annulent plus toute la série. Le dernier total exact est conservé en cas d'échec temporaire et l'infobulle indique l'actualisation en attente.
+- **Vérification** : démarrage sur Gmail authentifié, sans changer de vue : tous les compteurs disponibles en 4,3 secondes, dont Réseaux 14 et Forums 3 266. Tests ajoutés pour le cache, `fetch`, les gros totaux et une synchronisation pendant le décompte.
+
 ## [2026.10.106] - 2026-10-30
 
 ### Fixed

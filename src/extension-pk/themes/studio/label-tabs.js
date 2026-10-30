@@ -45,6 +45,7 @@
   let categories = ensurePurchases([{ id: 'primary', name: NAMES.primary }]);
   let counts = new Map();
   const exactCounts = new Map();
+  const pendingCounts = new Set();
   let countRequestSignature = '';
   let labelCounts = new Map();
   let routes = new Map();
@@ -177,6 +178,7 @@
     const rightPane = current !== '#inbox' || !paneId || rows.every(row => row.closest('[role="tabpanel"]')?.id === paneId);
     if (id && rightPane && numbers.length === 3 && numbers[0] === 1 && numbers[1] === numbers[2] && rows.length === numbers[2]) {
       counts.set(id, rows.filter(row => row.classList.contains('zE')).length);
+      pendingCounts.delete(id);
     }
     if (JSON.stringify(categories) !== JSON.stringify(unique)) {
       categories = unique;
@@ -200,8 +202,8 @@
       if (!account || result.account !== account) return;
       for (const [id, value] of Object.entries(result.counts || {})) {
         if (!NAMES[id]) continue;
-        if (Number.isSafeInteger(value) && value >= 0) exactCounts.set(id, value);
-        else exactCounts.delete(id);
+        if (Number.isSafeInteger(value) && value >= 0) { exactCounts.set(id, value); pendingCounts.delete(id); }
+        else pendingCounts.add(id); // Keep a previously verified total during a temporary failure.
       }
       schedule();
     } catch {}
@@ -226,7 +228,7 @@
     const items = categories.map(c => ({
       key: c.id, name: renames[c.id] || c.name, route: categoryRoute(c.id),
       icon: c.id, color: COLORS[c.id] || COLORS.label, count: counts.get(c.id) ?? null,
-      kind: 'unread',
+      kind: 'unread', pending: pendingCounts.has(c.id),
     }));
     // Purchases is now a category: a stored label with the same name would only
     // duplicate its tab (even when the category has been renamed).
@@ -360,7 +362,8 @@
         const ink = inkOf(item.color);
         if (button.style.getPropertyValue('--pk-tab-ink') !== ink) button.style.setProperty('--pk-tab-ink', ink);
         const kind = fr ? (item.count > 1 ? 'non lus' : 'non lu') : 'unread';
-        const description = item.count === null ? (fr ? 'décompte en attente' : 'count pending') : `${item.count} ${kind}`;
+        const description = item.count === null ? (fr ? 'décompte en attente' : 'count pending')
+          : `${item.count} ${kind}${item.pending ? (fr ? ' · actualisation en attente' : ' · refresh pending') : ''}`;
         const aria = `${item.name}, ${description}`;
         button.dataset.name = item.name;
         attr(button, 'aria-label', aria);

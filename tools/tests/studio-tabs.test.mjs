@@ -79,7 +79,8 @@ try {
   await evaluate(`publishCounts({primary:999},'other-account')`);
   assert.equal(await evaluate(`document.querySelector('[data-key=primary] .pk-studio-tab-count').textContent`), '9');
   await evaluate(`publishCounts({social:null})`);
-  await wait(`document.querySelector('[data-key=social] .pk-studio-tab-count').textContent==='…'`);
+  await wait(`document.querySelector('[data-key=social]').title.includes('actualisation en attente')`);
+  assert.equal(await evaluate(`document.querySelector('[data-key=social] .pk-studio-tab-count').textContent`), '16');
   await evaluate(`publishCounts()`);
   // Gmail's native tabs remain the real drop targets beneath Studio's custom strip.
   await evaluate(`document.querySelector('#view .zA').dispatchEvent(new DragEvent('dragstart',{bubbles:true,cancelable:true,dataTransfer:new DataTransfer()}))`);
