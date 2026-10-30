@@ -4,6 +4,23 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.10.106] - 2026-10-30
+
+### Fixed
+- **Non-lus réels** : décompte des conversations via les recherches Gmail `in:inbox category:<id> is:unread`, et non le badge « nouveaux » ou les totaux comprenant les archives. Une estimation ou une erreur n'est jamais convertie en zéro : la pastille indique `…` si le total exact est indisponible. Résultats conservés en mémoire, sans serveur tiers.
+- **Catégorie vers catégorie** : Principale, Promotions, Réseaux, Notifications et Forums activent les vrais onglets de la boîte de réception Gmail, plutôt qu'une vue de recherche. Les liens de recherche Studio historiques sont migrés. Les cibles natives sont alignées dès le début du drag souris, y compris pour Promotions → Principale. Achats reste une recherche `category:purchases`.
+- **Libellés** : lecture des badges frères du lien Gmail, sans se limiter au rail Chat/Meet.
+- **QA** : compteur Principale et Réseaux vérifié sur Gmail authentifié ; survol de Principale depuis Promotions reconnu par Gmail comme « Déplacer 1 conversation », puis annulé sans déplacement serveur. Trois déplacements de catégories vérifiés avec des mails fictifs. Le protocole de décompte est interne à Gmail et échoue sans faux total s'il change.
+
+## [2026.10.105] - 2026-10-29
+
+### Fixed
+- **Glisser-déposer des catégories** : pendant un déplacement de message depuis Principale, les onglets natifs Gmail redeviennent des cibles transparentes sous les onglets Studio ; Gmail garde la main sur le classement.
+- **Catégorie vide** : les recherches `in:inbox category:<id>` sans résultat retrouvent l’illustration Studio, avec une action pour revenir à Principale.
+
+### Changed
+- **Onglet actif** : suppression du fond noir ; le soulignement coloré de la catégorie suffit à marquer la sélection.
+
 ## [2026.10.104] - 2026-10-29
 
 ### Fixed

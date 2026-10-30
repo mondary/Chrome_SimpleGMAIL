@@ -11,6 +11,41 @@
   border-radius: 0;
   box-shadow: none;
 }
+/* A category opened through Gmail search has a generic no-results notice,
+   rather than the native inbox-tab card above. Reuse the same Studio artwork. */
+.bkK .aRv.pk-studio-search-zero,
+.bkK .TC.pk-studio-search-zero {
+  position: relative !important;
+  box-sizing: border-box !important;
+  display: block !important;
+  width: min(100%, 600px) !important;
+  margin: clamp(58px, 13vh, 140px) auto 60px !important;
+  padding: 0 24px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  text-align: center !important;
+  white-space: normal !important;
+}
+.bkK .pk-studio-search-zero > :not(.pk-studio-zero-art) {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+}
+.bkK .pk-studio-search-zero .pk-studio-zero-art {
+  position: relative;
+  z-index: 1;
+  color: #171717;
+  font-size: 14px;
+  line-height: 1.6;
+}
 /* Same artefact recipe as the Volt reference, inverted for white and applied
    to the whole empty pane: a blurred film grain plus 6px speckle dots whose
    density is modulated by a low-frequency turbulence mask. */
@@ -62,6 +97,9 @@
 .bkK .pk-studio-zero-kicker { color: #777; font: 600 10px/1.4 Arial, sans-serif; letter-spacing: .22em; }
 .bkK .pk-studio-zero-title { margin-top: 12px; color: #171717; font: 500 clamp(27px, 3vw, 34px)/1.2 Arial, sans-serif; letter-spacing: -.045em; }
 .bkK .pk-studio-zero-detail { margin-top: 12px; color: #686868; font: 14px/1.6 Arial, sans-serif; }
+.bkK .pk-studio-zero-action { margin-top: 24px; padding: 8px 14px; border: 1px solid #d4d4d8; border-radius: 999px; background: #fff; color: #18181b; font: 500 13px/1.2 Arial, sans-serif; cursor: pointer; }
+.bkK .pk-studio-zero-action:hover { background: #f4f4f5; }
+.bkK .pk-studio-zero-action:focus-visible { outline: 2px solid #18181b; outline-offset: 3px; }
 .bkK .aRu.pk-studio-zero > p:last-of-type { max-width: 450px; margin: 56px auto 0; color: #888; font: 12px/1.7 Arial, sans-serif; }
 .bkK .aRu.pk-studio-zero .aRq { color: #292929; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .bkK .aRu.pk-studio-zero .aRq:focus-visible { outline: 2px solid #171717; outline-offset: 3px; border-radius: 2px; }
@@ -80,6 +118,7 @@
   .bkK .pk-zero-bubble-front { animation: pk-zero-rise 540ms ease-out 200ms both; }
   .bkK .pk-zero-bell { animation: pk-zero-ring 780ms ease-out both; transform-origin: 72px 24px; }
   .bkK .pk-zero-bell-ring { animation: pk-zero-fade 460ms ease-out 380ms both; }
+  .bkK .pk-zero-purchase { animation: pk-zero-rise 620ms ease-out both; }
   .bkK .pk-zero-paper { animation: pk-zero-rise 680ms ease-out both; }
 }
 @keyframes pk-zero-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }

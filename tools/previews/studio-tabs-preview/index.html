@@ -2,19 +2,31 @@
 <html lang="fr">
 <meta charset="utf-8">
 <title>Studio — test des onglets (simulation)</title>
+<link rel="stylesheet" href="../../../src/extension-pk/themes/studio/empty-state.css">
 <style>
-  *{box-sizing:border-box}body{margin:0;background:#f5f5f5;color:#18181b;font:14px system-ui}header{padding:22px 32px;background:#fff;border-bottom:1px solid #ddd}header small{color:#71717a;margin-left:24px}.bkK{width:100%;padding:20px}.bkK>.nH{padding:20px;background:#fff;border-radius:12px}.G-atb{height:40px;border-bottom:1px solid #eee;color:#71717a}.mail{padding:18px 0;border-bottom:1px solid #eee}.aKz{white-space:nowrap}.aKh table{width:100%}.aKh td{padding:12px}.sidebar{display:none}
+  *{box-sizing:border-box}body{margin:0;background:#f5f5f5;color:#18181b;font:14px system-ui}header{padding:22px 32px;background:#fff;border-bottom:1px solid #ddd}header small{color:#71717a;margin-left:24px}.bkK{width:100%;padding:20px}.bkK>.nH{padding:20px;background:#fff;border-radius:12px;min-height:640px}.G-atb{height:40px;border-bottom:1px solid #eee;color:#71717a}.mail{padding:18px 0;border-bottom:1px solid #eee}.aKz{white-space:nowrap}.aKh table{width:100%}.aKh td{padding:12px}.TC{min-height:120px;padding:20px}.sidebar{display:none}
   :root{--pk-margin-side:8%}
   #view{max-width:calc(100% - (2 * var(--pk-margin-side)));margin-inline:auto}
 </style>
 <header>PK Simple Gmail · Studio <small>Simulation — données fictives</small></header>
-<aside class="sidebar" role="navigation"><a href="#category/promotions"><span class="bsU">20</span>Promotions</a><a href="#category/updates"><span class="bsU">1</span>Notifications</a><a href="#category/forums"><span class="bsU">3</span>Forums</a><a href="#purchases"><span class="bsU">7</span>Achats</a><a href="#label/Newsletters"><span class="bsU">2</span>Newsletters</a></aside>
+<nav role="navigation" class="sidebar">Mail · Chat · Meet</nav>
+<aside class="sidebar"><div class="aim"><a href="#category/promotions" aria-label="Promotions 1291 messages non lus">Promotions</a><span class="bsU">1 291</span></div><div class="aim"><a href="#category/updates">Notifications</a><span class="bsU">1</span></div><div class="aim"><a href="#category/social" aria-label="Réseaux sociaux 15 messages non lus">Réseaux sociaux</a><span class="bsU">15</span></div><div class="aim"><a href="#label/Newsletters">Newsletters</a><span class="bsU">2</span></div></aside>
 <div class="bkK"><div class="nH"><div id="view" role="main"></div></div></div>
 <script>
   window.state = { theme:'theme-pk', enabled:{}, pkLabelTabs:['Newsletters'], pkCategoryLabels:{promotions:'Recherche d’emploi'} };
   const listeners = [];
-  window.chrome = {storage:{local:{get:async()=>state}, onChanged:{addListener:fn=>listeners.push(fn)}}};
+  window.chrome = {storage:{local:{get:(_keys,callback)=>{if(callback)callback(state);return Promise.resolve(state)}}, onChanged:{addListener:fn=>listeners.push(fn)}}};
   window.updateSettings = values => {Object.assign(state,values);listeners.forEach(fn=>fn(Object.fromEntries(Object.keys(values).map(k=>[k,{}])),'local'));};
+  // Only the transport is simulated. Production never treats .aDG's "new"
+  // count or the archive-inclusive sidebar total as an inbox unread total.
+  window.inboxUnread={primary:9,promotions:25,social:15,updates:1,forums:3,purchases:7};
+  window.publishCounts = (values=inboxUnread,account='preview') => document.dispatchEvent(new CustomEvent('pk-studio-unread-result',{detail:JSON.stringify({account,counts:values,at:Date.now()})}));
+  document.addEventListener('pk-studio-unread-request',event=>{if(JSON.parse(event.detail).active)queueMicrotask(()=>publishCounts())});
+  window.nativeCategory='primary';
+  let movingRow=null;
+  document.addEventListener('mousedown',event=>{if(event.target.closest('.zA'))movingRow=event.target.closest('.zA')});
+  document.addEventListener('mouseup',()=>{movingRow=null});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape')movingRow=null});
   const categories = [['primary','Principale',2,2],['promotions','Promotions',5,1],['social','Réseaux sociaux',0,0],['updates','Notifications',1,1],['forums','Forums',3,3]];
   function nativeStrip() {
     const shell=document.createElement('div');shell.className='aKh';
@@ -24,8 +36,16 @@
     }).join('')+'</tr></tbody></table>';
     shell.querySelectorAll('[role=tab]').forEach(tab=>tab.addEventListener('click',()=>{
       shell.querySelectorAll('[role=tab]').forEach(other=>other.setAttribute('aria-selected',String(tab===other)));
-    }));return shell;
+      nativeCategory=tab.dataset.pkCategory;
+      document.querySelectorAll('#view > .zA').forEach(row=>{row.dataset.category=nativeCategory});
+    }));
+    shell.querySelectorAll('[role=tab]').forEach(tab=>tab.addEventListener('mouseup',()=>{
+      if(movingRow){window.lastCategoryMove={from:movingRow.dataset.category,to:tab.dataset.pkCategory};movingRow.dataset.category=tab.dataset.pkCategory;movingRow.remove();movingRow=null;}
+    }));
+    shell.querySelectorAll('[role=tab]').forEach(tab=>tab.addEventListener('drop',()=>tab.dataset.dropReceived='true'));
+    return shell;
   }
+  window.emptyView = false;
   window.renderView = () => {
     const view = document.querySelector('#view');
     view.replaceChildren();
@@ -33,12 +53,16 @@
     const route=decodeURIComponent(location.hash||'#inbox');
     if(route==='#inbox'||route.startsWith('#category/')) {
       const native=nativeStrip();view.append(native);
-      const id=route.startsWith('#category/')?route.split('/')[1]:'primary';
+      const id=route.startsWith('#category/')?route.split('/')[1]:nativeCategory;
       native.querySelectorAll('[role=tab]').forEach(tab=>tab.setAttribute('aria-selected',String(tab.dataset.pkCategory===id)));
+    } else {
+      const cached=document.createElement('div');cached.style.display='none';cached.className='cached-inbox';cached.append(nativeStrip());view.append(cached);
     }
     const title = route.includes('category:purchases') ? 'Achats' : route.startsWith('#label/') ? route.slice(7) : route.startsWith('#search/') ? 'Recherche' : 'Boîte de réception';
-    for(const subject of [title, 'Atelier — votre reçu de commande', 'Librairie — votre colis est en route']) {
-      const row=document.createElement('div');row.className='mail';row.textContent=subject;view.append(row);
+    if(window.emptyView) {
+      const empty=document.createElement('div');empty.className='TC';empty.textContent='Aucun message ne correspond à votre recherche';view.append(empty);
+    } else for(const subject of [title, 'Atelier — votre reçu de commande', 'Librairie — votre colis est en route']) {
+      const row=document.createElement('div');row.className='mail zA';row.dataset.category=nativeCategory;row.textContent=subject;view.append(row);
     }
     document.body.dataset.view=route;
   };
@@ -48,4 +72,5 @@
 </script>
 <script src="../../../src/extension-pk/themes/studio/category-labels.js"></script>
 <script src="../../../src/extension-pk/themes/studio/label-tabs.js"></script>
+<script src="../../../src/extension-pk/themes/studio/empty-state.js"></script>
 </html>

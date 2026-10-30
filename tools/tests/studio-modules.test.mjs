@@ -124,6 +124,18 @@ test('only Modules runs on Calendar, and sync upgrades an already enabled Gmail-
   assert.equal(w.registrations.some(s => s.id === 'js-studio-modules'), false);
 });
 
+test('unread transport starts before Gmail only for enabled Studio tabs', async () => {
+  const w = worker();
+  await w.send({ type: 'sync' });
+  const registration = w.registrations.find(item => item.id === 'pk-studio-unread-counts');
+  assert.equal(registration.world, 'MAIN');
+  assert.equal(registration.runAt, 'document_start');
+  assert.deepEqual(registration.matches, ['https://mail.google.com/*']);
+  w.local.enabled['js-studio-label-tabs'] = false;
+  await w.send({ type: 'sync' });
+  assert.equal(w.registrations.some(item => item.id === 'pk-studio-unread-counts'), false);
+});
+
 
 test('Drive opens My Drive for the active account, and Drive file pages can switch back', async () => {
   const w = worker();

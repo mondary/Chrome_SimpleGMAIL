@@ -9,10 +9,11 @@ PK Simple Gmail modifie l'apparence de Gmail dans le navigateur.
 - Ils recherchent les éléments d'interface nécessaires à la mise en page : menu, liste,
   vue de lecture et bouton de rédaction. Les dates visibles, les libellés et le compteur
   de messages sont lus localement pour les séparateurs, les catégories et le statut.
-  Le texte des messages, les destinataires, les sujets et les pièces jointes ne sont
-  ni lus ni copiés.
-- Aucune requête réseau n'est émise par l'extension. Aucun serveur, suivi, outil
-  d'analyse, police distante ou SDK n'est utilisé. Les polices et les fonds fournis
+  Le module de décompte Studio utilise aussi les résultats de recherche décrits
+  ci-dessous ; il n'en exploite que le total de conversations.
+- Aucun serveur tiers, suivi, outil d'analyse, police distante ou SDK n'est utilisé.
+  Studio peut effectuer des requêtes de décompte vers Gmail uniquement (voir ci-dessous).
+  Les polices et les fonds fournis
   sont inclus dans l'extension, sans téléchargement à l'utilisation.
 - La bascule Mail / Agenda navigue vers les pages complètes de Google sur clic.
   L'adresse du compte actif (bouton de compte Google) est utilisée dans `authuser`
@@ -26,9 +27,36 @@ PK Simple Gmail modifie l'apparence de Gmail dans le navigateur.
     sur les onglets Gmail autorisés et, pour le seul sélecteur Mail / Agenda,
     sur Google Calendar ;
   - `sidePanel` affiche le panneau de réglages de l'extension.
-- Aucun accès à l'API Gmail, aux cookies, à l'historique ou aux mots de passe.
+- Aucune permission de lecture des cookies, de l'historique ou des mots de passe,
+  ni accès OAuth à l'API Gmail publique. Le décompte utilise la session de la page Gmail.
 - Le bouton de rédaction déclenche uniquement le bouton natif de Gmail sur un clic
   de l'utilisateur. L'envoi reste une action dans Gmail.
+
+## Compteurs Studio / Studio unread counts
+
+**FR.** Lorsque les onglets Studio sont actifs, un script dans la page réutilise en
+mémoire les en-têtes de session des requêtes Gmail pour envoyer uniquement des
+recherches `in:inbox category:<id> is:unread` à l'endpoint de lecture Gmail du même
+compte (`/sync/u/<compte>/i/bv`). Il ne marque aucun message comme lu, n'archive rien
+et ne reclassifie rien. Les réponses peuvent contenir des résumés de conversations
+(objet, participants) ; le module ne conserve ni n'exploite ces résumés. Seul le total
+exact est transmis à l'interface Studio. Les en-têtes et jetons ne quittent pas le
+script de page, ne sont ni journalisés ni enregistrés. Les totaux restent en mémoire,
+sans stockage durable. Les requêtes s'arrêtent lorsque les onglets Studio sont
+désactivés ou la page masquée ; elles reprennent quand la page est visible.
+Le protocole est interne à Gmail et peut changer : une estimation ou une erreur
+affiche `…` plutôt qu'un faux zéro.
+
+**EN.** With Studio tabs enabled, a page script reuses Gmail request-session headers
+in memory to send only `in:inbox category:<id> is:unread` searches to the same account's
+read endpoint (`/sync/u/<account>/i/bv`). It never marks mail read, archives it or
+changes categories. Responses may contain thread summaries (subject, participants);
+the module neither retains nor uses those summaries. Only the exact total reaches
+the Studio UI. Headers and tokens never leave the page script and are neither logged
+nor stored. Totals remain in memory without persistent storage. Searches pause when
+Studio tabs are disabled or the page is hidden and resume when it becomes visible.
+This is an internal Gmail protocol and may change: estimates or errors show `…`,
+not a false zero.
 
 Comme tout script de contenu, l'extension a techniquement accès au DOM de la page
 autorisée. Chrome peut donc afficher un avertissement d'accès aux données de

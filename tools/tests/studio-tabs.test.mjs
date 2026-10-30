@@ -65,42 +65,75 @@ try {
   await wait(`Math.abs(document.querySelector('#pk-studio-tabs').getBoundingClientRect().width - document.querySelector('#view').getBoundingClientRect().width) < 1`);
   const geometry = () => evaluate(`Array.from(document.querySelectorAll('#pk-studio-tabs button'),b=>{const r=b.getBoundingClientRect();return [b.dataset.name,r.x+document.querySelector('#pk-studio-tabs').scrollLeft,r.y,r.width,r.height]})`);
   const selected = () => evaluate(`Array.from(document.querySelectorAll('#pk-studio-tabs [aria-selected=true]'),b=>b.dataset.name)`);
-  assert.equal(await evaluate(`document.querySelector('[data-key=promotions] .pk-studio-tab-count').textContent`), '20');
-  assert.equal(await evaluate(`document.querySelector('[data-key=social] .pk-studio-tab-count').hidden`), true);
+  await wait(`document.querySelector('[data-key=primary] .pk-studio-tab-count').textContent==='9'`);
+  assert.equal(await evaluate(`document.querySelector('[data-key=promotions] .pk-studio-tab-count').textContent`), '25');
+  assert.equal(await evaluate(`document.querySelector('[data-key=social] .pk-studio-tab-count').textContent`), '15');
   assert.equal(await evaluate(`document.querySelector('[data-key="label:Newsletters"] .pk-studio-tab-count').textContent`), '2');
   assert.equal(await evaluate(`document.querySelector('[data-key=purchases] .pk-studio-tab-count').textContent`), '7');
   assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key=promotions] svg')).color`), 'rgb(217, 48, 117)');
-  // The sidebar unread total wins over the native "new" badge (1) and aria (5).
-  await evaluate(`document.querySelector('.sidebar a[href="#category/promotions"] .bsU').textContent='21'`);
-  await wait(`document.querySelector('[data-key=promotions] .pk-studio-tab-count').textContent==='21'`);
-  await evaluate(`document.querySelector('.sidebar a[href="#category/promotions"] .bsU').textContent='20'`);
-  await wait(`document.querySelector('[data-key=promotions] .pk-studio-tab-count').textContent==='20'`);
+  // Neither a new-mail badge nor the archive-inclusive sidebar is the total.
+  await evaluate(`document.querySelector('.sidebar a[href="#category/promotions"]').closest('.aim').querySelector('.bsU').textContent='9999';document.querySelector('.aKh [data-pk-category=promotions] .aDG').textContent='1'`);
+  assert.equal(await evaluate(`document.querySelector('[data-key=promotions] .pk-studio-tab-count').textContent`), '25');
+  await evaluate(`publishCounts({promotions:26,social:16})`);
+  await wait(`document.querySelector('[data-key=promotions] .pk-studio-tab-count').textContent==='26' && document.querySelector('[data-key=social] .pk-studio-tab-count').textContent==='16'`);
+  await evaluate(`publishCounts({primary:999},'other-account')`);
+  assert.equal(await evaluate(`document.querySelector('[data-key=primary] .pk-studio-tab-count').textContent`), '9');
+  await evaluate(`publishCounts({social:null})`);
+  await wait(`document.querySelector('[data-key=social] .pk-studio-tab-count').textContent==='…'`);
+  await evaluate(`publishCounts()`);
+  // Gmail's native tabs remain the real drop targets beneath Studio's custom strip.
+  await evaluate(`document.querySelector('#view .zA').dispatchEvent(new DragEvent('dragstart',{bubbles:true,cancelable:true,dataTransfer:new DataTransfer()}))`);
+  await wait(`document.querySelector('#view .aKh[data-pk-studio-drop-active]')`);
+  assert.equal(await evaluate(`(()=>{const b=document.querySelector('#pk-studio-tabs [data-key=promotions]'),r=b.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return hit?.closest('[role=tab][data-pk-studio-drop-tab]')?.dataset.pkStudioDropTab})()`), 'promotions');
+  await evaluate(`(()=>{const b=document.querySelector('#pk-studio-tabs [data-key=promotions]'),r=b.getBoundingClientRect(),target=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2).closest('[role=tab][data-pk-studio-drop-tab]'),transfer=new DataTransfer();target.dispatchEvent(new DragEvent('dragover',{bubbles:true,cancelable:true,dataTransfer:transfer}));target.dispatchEvent(new DragEvent('drop',{bubbles:true,cancelable:true,dataTransfer:transfer}));document.querySelector('#view .zA').dispatchEvent(new DragEvent('dragend',{bubbles:true,dataTransfer:transfer}))})()`);
+  await wait(`!document.querySelector('#view .aKh[data-pk-studio-drop-active]')`);
+  assert.equal(await evaluate(`document.querySelector('#view .aKh [data-pk-category=promotions]').dataset.dropReceived`), 'true');
   await evaluate(`window.originalStrip=document.querySelector('#pk-studio-tabs');window.originalPurchase=document.querySelector('[data-key="purchases"]')`);
   const initial = await geometry();
   await evaluate(`originalPurchase.click()`);
   await wait(`document.body.dataset.view==='#search/in:inbox category:purchases'`);
   assert.deepEqual(await selected(), ['Achats']);
-  assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key="purchases"]')).backgroundColor`), 'rgb(24, 24, 27)');
-  assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key="purchases"]')).color`), 'rgb(255, 255, 255)');
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key="purchases"]')).backgroundColor`), 'rgba(0, 0, 0, 0)');
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key="purchases"]')).color`), 'rgb(24, 24, 27)');
   assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key="purchases"]')).borderBottomColor`), 'rgb(224, 138, 0)');
-  assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key="purchases"] svg')).color`), 'rgb(255, 255, 255)');
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key="purchases"] svg')).color`), 'rgb(224, 138, 0)');
+  // Search views reuse the cached REAL tabs, including Primary, never #inbox links.
+  await evaluate(`document.querySelector('#view > .zA').dispatchEvent(new MouseEvent('mousedown',{bubbles:true,button:0}))`);
+  await wait(`document.querySelector('.cached-inbox[data-pk-studio-drop-reveal]')`);
+  assert.equal(await evaluate(`(()=>{const r=document.querySelector('#pk-studio-tabs [data-key=primary]').getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('[data-pk-studio-drop-tab]')?.dataset.pkStudioDropTab})()`), 'primary');
+  await evaluate(`document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))`);
+  await wait(`!document.querySelector('[data-pk-studio-drop-tab]')`);
   assert.equal(await evaluate(`!document.querySelector('[data-key="label:Achats"]')`), true);
   assert.deepEqual(await geometry(), initial, 'navigation must not move, resize or rename tabs');
   assert.equal(await evaluate(`originalStrip===document.querySelector('#pk-studio-tabs') && originalPurchase===document.querySelector('[data-key="purchases"]')`), true);
   await evaluate(`document.querySelector('[data-key=promotions]').click()`);
-  await wait(`document.body.dataset.view==='#search/in:inbox category:promotions'`);
+  await wait(`document.body.dataset.view==='#inbox' && document.querySelector('#view .aKh [data-pk-category=promotions][aria-selected=true]')`);
   assert.deepEqual(await selected(), ['Recherche d’emploi']);
   assert.deepEqual(await geometry(), initial);
   await evaluate(`history.back()`);
   await wait(`document.body.dataset.view==='#search/in:inbox category:purchases'`);
   assert.deepEqual(await selected(), ['Achats']);
   await evaluate(`history.forward()`);
-  await wait(`document.body.dataset.view==='#search/in:inbox category:promotions'`);
+  await wait(`document.body.dataset.view==='#inbox'`);
   assert.deepEqual(await selected(), ['Recherche d’emploi']);
   // Gmail rewrites spaces as "+" in search hashes; the tab must stay selected.
   await evaluate(`location.hash='#search/in%3Ainbox+category:promotions'`);
-  await wait(`document.body.dataset.view==='#search/in:inbox+category:promotions'`);
+  await wait(`document.body.dataset.view==='#inbox' && document.querySelector('[data-key=promotions][aria-selected=true]')`);
   assert.deepEqual(await selected(), ['Recherche d’emploi']);
+  // Actual source and destination change, not just the open category.
+  for (const [from,to] of [['promotions','primary'],['primary','social'],['social','promotions']]) {
+    await evaluate(`document.querySelector('[data-key=${from}]').click()`);
+    await wait(`document.querySelector('[data-key=${from}][aria-selected=true]')`);
+    const point = await evaluate(`(()=>{const r=document.querySelector('#view > .zA').getBoundingClientRect();return {x:r.x+10,y:r.y+r.height/2}})()`);
+    await cdp('Input.dispatchMouseEvent',{type:'mousePressed',x:point.x,y:point.y,button:'left',clickCount:1});
+    const targetPoint=await evaluate(`(()=>{const r=document.querySelector('[data-key=${to}]').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`);
+    await cdp('Input.dispatchMouseEvent',{type:'mouseMoved',x:targetPoint.x,y:targetPoint.y,button:'left',buttons:1});
+    await wait(`document.elementFromPoint(${targetPoint.x},${targetPoint.y})?.closest('[data-pk-studio-drop-tab]')?.dataset.pkStudioDropTab===${JSON.stringify(to)}`);
+    await cdp('Input.dispatchMouseEvent',{type:'mouseReleased',x:targetPoint.x,y:targetPoint.y,button:'left',clickCount:1});
+    await wait(`!document.querySelector('[data-pk-studio-drop-tab]')`);
+    assert.deepEqual(await evaluate(`window.lastCategoryMove`),{from,to});
+    await evaluate(`renderView()`);
+  }
 
   // Gmail may keep a hidden inbox tree while a label is shown.
   await navigate('#search/in:inbox category:purchases');
@@ -118,7 +151,7 @@ try {
     const compact = await geometry();
     assert.ok(compact.every(tab => tab[3] === 28), `28px icon cells at viewport ${width}`);
     const style = await evaluate(`(()=>{const b=document.querySelector('#pk-studio-tabs button');return [getComputedStyle(b).paddingLeft,getComputedStyle(b.querySelector('.pk-studio-tab-text')).display,b.getAttribute('aria-label')]})()`);
-    assert.deepEqual(style, ['4px', 'none', 'Principale, 2 nouveaux']);
+    assert.deepEqual(style, ['4px', 'none', 'Principale, 9 non lus']);
     assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key=promotions] .pk-studio-tab-count')).backgroundColor`), 'rgb(217, 48, 117)');
     await navigate('#inbox');
     assert.deepEqual(await geometry(), compact);
@@ -134,8 +167,27 @@ try {
   assert.equal(await evaluate(`document.activeElement.dataset.name`), 'Forums');
   await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', text: '\r', windowsVirtualKeyCode: 13 });
   await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
-  await wait(`document.body.dataset.view==='#search/in:inbox category:forums'`);
+  await wait(`document.body.dataset.view==='#inbox' && document.querySelector('[data-key=forums][aria-selected=true]')`);
   assert.deepEqual(await selected(), ['Forums']);
+  // Search-based category tabs keep the Studio empty artwork on Gmail's no-results notice.
+  await evaluate(`document.activeElement.blur()`);
+  await evaluate(`window.emptyView=true;location.hash='#search/in:inbox category:purchases'`);
+  await wait(`document.body.dataset.view==='#search/in:inbox category:purchases' && document.querySelector('.TC.pk-studio-search-zero')`);
+  assert.equal(await evaluate(`document.querySelector('.pk-studio-search-zero .pk-studio-zero-illustration').dataset.category`), 'purchases');
+  assert.equal(await evaluate(`document.querySelector('.pk-studio-search-zero .pk-studio-zero-detail').textContent`), 'Aucun message dans Achats. Profitez de cette pause.');
+  assert.equal(await evaluate(`document.querySelector('.pk-studio-zero-action').textContent`), 'Retourner à Principale');
+  if (process.env.CAPTURE_EMPTY) {
+    await cdp('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: 2, mobile: false });
+    const { data } = await cdp('Page.captureScreenshot', { format: 'png' });
+    await writeFile(fileURLToPath(new URL('../../store/screenshots/15-studio-search-empty.png', import.meta.url)), Buffer.from(data, 'base64'));
+    await cdp('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
+  }
+  await evaluate(`document.querySelector('.pk-studio-zero-action').click()`);
+  await wait(`document.body.dataset.view==='#inbox'`);
+  await evaluate(`window.emptyView=true;location.hash='#search/from:unknown'`);
+  await wait(`document.body.dataset.view==='#search/from:unknown' && !document.querySelector('.pk-studio-search-zero')`);
+  await evaluate(`window.emptyView=false;location.hash='#inbox'`);
+  await wait(`document.body.dataset.view==='#inbox' && document.querySelector('#view .zA')`);
   // Direct reload on the purchases search keeps the cached category order.
   await navigate('#search/in:inbox category:purchases');
   await cdp('Page.reload');
@@ -152,7 +204,7 @@ try {
   await wait(`document.body.dataset.view==='#label/Équipe+/+été'`);
   assert.deepEqual(await selected(), ['Équipe / été']);
   await evaluate(`updateSettings({pkCategoryLabels:{promotions:'Offres'},pkLabelTabs:['Achats','Newsletters']})`);
-  await wait(`document.querySelector('[data-key=promotions]').title==='Offres'`);
+  await wait(`document.querySelector('[data-key=promotions]').dataset.name==='Offres'`);
   assert.equal(await evaluate(`!document.querySelector('[data-key="label:Achats"]') && document.querySelectorAll('#pk-studio-tabs button').length===7`), true);
   assert.equal(await evaluate(`document.querySelectorAll('#pk-studio-tabs').length`), 1);
   const idle = await evaluate(`new Promise(resolve=>{let count=0;const o=new MutationObserver(r=>count+=r.length);o.observe(document.body,{subtree:true,childList:true,attributes:true});setTimeout(()=>{o.disconnect();resolve(count)},150)})`);
@@ -173,7 +225,7 @@ try {
       await writeFile(fileURLToPath(new URL(`../../store/screenshots/studio-tabs-${name}.png`, import.meta.url)), Buffer.from(data,'base64'));
     }
   }
-  console.log('PASS: stable DOM/geometry, in:inbox category routes, category round trips, history, cached hidden inbox, replaced canvas, direct reload, 5 compact widths, keyboard, live settings, observer idle and theme cleanup.');
+  console.log('PASS: stable DOM/geometry, inbox-only category routes, native Gmail drop targets, search empty state, route history, cached inbox, responsive, keyboard, live settings and cleanup.');
 } finally {
   socket?.close();
   const exited = new Promise(resolve => chrome.once('exit', resolve));

@@ -11,7 +11,8 @@ const MATCH = ['https://mail.google.com/*'];
 const APP_TABS = ['https://mail.google.com/*', 'https://calendar.google.com/*', 'https://drive.google.com/*'];
 const LAB_IDS = self.LAB_ITEMS.map((i) => i.id);
 const THEME_IDS = self.LAB_THEMES.map((t) => t.id);
-const ALL_IDS = [...LAB_IDS, ...THEME_IDS];
+const COUNTS_ID = 'pk-studio-unread-counts';
+const ALL_IDS = [...LAB_IDS, ...THEME_IDS, COUNTS_ID];
 
 function registrationFor(item) {
   const base = {
@@ -51,6 +52,10 @@ async function syncRegistrations() {
   const wanted = self.LAB_ITEMS
     .filter((i) => enabled[i.id] !== false)
     .map(registrationFor);
+  if (theme === 'theme-pk' && enabled['js-studio-label-tabs'] !== false) wanted.push({
+    id: COUNTS_ID, matches: MATCH, persistAcrossSessions: false,
+    js: ['themes/studio/unread-counts.js'], world: 'MAIN', runAt: 'document_start',
+  });
   const themeScript = themeRegistration(theme);
   if (themeScript) wanted.push(themeScript);
 
@@ -142,6 +147,8 @@ async function ensureVersionApplied() {
   const current = chrome.runtime.getManifest().version;
   const { appliedVersion } = await chrome.storage.local.get('appliedVersion');
   if (appliedVersion === current) return;
+  // Register the document_start unread transport BEFORE reloading Gmail.
+  await syncRegistrations();
   await chrome.storage.local.set({ appliedVersion: current });
   await reloadAppTabs();
 }

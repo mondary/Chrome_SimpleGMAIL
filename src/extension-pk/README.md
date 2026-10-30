@@ -50,18 +50,31 @@ Les retouches Gmail ne sont pas injectées dans Calendar.
 ### Onglets Studio
 
 Activer **Onglets · catégories + libellés** dans Studio. Une seule barre réunit les
-catégories Gmail détectées et jusqu'à six libellés configurés. Chaque catégorie
-s'ouvre par la recherche `in:inbox category:<id>` : seuls les messages de la boîte
-de réception apparaissent, donc archiver un message le retire de l'onglet.
+catégories Gmail détectées et jusqu'à six libellés configurés. Les catégories
+standard activent les vrais onglets Gmail sous `#inbox`, pas les vues de libellé
+`#category/…` : les archives sont exclues et le classement natif reste disponible.
 **Achats** utilise `category:purchases`, même quand Gmail ne lui donne pas d'onglet,
 et reste présent même sans libellé configuré. Aucun libellé n'est ouvert par défaut.
+Le glisser-déposer d'une catégorie standard vers une autre (notamment Promotions
+vers Principale) passe par les vraies cibles Gmail, alignées sous la barre Studio
+dès le mousedown. Les catégories sans onglet natif, dont Achats, n'ont pas de cible
+native ajoutée artificiellement. Les anciens liens de recherche Studio vers une
+catégorie standard sont migrés vers son vrai onglet de boîte de réception.
+Quand une recherche de catégorie ne renvoie aucun message, l'état vide illustré Studio
+reste affiché au lieu du message générique de recherche.
 La barre se cale sur la largeur de la colonne des mails et suit le réglage des marges.
 Chaque onglet reprend le compteur de non-lus en pastille sur l'icône et la couleur
-Gmail de sa catégorie (icône, soulignement de l'onglet actif). Le compteur vient du
-badge de la barre latérale Gmail (total non lu, libellés configurés compris) ; si Gmail
-ne le fournit pas, le badge de nouveaux de l'onglet est utilisé et l'infobulle le précise.
-L'onglet actif est un segment noir plein ; en mode icônes, la barre le ramène
-automatiquement dans la zone visible.
+Gmail de sa catégorie (icône, soulignement de l'onglet actif). Le compteur de catégorie
+vient d'une recherche Gmail en lecture seule `in:inbox category:<id> is:unread` dans
+le compte actif : seules les conversations non lues et non archivées sont comptées.
+Le transport interne Gmail démarre avant l'application ; il attend la session Gmail
+et se rafraîchit après ses actions et toutes les 45 secondes quand la page est visible.
+Une liste visible complète constitue aussi une source exacte. Aucun repli vers les
+« nouveaux » ou les totaux de catégorie incluant les archives. Si Gmail ne fournit
+qu'une estimation ou une erreur, `…` remplace le nombre jusqu'au prochain résultat exact.
+Les libellés configurés conservent leur badge de navigation Gmail. Voir [confidentialité](PRIVACY.md).
+L'onglet actif est repéré par le soulignement de sa couleur, sans fond noir ; en mode
+icônes, la barre le ramène automatiquement dans la zone visible.
 Les catégories sont mémorisées dans la session par compte/langue : visiter la
 boîte de réception une première fois pour découvrir les catégories activées.
 La barre reste présente au changement de vue. Les noms renommés sont repris.
@@ -94,11 +107,19 @@ Les fichiers `data/*.js` portent l'en-tête « Généré par build.sh » : ne pa
 ## Vérifications
 
 - `node tools/tests/studio-tabs.test.mjs` : tests de navigation, géométrie,
-  responsive et clavier dans un Chrome headless à profil jetable, DOM Gmail fictif.
+  responsive, clavier, glisser-déposer natif et état vide de recherche dans un Chrome
+  headless à profil jetable, DOM Gmail fictif.
   `CHROME_BIN` permet de préciser le binaire ; `CAPTURE_TABS=1` régénère les deux
-  captures Studio. Le test ne prouve pas la compatibilité avec le DOM Gmail actuel.
+  captures d'onglets et `CAPTURE_EMPTY=1` l'état vide de recherche. Le test ne prouve
+  pas la compatibilité avec le DOM Gmail actuel.
 - `node --test tools/tests/studio-modules.test.mjs` depuis la racine : navigation,
   comptes, isolation des onglets et actualisation des enregistrements.
+- `node --test tools/tests/studio-counts.test.mjs` : décomptes exacts, estimations
+  rejetées, isolation de compte et absence de requêtes quand le module est inactif.
+- QA Gmail du 30 octobre : totaux Principale et Réseaux vérifiés ; drag Promotions
+  vers Principale reconnu comme « Déplacer 1 conversation », annulé avant dépôt.
+  Aucun message personnel reclassé pour ce test ; les dépôts effectifs sont testés
+  sur des messages fictifs dans `studio-tabs.test.mjs`.
 - `tools/tests/verify-modules-live.mjs` : aller-retour sur les vraies pages via Ego,
   avec API Chrome simulée dans un monde isolé (aucun mail ni événement modifié).
 - Harnais d'aperçu fictif : `tools/previews/focus-os-preview/` (Focus),
