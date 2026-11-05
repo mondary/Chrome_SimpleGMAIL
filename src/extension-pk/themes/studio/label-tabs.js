@@ -53,6 +53,7 @@
   let signature = '';
   let scheduled = false;
   let pendingCategory = '';
+  let stickyCategory = '';
   const measure = document.createElement('canvas').getContext('2d');
   const buttons = new Map();
   // Per-account, per-language metadata only; no mail data. Allows direct label reloads.
@@ -148,6 +149,16 @@
 
   function nativeLists() {
     return [...document.querySelectorAll('[role="tablist"]')].filter(list => list !== strip && list.querySelector('[role="tab"] .aKz'));
+  }
+
+  function readingMail() {
+    return [...document.querySelectorAll('.bkK .hP')].some(node => node.getClientRects().length
+      && getComputedStyle(node).visibility !== 'hidden');
+  }
+
+  function nativeCategory(lists) {
+    const selected = lists.flatMap(list => [...list.querySelectorAll('[role="tab"][aria-selected="true"], [role="tab"].J-KU-KO')]);
+    return selected.map(categoryOf).find(Boolean) || '';
   }
 
   function readCategories(lists) {
@@ -373,9 +384,8 @@
       });
     }
     const current = hash();
-    // Gmail's native category views are the same buckets as the inbox searches.
     const currentKey = canonical(current);
-    // Gmail's native category views are the same buckets as the inbox searches.
+    const reading = readingMail() || currentKey.startsWith('#inbox/');
     const aliases = {
       purchases: ['#purchases', '#category/purchases'],
       promotions: ['#category/promotions'], social: ['#category/social'],
@@ -384,19 +394,33 @@
     let selected = [...items].sort((a, b) => b.route.length - a.route.length)
       .find(item => {
         const route = canonical(decode(item.route));
-        return currentKey === route || currentKey.startsWith(`${route}/`)
-          || (aliases[item.key] || []).some(alias => canonical(alias) === currentKey);
+        const aliasMatch = (aliases[item.key] || []).some(alias => {
+          const key = canonical(alias);
+          return currentKey === key || currentKey.startsWith(`${key}/`);
+        });
+        // Every native category shares #inbox. A thread route (#inbox/<id>)
+        // must not be mistaken for the Primary tab.
+        if (route === '#inbox') return currentKey === route || aliasMatch;
+        return currentKey === route || currentKey.startsWith(`${route}/`) || aliasMatch;
       })?.key;
     if (!selected) {
       const fromSearch = categoryFromSearch(current);
       selected = items.some(item => item.key === fromSearch) ? fromSearch : '';
     }
-    // Gmail can change the native category without changing #inbox.
-    if (current === '#inbox' && !pendingCategory) {
-      const native = lists.flatMap(list => [...list.querySelectorAll('[role="tab"][aria-selected="true"], [role="tab"].J-KU-KO')]);
-      selected = native.map(categoryOf).find(Boolean) || selected;
+    if (currentKey === '#inbox' || currentKey.startsWith('#inbox/')) {
+      const native = nativeCategory(lists);
+      if (pendingCategory) selected = pendingCategory;
+      else if (reading) selected = stickyCategory || native || selected;
+      else selected = native && (stickyCategory === '' || native !== 'primary' || stickyCategory === 'primary')
+        ? native : (stickyCategory || native || selected);
+      // Gmail resets its hidden native tabs to Primary when a thread opens.
+      // The Studio strip keeps the category the thread was opened from.
+      if (reading && !selected) selected = stickyCategory || 'primary';
     }
-    if (current === '#inbox' && pendingCategory) selected = pendingCategory;
+    if (!reading) {
+      if (nativeCategories.has(selected)) stickyCategory = selected;
+      else stickyCategory = '';
+    }
     for (const [key, button] of buttons) {
       attr(button, 'aria-selected', String(key === selected));
       attr(button, 'tabindex', key === (selected || items[0]?.key) ? '0' : '-1');
@@ -483,8 +507,32 @@
   document.addEventListener('keydown', event => { if (event.key === 'Escape') clearDropTargets(); }, true);
   window.addEventListener('blur', clearDropTargets);
 
+  // Explicit Gmail navigation (logo, inbox link, hidden native tab) wins over
+  // the category kept while reading a thread.
+  document.addEventListener('click', event => {
+    if (event.target?.closest?.('#pk-studio-tabs')) return;
+    const tab = event.target?.closest?.('.aKh [role="tab"]');
+    if (tab) {
+      const id = categoryOf(tab);
+      if (nativeCategories.has(id)) stickyCategory = id;
+      return;
+    }
+    const link = event.target?.closest?.('a[href*="#"]');
+    if (!link) return;
+    const route = canonical(decode(link.hash || ''));
+    if (route === '#inbox') {
+      stickyCategory = 'primary';
+      return;
+    }
+    const id = route.match(/^#category\/([a-z]+)$/i)?.[1]?.toLowerCase() || categoryFromSearch(route);
+    if (nativeCategories.has(id)) stickyCategory = id;
+  }, true);
+
   function navigate(button) {
-    pendingCategory = nativeCategories.has(button.dataset.key) ? button.dataset.key : '';
+    const key = button.dataset.key;
+    pendingCategory = nativeCategories.has(key) ? key : '';
+    if (pendingCategory) stickyCategory = pendingCategory;
+    else if (!key.startsWith('label:')) stickyCategory = '';
     location.hash = button.dataset.route;
     refresh();
   }

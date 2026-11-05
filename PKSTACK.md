@@ -16,9 +16,11 @@ icônes ; `ego-browser` / `ego-browser-user-policy` pour la tentative de QA Gmai
 de simulation et la note bilingue locale. Suite sans dépendance :
 `tools/tests/studio-tabs.test.mjs`, profil Chrome headless jetable.
 
-Onglets 2026.10.107 : `ego-browser` pour la QA authentifiée des totaux, du démarrage
+Onglets 2026.11.2 : `ego-browser` pour la QA authentifiée des totaux, du démarrage
 depuis le cache et du drag
 Promotions → Principale (annulé avant dépôt), `pk-commits` pour le CalVer et
 `app-presence-sync` pour les README/landing locales. Transport de décompte :
 `themes/studio/unread-counts.js`, testé sans session réelle par
-`tools/tests/studio-counts.test.mjs`. Pas de publication store/FTP pour cette build.
+`tools/tests/studio-counts.test.mjs`. Toast « Annuler » : `themes/studio/toast-undo.js`
+conserve la ligne Gmail originale ; QA sur brouillons jetables et
+`tools/tests/studio-toast.test.mjs`. Pas de publication store/FTP pour cette build.

@@ -29,7 +29,7 @@
   <header>Gmail — banc de test toast</header>
   <main>
     <h1>Toast « Annuler » préservé</h1>
-    <p class="hint">Ce banc reproduit le comportement réel observé sur Gmail : un nœud <code>.bAp&nbsp;.vh</code> unique, dont le contenu est remplacé à chaque nouveau message, et qui disparaît après ~11,5&nbsp;s. La croix est liée au nœud (un clone ne l'hérite pas). Le tweak Studio doit faire réapparaître l'«&nbsp;Annuler&nbsp;» volé dans une pilule : 2 tuiles visibles au maximum, effacement au bout de 3&nbsp;s (durée du banc), croix fonctionnelle.</p>
+    <p class="hint">Ce banc reproduit le comportement réel observé sur Gmail : un nœud <code>.bAp&nbsp;.vh</code> unique, dont le contenu est remplacé à chaque nouveau message, et un gestionnaire d’annulation qui n’accepte que le <strong>vrai nœud</strong> «&nbsp;Annuler&nbsp;» — jamais un clone. Le tweak Studio doit déplacer cette ligne originale dans une pilule séparée sous le même <code>.bAp</code> : 2 tuiles visibles au maximum, effacement au bout de 3&nbsp;s (durée du banc), croix fonctionnelle.</p>
     <div class="controls">
       <button id="fire-undo">Toast avec Annuler (suppression)</button>
       <button id="fire-info">Toast sans Annuler (erreur traduction)</button>
@@ -46,6 +46,7 @@
     const vh = document.querySelector('.vh');
     let ttlTimer = 0;
     let undones = 0;
+    const registeredUndoLinks = new Set(); // Gmail follows node identity, not markup
     const count = document.getElementById('undo-count');
     const undoMessages = ['Conversation supprimée.', 'Conversation archivée.', 'Conversation ajoutée à Projet.'];
     let sent = 0;
@@ -58,6 +59,7 @@
       if (withUndo) {
         const action = document.createElement('span'); action.className = 'bAo';
         const link = document.createElement('a'); link.id = 'link_undo'; link.href = '#'; link.textContent = 'Annuler';
+        registeredUndoLinks.add(link);
         action.append(link); row.append(action);
       }
       vh.append(row);
@@ -71,11 +73,11 @@
       ttlTimer = setTimeout(() => { vh.hidden = true; }, 11500);
     }
 
-    // Délégation comme Gmail : le handler vit au-dessus du nœud toast,
-    // donc un clone avec ascendance .bAp déclenche aussi l'annulation.
+    // Délégation comme Gmail : le handler n’accepte que le vrai nœud enregistré,
+    // pas un clone, et ce nœud doit rester dans un conteneur .bAp.
     document.addEventListener('click', (e) => {
       const link = e.target.closest && e.target.closest('#link_undo');
-      if (link && link.closest('.bAp')) {
+      if (link && registeredUndoLinks.has(link) && link.closest('.bAp')) {
         e.preventDefault();
         undones += 1; count.textContent = 'Annulations réelles : ' + undones;
         showToast('Action annulée.', false);

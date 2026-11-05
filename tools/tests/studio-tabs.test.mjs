@@ -121,7 +121,22 @@ try {
   await evaluate(`location.hash='#search/in%3Ainbox+category:promotions'`);
   await wait(`document.body.dataset.view==='#inbox' && document.querySelector('[data-key=promotions][aria-selected=true]')`);
   assert.deepEqual(await selected(), ['Recherche d’emploi']);
-  // Actual source and destination change, not just the open category.
+  // Opening a thread must not move the tab back to Primary. Gmail resets its
+  // hidden native tabs to Primary while the conversation is open.
+  await navigate('#inbox/thread-pk-qa');
+  await wait(`document.querySelector('.hP') && document.querySelector('#view .aKh [data-pk-category=primary][aria-selected=true]')`);
+  assert.deepEqual(await selected(), ['Recherche d’emploi']);
+  await navigate('#inbox');
+  await wait(`document.querySelector('#view .aKh [data-pk-category=primary][aria-selected=true]')`);
+  assert.deepEqual(await selected(), ['Recherche d’emploi'], 'back to the list keeps the source category');
+  await navigate('#inbox/thread-pk-qa-2');
+  await wait(`document.querySelector('.hP')`);
+  await evaluate(`document.querySelector('.sidebar a[href="#inbox"]').click()`);
+  await wait(`document.body.dataset.view==='#inbox'`);
+  assert.deepEqual(await selected(), ['Principale'], 'an explicit Inbox navigation resets the category');
+  await evaluate(`document.querySelector('[data-key=promotions]').click()`);
+  await wait(`document.querySelector('[data-key=promotions][aria-selected=true]')`);
+  assert.deepEqual(await selected(), ['Recherche d’emploi']);
   for (const [from,to] of [['promotions','primary'],['primary','social'],['social','promotions']]) {
     await evaluate(`document.querySelector('[data-key=${from}]').click()`);
     await wait(`document.querySelector('[data-key=${from}][aria-selected=true]')`);
@@ -226,7 +241,7 @@ try {
       await writeFile(fileURLToPath(new URL(`../../store/screenshots/studio-tabs-${name}.png`, import.meta.url)), Buffer.from(data,'base64'));
     }
   }
-  console.log('PASS: stable DOM/geometry, inbox-only category routes, native Gmail drop targets, search empty state, route history, cached inbox, responsive, keyboard, live settings and cleanup.');
+  console.log('PASS: stable DOM/geometry, inbox-only category routes, category kept while reading, native Gmail drop targets, search empty state, route history, cached inbox, responsive, keyboard, live settings and cleanup.');
 } finally {
   socket?.close();
   const exited = new Promise(resolve => chrome.once('exit', resolve));

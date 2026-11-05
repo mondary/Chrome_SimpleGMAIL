@@ -10,7 +10,7 @@
 </style>
 <header>PK Simple Gmail · Studio <small>Simulation — données fictives</small></header>
 <nav role="navigation" class="sidebar">Mail · Chat · Meet</nav>
-<aside class="sidebar"><div class="aim"><a href="#category/promotions" aria-label="Promotions 1291 messages non lus">Promotions</a><span class="bsU">1 291</span></div><div class="aim"><a href="#category/updates">Notifications</a><span class="bsU">1</span></div><div class="aim"><a href="#category/social" aria-label="Réseaux sociaux 15 messages non lus">Réseaux sociaux</a><span class="bsU">15</span></div><div class="aim"><a href="#label/Newsletters">Newsletters</a><span class="bsU">2</span></div></aside>
+<aside class="sidebar"><div class="aim"><a href="#inbox">Boîte de réception</a></div><div class="aim"><a href="#category/promotions" aria-label="Promotions 1291 messages non lus">Promotions</a><span class="bsU">1 291</span></div><div class="aim"><a href="#category/updates">Notifications</a><span class="bsU">1</span></div><div class="aim"><a href="#category/social" aria-label="Réseaux sociaux 15 messages non lus">Réseaux sociaux</a><span class="bsU">15</span></div><div class="aim"><a href="#label/Newsletters">Newsletters</a><span class="bsU">2</span></div></aside>
 <div class="bkK"><div class="nH"><div id="view" role="main"></div></div></div>
 <script>
   window.state = { theme:'theme-pk', enabled:{}, pkLabelTabs:['Newsletters'], pkCategoryLabels:{promotions:'Recherche d’emploi'} };
@@ -51,7 +51,14 @@
     view.replaceChildren();
     const toolbar=document.createElement('div');toolbar.className='G-atb';toolbar.textContent='☐     Actualiser     ···';view.append(toolbar);
     const route=decodeURIComponent(location.hash||'#inbox');
-    if(route==='#inbox'||route.startsWith('#category/')) {
+    const inboxThread=route.startsWith('#inbox/');
+    if(inboxThread) {
+      // Gmail keeps a hidden cached inbox and resets its native tab to Primary
+      // while the thread is open.
+      nativeCategory='primary';
+      const cached=document.createElement('div');cached.style.display='none';cached.className='cached-inbox';cached.append(nativeStrip());view.append(cached);
+      const reading=document.createElement('div');reading.className='hP';reading.textContent='Conversation ouverte — données fictives';view.append(reading);
+    } else if(route==='#inbox'||route.startsWith('#category/')) {
       const native=nativeStrip();view.append(native);
       const id=route.startsWith('#category/')?route.split('/')[1]:nativeCategory;
       native.querySelectorAll('[role=tab]').forEach(tab=>tab.setAttribute('aria-selected',String(tab.dataset.pkCategory===id)));
@@ -61,7 +68,7 @@
     const title = route.includes('category:purchases') ? 'Achats' : route.startsWith('#label/') ? route.slice(7) : route.startsWith('#search/') ? 'Recherche' : 'Boîte de réception';
     if(window.emptyView) {
       const empty=document.createElement('div');empty.className='TC';empty.textContent='Aucun message ne correspond à votre recherche';view.append(empty);
-    } else for(const subject of [title, 'Atelier — votre reçu de commande', 'Librairie — votre colis est en route']) {
+    } else if(!inboxThread) for(const subject of [title, 'Atelier — votre reçu de commande', 'Librairie — votre colis est en route']) {
       const row=document.createElement('div');row.className='mail zA';row.dataset.category=nativeCategory;row.textContent=subject;view.append(row);
     }
     document.body.dataset.view=route;

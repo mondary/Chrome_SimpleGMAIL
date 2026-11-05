@@ -4,6 +4,20 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.11.2] - 2026-11-05
+
+### Fixed
+- **Onglet actif pendant la lecture** : ouvrir une conversation depuis Promotions, Réseaux sociaux ou une autre catégorie ne renvoie plus l’onglet sur Principale. Gmail réinitialise ses onglets cachés à Principale quand une conversation s’ouvre ; Studio conserve désormais la catégorie d’origine pendant la lecture et au retour à la liste. Un clic explicite sur l’icône Gmail, « Boîte de réception » ou l’onglet Principale réinitialise bien la sélection.
+- **Vérification** : `studio-tabs.test.mjs` couvre l’ouverture d’une conversation depuis Promotions, le retour à la liste et la réinitialisation explicite par « Boîte de réception ».
+
+## [2026.11.1] - 2026-11-02
+
+### Fixed
+- **« Annuler » réellement fonctionnel** : Gmail n’accepte plus le clic sur un clone du toast. La pilule Studio déplace désormais la ligne originale, avec son vrai lien `#link_undo`, dans un second `.vh` sous le même conteneur `.bAp` ; Gmail conserve ainsi son gestionnaire natif. Vérifié sur Gmail réel : brouillon supprimé, toast remplacé, puis clic sur la pilule — le brouillon est rouvert.
+- **Messages identiques** : la disparition du nœud d’origine, et non seulement le changement de texte, déclenche la préservation. Deux suppressions successives affichant « Brouillon supprimé. » restent donc annulables.
+- **Durée** : la pilule ne reste jamais visible au-delà de la fenêtre d’annulation native, même si le réglage demande 12 s.
+- **Vérification** : nouveau banc `tools/tests/studio-toast.test.mjs` — identité du vrai lien, clic après vol, deux messages identiques, fermeture et expiration.
+
 ## [2026.10.107] - 2026-10-30
 
 ### Fixed

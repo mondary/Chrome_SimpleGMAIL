@@ -11,7 +11,7 @@ visuelle aux onglets `mail.google.com`, sans backend ni compte supplémentaire.
 | Thème | Contenu |
 | --- | --- |
 | *Natif* | Gmail tel quel, avec les scripts cochables du panneau. |
-| *Studio* | 36 tweaks cochables, dont « Boîte à zéro », « Annuler préservé », le renommage des catégories, la bascule à triple logo Mail / Google Agenda / Drive complet et les accents Studio sur Agenda et Drive — bouton apps Google conservé. |
+| *Studio* | 36 tweaks cochables, dont « Boîte à zéro », « Annuler préservé » (le vrai bouton Gmail conservé dans une pilule), le renommage des catégories, la bascule à triple logo Mail / Google Agenda / Drive complet et les accents Studio sur Agenda et Drive — bouton apps Google conservé. |
 | *Simplify* | Fonds photo, boîte vide et volet de lecture (`themes/simplify/`). |
 | *Classique* | Transposition V1 : salutation, avatars, groupes de dates (`themes/simplemail-classic/`). |
 | *Focus* | Liste mono de 900 px, catégories masquables et alignables, compteur total Gmail et raccourcis (`themes/focus-os/`). |
@@ -80,13 +80,30 @@ dernier chiffre vérifié reste affiché avec la mention « actualisation en att
 dans l'infobulle ; `…` apparaît uniquement si aucun total exact n'a encore été obtenu.
 Les libellés configurés conservent leur badge de navigation Gmail. Voir [confidentialité](PRIVACY.md).
 L'onglet actif est repéré par le soulignement de sa couleur, sans fond noir ; en mode
-icônes, la barre le ramène automatiquement dans la zone visible.
+icônes, la barre le ramène automatiquement dans la zone visible. Ouvrir une
+conversation depuis une catégorie conserve cet onglet pendant la lecture et au retour
+à la liste, même si Gmail réinitialise ses propres onglets cachés à Principale.
+Cliquer l'icône Gmail, « Boîte de réception » ou l'onglet Principale réinitialise
+explicitement la sélection.
 Les catégories sont mémorisées dans la session par compte/langue : visiter la
 boîte de réception une première fois pour découvrir les catégories activées.
 La barre reste présente au changement de vue. Les noms renommés sont repris.
 Quand le texte ne tient plus, tous les boutons passent à l'icône seule : 20 px
 + 4 px de padding de chaque côté. Les infobulles gardent le nom complet.
 Le clavier utilise les flèches, Début/Fin puis Entrée/Espace pour activer.
+
+### Toasts « Annuler »
+
+Le tweak **Toast · Annuler préservé** ne clone plus le toast. Un clic sur un clone
+n'est plus reconnu par Gmail. Quand un nouveau toast remplace une action annulable,
+la pilule Studio déplace la **ligne originale** — donc le vrai nœud `#link_undo` —
+dans un second `.vh` sous le même conteneur `.bAp`. Le gestionnaire natif reste actif
+et le clic annule réellement la suppression, l'archivage ou le déplacement.
+La détection repose aussi sur la disparition du nœud, utile lorsque deux actions
+affichent le même texte (« Brouillon supprimé. »). La croix de la pilule ferme
+seulement le rappel. La durée affichée ne dépasse jamais la fenêtre d'annulation
+native, même si le réglage est plus long. Vérifié sur Gmail réel avec des brouillons
+jetables ; aucun courrier personnel n'est modifié.
 
 ### Génération des fichiers
 
@@ -113,8 +130,9 @@ Les fichiers `data/*.js` portent l'en-tête « Généré par build.sh » : ne pa
 ## Vérifications
 
 - `node tools/tests/studio-tabs.test.mjs` : tests de navigation, géométrie,
-  responsive, clavier, glisser-déposer natif et état vide de recherche dans un Chrome
-  headless à profil jetable, DOM Gmail fictif.
+  responsive, clavier, glisser-déposer natif, ouverture d’un mail sans perdre la
+  catégorie d’origine et état vide de recherche dans un Chrome headless à profil
+  jetable, DOM Gmail fictif.
   `CHROME_BIN` permet de préciser le binaire ; `CAPTURE_TABS=1` régénère les deux
   captures d'onglets et `CAPTURE_EMPTY=1` l'état vide de recherche. Le test ne prouve
   pas la compatibilité avec le DOM Gmail actuel.
@@ -123,6 +141,10 @@ Les fichiers `data/*.js` portent l'en-tête « Généré par build.sh » : ne pa
 - `node --test tools/tests/studio-counts.test.mjs` : décomptes exacts, estimations
   résolues par pagination, démarrage depuis le cache, sessions XHR/fetch, synchronisation
   pendant le décompte, isolation de compte et absence de requêtes quand le module est inactif.
+- `node tools/tests/studio-toast.test.mjs` : identité du vrai lien Gmail, clic après
+  remplacement du toast, deux messages identiques, fermeture et expiration de la pilule.
+- QA Gmail du 2 novembre : brouillon jetable supprimé, toast remplacé, puis clic
+  sur « Annuler » de la pilule — brouillon rouvert. Aucun courrier personnel touché.
 - QA Gmail du 30 octobre : totaux Principale et Réseaux vérifiés ; drag Promotions
   vers Principale reconnu comme « Déplacer 1 conversation », annulé avant dépôt.
   Aucun message personnel reclassé pour ce test ; les dépôts effectifs sont testés
