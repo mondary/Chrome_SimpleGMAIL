@@ -1,5 +1,6 @@
 // MAIN world, document_start. Reuse Gmail's current session for READ-ONLY
-// inbox/unread searches. Never expose request headers, message data or tokens.
+// inbox searches: unread totals (`in:inbox category:<id> is:unread`) and, when
+// that total is 0, the inbox total that certifies an inbox-zero category.
 // /i/bv and [11] = [2, exactTotal] were checked against Gmail on 2026-10-30.
 // This is an internal protocol: if it changes, report unknown, never "0".
 (() => {
@@ -14,8 +15,8 @@
   const nativeFetch = window.fetch.bind(window);
   let session = null, wanted = [], timer = 0, running = false, lastRun = 0, revision = 0, dirty = false;
   let bootstrapTimer = 0, bootstrapAttempts = 0, bootstrapClicks = 0;
-  const emit = counts => document.dispatchEvent(new CustomEvent('pk-studio-unread-result', {
-    detail: JSON.stringify({ account, counts, at: Date.now() }),
+  const emit = (counts, totals) => document.dispatchEvent(new CustomEvent('pk-studio-unread-result', {
+    detail: JSON.stringify({ account, counts, totals, at: Date.now() }),
   }));
 
   function schedule(delay = 0) {
@@ -87,6 +88,28 @@
     }
     return null;
   }
+  // Inbox-zero check: only asked when the unread total is already 0. An
+  // estimate above zero proves the box still holds mail; only a final [2, 0]
+  // certifies an empty category. Same read-only protocol as exactCount.
+  async function emptyCount(current, id, generation) {
+    const query = `in:inbox category:${id}`;
+    let page = 0;
+    for (let attempt = 0; attempt < 9 && page <= 16384; attempt++) {
+      if (generation !== revision) return null;
+      const response = await nativeFetch(current.url, {
+        method: 'POST', credentials: 'same-origin', headers: current.headers,
+        body: JSON.stringify([[79, 100, null, query, null, null, 1, 2000, null, page]]), signal: AbortSignal.timeout(15000),
+      });
+      if (!response.ok) throw new Error('Gmail search unavailable');
+      const data = await response.json();
+      const metadata = data?.[11], count = metadata?.[1];
+      if (Array.isArray(metadata) && metadata[0] === 2 && Number.isSafeInteger(count) && count >= 0) return count;
+      if (Array.isArray(metadata) && metadata[0] === 1 && count > 0) return count;
+      if (!Array.isArray(metadata) || metadata[0] !== 1) return null;
+      page = page ? page * 4 : 1;
+    }
+    return null;
+  }
   async function refresh() {
     timer = 0;
     if (running || !wanted.length || !session || document.visibilityState === 'hidden') return;
@@ -101,9 +124,17 @@
         try {
           count = await exactCount(current, id, generation);
         } catch {}
+        // Ask for the inbox total only once the unread total is 0: any unread
+        // mail already proves the box is not empty.
+        let total = null;
+        if (count === 0) {
+          try {
+            total = await emptyCount(current, id, generation);
+          } catch {}
+        }
         // Publish immediately: a slower Forums query must not hold Primary or
         // Social pending. Routine Gmail syncs must not cancel the entire batch.
-        if (generation === revision) emit({ [id]: count });
+        if (generation === revision) emit({ [id]: count }, { [id]: total });
       }
     } finally {
       running = false;

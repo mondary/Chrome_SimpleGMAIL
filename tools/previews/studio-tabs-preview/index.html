@@ -20,7 +20,7 @@
   // Only the transport is simulated. Production never treats .aDG's "new"
   // count or the archive-inclusive sidebar total as an inbox unread total.
   window.inboxUnread={primary:9,promotions:25,social:15,updates:1,forums:3,purchases:7};
-  window.publishCounts = (values=inboxUnread,account='preview') => document.dispatchEvent(new CustomEvent('pk-studio-unread-result',{detail:JSON.stringify({account,counts:values,at:Date.now()})}));
+  window.publishCounts = (values=inboxUnread, account='preview', totals=null) => document.dispatchEvent(new CustomEvent('pk-studio-unread-result',{detail:JSON.stringify({account,counts:values,totals,at:Date.now()})}));
   document.addEventListener('pk-studio-unread-request',event=>{if(JSON.parse(event.detail).active)queueMicrotask(()=>publishCounts())});
   window.nativeCategory='primary';
   let movingRow=null;

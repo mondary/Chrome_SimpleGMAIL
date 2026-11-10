@@ -78,6 +78,10 @@ le total exact. Il mémorise la page utile, pas les conversations. Les compteurs
 publiés individuellement, sans attendre les autres catégories. Lors d'un échec, le
 dernier chiffre vérifié reste affiché avec la mention « actualisation en attente »
 dans l'infobulle ; `…` apparaît uniquement si aucun total exact n'a encore été obtenu.
+La coche verte apparaît uniquement en inbox zéro : 0 non-lu **et** boîte réellement vide
+(le total `in:inbox category:<id>` vaut 0, interrogé en lecture seule seulement quand
+les non-lus tombent à 0). Une boîte à 0 non-lu mais qui garde du courrier lu n'affiche
+pas de pastille ; l'infobulle dit « boîte à zéro » ou « 0 non lu ».
 Les libellés configurés conservent leur badge de navigation Gmail. Voir [confidentialité](PRIVACY.md).
 L'onglet actif est repéré par le soulignement de sa couleur, sans fond noir ; en mode
 icônes, la barre le ramène automatiquement dans la zone visible. Ouvrir une
@@ -87,10 +91,23 @@ Cliquer l'icône Gmail, « Boîte de réception » ou l'onglet Principale réini
 explicitement la sélection.
 Les catégories sont mémorisées dans la session par compte/langue : visiter la
 boîte de réception une première fois pour découvrir les catégories activées.
-La barre reste présente au changement de vue. Les noms renommés sont repris.
+La barre reste présente au changement de vue. Un onglet renommé garde le vrai nom
+Gmail de sa catégorie entre parenthèses — « Job (Promotions) » — dans la barre,
+les infobulles, le lecteur d'écran et l'état vide « Boîte à zéro ».
 Quand le texte ne tient plus, tous les boutons passent à l'icône seule : 20 px
 + 4 px de padding de chaque côté. Les infobulles gardent le nom complet.
 Le clavier utilise les flèches, Début/Fin puis Entrée/Espace pour activer.
+
+### Menu latéral masqué
+
+Dans les réglages de l’extension, activer **NoLeftMenu · dossiers au survol**.
+Le menu natif Gmail reste masqué ; survoler la zone sous le burger révèle six icônes
+grises uniquement : Boîte de réception, Messages suivis, Messages envoyés, Brouillons,
+Spam et Corbeille. Aucun panneau, fond, bordure ou ombre ; apparition et disparition
+par fondu de 160 ms, désactivé en mouvement réduit. Les liens ouvrent les dossiers
+Gmail du compte courant même si leurs entrées natives sont absentes du menu caché.
+Aucune catégorie ni aucun libellé ajouté. Accessible au clavier, noms FR/EN ; le
+focus clavier révèle les liens, sans qu’un clic souris bloque la disparition.
 
 ### Toasts « Annuler »
 
@@ -129,6 +146,9 @@ Les fichiers `data/*.js` portent l'en-tête « Généré par build.sh » : ne pa
 
 ## Vérifications
 
+- `node --test tools/tests/no-left-menu.test.mjs` : contenu exact du rail, routes
+  Gmail sans menu natif, conservation du compte, libellés FR/EN, alignement sous le
+  burger (chargement tardif et redimensionnement), styles du fondu et focus clavier.
 - `node tools/tests/studio-tabs.test.mjs` : tests de navigation, géométrie,
   responsive, clavier, glisser-déposer natif, ouverture d’un mail sans perdre la
   catégorie d’origine et état vide de recherche dans un Chrome headless à profil

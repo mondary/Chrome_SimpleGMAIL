@@ -82,6 +82,23 @@ try {
   await wait(`document.querySelector('[data-key=social]').title.includes('actualisation en attente')`);
   assert.equal(await evaluate(`document.querySelector('[data-key=social] .pk-studio-tab-count').textContent`), '16');
   await evaluate(`publishCounts()`);
+  // A renamed tab keeps Gmail's real category name in parentheses.
+  assert.equal(await evaluate(`document.querySelector('[data-key=promotions] .pk-studio-tab-native').textContent`), ' (Promotions)');
+  assert.equal(await evaluate(`!document.querySelector('[data-key=primary] .pk-studio-tab-native')`), true);
+  assert.equal(await evaluate(`document.querySelector('[data-key=promotions]').getAttribute('aria-label')`), 'Recherche d’emploi (Promotions), 25 non lus');
+  // The green check means inbox zero: 0 unread AND an empty box.
+  await evaluate(`publishCounts({forums:0},'preview',{forums:0})`);
+  await wait(`document.querySelector('[data-key=forums] .pk-studio-tab-count').textContent==='✓'`);
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key=forums] .pk-studio-tab-count')).backgroundColor`), 'rgb(24, 128, 56)');
+  assert.equal(await evaluate(`document.querySelector('[data-key=forums]').title`), 'Forums · boîte à zéro');
+  // 0 unread but read mail still in the box: no badge at all, no check.
+  await evaluate(`publishCounts({updates:0},'preview',{updates:4})`);
+  await wait(`document.querySelector('[data-key=updates]').title==='Notifications · 0 non lu'`);
+  assert.equal(await evaluate(`document.querySelector('[data-key=updates] .pk-studio-tab-count').hidden`), true);
+  assert.equal(await evaluate(`!document.querySelector('[data-key=updates] .pk-studio-tab-count[data-clean]')`), true);
+  await evaluate(`publishCounts()`);
+  await wait(`document.querySelector('[data-key=forums] .pk-studio-tab-count').textContent==='3'`);
+  assert.equal(await evaluate(`!document.querySelector('[data-key=forums] .pk-studio-tab-count[data-clean]')`), true);
   // Gmail's native tabs remain the real drop targets beneath Studio's custom strip.
   await evaluate(`document.querySelector('#view .zA').dispatchEvent(new DragEvent('dragstart',{bubbles:true,cancelable:true,dataTransfer:new DataTransfer()}))`);
   await wait(`document.querySelector('#view .aKh[data-pk-studio-drop-active]')`);
@@ -200,6 +217,15 @@ try {
   }
   await evaluate(`document.querySelector('.pk-studio-zero-action').click()`);
   await wait(`document.body.dataset.view==='#inbox'`);
+  // The zero view keeps Gmail's real name beside a renamed category.
+  await evaluate(`updateSettings({pkCategoryLabels:{promotions:'Recherche d’emploi',purchases:'Commandes'}})`);
+  await wait(`document.querySelector('[data-key=purchases] .pk-studio-tab-native').textContent===' (Achats)'`);
+  await evaluate(`window.emptyView=true;location.hash='#search/in:inbox category:purchases'`);
+  await wait(`document.body.dataset.view==='#search/in:inbox category:purchases' && document.querySelector('.TC.pk-studio-search-zero')`);
+  assert.equal(await evaluate(`document.querySelector('.pk-studio-search-zero .pk-studio-zero-detail').textContent`), 'Aucun message dans Commandes (Achats). Profitez de cette pause.');
+  await evaluate(`document.querySelector('.pk-studio-zero-action').click()`);
+  await wait(`document.body.dataset.view==='#inbox'`);
+  await evaluate(`updateSettings({pkCategoryLabels:{promotions:'Recherche d’emploi'}})`);
   await evaluate(`window.emptyView=true;location.hash='#search/from:unknown'`);
   await wait(`document.body.dataset.view==='#search/from:unknown' && !document.querySelector('.pk-studio-search-zero')`);
   await evaluate(`window.emptyView=false;location.hash='#inbox'`);

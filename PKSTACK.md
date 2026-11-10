@@ -9,6 +9,7 @@
 | `pk-commits` | Synchroniser le CalVer, le changelog, les READMEs et la livraison. | `CHANGELOG.md`, `README.md`, `README_en.md`, commit et push. |
 | `fixing-accessibility` | Rendre la navigation Mail / Agenda accessible au clavier. | `themes/studio/modules.js`, `modules.css` : contrôles natifs, état courant et focus visible. |
 | `app-presence-sync` | Documenter la navigation vers Google Agenda complet et ses permissions. | README FR/EN, guide de l'extension et note locale de présentation. |
+| `fixing-motion-performance` | Remplacer le glissement du rail de dossiers par un fondu d’opacité de 160 ms. | `sources/gmail.css`, `tweaks/no-left-menu.css` ; aucun panneau, animation de position ou polling. |
 
 Onglets Studio : `fixing-accessibility` pour la navigation clavier et les noms des
 icônes ; `ego-browser` / `ego-browser-user-policy` pour la tentative de QA Gmail

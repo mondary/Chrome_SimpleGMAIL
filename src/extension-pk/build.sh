@@ -22,7 +22,7 @@ os.makedirs("tweaks", exist_ok=True)
 os.makedirs("scripts", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 
-BENCH_VERSION = "2026.11.2"
+BENCH_VERSION = "2026.11.6"
 
 # ---- 1. Découpage gmail.css en tweaks
 text = open(gmail_css, encoding="utf-8").read()
@@ -40,7 +40,7 @@ CSS_DEFS = {
     5: ("margin", "Margin · colonne centrée (marges en %)", "ok"),
     6: ("unread-color", "UnreadColor · non-lus gris", "ok"),
     7: ("top-right", "TopRight v3 · aide/notifications masqués (bouton apps conservé)", "ok"),
-    8: ("no-left-menu", "NoLeftMenu · menu latéral masqué", "ok"),
+    8: ("no-left-menu", "NoLeftMenu · dossiers au survol (6 raccourcis)", "ok"),
     9: ("white-style", "WhiteStyle · padding des lignes", "ok"),
     10: ("scrollbar-grey", "ScrollBarGrey · scrollbar fine grise", "ok"),
     11: ("theme-pkweb", "Theme · PK Web Memory (à alléger — trop de bordures)", "ko"),
@@ -62,9 +62,10 @@ for num, (fid, label, status) in CSS_DEFS.items():
     fname = f"tweaks/{fid}.css"
     with open(fname, "w", encoding="utf-8") as f:
         f.write(f"/* {num}) {titre} — généré depuis gmail.css */\n{contenu.strip()}\n")
-    css_items.append({"id": f"css-{fid}", "group": "css", "label": label,
-                      "file": fname, "type": "css", "version": BENCH_VERSION,
-                      "status": status})
+    if fid != "no-left-menu":
+        css_items.append({"id": f"css-{fid}", "group": "css", "label": label,
+                          "file": fname, "type": "css", "version": BENCH_VERSION,
+                          "status": status})
     if fid == "margin":
         css_items[-1]["setting"] = "margin-pct"
     print(f"  ✓ {fname}")
@@ -103,6 +104,14 @@ for src, fid, label, ver, status in JS_DEFS:
                      "world": "ISOLATED" if needs_gm else "MAIN",
                      "runAt": run_at, "status": status})
     print(f"  ✓ {dst}" + (" (+shim GM)" if needs_gm else ""))
+
+# NoLeftMenu keeps its existing preference key, but now pairs the native-menu
+# hiding CSS with an accessible six-folder hover rail.
+js_items.append({"id": "css-no-left-menu", "group": "js",
+                 "label": CSS_DEFS[8][1], "file": "themes/studio/no-left-menu.js",
+                 "css": ["tweaks/no-left-menu.css"], "type": "js",
+                 "world": "ISOLATED", "runAt": "document_end",
+                 "version": BENCH_VERSION, "status": "ok"})
 
 # ---- 3. Ordre d'affichage : indispensables d'abord, à retester ensuite
 ALL = css_items + js_items

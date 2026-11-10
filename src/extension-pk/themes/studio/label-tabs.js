@@ -47,7 +47,7 @@
   const exactCounts = new Map();
   const pendingCounts = new Set();
   let countRequestSignature = '';
-  let labelCounts = new Map();
+  const emptyFlags = new Map();
   let routes = new Map();
   let host = null;
   let signature = '';
@@ -84,6 +84,8 @@
     #pk-studio-tabs svg{display:block;width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;color:var(--pk-tab-color,#52525b)}
     #pk-studio-tabs .pk-studio-tab-text{display:block;flex:none}
     #pk-studio-tabs .pk-studio-tab-count{position:absolute;top:-8px;right:-3px;display:grid;place-items:center;min-width:15px;height:15px;padding:0 4px;border-radius:999px;background:var(--pk-tab-color,#52525b);color:var(--pk-tab-ink,#fff);font-size:10px;font-weight:700;line-height:1;box-shadow:0 0 0 1px #fff;font-variant-numeric:tabular-nums}
+    #pk-studio-tabs .pk-studio-tab-native{font-size:11px;font-weight:400;opacity:.55}
+    #pk-studio-tabs .pk-studio-tab-count[data-clean]{background:#188038;color:#fff;font-size:9px}
     #pk-studio-tabs .pk-studio-tab-count[hidden]{display:none}
     #pk-studio-tabs[data-compact] .pk-studio-tab{flex:0 0 28px;width:28px;min-width:28px;padding:0 4px;gap:0}
     #pk-studio-tabs[data-compact] .pk-studio-tab-text{display:none}
@@ -216,6 +218,11 @@
         if (Number.isSafeInteger(value) && value >= 0) { exactCounts.set(id, value); pendingCounts.delete(id); }
         else pendingCounts.add(id); // Keep a previously verified total during a temporary failure.
       }
+      for (const [id, value] of Object.entries(result.totals || {})) {
+        if (!NAMES[id]) continue;
+        // A null total (not queried or a transient failure) keeps the last known state.
+        if (Number.isSafeInteger(value) && value >= 0) emptyFlags.set(id, value === 0);
+      }
       schedule();
     } catch {}
   });
@@ -236,11 +243,17 @@
   }
 
   function model() {
-    const items = categories.map(c => ({
-      key: c.id, name: renames[c.id] || c.name, route: categoryRoute(c.id),
-      icon: c.id, color: COLORS[c.id] || COLORS.label, count: counts.get(c.id) ?? null,
-      kind: 'unread', pending: pendingCounts.has(c.id),
-    }));
+    const items = categories.map(c => {
+      const rename = String(renames[c.id] || '').trim();
+      // A renamed tab keeps Gmail's real category name visible in parentheses.
+      const native = rename && normal(rename) !== normal(c.name) ? c.name : '';
+      return {
+        key: c.id, name: rename || c.name, native, route: categoryRoute(c.id),
+        icon: c.id, color: COLORS[c.id] || COLORS.label, count: counts.get(c.id) ?? null,
+        kind: 'unread', pending: pendingCounts.has(c.id),
+        empty: emptyFlags.get(c.id) === true,
+      };
+    });
     // Purchases is now a category: a stored label with the same name would only
     // duplicate its tab (even when the category has been renamed).
     const shown = new Set(items.map(item => normal(item.name)));
@@ -363,22 +376,38 @@
           button.append(icon, text);
           buttons.set(item.key, button);
         }
-        const label = item.count === null ? '…' : item.count ? (item.count > 999 ? '999+' : String(item.count)) : '';
+        const label = item.count === null ? '…' : item.count ? (item.count > 999 ? '999+' : String(item.count)) : (item.empty ? '✓' : '');
         const text = button.querySelector('.pk-studio-tab-text');
         const count = button.querySelector('.pk-studio-tab-count');
-        if (text.textContent !== item.name) text.textContent = item.name;
+        const full = item.native ? `${item.name} (${item.native})` : item.name;
+        if (text.textContent !== full) {
+          text.textContent = item.name;
+          if (item.native) {
+            const native = document.createElement('span');
+            native.className = 'pk-studio-tab-native';
+            native.textContent = ` (${item.native})`;
+            text.append(native);
+          }
+        }
         if (count.textContent !== label) count.textContent = label;
         if (count.hidden !== !label) count.hidden = !label;
+        // The green check means inbox zero: no message left at all, read or not.
+        const clean = item.count === 0 && item.empty;
+        if (clean ? !count.hasAttribute('data-clean') : count.hasAttribute('data-clean')) {
+          count.toggleAttribute('data-clean', clean);
+        }
         if (button.style.getPropertyValue('--pk-tab-color') !== item.color) button.style.setProperty('--pk-tab-color', item.color);
         const ink = inkOf(item.color);
         if (button.style.getPropertyValue('--pk-tab-ink') !== ink) button.style.setProperty('--pk-tab-ink', ink);
         const kind = fr ? (item.count > 1 ? 'non lus' : 'non lu') : 'unread';
-        const description = item.count === null ? (fr ? 'décompte en attente' : 'count pending')
-          : `${item.count} ${kind}${item.pending ? (fr ? ' · actualisation en attente' : ' · refresh pending') : ''}`;
-        const aria = `${item.name}, ${description}`;
+        const state = item.count === null ? (fr ? 'décompte en attente' : 'count pending')
+          : item.count === 0 && item.empty ? (fr ? 'boîte à zéro' : 'inbox zero')
+          : `${item.count} ${kind}`;
+        const pending = item.pending && item.count !== null ? (fr ? ' · actualisation en attente' : ' · refresh pending') : '';
+        const aria = `${full}, ${state + pending}`;
         button.dataset.name = item.name;
         attr(button, 'aria-label', aria);
-        attr(button, 'title', `${item.name} · ${description}`);
+        attr(button, 'title', `${full} · ${state + pending}`);
         button.dataset.route = item.route;
         if (strip.children[index] !== button) strip.insertBefore(button, strip.children[index] || null);
       });

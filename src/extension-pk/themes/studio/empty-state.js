@@ -31,6 +31,11 @@
     return 'primary';
   }
   const normalize = text => (text || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  // A renamed category keeps Gmail's real name visible in parentheses.
+  const renamedDisplay = (rename, native) => {
+    const wanted = String(rename || '').trim();
+    return wanted && native && normalize(wanted) !== normalize(native) ? `${wanted} (${native})` : wanted;
+  };
   function categorySearch() {
     const match = (location.hash || '').match(/^#search\/(.+)$/);
     if (!match) return '';
@@ -113,7 +118,7 @@
         .replace(/^(Votre onglet |Your )/i, '').replace(/( est vide| tab is empty)$/i, '').replace(/["“”]/g, '');
       const configured = window.__pkStudioCategoryNames || {};
       const kind = Object.keys(configured).find(id => normalize(configured[id]) === normalize(name)) || category(name);
-      const display = window.__pkStudioCategoryNames?.[kind] || name;
+      const display = renamedDisplay(window.__pkStudioCategoryNames?.[kind], names[lang][kind] || name) || name;
       ensureArt(notice, kind, display, text);
       notice.classList.add('pk-studio-zero');
     }
@@ -133,7 +138,7 @@
     }
     if (candidate) {
       const kind = searchCategory;
-      const display = window.__pkStudioCategoryNames?.[kind] || names[lang][kind] || kind;
+      const display = renamedDisplay(window.__pkStudioCategoryNames?.[kind], names[lang][kind] || kind) || names[lang][kind] || kind;
       const art = ensureArt(candidate, kind, display, text, true);
       art.setAttribute('aria-live', 'polite');
       candidate.classList.add('pk-studio-search-zero');

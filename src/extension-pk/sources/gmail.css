@@ -88,10 +88,78 @@ div.aBS.J-J5-Ji {
     display: none;
 }
 
-/* 8) Gmail No left menu */
+/* 8) Gmail No left menu — icônes discrètes sous le burger */
 .aeN,
 .ain .CJ {
     display: none !important;
+}
+
+#pk-no-left-menu-rail {
+    position: fixed !important;
+    z-index: 100 !important;
+    top: var(--pk-folder-top, 56px) !important;
+    left: var(--pk-folder-left, 12px) !important;
+    display: flex !important;
+    width: 40px !important;
+    max-height: calc(100dvh - var(--pk-folder-top, 56px)) !important;
+    box-sizing: border-box !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0 !important;
+    overflow: auto !important;
+    scrollbar-width: none !important;
+    padding: 4px 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    opacity: 0 !important;
+    transition: opacity 160ms ease !important;
+}
+
+#pk-no-left-menu-rail:hover,
+#pk-no-left-menu-rail:has(a:focus-visible) {
+    opacity: 1 !important;
+}
+
+#pk-no-left-menu-rail a {
+    display: grid !important;
+    flex: 0 0 40px !important;
+    width: 40px !important;
+    height: 40px !important;
+    place-items: center !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 6px !important;
+    background: transparent !important;
+    color: #80868b !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+}
+
+#pk-no-left-menu-rail a:hover {
+    color: #3c4043 !important;
+}
+
+#pk-no-left-menu-rail a:focus-visible {
+    color: #3c4043 !important;
+    outline: 2px solid currentColor !important;
+    outline-offset: -4px !important;
+}
+
+#pk-no-left-menu-rail svg {
+    display: block !important;
+    width: 20px !important;
+    height: 20px !important;
+    fill: none !important;
+    stroke: currentColor !important;
+    stroke-width: 1.8 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #pk-no-left-menu-rail { transition: none !important; }
 }
 
 /* 9) Gmail Styling (Padding) */

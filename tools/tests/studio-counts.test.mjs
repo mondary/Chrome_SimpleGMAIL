@@ -59,6 +59,7 @@ test('an estimate, a missing total and a network error are never converted to ze
   const h = harness({ primary: [1, 201], promotions: null, social: [2, 0] });
   h.configure(true); h.session(); await h.flush();
   assert.deepEqual(h.counts(), { primary: null, promotions: null, social: 0 });
+  assert.equal(h.results.some(r => r.totals && r.totals.social === 0), true, 'an exact inbox total of 0 is published for the inbox-zero check');
   const failure = harness({ social: new Error('offline') }); failure.configure(true, ['social']); failure.session(); await failure.flush();
   assert.equal(failure.results[0].counts.social, null);
 });

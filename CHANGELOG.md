@@ -4,6 +4,33 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.11.6] - 2026-11-10
+
+### Fixed
+- **Icônes discrètes sous le burger** : suppression du panneau blanc, de la bordure, de l’ombre et du rail pleine hauteur. Les six icônes grises s’alignent sous le vrai bouton de menu ; elles apparaissent et disparaissent par fondu de 160 ms, sans glissement. Un clic souris ne bloque plus leur disparition ; le focus clavier les garde accessibles. Mouvement réduit respecté.
+- **Navigation des dossiers** : vrais liens Gmail `#inbox`, `#starred`, `#sent`, `#drafts`, `#spam`, `#trash`, dans le compte courant. Plus de clic délégué à un élément caché ou absent du menu natif, notamment Spam et Corbeille sous « Plus ».
+- **Vérification** : tests sans navigateur personnel pour les liens et comptes, l’alignement au burger (y compris chargé tardivement), le fondu sans panneau et l’enregistrement du module. Validation visuelle sur Gmail réel non effectuée.
+
+## [2026.11.5] - 2026-11-10
+
+### Added
+- **Raccourcis de dossiers au survol** : le réglage NoLeftMenu garde le menu Gmail masqué, mais un passage sur le bord gauche révèle six icônes seulement — Boîte de réception, Messages suivis, Messages envoyés, Brouillons, Spam et Corbeille. Les catégories et libellés Gmail restent cachés ; chaque icône active le lien natif correspondant.
+- **Accessibilité** : icônes nommées pour les lecteurs d’écran, navigation au clavier et ouverture au focus ; libellés adaptés au français et à l’anglais.
+- **Vérification** : `no-left-menu.test.mjs` couvre les six destinations, l’absence des autres catégories et les libellés FR/EN. Le rendu sur Gmail réel reste à vérifier.
+
+## [2026.11.4] - 2026-11-09
+
+### Changed
+- **Coche verte = inbox zéro, pas seulement « tout lu »** : la coche apparaît désormais quand la catégorie est réellement vide — 0 non-lu **et** plus aucun message, lu ou non — et l'infobulle dit « boîte à zéro ». Le transport interroge le total `in:inbox category:<id>` en lecture seule, uniquement quand les non-lus tombent à 0 ; une estimation supérieure à zéro prouve que la boîte n'est pas vide. Une boîte à 0 non-lu qui garde du courrier lu n'affiche pas de pastille, `…`/« actualisation en attente » restent réservés aux totaux indisponibles.
+- **Vérification** : `studio-tabs.test.mjs` couvre la coche `✓` verte seulement pour `{non-lus: 0, total: 0}`, son absence à 0 non-lu avec courrier lu restant et le retour au chiffre ; `studio-counts.test.mjs` vérifie la publication du total exact à 0.
+
+## [2026.11.3] - 2026-11-09
+
+### Added
+- **Vrai nom de boîte entre parenthèses** : un onglet de catégorie renommé (ex. Promotions → Job) affiche désormais le nom Gmail réel — « Job (Promotions) » — dans la barre Studio, les infobulles, les libellés de lecteur d'écran et l'état vide « Boîte à zéro » (« Aucun message dans Job (Promotions). »). Plus besoin d'ouvrir « Configurer la boîte de réception » pour retrouver la correspondance.
+- **Coche verte à zéro non-lu** : quand le total exact de non-lus d'une catégorie tombe à 0, sa pastille devient une coche verte et l'infobulle dit « propre », au lieu de disparaître. (Sémantique remplacée par l'inbox zéro en 2026.11.4.)
+- **Vérification** : `studio-tabs.test.mjs` couvre le suffixe entre parenthèses (onglet, aria, infobulle) et le détail de l'état vide renommé.
+
 ## [2026.11.2] - 2026-11-05
 
 ### Fixed
