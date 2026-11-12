@@ -11,6 +11,12 @@
 | `app-presence-sync` | Documenter la navigation vers Google Agenda complet et ses permissions. | README FR/EN, guide de l'extension et note locale de présentation. |
 | `fixing-motion-performance` | Remplacer le glissement du rail de dossiers par un fondu d’opacité de 160 ms. | `sources/gmail.css`, `tweaks/no-left-menu.css` ; aucun panneau, animation de position ou polling. |
 
+Audit performances Gmail 2026.11.7 : boucles d’observation des états vides et du
+surligneur corrigées, scans Studio regroupés, décomptes suspendus en arrière-plan.
+`tools/tests/studio-performance.test.mjs` mesure le DOM/layout au repos et la
+stabilité des nœuds sur données fictives, sans session personnelle ni captures.
+Méthode, résultats et limites mémoire/GPU : `docs/PERFORMANCE_GMAIL.md`.
+
 Onglets Studio : `fixing-accessibility` pour la navigation clavier et les noms des
 icônes ; `ego-browser` / `ego-browser-user-policy` pour la tentative de QA Gmail
 (reconnexion requise) ; `premium-promo-media` et `app-presence-sync` pour les captures

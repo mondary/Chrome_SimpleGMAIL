@@ -15,6 +15,8 @@
   const nativeFetch = window.fetch.bind(window);
   let session = null, wanted = [], timer = 0, running = false, lastRun = 0, revision = 0, dirty = false;
   let bootstrapTimer = 0, bootstrapAttempts = 0, bootstrapClicks = 0;
+  let batchController = null;
+  const MIN_REFRESH_MS = 45000;
   const emit = (counts, totals) => document.dispatchEvent(new CustomEvent('pk-studio-unread-result', {
     detail: JSON.stringify({ account, counts, totals, at: Date.now() }),
   }));
@@ -24,7 +26,7 @@
     if (!session) { bootstrap(); return; }
     if (running) { dirty = true; return; }
     if (timer) return;
-    timer = setTimeout(refresh, Math.max(delay, 10000 - (Date.now() - lastRun)));
+    timer = setTimeout(refresh, Math.max(delay, MIN_REFRESH_MS - (Date.now() - lastRun)));
   }
   // Gmail can serve the initial inbox entirely from cache, without an XHR.
   // Refresh the visible mail LIST once to initialise its own session transport;
@@ -74,7 +76,7 @@
       if (generation !== revision) return null;
       const response = await nativeFetch(current.url, {
         method: 'POST', credentials: 'same-origin', headers: current.headers,
-        body: JSON.stringify([[79, 100, null, query, null, null, 1, 2000, null, page]]), signal: AbortSignal.timeout(15000),
+        body: JSON.stringify([[79, 100, null, query, null, null, 1, 2000, null, page]]), signal: AbortSignal.any([current.signal, AbortSignal.timeout(15000)]),
       });
       if (!response.ok) throw new Error('Gmail search unavailable');
       const data = await response.json();
@@ -98,7 +100,7 @@
       if (generation !== revision) return null;
       const response = await nativeFetch(current.url, {
         method: 'POST', credentials: 'same-origin', headers: current.headers,
-        body: JSON.stringify([[79, 100, null, query, null, null, 1, 2000, null, page]]), signal: AbortSignal.timeout(15000),
+        body: JSON.stringify([[79, 100, null, query, null, null, 1, 2000, null, page]]), signal: AbortSignal.any([current.signal, AbortSignal.timeout(15000)]),
       });
       if (!response.ok) throw new Error('Gmail search unavailable');
       const data = await response.json();
@@ -116,14 +118,16 @@
     running = true;
     dirty = false;
     lastRun = Date.now();
-    const generation = revision, current = session;
+    batchController = new AbortController();
+    const generation = revision, current = { ...session, signal: batchController.signal };
     try {
       for (const id of wanted) {
-        if (generation !== revision) break;
+        if (generation !== revision || current.signal.aborted || document.visibilityState === 'hidden') break;
         let count = null;
         try {
           count = await exactCount(current, id, generation);
         } catch {}
+        if (generation !== revision || current.signal.aborted) break;
         // Ask for the inbox total only once the unread total is 0: any unread
         // mail already proves the box is not empty.
         let total = null;
@@ -138,6 +142,7 @@
       }
     } finally {
       running = false;
+      batchController = null;
       if (dirty || generation !== revision) schedule();
     }
   }
@@ -185,11 +190,28 @@
     try {
       const request = JSON.parse(event.detail);
       const next = request.active && Array.isArray(request.ids) ? [...new Set(request.ids.filter(id => ids.has(id)))] : [];
-      if (JSON.stringify(next) !== JSON.stringify(wanted)) { wanted = next; revision++; }
+      if (JSON.stringify(next) !== JSON.stringify(wanted)) {
+        wanted = next;
+        revision++;
+        batchController?.abort();
+        if (!wanted.length) cancelPending();
+      }
       schedule();
     } catch {}
   });
-  document.addEventListener('visibilitychange', () => schedule());
+  function cancelPending() {
+    clearTimeout(timer);
+    clearTimeout(bootstrapTimer);
+    timer = bootstrapTimer = 0;
+    batchController?.abort();
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      revision++;
+      dirty = false;
+      cancelPending();
+    } else schedule();
+  });
   document.addEventListener('focusout', () => {
     if (!session) { bootstrapAttempts = 0; schedule(); }
   });

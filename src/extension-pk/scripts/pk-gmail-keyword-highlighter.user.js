@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PK Gmail Keyword Highlighter
 // @namespace    https://github.com/mondary
-// @version      0.4.0
+// @version      0.4.1
 // @description  Highlight keywords with colors and strike-through excluded terms, per site.
 // @match        *://*/*
 // @run-at       document-start
@@ -27,6 +27,8 @@ Usage:
 
   let applyTimer = null;
   let isApplying = false;
+  let contentObserver = null;
+  const observerOptions = { childList: true, subtree: true, characterData: true };
   let dragState = null;
 
   function storageKey() {
@@ -192,6 +194,7 @@ Usage:
     if (el.id === overlayId || el.id === toggleId) return true;
     if (el.closest && el.closest(`#${overlayId}, #${toggleId}`)) return true;
     if (el.closest && el.closest(`.${tokenClass}`)) return true;
+    if (el.closest?.('#pk-studio-tabs, #pk-studio-modules, .pk-studio-zero-art')) return true;
     const tag = el.tagName;
     if (!tag) return false;
     if (tag === "SCRIPT" || tag === "STYLE" || tag === "NOSCRIPT") return true;
@@ -370,14 +373,18 @@ Usage:
   }
 
   function applyHighlights() {
-    if (isApplying) return;
-    if (!isDomainEnabled()) {
-      clearHighlights();
-      return;
-    }
+    applyTimer = null;
+    if (isApplying || document.visibilityState === 'hidden') return;
+    // Observer delivery is asynchronous: an isApplying flag alone cannot filter
+    // our own clear/rebuild mutations, delivered AFTER the flag returns to false.
+    contentObserver?.disconnect();
     isApplying = true;
 
     try {
+      if (!isDomainEnabled()) {
+        clearHighlights();
+        return;
+      }
       const config = loadConfig();
       const tokenMap = buildTokenMap(config);
       const excludeRegex = buildRegexFromList(config.exclude);
@@ -404,11 +411,14 @@ Usage:
       }
     } finally {
       isApplying = false;
+      if (document.documentElement) contentObserver?.observe(document.documentElement, observerOptions);
     }
   }
 
   function scheduleApply() {
     if (applyTimer) window.clearTimeout(applyTimer);
+    applyTimer = null;
+    if (document.visibilityState === 'hidden') return;
     applyTimer = window.setTimeout(applyHighlights, APPLY_DEBOUNCE_MS);
   }
 
@@ -1322,18 +1332,19 @@ Usage:
   }
 
   function setupObserver() {
-    const observer = new MutationObserver(() => {
-      if (isApplying) return;
+    contentObserver = new MutationObserver(records => {
+      if (isApplying || document.visibilityState === 'hidden') return;
+      const outsidePanel = records.some(record => {
+        const node = record.target.nodeType === 1 ? record.target : record.target.parentElement;
+        return !node?.closest?.(`#${overlayId}, #${toggleId}, #pk-studio-tabs, #pk-studio-modules, .pk-studio-zero-art`);
+      });
+      if (!outsidePanel) return;
       ensureOverlay();
       scheduleApply();
     });
 
     if (document.documentElement) {
-      observer.observe(document.documentElement, {
-        childList: true,
-        subtree: true,
-        characterData: true,
-      });
+      contentObserver.observe(document.documentElement, observerOptions);
     }
   }
 
@@ -1344,6 +1355,7 @@ Usage:
     scheduleApply();
     window.addEventListener("hashchange", scheduleApply);
     window.addEventListener("popstate", scheduleApply);
+    document.addEventListener("visibilitychange", scheduleApply);
   }
 
   if (document.readyState === "loading") {

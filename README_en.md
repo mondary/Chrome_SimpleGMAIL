@@ -6,7 +6,7 @@
 
 Immersive IMAP mail client — Python FastAPI backend + vanilla HTML/JS. Packaged as native desktop app (macOS · Windows · Linux).
 
-**Local version 2026.11.6** — [Changelog](CHANGELOG.md)
+**Local version 2026.11.7** — [Changelog](CHANGELOG.md)
 
 [![Gmail extension preview](store/screenshots/05-ocean.png)](store/index.html)
 [![Gmail extension settings](store/screenshots/02-reglages.png)](store/index.html)
@@ -125,6 +125,11 @@ Contents:
 - `simplemail.db`: message cache, settings, labels
 
 ## Performance
+
+Gmail extension: empty states and highlighting must not rewrite the DOM at rest.
+Studio scans are coalesced and paused in hidden tabs; count batches are spaced by
+at least 45 seconds and cancelled in the background.
+[Reproducible audit and measurement limits (French)](docs/PERFORMANCE_GMAIL.md).
 
 The backend keeps its memory footprint bounded:
 - No permanent WebGL loop or fullscreen filters; off-screen rows use `content-visibility`

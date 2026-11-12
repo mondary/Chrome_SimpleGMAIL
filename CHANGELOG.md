@@ -4,6 +4,14 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.11.7] - 2026-11-12
+
+### Fixed
+- **Boucles au repos** : l’état « boîte à zéro » ne réécrit plus ses classes identiques ; le surligneur suspend son observateur pendant ses propres remplacements. Son ancien drapeau synchrone ne filtrait pas les mutations livrées après le traitement. Les scans Studio sont regroupés et ignorent les panneaux internes ; onglet masqué, les scans de texte/onglets/états vides sont suspendus.
+- **Compteurs** : au moins 45 secondes entre deux séries, même pendant les synchronisations Gmail ; arrêt des requêtes en cours et timers en attente quand l’onglet est masqué ou le module désactivé. Les derniers totaux vérifiés restent disponibles.
+- **Sources reproductibles** : le correctif du surligneur vit dans `sources/`, prioritaire au build sur le snippet partagé. Le dépôt ScriptCat voisin reste inchangé.
+- **Vérification** : reproduction avant/après des boucles via Chrome headless jetable, sans réseau ni compte. Repos mesuré sur données fictives : 144/144/35 mutations en 1,2 s avant, 0/0/0 après. Navigation, glisser-déposer, annulation et arrêt des compteurs testés séparément. Cela ne mesure pas les 2,5 Go/147 % signalés sur Gmail réel et ne prouve pas une fuite GPU. Voir [`docs/PERFORMANCE_GMAIL.md`](docs/PERFORMANCE_GMAIL.md).
+
 ## [2026.11.6] - 2026-11-10
 
 ### Fixed

@@ -133,6 +133,8 @@ cd src/extension-pk
 ```
 
 Le script exige le symlink `vendors/scriptcat-snippets` (voir la racine du dépôt).
+Un userscript présent dans `sources/` est prioritaire sur le snippet partagé : le
+correctif anti-boucle du surligneur y vit, sans modifier le dépôt ScriptCat voisin.
 Les fichiers `data/*.js` portent l'en-tête « Généré par build.sh » : ne pas les
 éditer à la main.
 
@@ -146,6 +148,11 @@ Les fichiers `data/*.js` portent l'en-tête « Généré par build.sh » : ne pa
 
 ## Vérifications
 
+- `node tools/tests/studio-performance.test.mjs` : absence de mutations et de
+  recalculs de mise en page au repos, surlignage après ajout de contenu, pause en
+  arrière-plan et absence d’accumulation de lignes DOM après remplacements répétés.
+  Profil Chrome headless jetable, réseau bloqué, aucune capture ni session personnelle.
+  Méthode et limites : [`docs/PERFORMANCE_GMAIL.md`](../../docs/PERFORMANCE_GMAIL.md).
 - `node --test tools/tests/no-left-menu.test.mjs` : contenu exact du rail, routes
   Gmail sans menu natif, conservation du compte, libellés FR/EN, alignement sous le
   burger (chargement tardif et redimensionnement), styles du fondu et focus clavier.
@@ -161,6 +168,7 @@ Les fichiers `data/*.js` portent l'en-tête « Généré par build.sh » : ne pa
 - `node --test tools/tests/studio-counts.test.mjs` : décomptes exacts, estimations
   résolues par pagination, démarrage depuis le cache, sessions XHR/fetch, synchronisation
   pendant le décompte, isolation de compte et absence de requêtes quand le module est inactif.
+  Vérifie aussi l’annulation en arrière-plan/désactivation et l’espacement des séries.
 - `node tools/tests/studio-toast.test.mjs` : identité du vrai lien Gmail, clic après
   remplacement du toast, deux messages identiques, fermeture et expiration de la pilule.
 - QA Gmail du 2 novembre : brouillon jetable supprimé, toast remplacé, puis clic

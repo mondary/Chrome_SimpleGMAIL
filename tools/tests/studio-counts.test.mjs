@@ -5,16 +5,18 @@ import { readFileSync } from 'node:fs';
 
 const source = readFileSync(new URL('../../src/extension-pk/themes/studio/unread-counts.js', import.meta.url), 'utf8');
 function harness(metadata = { primary: [2, 9], social: [2, 15], promotions: [2, 25] }) {
-  const document = new EventTarget(), timers = [], results = [], requests = [];
+  const document = new EventTarget(), timers = new Map(), results = [], requests = [], delays = [];
+  let nextTimer = 0;
   Object.assign(document, { visibilityState: 'visible', documentElement: { lang: 'fr' }, querySelectorAll: () => [] });
   class XHR extends EventTarget { open() {} setRequestHeader() {} send() {} }
   class Custom extends Event { constructor(type, { detail } = {}) { super(type); this.detail = detail; } }
   document.addEventListener('pk-studio-unread-result', event => results.push(JSON.parse(event.detail)));
   const context = vm.createContext({
-    document, XMLHttpRequest: XHR, Event, CustomEvent: Custom, MouseEvent: Custom, URL, Headers, AbortSignal, Date,
+    document, XMLHttpRequest: XHR, Event, CustomEvent: Custom, MouseEvent: Custom, URL, Headers, AbortSignal, AbortController, Date,
     getComputedStyle: () => ({ visibility: 'visible' }),
     location: { pathname: '/mail/u/3/', hostname: 'mail.google.com', href: 'https://mail.google.com/mail/u/3/#inbox', origin: 'https://mail.google.com' },
-    setTimeout: fn => (timers.push(fn), timers.length), setInterval() {},
+    setTimeout: (fn, delay) => { const id = ++nextTimer; timers.set(id, fn); delays.push(delay); return id; },
+    clearTimeout: id => timers.delete(id), setInterval() {},
     fetch: async (url, options) => {
       requests.push({ url, options });
       if (!new URL(url).pathname.endsWith('/i/bv')) return { ok: true, json: async () => [] };
@@ -29,7 +31,7 @@ function harness(metadata = { primary: [2, 9], social: [2, 15], promotions: [2, 
   context.window = context; context.top = context;
   vm.runInContext(source, context);
   return {
-    requests, results, document,
+    requests, results, document, delays,
     counts: () => Object.assign({}, ...results.map(item => item.counts)),
     fetch: (...args) => context.fetch(...args),
     configure: (active, ids = ['primary', 'social', 'promotions']) => document.dispatchEvent(new Custom('pk-studio-unread-request', { detail: JSON.stringify({ active, ids }) })),
@@ -39,7 +41,13 @@ function harness(metadata = { primary: [2, 9], social: [2, 15], promotions: [2, 
       xhr.setRequestHeader('Content-Type', 'application/json'); xhr.send('not retained');
       return xhr;
     },
-    async flush() { while (timers.length) await timers.shift()(); },
+    async flush() {
+      while (timers.size) {
+        const [id, fn] = timers.entries().next().value;
+        timers.delete(id);
+        await fn();
+      }
+    },
   };
 }
 test('read-only inbox/unread queries give exact Primary 9, Social 15, Promotions 25', async () => {
@@ -127,4 +135,32 @@ test('bootstrap does not interrupt editing or refresh an open conversation', asy
   reading.document.querySelectorAll = selector => selector.includes('.hP') ? [{ getClientRects: () => [1] }] : [button];
   reading.configure(true); await reading.flush();
   assert.equal(clicks, 0);
+});
+
+test('hiding the page aborts a running count batch without querying the remaining categories', async () => {
+  const h = harness({ primary: () => {
+    h.document.visibilityState = 'hidden';
+    h.document.dispatchEvent(new Event('visibilitychange'));
+    return [2, 9];
+  }, social: [2, 15], promotions: [2, 25] });
+  h.configure(true); h.session(); await h.flush();
+  assert.equal(h.requests.length, 1);
+  assert.equal(h.requests[0].options.signal.aborted, true);
+  assert.equal(h.results.length, 0);
+});
+
+test('disabling the module cancels queued work and an in-flight request', async () => {
+  const queued = harness(); queued.configure(true); queued.session(); queued.configure(false); await queued.flush();
+  assert.equal(queued.requests.length, 0);
+  const h = harness({ primary: () => { h.configure(false); return [2, 9]; } });
+  h.configure(true); h.session(); await h.flush();
+  assert.equal(h.requests.length, 1);
+  assert.equal(h.requests[0].options.signal.aborted, true);
+  assert.equal(h.results.length, 0);
+});
+
+test('routine Gmail syncs cannot start a fresh count batch every ten seconds', async () => {
+  const h = harness(); h.configure(true); h.session(); await h.flush();
+  h.session(3, true).dispatchEvent(new Event('loadend'));
+  assert.ok(h.delays.at(-1) >= 44000 && h.delays.at(-1) <= 45000, 'at least 45s between batch starts');
 });

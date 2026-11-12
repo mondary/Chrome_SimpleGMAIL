@@ -65,6 +65,12 @@ try {
   await wait(`Math.abs(document.querySelector('#pk-studio-tabs').getBoundingClientRect().width - document.querySelector('#view').getBoundingClientRect().width) < 1`);
   const geometry = () => evaluate(`Array.from(document.querySelectorAll('#pk-studio-tabs button'),b=>{const r=b.getBoundingClientRect();return [b.dataset.name,r.x+document.querySelector('#pk-studio-tabs').scrollLeft,r.y,r.width,r.height]})`);
   const selected = () => evaluate(`Array.from(document.querySelectorAll('#pk-studio-tabs [aria-selected=true]'),b=>b.dataset.name)`);
+  const expectSelected = async (names, message) => {
+    // Gmail DOM mutations are deliberately coalesced; assert the eventual state,
+    // not the transient frame between Gmail's redraw and Studio's update.
+    await wait(`JSON.stringify(Array.from(document.querySelectorAll('#pk-studio-tabs [aria-selected=true]'),b=>b.dataset.name))===${JSON.stringify(JSON.stringify(names))}`);
+    assert.deepEqual(await selected(), names, message);
+  };
   await wait(`document.querySelector('[data-key=primary] .pk-studio-tab-count').textContent==='9'`);
   assert.equal(await evaluate(`document.querySelector('[data-key=promotions] .pk-studio-tab-count').textContent`), '25');
   assert.equal(await evaluate(`document.querySelector('[data-key=social] .pk-studio-tab-count').textContent`), '15');
@@ -110,7 +116,7 @@ try {
   const initial = await geometry();
   await evaluate(`originalPurchase.click()`);
   await wait(`document.body.dataset.view==='#search/in:inbox category:purchases'`);
-  assert.deepEqual(await selected(), ['Achats']);
+  await expectSelected(['Achats']);
   assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key="purchases"]')).backgroundColor`), 'rgba(0, 0, 0, 0)');
   assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key="purchases"]')).color`), 'rgb(24, 24, 27)');
   assert.equal(await evaluate(`getComputedStyle(document.querySelector('[data-key="purchases"]')).borderBottomColor`), 'rgb(224, 138, 0)');
@@ -126,34 +132,34 @@ try {
   assert.equal(await evaluate(`originalStrip===document.querySelector('#pk-studio-tabs') && originalPurchase===document.querySelector('[data-key="purchases"]')`), true);
   await evaluate(`document.querySelector('[data-key=promotions]').click()`);
   await wait(`document.body.dataset.view==='#inbox' && document.querySelector('#view .aKh [data-pk-category=promotions][aria-selected=true]')`);
-  assert.deepEqual(await selected(), ['Recherche d’emploi']);
+  await expectSelected(['Recherche d’emploi']);
   assert.deepEqual(await geometry(), initial);
   await evaluate(`history.back()`);
   await wait(`document.body.dataset.view==='#search/in:inbox category:purchases'`);
-  assert.deepEqual(await selected(), ['Achats']);
+  await expectSelected(['Achats']);
   await evaluate(`history.forward()`);
   await wait(`document.body.dataset.view==='#inbox'`);
-  assert.deepEqual(await selected(), ['Recherche d’emploi']);
+  await expectSelected(['Recherche d’emploi']);
   // Gmail rewrites spaces as "+" in search hashes; the tab must stay selected.
   await evaluate(`location.hash='#search/in%3Ainbox+category:promotions'`);
   await wait(`document.body.dataset.view==='#inbox' && document.querySelector('[data-key=promotions][aria-selected=true]')`);
-  assert.deepEqual(await selected(), ['Recherche d’emploi']);
+  await expectSelected(['Recherche d’emploi']);
   // Opening a thread must not move the tab back to Primary. Gmail resets its
   // hidden native tabs to Primary while the conversation is open.
   await navigate('#inbox/thread-pk-qa');
   await wait(`document.querySelector('.hP') && document.querySelector('#view .aKh [data-pk-category=primary][aria-selected=true]')`);
-  assert.deepEqual(await selected(), ['Recherche d’emploi']);
+  await expectSelected(['Recherche d’emploi']);
   await navigate('#inbox');
   await wait(`document.querySelector('#view .aKh [data-pk-category=primary][aria-selected=true]')`);
-  assert.deepEqual(await selected(), ['Recherche d’emploi'], 'back to the list keeps the source category');
+  await expectSelected(['Recherche d’emploi'], 'back to the list keeps the source category');
   await navigate('#inbox/thread-pk-qa-2');
   await wait(`document.querySelector('.hP')`);
   await evaluate(`document.querySelector('.sidebar a[href="#inbox"]').click()`);
   await wait(`document.body.dataset.view==='#inbox'`);
-  assert.deepEqual(await selected(), ['Principale'], 'an explicit Inbox navigation resets the category');
+  await expectSelected(['Principale'], 'an explicit Inbox navigation resets the category');
   await evaluate(`document.querySelector('[data-key=promotions]').click()`);
   await wait(`document.querySelector('[data-key=promotions][aria-selected=true]')`);
-  assert.deepEqual(await selected(), ['Recherche d’emploi']);
+  await expectSelected(['Recherche d’emploi']);
   for (const [from,to] of [['promotions','primary'],['primary','social'],['social','promotions']]) {
     await evaluate(`document.querySelector('[data-key=${from}]').click()`);
     await wait(`document.querySelector('[data-key=${from}][aria-selected=true]')`);
@@ -171,7 +177,7 @@ try {
   // Gmail may keep a hidden inbox tree while a label is shown.
   await navigate('#search/in:inbox category:purchases');
   await evaluate(`const cached=document.createElement('div');cached.style.display='none';cached.append(nativeStrip());document.querySelector('#view').append(cached)`);
-  assert.deepEqual(await selected(), ['Achats']);
+  await expectSelected(['Achats']);
   assert.equal(await evaluate(`document.querySelector('#pk-studio-tabs').getClientRects().length`), 1);
   // Even replacement of the padded canvas must reattach the SAME strip.
   await evaluate(`document.querySelector('.bkK').innerHTML='<div class="nH"><div role="main" id="view"></div></div>';renderView()`);
@@ -201,7 +207,7 @@ try {
   await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', text: '\r', windowsVirtualKeyCode: 13 });
   await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
   await wait(`document.body.dataset.view==='#inbox' && document.querySelector('[data-key=forums][aria-selected=true]')`);
-  assert.deepEqual(await selected(), ['Forums']);
+  await expectSelected(['Forums']);
   // Search-based category tabs keep the Studio empty artwork on Gmail's no-results notice.
   await evaluate(`document.activeElement.blur()`);
   await evaluate(`window.emptyView=true;location.hash='#search/in:inbox category:purchases'`);
@@ -219,7 +225,7 @@ try {
   await wait(`document.body.dataset.view==='#inbox'`);
   // The zero view keeps Gmail's real name beside a renamed category.
   await evaluate(`updateSettings({pkCategoryLabels:{promotions:'Recherche d’emploi',purchases:'Commandes'}})`);
-  await wait(`document.querySelector('[data-key=purchases] .pk-studio-tab-native').textContent===' (Achats)'`);
+  await wait(`document.querySelector('[data-key=purchases] .pk-studio-tab-native')?.textContent===' (Achats)'`);
   await evaluate(`window.emptyView=true;location.hash='#search/in:inbox category:purchases'`);
   await wait(`document.body.dataset.view==='#search/in:inbox category:purchases' && document.querySelector('.TC.pk-studio-search-zero')`);
   assert.equal(await evaluate(`document.querySelector('.pk-studio-search-zero .pk-studio-zero-detail').textContent`), 'Aucun message dans Commandes (Achats). Profitez de cette pause.');
@@ -234,21 +240,27 @@ try {
   await navigate('#search/in:inbox category:purchases');
   await cdp('Page.reload');
   await wait(`document.querySelectorAll('#pk-studio-tabs button').length===7`);
-  assert.deepEqual(await selected(), ['Achats']);
+  await expectSelected(['Achats']);
   assert.deepEqual(await geometry(), initial);
   await evaluate(`updateSettings({pkLabelTabs:['Achats','Équipe / été','Achats']})`);
   await wait(`document.querySelector('[data-key="label:Équipe / été"]')`);
   await evaluate(`document.querySelector('[data-key="label:Équipe / été"]').click()`);
   await wait(`document.body.dataset.view==='#label/Équipe / été'`);
-  assert.deepEqual(await selected(), ['Équipe / été']);
+  await expectSelected(['Équipe / été']);
   // Gmail rewrites label spaces as "+" too.
   await evaluate(`location.hash='#label/%C3%89quipe+%2F+%C3%A9t%C3%A9'`);
   await wait(`document.body.dataset.view==='#label/Équipe+/+été'`);
-  assert.deepEqual(await selected(), ['Équipe / été']);
+  await expectSelected(['Équipe / été']);
   await evaluate(`updateSettings({pkCategoryLabels:{promotions:'Offres'},pkLabelTabs:['Achats','Newsletters']})`);
   await wait(`document.querySelector('[data-key=promotions]').dataset.name==='Offres'`);
   assert.equal(await evaluate(`!document.querySelector('[data-key="label:Achats"]') && document.querySelectorAll('#pk-studio-tabs button').length===7`), true);
   assert.equal(await evaluate(`document.querySelectorAll('#pk-studio-tabs').length`), 1);
+  await evaluate(`new Promise((resolve,reject)=>{
+    let quiet;const finish=()=>{clearTimeout(limit);observer.disconnect();resolve(true)};
+    const observer=new MutationObserver(()=>{clearTimeout(quiet);quiet=setTimeout(finish,200)});
+    const limit=setTimeout(()=>{clearTimeout(quiet);observer.disconnect();reject(new Error('DOM never settles'))},4000);
+    observer.observe(document.body,{subtree:true,childList:true,attributes:true});quiet=setTimeout(finish,200);
+  })`);
   const idle = await evaluate(`new Promise(resolve=>{let count=0;const o=new MutationObserver(r=>count+=r.length);o.observe(document.body,{subtree:true,childList:true,attributes:true});setTimeout(()=>{o.disconnect();resolve(count)},150)})`);
   assert.equal(idle, 0, 'observers must settle, not continuously rewrite the DOM');
   await evaluate(`updateSettings({theme:'native'})`);

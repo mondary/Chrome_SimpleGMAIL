@@ -50,6 +50,9 @@
   }
   let active = false;
   let scheduled = false;
+  const setClass = (node, name, on) => {
+    if (node.classList.contains(name) !== on) node.classList.toggle(name, on);
+  };
 
   function visible(node) {
     return node.getClientRects().length > 0 && getComputedStyle(node).visibility !== 'hidden';
@@ -97,6 +100,7 @@
 
   function refresh() {
     scheduled = false;
+    if (document.visibilityState === 'hidden') return;
     const inbox = location.hash === '#inbox' || location.hash.startsWith('#inbox/') || location.hash.startsWith('#category/');
     const searchCategory = categorySearch();
     const lang = /^fr/i.test(document.documentElement.lang || navigator.language) ? 'fr' : 'en';
@@ -110,7 +114,7 @@
         /^(Votre onglet .+ est vide|Your .+ tab is empty)/i.test(title.textContent.trim());
 
       if (!eligible) {
-        notice.classList.remove('pk-studio-zero');
+        setClass(notice, 'pk-studio-zero', false);
         notice.querySelector('.pk-studio-zero-art')?.remove();
         continue;
       }
@@ -120,12 +124,12 @@
       const kind = Object.keys(configured).find(id => normalize(configured[id]) === normalize(name)) || category(name);
       const display = renamedDisplay(window.__pkStudioCategoryNames?.[kind], names[lang][kind] || name) || name;
       ensureArt(notice, kind, display, text);
-      notice.classList.add('pk-studio-zero');
+      setClass(notice, 'pk-studio-zero', true);
     }
 
     const staleSearchNotices = [...document.querySelectorAll('.bkK .pk-studio-search-zero')];
-    const rows = [...document.querySelectorAll('.bkK .zA')].some(row => visible(row) && !row.closest('[aria-hidden="true"]'));
-    const busy = [...document.querySelectorAll('.bkK [aria-busy="true"]')].some(visible);
+    const rows = active && searchCategory && [...document.querySelectorAll('.bkK .zA')].some(row => visible(row) && !row.closest('[aria-hidden="true"]'));
+    const busy = active && searchCategory && [...document.querySelectorAll('.bkK [aria-busy="true"]')].some(visible);
     const candidate = active && searchCategory && !rows && !busy
       ? [...document.querySelectorAll('.bkK .aRv, .bkK .TC')]
         .filter(node => !node.closest('.aRu') && visible(node) && searchEmptyCopy(node))
@@ -133,22 +137,22 @@
       : null;
     for (const notice of staleSearchNotices) {
       if (notice === candidate) continue;
-      notice.classList.remove('pk-studio-search-zero');
+      setClass(notice, 'pk-studio-search-zero', false);
       notice.querySelector(':scope > .pk-studio-zero-art')?.remove();
     }
     if (candidate) {
       const kind = searchCategory;
       const display = renamedDisplay(window.__pkStudioCategoryNames?.[kind], names[lang][kind] || kind) || names[lang][kind] || kind;
       const art = ensureArt(candidate, kind, display, text, true);
-      art.setAttribute('aria-live', 'polite');
-      candidate.classList.add('pk-studio-search-zero');
+      if (art.getAttribute('aria-live') !== 'polite') art.setAttribute('aria-live', 'polite');
+      setClass(candidate, 'pk-studio-search-zero', true);
     }
   }
 
   function schedule() {
-    if (scheduled) return;
+    if (scheduled || document.visibilityState === 'hidden') return;
     scheduled = true;
-    requestAnimationFrame(refresh);
+    setTimeout(refresh, 100);
   }
 
   chrome.storage.local.get(['theme', 'enabled'], state => {
@@ -162,7 +166,14 @@
       schedule();
     });
   });
-  new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class', 'aria-hidden'] });
+  new MutationObserver(records => {
+    if (!active) return;
+    if (records.some(record => {
+      const node = record.target.nodeType === 1 ? record.target : record.target.parentElement;
+      return !node?.closest('#pk-studio-tabs, #pk-studio-modules, #pkh-overlay, #pkh-toggle, .pk-studio-zero-art');
+    })) schedule();
+  }).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class', 'aria-hidden'] });
   window.addEventListener('hashchange', schedule);
+  document.addEventListener('visibilitychange', schedule);
   schedule();
 })();

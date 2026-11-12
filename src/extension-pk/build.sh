@@ -22,7 +22,7 @@ os.makedirs("tweaks", exist_ok=True)
 os.makedirs("scripts", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 
-BENCH_VERSION = "2026.11.6"
+BENCH_VERSION = "2026.11.7"
 
 # ---- 1. Découpage gmail.css en tweaks
 text = open(gmail_css, encoding="utf-8").read()
@@ -72,7 +72,7 @@ for num, (fid, label, status) in CSS_DEFS.items():
 
 # ---- 2. Scripts fonctionnels (src, id, label, version, statut)
 JS_DEFS = [
-    ("pk-gmail-keyword-highlighter.user.js", "js-keyword-highlighter", "Keyword Highlighter", "0.4.0", "ok"),
+    ("pk-gmail-keyword-highlighter.user.js", "js-keyword-highlighter", "Keyword Highlighter", "0.4.1", "ok"),
     ("pk-gmail-filter-similar-always-visible.user.js", "js-filter-similar", "Filter Similar · toujours visible (+Alt+Shift+F)", "1.33", "ok"),
     ("pk-gmail-no-spam-icon.user.js", "js-no-spam-icon", "No Spam Icon · coche verte zéro spam (fix v0.2)", "0.2", "ko"),
     ("pk-gmail-sender-icons.user.js", "js-sender-icons", "Sender Icons · favicons expéditeurs", "0.1", "ok"),
@@ -91,7 +91,10 @@ if (typeof GM_getValue === 'undefined') {
 
 js_items = []
 for src, fid, label, ver, status in JS_DEFS:
-    code = open(os.path.join(snippets, src), encoding="utf-8", errors="replace").read()
+    # Local, reviewed fixes take precedence without modifying the shared ScriptCat repo.
+    local_source = os.path.join("sources", src)
+    source = local_source if os.path.isfile(local_source) else os.path.join(snippets, src)
+    code = open(source, encoding="utf-8", errors="replace").read()
     needs_gm = "GM_getValue" in code or "GM_setValue" in code
     if needs_gm and "GM_getValue === 'undefined'" not in code:
         code = GM_SHIM + "\n" + code

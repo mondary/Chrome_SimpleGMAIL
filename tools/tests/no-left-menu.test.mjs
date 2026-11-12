@@ -121,7 +121,8 @@ test('the existing NoLeftMenu preference key loads the CSS and rail together', (
   const context = vm.createContext({ self: {} });
   vm.runInContext(generated, context);
   const item = context.self.LAB_ITEMS.find((entry) => entry.id === 'css-no-left-menu');
-  assert.equal(extensionManifest.version, '2026.11.6');
+  const version = readFileSync(new URL('../../CHANGELOG.md', import.meta.url), 'utf8').match(/^## \[([\d.]+)\]/m)[1];
+  assert.equal(extensionManifest.version, version);
   assert.equal(item.type, 'js');
   assert.equal(item.file, 'themes/studio/no-left-menu.js');
   assert.deepEqual(Array.from(item.css), ['tweaks/no-left-menu.css']);

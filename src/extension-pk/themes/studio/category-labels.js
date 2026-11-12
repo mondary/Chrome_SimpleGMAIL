@@ -60,11 +60,12 @@
     if (!offset) return;
     const renamed = next + aria.slice(offset);
     if (renamed !== aria) tab.setAttribute('aria-label', renamed);
-    tab.dataset.pkAriaName = next;
+    if (tab.dataset.pkAriaName !== next) tab.dataset.pkAriaName = next;
   }
 
   function refresh() {
     scheduled = false;
+    if (document.visibilityState === 'hidden') return;
     for (const tab of document.querySelectorAll('[role="tab"]')) {
       // Injected label tabs (Achats, …) are not Gmail categories.
       if (tab.hasAttribute('data-pk-label-tab')) continue;
@@ -75,10 +76,9 @@
   }
 
   function schedule() {
-    if (scheduled) return;
+    if (scheduled || document.visibilityState === 'hidden') return;
     scheduled = true;
-    // setTimeout, not rAF: Gmail in a background tab must still apply the names.
-    setTimeout(refresh, 0);
+    setTimeout(refresh, 100);
   }
 
   function applyState(state) {
@@ -96,8 +96,15 @@
     if (area !== 'local' || (!changes.theme && !changes.enabled && !changes.pkCategoryLabels)) return;
     load();
   });
-  new MutationObserver(schedule).observe(document.body || document.documentElement, {
+  new MutationObserver(records => {
+    if (!active) return;
+    if (records.some(record => {
+      const node = record.target.nodeType === 1 ? record.target : record.target.parentElement;
+      return !node?.closest('#pk-studio-tabs, #pk-studio-modules, #pkh-overlay, #pkh-toggle, .pk-studio-zero-art');
+    })) schedule();
+  }).observe(document.body || document.documentElement, {
     childList: true, subtree: true, attributes: true, attributeFilter: ['aria-label', 'aria-selected'],
   });
+  document.addEventListener('visibilitychange', schedule);
   schedule();
 })();

@@ -169,7 +169,8 @@
     const pills = [...preserved].map(entry => entry.pill).filter(pill => pill?.isConnected && !pill.dataset.leaving);
     pills.forEach((pill, index) => {
       const offset = (nativeVisible ? 1 : 0) + index;
-      pill.style.setProperty('--pk-toast-bottom', `${24 + offset * 68}px`);
+      const bottom = `${24 + offset * 68}px`;
+      if (pill.style.getPropertyValue('--pk-toast-bottom') !== bottom) pill.style.setProperty('--pk-toast-bottom', bottom);
     });
     // One live native toast already occupies a slot: keep at most two tiles.
     const room = Math.max(MAX_VISIBLE - (nativeVisible ? 1 : 0), 1);

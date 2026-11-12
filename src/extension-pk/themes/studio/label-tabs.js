@@ -44,6 +44,7 @@
   let renames = {};
   let categories = ensurePurchases([{ id: 'primary', name: NAMES.primary }]);
   let counts = new Map();
+  let labelCounts = new Map();
   const exactCounts = new Map();
   const pendingCounts = new Set();
   let countRequestSignature = '';
@@ -338,8 +339,8 @@
       - (parseFloat(style.paddingLeft) || 0) - (parseFloat(style.paddingRight) || 0);
     const left = Math.max(0, rect.left - edge);
     const width = Math.max(0, Math.min(rect.width, available - left));
-    strip.style.width = `${width}px`;
-    strip.style.marginLeft = `${left}px`;
+    if (strip.style.width !== `${width}px`) strip.style.width = `${width}px`;
+    if (strip.style.marginLeft !== `${left}px`) strip.style.marginLeft = `${left}px`;
     resize();
   }
   window.addEventListener('resize', fitColumn);
@@ -591,6 +592,7 @@
 
   function refresh() {
     scheduled = false;
+    if (document.visibilityState === 'hidden') return;
     const lists = nativeLists();
     if (!active) {
       clearDropTargets();
@@ -639,8 +641,10 @@
   }
 
   function schedule() {
-    if (scheduled) return;
+    if (scheduled || document.visibilityState === 'hidden') return;
     scheduled = true;
+    // Category/drag state must follow Gmail before the next pointer event.
+    // Own UI writes are filtered at the observer instead of delaying navigation.
     queueMicrotask(refresh);
   }
   const load = () => chrome.storage.local.get(KEYS).then(state => {
@@ -654,10 +658,11 @@
     if (area === 'local' && KEYS.some(key => key in changes)) load();
   });
   new MutationObserver(records => {
+    if (!active) return;
     // Ignore the strip's own label/count rewrites; follow Gmail's tabs.
     const outside = records.some(record => {
       const node = record.target.nodeType === 1 ? record.target : record.target.parentElement;
-      return !node?.closest('#pk-studio-tabs');
+      return !node?.closest('#pk-studio-tabs, #pk-studio-modules, #pkh-overlay, #pkh-toggle, .pk-studio-zero-art');
     });
     if (outside) schedule();
   }).observe(document.body || document.documentElement, {
@@ -665,5 +670,6 @@
     attributes: true, attributeFilter: ['aria-selected', 'aria-hidden', 'class', 'aria-label'],
   });
   window.addEventListener('hashchange', schedule);
+  document.addEventListener('visibilitychange', schedule);
   load();
 })();
