@@ -4,25 +4,47 @@
 // native undo. The handler follows the original row as long as it stays inside
 // its original .bAp alert wrapper. So the pill is a new .vh child of that same
 // wrapper and receives the original row — never a clone.
+//
+// Stack v3 (2026-11-17): every tile — native toasts AND preserved pills — is
+// placed by one measured layout. Gmail stacks its own alerts with inline
+// `bottom` offsets that the css-toast-center tweak overrides with !important:
+// several live toasts then collapsed onto the same pixel. The manager below
+// re-measures real heights each pass: newest tile at the edge (24 px), older
+// ones glide up with an even 10 px gap. Beyond one visible pill, older pills
+// fold behind a "+N" chip (same wrapper keeps the real row alive, its undo
+// window keeps running) so the stack never climbs over the message.
 (() => {
   if (window.__pkStudioToastUndo) return;
   window.__pkStudioToastUndo = true;
 
   const UNDO_WINDOW = 10500; // native window measured at ~11.5 s
   const SVG_NS = 'http://www.w3.org/2000/svg';
-  const MAX_VISIBLE = 2; // preserved pills + live native toast
   const DEFAULT_HOLD = 8000; // pill lifetime, seconds setting lives in storage
   const MIN_HOLD = 3000;
   const MAX_HOLD = 12000;
   const UNDO_SELECTOR = '#link_undo, .bAo [role=link], .a8k, .ag';
   const CLOSE_SELECTOR = '.bBe';
+  const STACK_BASE = 24; // bottom edge of the newest tile, px
+  const STACK_GAP = 10;  // even gap between tiles, px
+  const EXPAND_HOLD = 4000; // auto re-fold of the "+N" chip, ms
   const CSS = [
-    '.bAp [data-pk-toast-preserve].vh{position:fixed!important;left:50%!important;right:auto!important;top:auto!important;bottom:var(--pk-toast-bottom,92px)!important;transform:translateX(-50%)!important;z-index:991!important}',
+    // Measured slots: the manager assigns each tile its real bottom. The
+    // attribute keeps specificity above the css-toast-center tweak.
+    '.bAp .vh[data-pk-toast-preserve],.bAp .vh[data-pk-toast-slot]{bottom:var(--pk-toast-bottom,24px)!important}',
+    // Reflow is animated only between two placed frames, never on arrival.
+    '.bAp .vh[data-pk-toast-preserve],.bAp .vh[data-pk-toast-slot]{transition:bottom .18s cubic-bezier(.2,.7,.3,1),opacity .18s ease}',
+    // Folded pills: the DOM stays (the real undo row keeps its native window),
+    // the measured stack just ignores them until the chip unfolds them.
+    '.bAp [data-pk-toast-preserve][data-pk-toast-collapsed]{display:none!important}',
     '.bAp [data-pk-toast-preserve].vh .pk-pill-timer{position:absolute!important;top:50%!important;transform:translateY(-50%) rotate(-90deg)!important;transform-origin:center!important;pointer-events:none!important;overflow:visible!important}',
     '.bAp [data-pk-toast-preserve].vh .pk-pill-timer circle{fill:none!important;stroke:#ffd35c!important;stroke-width:2!important;stroke-linecap:round!important}',
     '.bAp .vh .pk-pill-timer{position:absolute!important;top:50%!important;transform:translateY(-50%) rotate(-90deg)!important;transform-origin:center!important;pointer-events:none!important;overflow:visible!important}',
     '.bAp .vh .pk-pill-timer circle{fill:none!important;stroke:#ffd35c!important;stroke-width:2!important;stroke-linecap:round!important}',
-    '@media (prefers-reduced-motion: reduce){.bAp [data-pk-toast-preserve].vh{transition:none}}',
+    // "+N" chip: same language as the pills — one line, dark, hairline ring.
+    '.pk-toast-more{position:fixed!important;left:50%!important;transform:translateX(-50%)!important;bottom:var(--pk-toast-bottom,24px)!important;display:flex!important;align-items:center!important;height:26px!important;padding:0 13px!important;background:#09090b!important;color:rgba(255,255,255,.85)!important;border:1px solid rgba(255,255,255,.09)!important;border-radius:9999px!important;box-shadow:0 8px 24px rgba(9,9,11,.22)!important;font:600 12px/1 Roboto,Arial,sans-serif!important;letter-spacing:.03em!important;cursor:pointer!important;z-index:991!important;transition:bottom .18s cubic-bezier(.2,.7,.3,1)!important;-webkit-user-select:none!important;user-select:none!important}',
+    '.pk-toast-more:hover{color:#ffffff!important}',
+    '.pk-toast-more:focus-visible{outline:2px solid #ffd35c!important;outline-offset:2px!important}',
+    '@media (prefers-reduced-motion: reduce){.bAp .vh[data-pk-toast-preserve],.bAp .vh[data-pk-toast-slot],.pk-toast-more{transition:none!important}}',
   ].join('\n');
 
   let active = false;
@@ -30,7 +52,16 @@
   let styleEl = null;
   let holdMs = DEFAULT_HOLD;
   let current = null; // { wrapper, vh, row, link, message, bornAt, consumed, ring }
-  const preserved = new Set(); // entries with a pill currently shown
+  const preserved = new Set(); // entries with a pill currently shown (insertion = oldest first)
+  const nativeOrder = new Map(); // live native .vh -> arrival counter
+  let arrival = 0;
+  let moreEl = null; // the "+N" chip
+  let expandedUntil = 0; // unfold deadline; 0 = folded
+  let collapseTimer = 0;
+
+  function reducedMotion() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
 
   function visible(node) {
     return node.getClientRects().length > 0 && getComputedStyle(node).visibility !== 'hidden';
@@ -63,12 +94,30 @@
     document.head.append(styleEl);
   }
 
+  function enterAnimation(el) {
+    if (reducedMotion() || typeof el.animate !== 'function') return;
+    // composite:"add" stacks on the !important translateX(-50%): no fight.
+    el.animate(
+      [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'translateY(0)' }],
+      { duration: 220, composite: 'add', easing: 'cubic-bezier(.2,.7,.3,1)' },
+    );
+  }
+
   function dismiss(pill) {
     if (!pill?.isConnected || pill.dataset.leaving) return;
     pill.dataset.leaving = '1';
-    pill.style.opacity = '0';
-    pill.style.transform = 'translateX(-50%) translateY(6px)';
-    setTimeout(() => pill.remove(), 260);
+    const animated = !reducedMotion() && typeof pill.animate === 'function'
+      && !pill.hasAttribute('data-pk-toast-collapsed');
+    if (!animated) {
+      pill.remove();
+      return;
+    }
+    const fade = pill.animate(
+      [{ opacity: 1, transform: 'translateY(0)' }, { opacity: 0, transform: 'translateY(8px)' }],
+      { duration: 200, composite: 'add', easing: 'ease-out', fill: 'forwards' },
+    );
+    fade.onfinish = () => pill.remove();
+    setTimeout(() => pill.remove(), 600); // hidden tab: onfinish can stall
   }
 
   function retire(entry) {
@@ -112,7 +161,7 @@
     circle.style.strokeDashoffset = '0';
     if (typeof circle.animate === 'function') {
       // Reduced motion: stepped countdown instead of a continuous sweep.
-      const easing = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'steps(12, end)' : 'linear';
+      const easing = reducedMotion() ? 'steps(12, end)' : 'linear';
       circle.animate(
         [{ strokeDashoffset: 0 }, { strokeDashoffset: length }],
         { duration, easing, fill: 'forwards' },
@@ -142,6 +191,7 @@
     entry.pill = pill;
     entry.wrapper.append(pill);
     attachCountdown(pill, pill, lifetime());
+    enterAnimation(pill);
     pill.addEventListener('click', (event) => {
       if (event.target?.closest?.(UNDO_SELECTOR)) {
         entry.consumed = true;
@@ -165,18 +215,123 @@
     preserved.add(entry);
   }
 
-  function layoutPills(nativeVisible) {
-    const pills = [...preserved].map(entry => entry.pill).filter(pill => pill?.isConnected && !pill.dataset.leaving);
-    pills.forEach((pill, index) => {
-      const offset = (nativeVisible ? 1 : 0) + index;
-      const bottom = `${24 + offset * 68}px`;
-      if (pill.style.getPropertyValue('--pk-toast-bottom') !== bottom) pill.style.setProperty('--pk-toast-bottom', bottom);
+  // ---- The "+N" chip ----------------------------------------------------
+
+  function ensureMore() {
+    if (moreEl?.isConnected) return moreEl;
+    moreEl = document.createElement('button');
+    moreEl.type = 'button';
+    moreEl.className = 'pk-toast-more';
+    moreEl.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (Date.now() < expandedUntil) {
+        expandedUntil = 0;
+        clearTimeout(collapseTimer);
+      } else {
+        expandedUntil = Date.now() + EXPAND_HOLD;
+        clearTimeout(collapseTimer);
+        collapseTimer = setTimeout(() => {
+          expandedUntil = 0;
+          collapseTimer = 0;
+          schedule();
+        }, EXPAND_HOLD + 30);
+      }
+      schedule();
     });
-    // One live native toast already occupies a slot: keep at most two tiles.
-    const room = Math.max(MAX_VISIBLE - (nativeVisible ? 1 : 0), 1);
-    for (let index = 0; index < pills.length - room; index += 1) {
-      const entry = [...preserved].find(candidate => candidate.pill === pills[index]);
-      if (entry) retire(entry);
+    document.body.append(moreEl);
+    enterAnimation(moreEl);
+    return moreEl;
+  }
+
+  function updateMore(hiddenCount, expanded) {
+    if (!moreEl) return;
+    moreEl.textContent = expanded ? '−' : `+${hiddenCount}`;
+    const noun = hiddenCount > 1 ? 's' : '';
+    moreEl.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    moreEl.setAttribute('aria-label', expanded
+      ? 'Réduire les notifications'
+      : `Afficher ${hiddenCount} notification${noun} masquée${noun}`);
+  }
+
+  function removeMore() {
+    clearTimeout(collapseTimer);
+    collapseTimer = 0;
+    expandedUntil = 0;
+    const chip = moreEl;
+    moreEl = null;
+    if (!chip?.isConnected) return;
+    if (reducedMotion() || typeof chip.animate !== 'function') {
+      chip.remove();
+      return;
+    }
+    const fade = chip.animate(
+      [{ opacity: 1, transform: 'translateY(0)' }, { opacity: 0, transform: 'translateY(6px)' }],
+      { duration: 160, composite: 'add', easing: 'ease-out', fill: 'forwards' },
+    );
+    fade.onfinish = () => chip.remove();
+    setTimeout(() => chip.remove(), 400);
+  }
+
+  // ---- Measured stack ---------------------------------------------------
+
+  function place(el, bottom) {
+    const value = `${Math.round(bottom)}px`;
+    if (el.style.getPropertyValue('--pk-toast-bottom') !== value) {
+      el.style.setProperty('--pk-toast-bottom', value);
+    }
+  }
+
+  function layoutStack(natives) {
+    // Chronology: a tile seen for the first time takes the edge slot, older
+    // ones glide up. Reused wrappers keep their arrival order.
+    for (const vh of natives) {
+      if (!nativeOrder.has(vh)) nativeOrder.set(vh, ++arrival);
+    }
+    for (const [vh] of nativeOrder) {
+      if (!vh.isConnected) nativeOrder.delete(vh);
+    }
+    const orderedNatives = [...nativeOrder.keys()]
+      .filter((vh) => natives.includes(vh))
+      .sort((a, b) => nativeOrder.get(a) - nativeOrder.get(b)); // oldest → newest
+
+    const pills = [...preserved]
+      .map((entry) => entry.pill)
+      .filter((pill) => pill?.isConnected && !pill.dataset.leaving); // oldest → newest
+
+    // One visible pill: the newest. Older ones fold behind the chip — their
+    // real row keeps running its undo window inside the same wrapper.
+    const expanded = Date.now() < expandedUntil || pills.length <= 1;
+    const visibleCount = expanded ? pills.length : 1;
+    pills.forEach((pill, index) => {
+      const folded = index < pills.length - visibleCount;
+      if (folded) pill.setAttribute('data-pk-toast-collapsed', '');
+      else pill.removeAttribute('data-pk-toast-collapsed');
+    });
+    const visiblePills = pills.slice(-visibleCount);
+    const hiddenCount = pills.length - visiblePills.length;
+
+    let bottom = STACK_BASE;
+    // Bottom-up: newest native at the edge, then older ones, then the pills
+    // newest → oldest, chip on top. Heights are measured, never assumed.
+    for (const vh of [...orderedNatives].reverse()) {
+      vh.setAttribute('data-pk-toast-slot', '');
+      place(vh, bottom);
+      bottom += vh.offsetHeight + STACK_GAP;
+    }
+    for (const pill of [...visiblePills].reverse()) {
+      place(pill, bottom);
+      bottom += pill.offsetHeight + STACK_GAP;
+    }
+    // The chip stays as long as a fold exists: "+N" when folded, "−" on top
+    // of the unfolded stack. Its slot is re-measured in the same pass, so it
+    // never lingers where an unfolded pill now sits.
+    if (pills.length > 1) {
+      const chip = ensureMore();
+      updateMore(hiddenCount, expanded);
+      place(chip, bottom);
+    } else if (moreEl) {
+      removeMore();
     }
   }
 
@@ -186,6 +341,12 @@
       for (const entry of [...preserved]) retire(entry);
       current?.ring?.remove();
       current = null;
+      removeMore();
+      document.querySelectorAll('.bAp .vh[data-pk-toast-slot]').forEach((vh) => {
+        vh.removeAttribute('data-pk-toast-slot');
+        vh.style.removeProperty('--pk-toast-bottom');
+      });
+      nativeOrder.clear();
       styleEl?.remove();
       styleEl = null;
       return;
@@ -223,7 +384,7 @@
     }
 
     if (current && !current.ring) current.ring = attachCountdown(current.vh, current.vh, UNDO_WINDOW);
-    layoutPills(liveToasts.length > 0);
+    layoutStack(liveToasts);
   }
 
   // A trusted click on the live native "Annuler" consumes the undo: the next

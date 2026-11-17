@@ -22,7 +22,7 @@ os.makedirs("tweaks", exist_ok=True)
 os.makedirs("scripts", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 
-BENCH_VERSION = "2026.11.7"
+BENCH_VERSION = "2026.11.8"
 
 # ---- 1. Découpage gmail.css en tweaks
 text = open(gmail_css, encoding="utf-8").read()
@@ -49,7 +49,7 @@ CSS_DEFS = {
     14: ("grayscale-bar", "Barre supérieure en niveaux de gris", "ok"),
     15: ("compose-toolbar", "Masquer outils de saisie (v3 : Envoyer préservé)", "ok"),
     16: ("reading-pane-btn", "Masquer volet de lecture (v3 : Envoyer préservé)", "ok"),
-    17: ("toast-center", "Toast redesign · centré bas, pilule sombre (Annuler cliquable)", "new"),
+    17: ("toast-center", "Toast redesign · centré bas, pilule sombre, pile mesurée (+N)", "new"),
     18: ("sidebar-composer", "Sidebar · Nouveau message à la largeur des dossiers", "new"),
     19: ("sidebar-gray", "Sidebar · niveaux de gris (libellés préservés)", "new"),
 }
@@ -122,7 +122,7 @@ ALL.append({"id": "js-studio-empty", "group": "js", "label": "Boîte à zéro ·
             "file": "themes/studio/empty-state.js", "css": ["themes/studio/empty-state.css"],
             "type": "js", "world": "ISOLATED", "runAt": "document_end",
             "version": BENCH_VERSION, "status": "new"})
-ALL.append({"id": "js-studio-toast-undo", "group": "js", "label": "Toast · Annuler préservé (un nouveau toast ne le vole plus)",
+ALL.append({"id": "js-studio-toast-undo", "group": "js", "label": "Toast · Annuler préservé (pile mesurée, « +N » au-delà d'une pilule)",
             "file": "themes/studio/toast-undo.js",
             "type": "js", "world": "ISOLATED", "runAt": "document_end",
             "version": BENCH_VERSION, "status": "new", "setting": "toast-seconds"})

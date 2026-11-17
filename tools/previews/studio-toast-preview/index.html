@@ -15,7 +15,8 @@
     button { padding: 10px 16px; border: 1px solid #dadce0; background: #fff; border-radius: 8px; font: 13px Arial, sans-serif; cursor: pointer; }
     button:hover { background: #f6f8f9; }
     #undo-count { margin-top: 14px; font-weight: 600; }
-    /* Réplique du toast Gmail : un seul nœud réutilisé, contenu remplacé. */
+    /* Réplique du toast Gmail : plusieurs .bAp simultanés (Gmail empile ses
+       alertes), chacun avec son .vh dont le contenu est remplacé. */
     .b8.UC.bAp { position: fixed; left: 24px; bottom: 24px; z-index: 500; }
     .bAp .vh { display: flex; align-items: center; gap: 10px; max-width: 480px; padding: 12px 40px 12px 16px; background: #f1f3f4; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,.12); position: relative; }
     .bAp .vh[hidden] { display: none; }
@@ -29,29 +30,62 @@
   <header>Gmail — banc de test toast</header>
   <main>
     <h1>Toast « Annuler » préservé</h1>
-    <p class="hint">Ce banc reproduit le comportement réel observé sur Gmail : un nœud <code>.bAp&nbsp;.vh</code> unique, dont le contenu est remplacé à chaque nouveau message, et un gestionnaire d’annulation qui n’accepte que le <strong>vrai nœud</strong> «&nbsp;Annuler&nbsp;» — jamais un clone. Le tweak Studio doit déplacer cette ligne originale dans une pilule séparée sous le même <code>.bAp</code> : 2 tuiles visibles au maximum, effacement au bout de 3&nbsp;s (durée du banc), croix fonctionnelle.</p>
+    <p class="hint">Ce banc reproduit le comportement réel observé sur Gmail : un nœud <code>.bAp&nbsp;.vh</code> par alerte simultanée (contenu remplacé à réutilisation), et un gestionnaire d'annulation qui n'accepte que le <strong>vrai nœud</strong> «&nbsp;Annuler&nbsp;» — jamais un clone. Le tweak Studio déplace la ligne originale dans une pilule sous le même <code>.bAp</code>, mesure les hauteurs réelles pour empiler (plus récent à la bordure, 10&nbsp;px d'écart constant) et replie les pilules anciennes derrière une puce «&nbsp;+N&nbsp;». Durée du banc : 3&nbsp;s par pilule.</p>
     <div class="controls">
       <button id="fire-undo">Toast avec Annuler (suppression)</button>
       <button id="fire-info">Toast sans Annuler (erreur traduction)</button>
+      <button id="fire-long">Toast long (message sur 2 lignes)</button>
+      <button id="fire-burst">Rafale : 3 toasts simultanés</button>
       <button id="expire">Forcer l'expiration</button>
     </div>
     <div id="undo-count">Annulations réelles : 0</div>
   </main>
 
   <div class="b8 UC bAp" role="alert" aria-live="polite"><div class="vh" hidden></div></div>
+  <div class="b8 UC bAp" role="alert" aria-live="polite"><div class="vh" hidden></div></div>
+  <div class="b8 UC bAp" role="alert" aria-live="polite"><div class="vh" hidden></div></div>
 
   <script>
-    window.chrome = { storage: { local: { get: (_k, cb) => cb({ theme: 'theme-pk', enabled: { 'js-studio-toast-undo': true }, toastSeconds: 3 }) }, onChanged: { addListener: () => {} } } };
-    const bap = document.querySelector('.bAp');
-    const vh = document.querySelector('.vh');
-    let ttlTimer = 0;
+    window.__pkStorageListeners = [];
+    window.chrome = { storage: { local: (() => {
+      const store = { theme: 'theme-pk', enabled: { 'js-studio-toast-undo': true }, toastSeconds: 3 };
+      return {
+        get: (_k, cb) => cb({ ...store }),
+        set: (patch) => { Object.assign(store, patch); window.__pkStorageListeners.forEach((l) => l(patch, 'local')); },
+      };
+    })(), onChanged: { addListener: (l) => window.__pkStorageListeners.push(l) } } };
+    const wrappers = [...document.querySelectorAll('.bAp')];
+    const ttlTimers = new Map(); // wrapper -> timer
     let undones = 0;
     const registeredUndoLinks = new Set(); // Gmail follows node identity, not markup
     const count = document.getElementById('undo-count');
     const undoMessages = ['Conversation supprimée.', 'Conversation archivée.', 'Conversation ajoutée à Projet.'];
     let sent = 0;
 
-    function showToast(message, withUndo) {
+    // Comme Gmail : un nouveau toast REMPLACE celui en cours (même nœud .vh,
+    // contenu remplacé) — c'est ce remplacement qui vole le « Annuler ».
+    // Les toasts simultanés n'arrivent que par rafale (forceNew).
+    function targetWrapper(forceNew) {
+      if (forceNew) {
+        return wrappers.find((w) => w.querySelector('.vh').hidden) || oldestWrapper();
+      }
+      let newest = wrappers[0];
+      for (const w of wrappers) if ((arrival.get(w) ?? 0) > (arrival.get(newest) ?? 0)) newest = w;
+      if (!newest.querySelector('.vh').hidden) return newest;
+      return wrappers.find((w) => w.querySelector('.vh').hidden) || newest;
+    }
+    let arrivalCounter = 0;
+    const arrival = new Map();
+    function oldestWrapper() {
+      let oldest = wrappers[0];
+      for (const w of wrappers) if ((arrival.get(w) ?? 0) < (arrival.get(oldest) ?? 0)) oldest = w;
+      return oldest;
+    }
+
+    function showToast(message, withUndo, forceNew) {
+      const wrapper = targetWrapper(forceNew);
+      arrival.set(wrapper, ++arrivalCounter);
+      const vh = wrapper.querySelector('.vh');
       vh.replaceChildren();
       const row = document.createElement('div'); row.className = 'aT';
       const msg = document.createElement('span'); msg.className = 'bAq'; msg.textContent = message;
@@ -66,14 +100,14 @@
       // Comme Gmail : la croix est liée au nœud, un clone ne l'hérite pas.
       const close = document.createElement('button'); close.className = 'bBe'; close.type = 'button';
       close.setAttribute('aria-label', 'Fermer'); close.textContent = '✕';
-      close.addEventListener('click', () => { clearTimeout(ttlTimer); vh.hidden = true; });
+      close.addEventListener('click', () => { clearTimeout(ttlTimers.get(wrapper)); vh.hidden = true; });
       vh.append(close);
       vh.hidden = false;
-      clearTimeout(ttlTimer);
-      ttlTimer = setTimeout(() => { vh.hidden = true; }, 11500);
+      clearTimeout(ttlTimers.get(wrapper));
+      ttlTimers.set(wrapper, setTimeout(() => { vh.hidden = true; }, 11500));
     }
 
-    // Délégation comme Gmail : le handler n’accepte que le vrai nœud enregistré,
+    // Délégation comme Gmail : le handler n'accepte que le vrai nœud enregistré,
     // pas un clone, et ce nœud doit rester dans un conteneur .bAp.
     document.addEventListener('click', (e) => {
       const link = e.target.closest && e.target.closest('#link_undo');
@@ -84,9 +118,18 @@
       }
     });
 
+    const longMessage = 'Impossible de traduire ce message pour le moment car le contenu depasse la taille prise en charge par le service de traduction integre.';
     document.getElementById('fire-undo').addEventListener('click', () => showToast(undoMessages[sent++ % undoMessages.length], true));
     document.getElementById('fire-info').addEventListener('click', () => showToast('Impossible de traduire ce message pour le moment.', false));
-    document.getElementById('expire').addEventListener('click', () => { clearTimeout(ttlTimer); vh.hidden = true; });
+    document.getElementById('fire-long').addEventListener('click', () => showToast(longMessage, false));
+    document.getElementById('fire-burst').addEventListener('click', () => {
+      showToast('Conversation supprimée.', false, true);
+      showToast('Message envoyé.', false, true);
+      showToast(longMessage, false, true);
+    });
+    document.getElementById('expire').addEventListener('click', () => {
+      for (const w of wrappers) { clearTimeout(ttlTimers.get(w)); w.querySelector('.vh').hidden = true; }
+    });
   </script>
   <script src="../../../src/extension-pk/themes/studio/toast-undo.js"></script>
 </body>

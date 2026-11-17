@@ -1,9 +1,11 @@
-/* 17) Toast redesign v2 — centré en bas, pilule arrondie sombre — généré depuis gmail.css */
+/* 17) Toast redesign v3 — centré en bas, pilule arrondie sombre — généré depuis gmail.css */
 /* Structure Gmail (vérifiée en session isolée) :
    .bAp[role=alert] reste en flux et vide ; la boîte visible est son .vh
    (position: fixed, bas-gauche) qui contient .bAq (message), .bAo >
    #link_undo (Annuler) et .bBe > .bBf (fermeture). On ne touche qu'à .vh et
-   à son contenu : le bouton « Annuler » reste cliquable, centré en bas. */
+   à son contenu : le bouton « Annuler » reste cliquable, centré en bas.
+   L'empilement de plusieurs tuiles (offsets « bottom » mesurés, puce « +N »)
+   vit dans themes/studio/toast-undo.js : ici, une seule pilule à 24 px. */
 .bAp .vh {
   position: fixed !important;
   left: 50% !important;
@@ -19,9 +21,9 @@
   padding: 10px 52px 10px 20px !important; /* 52px : place du bouton de fermeture natif */
   background: #09090b !important;
   color: #ffffff !important;
-  border: 0 !important;
+  border: 1px solid rgba(255,255,255,.09) !important; /* hairline : détache du contenu clair */
   border-radius: 9999px !important;
-  box-shadow: 0 12px 32px rgba(9,9,11,.28) !important;
+  box-shadow: 0 8px 24px rgba(9,9,11,.22) !important;
   z-index: 990 !important;
 }
 

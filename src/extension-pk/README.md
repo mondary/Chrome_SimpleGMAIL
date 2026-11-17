@@ -122,6 +122,16 @@ seulement le rappel. La durée affichée ne dépasse jamais la fenêtre d'annula
 native, même si le réglage est plus long. Vérifié sur Gmail réel avec des brouillons
 jetables ; aucun courrier personnel n'est modifié.
 
+L'empilement est **mesuré** : la tuile la plus récente (toast natif ou pilule) reste
+à 24 px du bord, les autres montent avec un écart constant de 10 px calculé sur leurs
+hauteurs réelles — un message sur deux lignes ne chevauche plus sa voisine, et les
+toasts natifs simultanés ne s'écrasent plus sur le même pixel. Au-delà d'une pilule
+préservée, les anciennes se replient derrière une puce « **+N** » (accessible au
+clavier) : la pile ne recouvre plus le bas du message. Un clic déplie tout (la puce
+passe en « − »), un second replie, et le dépliage se referme seul après 4 s. Les
+lignes « Annuler » repliées restent le vrai nœud Gmail : leur fenêtre d'annulation
+continue de courir pendant le repli.
+
 ### Génération des fichiers
 
 `tweaks/`, `scripts/` et `data/manifest.js` sont régénérés depuis la source CSS
@@ -170,7 +180,9 @@ Les fichiers `data/*.js` portent l'en-tête « Généré par build.sh » : ne pa
   pendant le décompte, isolation de compte et absence de requêtes quand le module est inactif.
   Vérifie aussi l’annulation en arrière-plan/désactivation et l’espacement des séries.
 - `node tools/tests/studio-toast.test.mjs` : identité du vrai lien Gmail, clic après
-  remplacement du toast, deux messages identiques, fermeture et expiration de la pilule.
+  remplacement du toast, deux messages identiques, fermeture clavier et expiration de
+  la pilule ; rafale de 3 toasts natifs sans chevauchement (écarts ≥ hauteur + 9 px),
+  repli « +N », dépliage « − » et refermeture automatique après 4 s.
 - QA Gmail du 2 novembre : brouillon jetable supprimé, toast remplacé, puis clic
   sur « Annuler » de la pilule — brouillon rouvert. Aucun courrier personnel touché.
 - QA Gmail du 30 octobre : totaux Principale et Réseaux vérifiés ; drag Promotions

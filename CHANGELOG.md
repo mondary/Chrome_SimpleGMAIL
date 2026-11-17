@@ -4,6 +4,14 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.11.8] - 2026-11-17
+
+### Fixed
+- **Pile de notifications mesurée** : quand plusieurs toasts coexistent (actions rapides, pilules « Annuler » préservées), chaque tuile recevait `bottom: 24px` — elles se superposaient au même pixel et le pas fixe de 68 px ignorait les messages sur deux lignes. Un gestionnaire de pile unique mesure désormais les hauteurs réelles : la tuile la plus récente reste à 24 px du bord, les autres montent avec un écart constant de 10 px, refluant en douceur quand une tuile expire. Les toasts natifs simultanés ne s'écrasent plus.
+- **Compteur « +N » au-delà d'une pilule** : les pilules anciennes se replient derrière une puce « +N » (même langage visuel, accessible au clavier) — la pile ne recouvre plus le bas du message. Un clic déplie tout (« − »), un second replie ; dépliage automatique après 4 s. Les lignes « Annuler » repliées restent le vrai nœud Gmail : leur fenêtre d'annulation continue de courir.
+- **Animations réparées** : l'animation de sortie était morte (le `transform` inline perdait contre le `!important` du CSS injecté) — entrée et sortie passent désormais par l'API d'animation en composition additive, mouvement réduit respecté. Pilule : liseré hairline subtil et ombre adoucie.
+- **Vérification** : `studio-toast.test.mjs` étendu — vols consécutifs (chaque toast doit devenir visible avant d'être remplacé, comme sur Gmail), identité du vrai nœud « Annuler », rafale de 3 toasts natifs sans chevauchement (écarts ≥ hauteur + 9 px), repli/dépliage/repli automatique du compteur, fermeture clavier, expiration. Banc `tools/previews/studio-toast-preview/` passé à un pool de toasts simultanés avec remplacement de contenu et message long sur deux lignes.
+
 ## [2026.11.7] - 2026-11-12
 
 ### Fixed
