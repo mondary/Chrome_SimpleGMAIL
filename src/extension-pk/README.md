@@ -132,6 +132,25 @@ passe en « − »), un second replie, et le dépliage se referme seul après 4 
 lignes « Annuler » repliées restent le vrai nœud Gmail : leur fenêtre d'annulation
 continue de courir pendant le repli.
 
+### Focus lecture
+
+Le tweak **Focus lecture · interface effacée, révélée au bord de l'écran** ne
+s'active que dans un fil ouvert : la barre globale (logo + recherche), le bandeau
+de catégories, la barre d'actions du fil et la barre de réponse flottante quittent
+le flux (`position: fixed` hors écran ou `display: none`), environ 110 px rendus au
+contenu ; le sujet sticky est compacté (une ligne, hairline) et la colonne de
+lecture est resserrée à 920 px. Révélation : la souris à moins de 44 px du bord haut
+rappelle la barre d'actions du fil (entrée 180 ms, retrait après 700 ms loin du
+bord), à moins de 64 px du bord bas la barre de réponse native et le bouton
+« Nouveau message » ; la recherche réapparaît quand le focus clavier entre dans
+`#gb` (raccourci `/`, Tab). Le focus clavier force la zone concernée visible, donc
+rien n'est piégé ; `prefers-reduced-motion` supprime les transitions. Aucun nœud
+Gmail n'est cloné ni déplacé : le script marque les conteneurs sur place
+(`data-pk-focus-tools`, `data-pk-focus-floatbar`) et l'état vit dans des classes sur
+`<html>` (`pk-focus`, `pk-focus-top`, `pk-focus-bottom`). La vue liste n'est jamais
+touchée ; le retour à la liste restaure tout instantanément. Seul un Gmail avec
+survol est concerné (`hover: hover`).
+
 ### Génération des fichiers
 
 `tweaks/`, `scripts/` et `data/manifest.js` sont régénérés depuis la source CSS
@@ -183,6 +202,11 @@ Les fichiers `data/*.js` portent l'en-tête « Généré par build.sh » : ne pa
   remplacement du toast, deux messages identiques, fermeture clavier et expiration de
   la pilule ; rafale de 3 toasts natifs sans chevauchement (écarts ≥ hauteur + 9 px),
   repli « +N », dépliage « − » et refermeture automatique après 4 s.
+- `node tools/tests/studio-focus.test.mjs` : retrait du chrome en vue fil, marquage
+  unique des conteneurs, réapparition au bord haut (barre d'actions) et bas (réponse +
+  FAB) avec vrais événements pointeur, recherche révélée par le focus clavier, retour
+  à la liste sans attribut résiduel et désactivation par réglage. Banc :
+  `tools/previews/studio-focus-preview/` (captures `01-focus` à `04-liste`).
 - QA Gmail du 2 novembre : brouillon jetable supprimé, toast remplacé, puis clic
   sur « Annuler » de la pilule — brouillon rouvert. Aucun courrier personnel touché.
 - QA Gmail du 30 octobre : totaux Principale et Réseaux vérifiés ; drag Promotions

@@ -4,6 +4,12 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.11.9] - 2026-11-17
+
+### Added
+- **Focus lecture** : nouveau tweak Studio — dans un fil ouvert, l'interface de liste s'efface et seuls le sujet sticky compacté et le message restent sur fond blanc (colonne de lecture resserrée à 920 px maximum). La barre globale (logo + recherche) et le bandeau de catégories quittent le flux : environ 110 px de haut rendus au contenu. Révélation « smart » : le bord haut rappelle la barre d'actions du fil (retour, archiver, supprimer…) en 180 ms, le bord bas rappelle la barre de réponse native et le bouton « Nouveau message », et la recherche réapparaît dès que le focus clavier entre dedans (raccourci `/`). Retrait différé de 700 ms, focus clavier jamais piégé, `prefers-reduced-motion` respecté. La vue liste n'est pas touchée ; retour à la liste = interface complète instantanée. Aucun nœud Gmail cloné ni déplacé : les conteneurs sont marqués sur place, l'état vit dans des classes sur `<html>`. Réglage cochable dans le panneau, actif par défaut dans Studio.
+- **Vérification** : `studio-focus.test.mjs` — retrait du chrome en vue fil, réapparition au bord haut/bas (vrais événements pointeur CDP), recherche révélée au focus, retour à la liste nettoyé sans attribut résiduel, désactivation par réglage. Banc `tools/previews/studio-focus-preview/` avec captures (`01-focus`, `02-bord-haut`, `03-bord-bas`, `04-liste`).
+
 ## [2026.11.8] - 2026-11-17
 
 ### Fixed

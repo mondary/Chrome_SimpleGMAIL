@@ -1,0 +1,101 @@
+/* Studio · Focus lecture — thread view only.
+   <html> classes: pk-focus (reading), pk-focus-top (toolbar summoned from the
+   top edge, or keyboard focus inside it), pk-focus-bottom (reply bar + compose
+   FAB summoned from the bottom edge).
+   Nothing is cloned or moved: #gb and the marked toolbar leave the flow with
+   position:fixed, so their height is reclaimed while they are withdrawn. */
+
+/* Global bar (logo + search): out of flow, 64 px reclaimed. It only comes
+   back when keyboard focus enters it (Gmail's "/" shortcut, Tab) — hovering
+   the top edge summons the thread toolbar, not the search bar. */
+html.pk-focus #gb {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 996 !important;
+  margin: 0 !important;
+  opacity: 0 !important;
+  transform: translateY(-100%) !important;
+  pointer-events: none !important;
+  background: #ffffff !important;
+  box-shadow: 0 10px 30px rgba(9,9,11,.08) !important;
+  transition: transform .18s ease, opacity .18s ease !important;
+}
+html.pk-focus #gb:focus-within {
+  opacity: 1 !important;
+  transform: none !important;
+  pointer-events: auto !important;
+}
+
+/* Category strip belongs to the list: hidden while reading, back instantly
+   when the conversation is closed. */
+html.pk-focus #pk-studio-tabs {
+  display: none !important;
+}
+
+/* Thread toolbar (back arrow, archive, delete…): fixed and withdrawn, so the
+   subject becomes the only top landmark. Summoned by the top edge. */
+html.pk-focus [data-pk-focus-tools] {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 994 !important;
+  margin: 0 !important;
+  padding: 6px 12px !important;
+  background: rgba(255,255,255,.94) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  backdrop-filter: blur(14px) !important;
+  border-bottom: 1px solid #f0f0f1 !important;
+  box-shadow: 0 10px 30px rgba(9,9,11,.06) !important;
+  transform: translateY(-110%) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: transform .18s cubic-bezier(.2,.7,.3,1), opacity .18s ease !important;
+}
+html.pk-focus.pk-focus-top [data-pk-focus-tools] {
+  transform: none !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Floating reply bar (fixed/sticky native row) and compose FAB: withdrawn
+   until the pointer approaches the bottom edge. An in-flow reply row at the
+   end of the thread is never marked, so it keeps working as usual. */
+html.pk-focus [data-pk-focus-floatbar],
+html.pk-focus #pk-new-message-fab {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: opacity .18s ease, visibility 0s .18s !important;
+}
+html.pk-focus.pk-focus-bottom [data-pk-focus-floatbar],
+html.pk-focus.pk-focus-bottom #pk-new-message-fab {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transition: opacity .18s ease, visibility 0s 0s !important;
+}
+
+/* Sticky subject: compact single landmark, hairline instead of a bar. */
+html.pk-focus .iY.a98.nH > div.nH:nth-of-type(1) {
+  padding-top: 2px !important;
+  padding-bottom: 6px !important;
+  border-bottom: 1px solid #f4f4f5 !important;
+  box-shadow: none !important;
+}
+
+/* Reading column: comfortable measure while the chrome is away. */
+html.pk-focus .AO {
+  max-width: min(calc(100% - 2 * var(--pk-margin-side, 5%)), 920px) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.pk-focus #gb,
+  html.pk-focus [data-pk-focus-tools],
+  html.pk-focus [data-pk-focus-floatbar],
+  html.pk-focus #pk-new-message-fab {
+    transition: none !important;
+  }
+}

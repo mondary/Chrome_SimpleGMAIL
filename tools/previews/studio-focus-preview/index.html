@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Studio — aperçu du mode Focus lecture</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 14px Arial, sans-serif; background: #fff; color: #202124; }
+    /* Barre globale Gmail : logo + recherche, en flux, 64 px. */
+    #gb { height: 64px; display: flex; align-items: center; gap: 24px; padding: 0 24px; border-bottom: 1px solid #edf0f2; background: #fff; }
+    #gb .logo { font-size: 20px; letter-spacing: -.06em; font-weight: 600; }
+    #gb input { width: 420px; height: 38px; padding: 0 14px; border: 1px solid #e4e4e7; border-radius: 999px; font: 13px Arial; }
+    main { padding: 0 5%; }
+    .bkK { width: min(100%, 1080px); margin: 0 auto; }
+    /* Bandeau d'onglets Studio (même gabarit que le vrai). */
+    #pk-studio-tabs { display: flex; align-items: stretch; height: 44px; margin: 0 0 12px; border: 1px solid #e4e4e7; border-radius: 10px; background: #fff; }
+    #pk-studio-tabs span { flex: 1; display: flex; align-items: center; justify-content: center; font: 500 13px Arial; color: #52525b; border-bottom: 2px solid transparent; }
+    #pk-studio-tabs span[aria-selected="true"] { color: #18181b; border-bottom-color: #18181b; font-weight: 600; }
+    /* Ligne de liste factice. */
+    .list-row { display: flex; gap: 16px; padding: 12px 10px; border-bottom: 1px solid #f1f1f3; font-size: 13px; }
+    /* Vue fil : barre d'outils (Retour + actions), sujet sticky, message. */
+    #thread { scroll-behavior: smooth; }
+    .ack { display: flex; align-items: center; gap: 6px; padding: 8px 6px; }
+    .ack button { width: 34px; height: 34px; border: 1px solid #e4e4e7; background: #fff; border-radius: 999px; font-size: 13px; cursor: pointer; }
+    .iY.a98.nH { position: sticky; top: 0; z-index: 1; background: #fff; padding: 10px 0; }
+    .iY.a98.nH > div.nH { font-size: 20px; letter-spacing: -.03em; font-weight: 600; padding: 4px 0; }
+    .message { max-width: 760px; margin: 18px auto 40px; padding: 20px 24px; border: 1px solid #f1f1f3; border-radius: 14px; line-height: 1.6; }
+    .message p { margin: 0 0 12px; }
+    /* Barre de réponse flottante native (2025) + FAB composer. */
+    .amn { position: fixed; right: 24px; bottom: 24px; display: flex; gap: 8px; padding: 6px; background: #f1f3f4; border-radius: 999px; box-shadow: 0 8px 24px rgba(9,9,11,.16); z-index: 20; }
+    .amn button { border: 0; background: #fff; border-radius: 999px; padding: 10px 16px; font: 600 13px Arial; cursor: pointer; }
+    #pk-new-message-fab { position: fixed; right: 24px; bottom: 92px; width: 48px; height: 48px; border: 0; border-radius: 999px; background: #09090b; color: #fff; font-size: 20px; cursor: pointer; z-index: 21; }
+    .controls { position: fixed; left: 16px; bottom: 16px; display: flex; gap: 8px; z-index: 30; }
+    .controls button { padding: 8px 14px; border: 1px solid #dadce0; background: #fff; border-radius: 8px; font: 13px Arial; cursor: pointer; }
+    .probe { position: absolute; top: 0; left: 0; }
+  </style>
+  <link rel="stylesheet" href="../../../src/extension-pk/themes/studio/focus-read.css">
+</head>
+<body>
+  <div id="gb"><span class="logo">Gmail</span><input id="search" type="search" aria-label="Rechercher dans les messages"></div>
+  <main>
+    <div class="bkK" id="canvas">
+      <div id="pk-studio-tabs">
+        <span aria-selected="true" data-tab="primary">Principale</span>
+        <span data-tab="job">Job</span>
+        <span data-tab="wordpress">WordPress</span>
+        <span data-tab="veille">Veille</span>
+      </div>
+      <section id="list-view">
+        <div class="list-row"><strong>Studio</strong> — Bienvenue dans le mode focus</div>
+        <div class="list-row"><strong>PK</strong> — Réglages et aperçus</div>
+      </section>
+      <section id="thread" hidden>
+        <div class="ack" id="toolbar">
+          <button role="button" aria-label="Retour à la liste">←</button>
+          <button role="button" aria-label="Archiver">⌫</button>
+          <button role="button" aria-label="Supprimer">🗑</button>
+          <button role="button" aria-label="Étiqueter">🏷</button>
+        </div>
+        <div class="iY a98 nH"><div class="nH" id="subject">Un sujet volontairement long pour éprouver le mode focus</div></div>
+        <div class="message">
+          <p>Voici le contenu du message. En mode Focus lecture, seuls le sujet compact et ce texte restent à l'écran.</p>
+          <p>La barre de recherche, les onglets de catégories, la barre d'outils du fil et la barre de réponse se sont effacés.</p>
+          <p>Approchez la souris du bord haut pour retrouver les actions du fil, du bord bas pour répondre, ou utilisez « / » pour la recherche.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+  <div class="amn" id="floatbar" role="toolbar">
+    <button role="button" aria-label="Répondre" id="reply">Répondre</button>
+    <button role="button" aria-label="Transférer" id="forward">Transférer</button>
+  </div>
+  <button id="pk-new-message-fab" aria-label="Nouveau message">＋</button>
+  <div class="controls">
+    <button id="open-thread">Ouvrir le fil</button>
+    <button id="back-list">Retour à la liste</button>
+  </div>
+
+  <script>
+    window.__pkStorageListeners = [];
+    window.chrome = { storage: { local: (() => {
+      const store = { theme: 'theme-pk', enabled: { 'js-studio-focus-read': true } };
+      return {
+        get: (_k, cb) => cb({ ...store }),
+        set: (patch) => { Object.assign(store, patch); window.__pkStorageListeners.forEach((l) => l(patch, 'local')); },
+      };
+    })(), onChanged: { addListener: (l) => window.__pkStorageListeners.push(l) } } };
+
+    const thread = document.getElementById('thread');
+    const list = document.getElementById('list-view');
+    document.getElementById('open-thread').addEventListener('click', () => {
+      list.hidden = true; thread.hidden = false; window.scrollTo(0, 0);
+    });
+    document.getElementById('back-list').addEventListener('click', () => {
+      thread.hidden = true; list.hidden = false;
+    });
+  </script>
+  <script src="../../../src/extension-pk/themes/studio/focus-read.js"></script>
+</body>
+</html>

@@ -22,7 +22,7 @@ os.makedirs("tweaks", exist_ok=True)
 os.makedirs("scripts", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 
-BENCH_VERSION = "2026.11.8"
+BENCH_VERSION = "2026.11.9"
 
 # ---- 1. Découpage gmail.css en tweaks
 text = open(gmail_css, encoding="utf-8").read()
@@ -126,6 +126,10 @@ ALL.append({"id": "js-studio-toast-undo", "group": "js", "label": "Toast · Annu
             "file": "themes/studio/toast-undo.js",
             "type": "js", "world": "ISOLATED", "runAt": "document_end",
             "version": BENCH_VERSION, "status": "new", "setting": "toast-seconds"})
+ALL.append({"id": "js-studio-focus-read", "group": "js", "label": "Focus lecture · interface effacée, révélée au bord de l'écran",
+            "file": "themes/studio/focus-read.js", "css": ["themes/studio/focus-read.css"],
+            "type": "js", "world": "ISOLATED", "runAt": "document_end",
+            "version": BENCH_VERSION, "status": "new"})
 ALL.append({"id": "js-studio-category-labels", "group": "js", "label": "Catégories · renommer les onglets de la boîte de réception",
             "file": "themes/studio/category-labels.js",
             "type": "js", "world": "ISOLATED", "runAt": "document_end",
@@ -155,7 +159,7 @@ ORDER_OK = ["css-white-style", "css-background-white", "css-grayscale-bar", "css
             "css-top-right", "js-sender-icons", "js-short-label", "css-unread-color",
             "css-searchbar", "css-sticky-topic", "css-stars-focus", "css-compose-toolbar",
             "css-reading-pane-btn", "css-margin", "js-new-message-button", "js-custom-tabs"]
-ORDER_NEW = ["js-studio-empty", "js-studio-toast-undo", "js-studio-modules", "css-toast-center", "css-sidebar-composer", "css-sidebar-gray"]
+ORDER_NEW = ["js-studio-empty", "js-studio-toast-undo", "js-studio-focus-read", "js-studio-modules", "css-toast-center", "css-sidebar-composer", "css-sidebar-gray"]
 ORDER_KO = ["css-theme-pkweb", "css-header-autohide", "js-icon-view",
             "js-inbox-strict", "js-no-spam-icon"]
 
