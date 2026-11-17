@@ -11,7 +11,7 @@ self.LAB_ITEMS = [
     "type": "js",
     "world": "ISOLATED",
     "runAt": "document_end",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "new"
   },
   {
@@ -22,7 +22,7 @@ self.LAB_ITEMS = [
     "type": "js",
     "world": "ISOLATED",
     "runAt": "document_end",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "new",
     "setting": "toast-seconds"
   },
@@ -37,7 +37,7 @@ self.LAB_ITEMS = [
     "type": "js",
     "world": "ISOLATED",
     "runAt": "document_end",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "new"
   },
   {
@@ -56,7 +56,7 @@ self.LAB_ITEMS = [
     "type": "js",
     "world": "ISOLATED",
     "runAt": "document_end",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "new"
   },
   {
@@ -65,7 +65,7 @@ self.LAB_ITEMS = [
     "label": "Toast redesign · centré bas, pilule sombre, pile mesurée (+N)",
     "file": "tweaks/toast-center.css",
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "new"
   },
   {
@@ -74,7 +74,7 @@ self.LAB_ITEMS = [
     "label": "Sidebar · Nouveau message à la largeur des dossiers",
     "file": "tweaks/sidebar-composer.css",
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "new"
   },
   {
@@ -83,7 +83,7 @@ self.LAB_ITEMS = [
     "label": "Sidebar · niveaux de gris (libellés préservés)",
     "file": "tweaks/sidebar-gray.css",
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "new"
   },
   {
@@ -94,7 +94,7 @@ self.LAB_ITEMS = [
     "type": "js",
     "world": "ISOLATED",
     "runAt": "document_end",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "new",
     "setting": "category-labels"
   },
@@ -106,7 +106,7 @@ self.LAB_ITEMS = [
     "type": "js",
     "world": "ISOLATED",
     "runAt": "document_end",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "new",
     "setting": "label-tabs"
   },
@@ -119,7 +119,7 @@ self.LAB_ITEMS = [
       "https://calendar.google.com/*"
     ],
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "new"
   },
   {
@@ -131,7 +131,7 @@ self.LAB_ITEMS = [
       "https://drive.google.com/*"
     ],
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "new"
   },
   {
@@ -140,7 +140,7 @@ self.LAB_ITEMS = [
     "label": "Composer · « Nouveau message » noir plein",
     "file": "themes/studio/compose.css",
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "new"
   },
   {
@@ -149,7 +149,7 @@ self.LAB_ITEMS = [
     "label": "WhiteStyle · padding des lignes",
     "file": "tweaks/white-style.css",
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "ok"
   },
   {
@@ -158,7 +158,7 @@ self.LAB_ITEMS = [
     "label": "BackgroundWhite · fond blanc + police fine",
     "file": "tweaks/background-white.css",
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "ok"
   },
   {
@@ -167,7 +167,7 @@ self.LAB_ITEMS = [
     "label": "Barre supérieure en niveaux de gris",
     "file": "tweaks/grayscale-bar.css",
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "ok"
   },
   {
@@ -176,7 +176,7 @@ self.LAB_ITEMS = [
     "label": "ScrollBarGrey · scrollbar fine grise",
     "file": "tweaks/scrollbar-grey.css",
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "ok"
   },
   {
@@ -212,7 +212,7 @@ self.LAB_ITEMS = [
     "type": "js",
     "world": "ISOLATED",
     "runAt": "document_end",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "ok"
   },
   {
@@ -221,7 +221,7 @@ self.LAB_ITEMS = [
     "label": "Statut · masquer Actif/absent (à côté des réglages)",
     "file": "tweaks/status-pill.css",
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "ok"
   },
   {
@@ -230,7 +230,7 @@ self.LAB_ITEMS = [
     "label": "TopRight v3 · aide/notifications masqués (bouton apps conservé)",
     "file": "tweaks/top-right.css",
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "ok"
   },
   {
@@ -261,7 +261,7 @@ self.LAB_ITEMS = [
     "label": "UnreadColor · non-lus gris",
     "file": "tweaks/unread-color.css",
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "ok"
   },
   {
@@ -270,7 +270,7 @@ self.LAB_ITEMS = [
     "label": "SearchBar · recherche centrée blanche",
     "file": "tweaks/searchbar.css",
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "ok"
   },
   {
@@ -279,7 +279,7 @@ self.LAB_ITEMS = [
     "label": "StickyTopic · sujet épinglé en haut",
     "file": "tweaks/sticky-topic.css",
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "ok"
   },
   {
@@ -288,7 +288,7 @@ self.LAB_ITEMS = [
     "label": "StarsFocus · ligne étoilée surlignée (jaune)",
     "file": "tweaks/stars-focus.css",
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "ok"
   },
   {
@@ -297,7 +297,7 @@ self.LAB_ITEMS = [
     "label": "Masquer outils de saisie (v3 : Envoyer préservé)",
     "file": "tweaks/compose-toolbar.css",
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "ok"
   },
   {
@@ -306,7 +306,7 @@ self.LAB_ITEMS = [
     "label": "Masquer volet de lecture (v3 : Envoyer préservé)",
     "file": "tweaks/reading-pane-btn.css",
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "ok"
   },
   {
@@ -315,7 +315,7 @@ self.LAB_ITEMS = [
     "label": "Margin · colonne centrée (marges en %)",
     "file": "tweaks/margin.css",
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "ok",
     "setting": "margin-pct"
   },
@@ -347,7 +347,7 @@ self.LAB_ITEMS = [
     "label": "Theme · PK Web Memory (à alléger — trop de bordures)",
     "file": "tweaks/theme-pkweb.css",
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "ko"
   },
   {
@@ -356,7 +356,7 @@ self.LAB_ITEMS = [
     "label": "Header auto-hide v4 · header effacé au scroll (mise en page stable)",
     "file": "tweaks/header-autohide.css",
     "type": "css",
-    "version": "2026.11.9",
+    "version": "2026.11.10",
     "status": "ko"
   },
   {

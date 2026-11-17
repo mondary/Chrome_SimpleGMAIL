@@ -65,17 +65,29 @@ html.pk-focus.pk-focus-top [data-pk-focus-tools] {
    end of the thread is never marked, so it keeps working as usual. */
 html.pk-focus [data-pk-focus-floatbar],
 html.pk-focus #pk-new-message-fab {
+  position: fixed !important;
+  top: auto !important;
+  bottom: 0 !important;
+  z-index: 995 !important;
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
-  transition: opacity .18s ease, visibility 0s .18s !important;
+  transform: translateY(100%) !important;
+  transition: transform .18s cubic-bezier(.2,.7,.3,1), opacity .18s ease, visibility 0s .18s !important;
+}
+html.pk-focus [data-pk-focus-floatbar] {
+  left: var(--pk-focus-float-left, 0px) !important;
+  right: auto !important;
+  width: var(--pk-focus-float-width, auto) !important;
+  margin: 0 !important;
 }
 html.pk-focus.pk-focus-bottom [data-pk-focus-floatbar],
 html.pk-focus.pk-focus-bottom #pk-new-message-fab {
   opacity: 1 !important;
   visibility: visible !important;
   pointer-events: auto !important;
-  transition: opacity .18s ease, visibility 0s 0s !important;
+  transform: none !important;
+  transition: transform .18s cubic-bezier(.2,.7,.3,1), opacity .18s ease, visibility 0s 0s !important;
 }
 
 /* Sticky subject: compact single landmark, hairline instead of a bar. */

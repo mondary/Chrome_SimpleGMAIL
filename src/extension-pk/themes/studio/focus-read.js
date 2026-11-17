@@ -15,15 +15,15 @@
   const TOP_ZONE = 44;     // px from the top edge that summons the toolbar
   const BOTTOM_ZONE = 64;  // px from the bottom edge that summons the reply bar
   const HIDE_DELAY = 700;  // ms after the pointer leaves before withdrawing
-  const SCAN_EVERY = 2000; // ms between structural scans when nothing is found
+  const SCAN_EVERY = 2000; // ms between full scans once a floating bar is found
+  const RETRY_EVERY = 750;  // ms while Gmail is still mounting its reply bar
 
   let active = false;
   let reading = false;
   let scheduled = false;
-  let toolsEl = null;
   let floatEl = null;
   let lastScan = 0;
-  let pointerY = -1;
+  let scanRetry = 0;
 
   const root = document.documentElement;
   const held = { top: false, bottom: false };
@@ -38,7 +38,12 @@
   }
 
   function labelOf(el) {
-    return (el.getAttribute('aria-label') || el.innerText || '').trim();
+    return [
+      el.getAttribute('aria-label'),
+      el.getAttribute('data-tooltip'),
+      el.getAttribute('title'),
+      el.innerText,
+    ].filter(Boolean).join(' ').trim();
   }
 
   // The full thread view is the only place where the subject header exists.
@@ -47,43 +52,75 @@
     return [...document.querySelectorAll('.iY.a98.nH')].some(visible);
   }
 
-  // The thread toolbar carries the back arrow. Take the largest ancestor of
-  // that row which still does not swallow the subject header.
+  // Gmail's actual thread toolbar has a stable semantic hook used elsewhere
+  // in this extension: .aeH .iH.bzn[gh="mtb"]. Prefer it to translated button
+  // labels; keep a subject-relative fallback for Gmail variants.
   function markTools() {
-    if (toolsEl?.isConnected) return;
-    toolsEl = null;
-    const back = [...document.querySelectorAll('[role="button"],[role="link"]')]
-      .find(el => visible(el) && /^(retour|back)\b/i.test(labelOf(el)));
-    if (!back) return;
-    let row = back.parentElement;
-    for (let node = back.parentElement; node && node !== document.body; node = node.parentElement) {
-      if (node.querySelector('.iY')) break;
-      if (node.querySelectorAll('[role="button"],[role="link"]').length >= 3) row = node;
+    const native = [...document.querySelectorAll('.aeH .iH.bzn[gh="mtb"]')].filter(visible);
+    if (native.length) {
+      native.forEach(el => el.setAttribute('data-pk-focus-tools', ''));
+      return;
     }
-    if (!row || row === document.body) return;
-    toolsEl = row;
-    row.setAttribute('data-pk-focus-tools', '');
-  }
-
-  // The floating reply bar (2025 Gmail) is a fixed/sticky ancestor of a real
-  // "Répondre" button. An in-flow reply row at the end of the thread is left
-  // alone: it only shows up when the conversation ends.
-  function markFloatBar() {
-    if (floatEl?.isConnected) return;
-    floatEl = null;
-    if (Date.now() - lastScan < SCAN_EVERY) return;
-    lastScan = Date.now();
-    const reply = [...document.querySelectorAll('[role="button"],[role="link"]')]
-      .find(el => visible(el) && /^(répondre|repondre|reply)\b/i.test(labelOf(el)));
-    if (!reply) return;
-    for (let node = reply.parentElement; node && node !== document.body; node = node.parentElement) {
-      const position = getComputedStyle(node).position;
-      if ((position === 'fixed' || position === 'sticky') && visible(node)) {
-        floatEl = node;
-        node.setAttribute('data-pk-focus-floatbar', '');
-        return;
+    const subjectEl = [...document.querySelectorAll('.iY.a98.nH')].find(visible);
+    if (!subjectEl) return;
+    let best = null;
+    for (let wrap = subjectEl.parentElement; wrap && wrap !== document.body && !best; wrap = wrap.parentElement) {
+      for (let node = wrap.firstElementChild; node; node = node.nextElementSibling) {
+        if (node.contains(subjectEl) || node.querySelector('.iY')) break;
+        if (!visible(node)) continue;
+        if (node.querySelectorAll('[role="button"],button,a').length >= 3) best = node;
       }
     }
+    if (!best) return;
+    best.setAttribute('data-pk-focus-tools', '');
+  }
+
+  // Floating action bars (reply / forward, 2025 Gmail) are fixed or sticky
+  // ancestors of REAL reply buttons. Every visible candidate is scanned —
+  // never just the first match: an inline "Répondre" button inside the
+  // message must not hide the floating bar from the scan.
+  function markFloatBars() {
+    const now = Date.now();
+    const interval = floatEl?.isConnected ? SCAN_EVERY : RETRY_EVERY;
+    if (now - lastScan < interval) {
+      if (!floatEl?.isConnected && !scanRetry) {
+        scanRetry = setTimeout(() => {
+          scanRetry = 0;
+          schedule();
+        }, interval - (now - lastScan) + 8);
+      }
+      return;
+    }
+    lastScan = now;
+    let found = false;
+    for (const el of document.querySelectorAll('button,a,[role="button"],[role="link"]')) {
+      if (!visible(el) || !/^(répondre|repondre|reply|transf[ée]rer|forward)\b/i.test(labelOf(el))) continue;
+      for (let node = el.parentElement; node && node !== document.body; node = node.parentElement) {
+        const position = getComputedStyle(node).position;
+        if ((position === 'fixed' || position === 'sticky') && visible(node)) {
+          if (!node.hasAttribute('data-pk-focus-floatbar')) {
+            const rect = node.getBoundingClientRect();
+            node.style.setProperty('--pk-focus-float-left', `${Math.round(rect.left)}px`);
+            node.style.setProperty('--pk-focus-float-width', `${Math.round(rect.width)}px`);
+            if (!floatEl) floatEl = node;
+            node.setAttribute('data-pk-focus-floatbar', '');
+          }
+          found = true;
+          break; // innermost floating ancestor of this button
+        }
+      }
+    }
+    if (found) {
+      clearTimeout(scanRetry);
+      scanRetry = 0;
+      floatEl = floatEl?.isConnected ? floatEl : [...document.querySelectorAll('[data-pk-focus-floatbar]')].find(el => el.isConnected) || null;
+    }
+  }
+
+  function zoneSelector(zone) {
+    return zone === 'top'
+      ? '#gb, [data-pk-focus-tools], #pk-studio-tabs'
+      : '[data-pk-focus-floatbar], #pk-new-message-fab';
   }
 
   function inTopChrome(target) {
@@ -107,21 +144,22 @@
     clearTimeout(timers[zone]);
     timers[zone] = setTimeout(() => {
       timers[zone] = 0;
-      if (!held[zone]) root.classList.remove(`pk-focus-${zone}`);
+      // Keyboard focus inside the zone keeps it open (typing a reply or
+      // tabbing through toolbar controls): only the pointer closes it.
+      const focused = document.activeElement?.closest?.(zoneSelector(zone));
+      if (!held[zone] && !focused) root.classList.remove(`pk-focus-${zone}`);
     }, HIDE_DELAY);
   }
 
   function onPointerMove(event) {
     if (!reading) return;
-    pointerY = event.clientY;
     const target = event.target instanceof Element ? event.target : null;
-    hold('top', inTopChrome(target) || pointerY <= TOP_ZONE);
-    hold('bottom', inBottomBar(target) || pointerY >= window.innerHeight - BOTTOM_ZONE);
+    hold('top', inTopChrome(target) || event.clientY <= TOP_ZONE);
+    hold('bottom', inBottomBar(target) || event.clientY >= window.innerHeight - BOTTOM_ZONE);
   }
 
   function onPointerLeave() {
     if (!reading) return;
-    pointerY = -1;
     hold('top', false);
     hold('bottom', false);
   }
@@ -142,7 +180,6 @@
 
   function releaseAll() {
     reading = false;
-    pointerY = -1;
     for (const zone of ['top', 'bottom']) {
       held[zone] = false;
       clearTimeout(timers[zone]);
@@ -150,12 +187,15 @@
       root.classList.remove(`pk-focus-${zone}`);
     }
     root.classList.remove('pk-focus');
-    toolsEl = null;
     floatEl = null;
+    clearTimeout(scanRetry);
+    scanRetry = 0;
     document.querySelectorAll('[data-pk-focus-tools],[data-pk-focus-floatbar]')
       .forEach(el => {
         el.removeAttribute('data-pk-focus-tools');
         el.removeAttribute('data-pk-focus-floatbar');
+        el.style.removeProperty('--pk-focus-float-left');
+        el.style.removeProperty('--pk-focus-float-width');
       });
   }
 
@@ -169,14 +209,19 @@
     if (next !== reading) {
       if (next) {
         reading = true;
+        lastScan = 0; // scan the floating bars right away on entry
         root.classList.add('pk-focus');
       } else {
         releaseAll();
       }
     }
     if (!reading) return;
+    if (floatEl && !floatEl.isConnected) {
+      floatEl = null;
+      lastScan = 0;
+    }
     markTools();
-    markFloatBar();
+    markFloatBars();
   }
 
   function schedule() {

@@ -4,6 +4,13 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.11.10] - 2026-11-17
+
+### Fixed
+- **Focus lecture — toolbar immédiatement retirée** : le repérage ne dépend plus du libellé localisé « Retour/Back » ni d'une heuristique sur les boutons ; il cible d'abord la vraie barre de conversation Gmail `.aeH .iH.bzn[gh="mtb"]`, déjà utilisée par le filtre de messages. Le repli structurel reste en secours. Le mode se met en place dès l'ouverture du fil, sans devoir survoler la barre pour qu'elle disparaisse.
+- **Footer blanc et place de lecture** : la barre « Répondre / Transférer » pouvait être `position: sticky` — la masquer en transparence laissait son espace blanc réservé. Elle est maintenant ancrée en `fixed` au bord inférieur dès l'entrée en focus, donc sortie du flux ; cachée sans laisser de footer, elle revient en superposition compacte au même bord au survol (transition glissée 180 ms), sans raccourcir la zone du message. Le sujet sticky remonte avec la toolbar désormais retirée et garde son format compact.
+- **Vérification** : test du vrai hook `gh="mtb"`, bouton « Répondre » inline avant les actions flottantes, barre native sticky sortie du flux, récupération de sa hauteur par le scroller, révélation au bord bas et absence de marqueurs après retour liste. Captures du banc remplacées (`01-focus` à `04-liste`).
+
 ## [2026.11.9] - 2026-11-17
 
 ### Added

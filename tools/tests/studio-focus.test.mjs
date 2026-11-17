@@ -4,9 +4,10 @@
 // Run: node tools/tests/studio-focus.test.mjs (Chrome, or CHROME_BIN, required).
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const profile = await mkdtemp(join(tmpdir(), 'pk-studio-focus-'));
 const chrome = spawn(process.env.CHROME_BIN || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', [
@@ -48,6 +49,13 @@ try {
   const click = selector => evaluate(`document.querySelector(${JSON.stringify(selector)})?.click()`);
   const move = (x, y) => cdp('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y, buttons: 0 });
   const style = (selector, prop) => evaluate(`getComputedStyle(document.querySelector(${JSON.stringify(selector)})).${prop}`);
+  const captureDir = new URL('../previews/studio-focus-preview/captures/', import.meta.url);
+  const capture = async name => {
+    if (process.env.CAPTURE_FOCUS !== '1') return;
+    await mkdir(fileURLToPath(captureDir), { recursive: true });
+    const { data } = await cdp('Page.captureScreenshot', { format: 'png' });
+    await writeFile(fileURLToPath(new URL(`${name}.png`, captureDir)), Buffer.from(data, 'base64'));
+  };
 
   const fixture = new URL('../previews/studio-focus-preview/index.html', import.meta.url).href;
   await cdp('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false });
@@ -71,15 +79,21 @@ try {
   assert.equal(await style('#gb', 'opacity'), '0', 'global bar withdrawn');
   assert.equal(await style('#toolbar', 'position'), 'fixed', 'thread toolbar out of flow');
   assert.equal(await style('#toolbar', 'opacity'), '0', 'thread toolbar withdrawn');
+  assert.equal(await style('#floatbar', 'position'), 'fixed', 'sticky reply bar leaves the flow');
+  assert.equal(await style('#floatbar', 'bottom'), '0px', 'reply bar is anchored to the screen edge');
   assert.equal(await style('#floatbar', 'visibility'), 'hidden', 'reply bar withdrawn');
   assert.equal(await evaluate(`document.querySelectorAll('[data-pk-focus-tools]').length`), 1, 'toolbar marked once');
-  assert.equal(await evaluate(`document.querySelectorAll('[data-pk-focus-floatbar]').length`), 1, 'float bar marked once');
+  assert.equal(await evaluate(`document.querySelectorAll('[data-pk-focus-floatbar]').length`), 1, 'float bar marked once despite inline reply button');
+  assert.equal(await evaluate(`document.querySelector('#toolbar').getAttribute('gh')`), 'mtb', 'real Gmail thread-toolbar hook is used');
+  await move(640, 420);
+  await capture('01-focus');
 
   // Pointer at the top edge summons the thread toolbar only.
   await move(640, 8);
   await wait(`document.documentElement.classList.contains('pk-focus-top')`);
   await wait(`getComputedStyle(document.querySelector('#toolbar')).opacity === '1'`);
   assert.equal(await style('#gb', 'opacity'), '0', 'search bar stays away on edge hover');
+  await capture('02-bord-haut');
 
   // Leaving the edge withdraws it again after the delay.
   await move(640, 420);
@@ -89,7 +103,10 @@ try {
   await move(640, 796);
   await wait(`document.documentElement.classList.contains('pk-focus-bottom')`);
   await wait(`getComputedStyle(document.querySelector('#floatbar')).visibility === 'visible'`);
+  assert.equal(await style('#floatbar', 'position'), 'fixed', 'reply bar remains out of flow while revealed');
+  assert.equal(await style('#floatbar', 'bottom'), '0px', 'reply bar overlays the bottom edge, not a footer gap');
   assert.equal(await style('#pk-new-message-fab', 'visibility'), 'visible', 'compose FAB back at the bottom');
+  await capture('03-bord-bas');
   await move(640, 420);
   await wait(`!document.documentElement.classList.contains('pk-focus-bottom')`);
 
@@ -104,6 +121,7 @@ try {
   await wait(`!document.documentElement.classList.contains('pk-focus')`);
   assert.notEqual(await style('#pk-studio-tabs', 'display'), 'none', 'category strip back');
   assert.equal(await evaluate(`document.querySelectorAll('[data-pk-focus-tools],[data-pk-focus-floatbar]').length`), 0, 'marks cleaned');
+  await capture('04-liste');
 
   // The setting switches the whole mode off.
   await evaluate(`chrome.storage.local.set({ enabled: { 'js-studio-focus-read': false } })`);
@@ -113,8 +131,16 @@ try {
   assert.equal(await evaluate(`document.documentElement.classList.contains('pk-focus')`), false, 'disabled: no focus mode');
   assert.notEqual(await style('#pk-studio-tabs', 'display'), 'none', 'disabled: strip stays');
   assert.equal(await style('#gb', 'position'), 'static', 'disabled: bar stays in flow');
+  const reservedBar = await evaluate(`document.querySelector('#floatbar').offsetHeight`);
+  const scrollerWithFooter = await evaluate(`document.querySelector('.scroller').clientHeight`);
+  await evaluate(`chrome.storage.local.set({ enabled: { 'js-studio-focus-read': true } })`);
+  await wait(`document.documentElement.classList.contains('pk-focus')`);
+  await wait(`getComputedStyle(document.querySelector('#floatbar')).position === 'fixed'`);
+  const scrollerWithoutFooter = await evaluate(`document.querySelector('.scroller').clientHeight`);
+  assert.ok(scrollerWithoutFooter >= scrollerWithFooter + reservedBar - 2,
+    `removing the sticky bar's flow reservation recovers its height (${scrollerWithFooter} → ${scrollerWithoutFooter}, bar ${reservedBar})`);
 
-  console.log('PASS: focus lecture — chrome withdrawn in thread view, edge summon, keyboard search, clean list fallback, toggle respected.');
+  console.log('PASS: focus lecture — Gmail toolbar hook, sticky reply bar leaves the flow, edge summon, keyboard search, clean list fallback, toggle respected.');
 } finally {
   socket?.close();
   const exited = new Promise(resolve => chrome.once('exit', resolve));
