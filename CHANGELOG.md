@@ -4,6 +4,76 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.11.20] - 2026-11-17
+
+### Changed
+- **Retrait du triptyque permanent en lecture** : suppression de l’ancrage ajouté en 2026.11.19, du déplacement du composant hors de l’en-tête et des décalages du sujet et des actions. Mail / Agenda / Drive reste à sa position habituelle dans la barre Google, masquée avec elle pendant Focus. Aucun bouton Retour permanent ajouté.
+- **Comportement précédent conservé** : les barres d’actions/navigation au survol, leur stabilité et le bouton « Nouveau message » compact de 2026.11.18 restent inchangés.
+- **Vérification headless** : le test vérifie l’absence de triptyque flottant et de décalage du sujet, tout en conservant la navigation normale du composant dans l’en-tête révélé pour la recherche ou dans la liste.
+
+## [2026.11.19] - 2026-11-17
+
+### Fixed
+- **Focus lecture — triptyque accessible en permanence** : le composant Mail / Agenda / Drive est conservé hors du parent `#gb` masqué pendant la lecture. L’enveloppe Gmail garde son vrai gestionnaire de clic vers `#inbox` ; aucune flèche Retour supplémentaire ni copie du composant n’est ajoutée. Les boutons Agenda et Drive gardent leur navigation existante.
+- **Intégration sans nouvelle rangée** : la capsule reste en haut à gauche ; les actions révélées commencent après sa largeur réelle, et le sujet ne reçoit un dégagement horizontal que si nécessaire. La hauteur retirée des anciennes barres n’est pas réintroduite.
+- **Recherche, liste et préférences** : le même composant retrouve sa place dans l’en-tête lorsque la recherche prend le focus ou au retour à la liste. Le cache de l’ancre logo permet ce retour même si le logo natif est déjà masqué. Désactiver Modules retire le triptyque et son dégagement.
+- **Vérification headless** : le test charge le vrai script Modules (seul son garde d’hôte est adapté au fixture local), vérifie les trois boutons hors survol, les messages Agenda/Drive avec le compte de démo, le clic pointeur sur l’enveloppe vers l’inbox, l’absence de doublon et la restauration dans l’en-tête. Aucun compte Gmail réel inspecté.
+
+## [2026.11.18] - 2026-11-17
+
+### Changed
+- **Focus lecture — bouton « Nouveau message » intégré aux réponses** : en lecture uniquement, la grosse pilule colorée avec ombre devient un bouton compact blanc à contour gris, sans ombre, avec un survol discret et un focus clavier visible. Sa hauteur suit les boutons natifs de réponse et son bord inférieur s’aligne sur leur dernière ligne, au lieu d’être plaqué plus bas contre le bord de l’écran. La disposition, le survol et la navigation de la version précédente ne changent pas.
+- **Vérification headless** : hauteur et alignement du bouton comparés aux réponses natives, hit-test et absence de recouvrement à 1280/384 px ; couleur et ombre d’origine restaurées en vue liste. La retouche visuelle reste à confirmer dans Gmail réel.
+
+## [2026.11.17] - 2026-11-17
+
+### Fixed
+- **Focus lecture — clignotement des actions** : la sélection de la barre est calculée avant le marquage, puis réconciliée uniquement si sa cible change. Suppression du cycle qui retirait le marqueur du parent pour le remettre sur l’enfant, puis faisait l’inverse au même scan. Aucune réécriture d’attribut ou de variable CSS identique au repos.
+- **Survol indépendant du focus** : un événement de perte de focus Gmail ne peut plus annuler le maintien par le pointeur. La même séparation s’applique aux commandes du haut et du bas.
+- **Bandeau haut commun** : actions et groupe natif compteur/flèches occupent deux zones contiguës du même bandeau visuel, avec une hauteur et un état de survol communs. Leur fondu n’utilise plus de `transform`, qui piégeait la pagination fixe lorsqu’elle était imbriquée dans la barre d’actions. Aucun nœud Gmail déplacé ni cloné. Les dimensions sont mesurées après le marquage et actualisées au redimensionnement ou à un changement du compteur.
+- **Réponse et composition** : la barre Répondre / Répondre à tous / Transférer n’est plus remesurée depuis son état caché ni figée sur une ancienne largeur. Elle occupe une zone à gauche du bouton « Nouveau message », avec un écart de 12 px ; le bouton reste au-dessus de son fond et Focus prend explicitement la main sur la classe `pk-fab-hidden` du userscript.
+- **Vérification headless** : 45 mutations de classes Gmail sans réécriture des marqueurs ni clignotement, aucune mutation DOM au repos, navigation native cliquable, redimensionnement après changement du compteur, absence de recouvrement des quatre commandes du bas à 1280 et 384 px. Le DOM et le rendu du compte Gmail réel ne sont pas inspectés ; ce résultat ne vaut pas validation sur Gmail authentifié.
+
+## [2026.11.16] - 2026-11-17
+
+### Fixed
+- **Focus lecture — pagination au survol** : les rangées Gmail `E` et `F` ne sont plus traitées comme des variantes exclusives dont une seule serait retenue. Les actions et la pagination sont traitées séparément quand les deux rangées coexistent, y compris lorsqu’elles sont imbriquées ; leur parent commun reste sans réservation de hauteur. Une rangée contenant toutes les commandes est toujours révélée en un seul bloc.
+- **Marquage actualisé** : les anciens marqueurs de barre englobante sont nettoyés avant de repérer les actions courantes, pour ne pas conserver un mauvais parent fixe autour de la pagination.
+- **Vérification headless** : rangées communes, séparées et imbriquées ; « Suivant » doit être dans le viewport, passer le hit-test et recevoir les clics pointeur, sans clonage du bouton. Le focus clavier révèle également la pagination. Validation sur fixture, pas sur un compte Gmail authentifié.
+
+## [2026.11.15] - 2026-11-17
+
+### Fixed
+- **Focus lecture — sélecteurs relevés dans Gmail** : les rangées `div.G-atb.D.E` / `div.G-atb.D.F` sont désormais ciblées directement, sans exiger les anciens hooks de pagination `.Dj` / `.aqJ`. Leurs pseudo-éléments `::before` / `::after` sont supprimés pendant Focus ; la rangée quitte le flux et ne revient qu’en superposition au survol haut.
+- **Sticky header réel** : `div.V8djrc.byY` active lui aussi le mode lecture et revient à `top: 0`, sans marge ni hauteur minimale réservée à la barre masquée. Si actions et pagination partagent la rangée native, elles sont révélées en un seul bloc, sans barres fixes imbriquées.
+- **Vérification** : le nouveau cas de test, construit avec les sélecteurs fournis mais sans `.iY.a98.nH`, `.Dj` ni `.aqJ`, échouait avant ce correctif. Il vérifie maintenant suppression du pseudo-élément, remontée du sticky, révélation commune sans déplacement et restauration à la désactivation. Ce banc reste simulé : pas d’inspection directe ni de validation visuelle dans Gmail authentifié.
+
+## [2026.11.14] - 2026-11-17
+
+### Fixed
+- **Focus lecture — aucune rangée réservée** : les commandes fixées hors du flux ne suffisaient pas à neutraliser les conteneurs parents à hauteur/min-height/padding imposés. Les wrappers exclusivement composés du bandeau global, des actions et de la pagination passent maintenant en `display: contents` pendant la lecture, survol compris. Les commandes restent en superposition ; leurs parents ne doivent plus laisser de place vide au-dessus du sujet.
+- **Actions et pagination dans une même rangée Gmail** : détection du groupe compteur/flèches indépendamment des actions, puis neutralisation de leur rangée commune. Aucun nœud cloné ni déplacé ; restauration des wrappers à la sortie du mode.
+- **Vérification headless** : hauteur imposée des parents, contexte transformé, positions identiques du sujet/message avant et pendant le survol, rangée commune et préservation d'un autre contenu natif. La compatibilité avec le DOM Gmail authentifié reste non vérifiée.
+
+## [2026.11.13] - 2026-11-17
+
+### Fixed
+- **Focus lecture — suppression de l’espace réservé du pager** : le marqueur cible la rangée complète contenant compteur et flèches, et non le seul groupe de pagination imbriqué. Repli géométrique sur le wrapper pleine largeur si Gmail change ses classes ; la cible reste stable une fois fixée pour éviter les bascules causées par son nouveau gabarit.
+- **Vérification headless** : le test contrôle que le wrapper complet est fixé, que le groupe interne ne l’est pas, et que le panneau de lecture remonte en haut sans hauteur réservée. Cela valide le fixture, pas le DOM Gmail authentifié, qui reste à vérifier.
+
+## [2026.11.12] - 2026-11-17
+
+### Fixed
+- **Focus lecture — détection du pager Gmail** : le repérage ne dépend plus de `.bkK` ni d’un enfant direct de `.aeH`. Il cherche le compteur `.Dj` et les flèches `.aqJ` dans la conversation active, puis remonte à leur rangée `.G-atb` (ou au groupe `.G-Ni` des variantes Gmail). Le test place volontairement la rangée hors du workspace de liste.
+- **Validation** : build locale et suite headless. Le DOM Gmail authentifié n’a pas été inspecté ; cette version corrige le sélecteur qui avait laissé le pager sous la barre dans l’essai précédent, mais le rendu réel reste à confirmer.
+
+## [2026.11.11] - 2026-11-17
+
+### Changed
+- **Focus lecture — pagination intégrée à la barre révélée** : le compteur Gmail (« 3 sur 49 ») et ses flèches précédent/suivant quittent leur rangée dédiée et rejoignent, à droite, la barre d’actions révélée au survol du bord haut. Cette rangée ne réserve plus de hauteur entre les actions et le sujet sticky.
+- **Rail de dossiers dégagé** : pendant Focus, le rail reste sous la barre haute même si son ancre hamburger est masquée ; le bouton Retour et les actions commencent après la largeur réelle du rail. Un espace dédié est aussi réservé avant la pagination pour éviter tout recouvrement.
+- **Vérification** : le banc simule les sélecteurs Gmail `.G-atb`, `.Dj`, `.aqJ` et le rail NoLeftMenu ; le pager est volontairement monté hors du workspace `.bkK` pour empêcher une détection dépendante de cette zone. Il vérifie la rangée commune, les marges, la révélation et le nettoyage à la sortie du fil.
+
 ## [2026.11.10] - 2026-11-17
 
 ### Fixed

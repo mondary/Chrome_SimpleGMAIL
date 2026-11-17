@@ -11,6 +11,17 @@
 | `app-presence-sync` | Documenter la navigation vers Google Agenda complet et ses permissions. | README FR/EN, guide de l'extension et note locale de présentation. |
 | `fixing-motion-performance` | Remplacer le glissement du rail de dossiers par un fondu d’opacité de 160 ms. | `sources/gmail.css`, `tweaks/no-left-menu.css` ; aucun panneau, animation de position ou polling. |
 
+Focus lecture 2026.11.17 : `fixing-motion-performance` pour le marquage idempotent,
+le fondu commun sans transformation du bandeau haut et les mesures ponctuelles.
+`themes/studio/focus-read.js` / `.css` ; `studio-focus.test.mjs` vérifie 45 mutations
+Gmail simulées sans réécriture des marqueurs, le repos sans mutations et les
+commandes du bas sans recouvrement à 1280/384 px. Validation Gmail réel en attente.
+
+Focus lecture 2026.11.20 : retrait de l’essai de triptyque permanent. Le test Focus
+exécute le vrai script Modules sur fixture et vérifie qu’il reste à sa place dans
+l’en-tête, sans capsule de coin ni décalage du sujet ; les contrôles accessibles
+et la navigation ordinaire de l’en-tête restent couverts.
+
 Audit performances Gmail 2026.11.7 : boucles d’observation des états vides et du
 surligneur corrigées, scans Studio regroupés, décomptes suspendus en arrière-plan.
 `tools/tests/studio-performance.test.mjs` mesure le DOM/layout au repos et la

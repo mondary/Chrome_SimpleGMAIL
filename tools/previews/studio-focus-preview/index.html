@@ -11,12 +11,26 @@
     #gb { height: 64px; display: flex; align-items: center; gap: 24px; padding: 0 24px; border-bottom: 1px solid #edf0f2; background: #fff; }
     #gb .logo { font-size: 20px; letter-spacing: -.06em; font-weight: 600; }
     #gb input { width: 420px; height: 38px; padding: 0 14px; border: 1px solid #e4e4e7; border-radius: 999px; font: 13px Arial; }
+    #global-shell { height: 64px; min-height: 64px; }
+    #pager-shell { height: 58px; min-height: 58px; padding-top: 6px; transform: translateZ(0); }
+    #tools-shell { height: 62px; min-height: 62px; padding: 6px 0; }
     main { padding: 0 5%; }
     .bkK { width: min(100%, 1080px); margin: 0 auto; }
     /* Bandeau d'onglets Studio (même gabarit que le vrai). */
     #pk-studio-tabs { display: flex; align-items: stretch; height: 44px; margin: 0 0 12px; border: 1px solid #e4e4e7; border-radius: 10px; background: #fff; }
     #pk-studio-tabs span { flex: 1; display: flex; align-items: center; justify-content: center; font: 500 13px Arial; color: #52525b; border-bottom: 2px solid transparent; }
     #pk-studio-tabs span[aria-selected="true"] { color: #18181b; border-bottom-color: #18181b; font-weight: 600; }
+    #pk-no-left-menu-rail { position: fixed; z-index: 100; top: 56px; left: 12px; display: flex; width: 40px; flex-direction: column; opacity: 0; }
+    #pk-no-left-menu-rail:hover { opacity: 1; }
+    #pk-no-left-menu-rail a { display: grid; width: 40px; height: 40px; place-items: center; color: #687078; text-decoration: none; }
+    .G-atb, .pager-row { display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-height: 46px; padding: 6px 12px; border-bottom: 1px solid #f1f1f3; color: #5f6368; }
+    .G-atb .Dj, .pager-row .Dj { font-size: 12px; white-space: nowrap; }
+    .G-atb .aqJ, .pager-row .aqJ { display: flex; gap: 4px; }
+    .G-atb button { width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent; color: inherit; cursor: pointer; }
+    /* Selectors reported from Gmail: generated toolbar spacer + sticky offset.
+       These rules model reservations, not an exported copy of Gmail's CSS. */
+    div.G-atb.D:is(.E, .F)::before { content: ""; display: block; height: 64px; min-width: 40px; }
+    div.V8djrc.byY { position: sticky; top: 64px; margin-top: 24px; padding-top: 20px; min-height: 90px; background: #fff; }
     /* Ligne de liste factice. */
     .list-row { display: flex; gap: 16px; padding: 12px 10px; border-bottom: 1px solid #f1f1f3; font-size: 13px; }
     /* Vue fil : panneau de lecture avec barre sticky qui réserve de la hauteur. */
@@ -32,7 +46,8 @@
     /* Barre de réponse flottante native (2025) + FAB composer. */
     .amn { position: sticky; align-self: flex-end; right: 24px; bottom: 24px; display: flex; gap: 8px; padding: 6px; background: #f1f3f4; border-radius: 999px; box-shadow: 0 8px 24px rgba(9,9,11,.16); z-index: 20; }
     .amn button { border: 0; background: #fff; border-radius: 999px; padding: 10px 16px; font: 600 13px Arial; cursor: pointer; }
-    #pk-new-message-fab { position: fixed; right: 24px; bottom: 92px; width: 48px; height: 48px; border: 0; border-radius: 999px; background: #09090b; color: #fff; font-size: 20px; cursor: pointer; z-index: 21; }
+    #pk-new-message-fab { position: fixed; right: 24px; bottom: 92px; height: 48px; padding: 0 22px; white-space: nowrap; border: 0; border-radius: 999px; background: #c2e7ff; color: #001d35; font-size: 14px; cursor: pointer; z-index: 21; box-shadow: 0 4px 16px rgba(0,0,0,.18); }
+    #pk-new-message-fab.pk-fab-hidden { display: none !important; }
     .controls { position: fixed; left: 16px; bottom: 16px; display: flex; gap: 8px; z-index: 30; }
     .controls button { padding: 8px 14px; border: 1px solid #dadce0; background: #fff; border-radius: 8px; font: 13px Arial; cursor: pointer; }
     .probe { position: absolute; top: 0; left: 0; }
@@ -40,7 +55,7 @@
   <link rel="stylesheet" href="../../../src/extension-pk/themes/studio/focus-read.css">
 </head>
 <body>
-  <div id="gb"><span class="logo">Gmail</span><input id="search" type="search" aria-label="Rechercher dans les messages"></div>
+  <header id="global-shell"><div id="gb"><a id="native-logo" class="logo" aria-label="Gmail" href="#inbox"><img alt="" width="20" height="20">Gmail</a><input id="search" type="search" aria-label="Rechercher dans les messages"><button aria-label="Compte Google : demo@example.com">Compte démo</button></div></header>
   <main>
     <div class="bkK" id="canvas">
       <div id="pk-studio-tabs">
@@ -53,14 +68,28 @@
         <div class="list-row"><strong>Studio</strong> — Bienvenue dans le mode focus</div>
         <div class="list-row"><strong>PK</strong> — Réglages et aperçus</div>
       </section>
-      <section id="thread" class="aeH" hidden>
+    </div>
+    <section id="thread" class="aeH" hidden>
+      <div id="pager-shell">
+        <div class="G-atb pager-row" id="pager">
+          <div class="G-Ni" id="pager-controls">
+            <span class="Dj">3 sur 49</span>
+            <div class="aqJ" aria-label="Navigation dans les messages">
+              <button type="button" aria-label="Message précédent">‹</button>
+              <button type="button" aria-label="Message suivant">›</button>
+            </div>
+          </div>
+        </div>
+      </div>
         <div class="pane">
           <div class="scroller">
+            <div id="tools-shell">
             <div class="ack iH bzn" id="toolbar" gh="mtb">
               <button role="button" aria-label="Menu du fil">←</button>
               <button role="button" aria-label="Archiver">⌫</button>
               <button role="button" aria-label="Supprimer">🗑</button>
               <button role="button" aria-label="Étiqueter">🏷</button>
+            </div>
             </div>
             <div class="iY a98 nH"><div class="nH" id="subject">Un sujet volontairement long pour éprouver le mode focus</div></div>
             <div class="message">
@@ -72,13 +101,21 @@
           </div>
           <div class="amn" id="floatbar" role="toolbar">
             <button role="button" aria-label="Répondre" id="reply">Répondre</button>
+            <button role="button" aria-label="Répondre à tous" id="reply-all">Répondre à tous</button>
             <button role="button" aria-label="Transférer" id="forward">Transférer</button>
           </div>
         </div>
       </section>
-    </div>
   </main>
-  <button id="pk-new-message-fab" aria-label="Nouveau message">＋</button>
+  <button id="pk-new-message-fab" aria-label="Nouveau message">＋ Nouveau message</button>
+  <nav id="pk-no-left-menu-rail" aria-label="Dossiers Gmail">
+    <a href="#inbox" aria-label="Boîte de réception">▣</a>
+    <a href="#starred" aria-label="Messages suivis">★</a>
+    <a href="#sent" aria-label="Messages envoyés">➤</a>
+    <a href="#drafts" aria-label="Brouillons">✎</a>
+    <a href="#spam" aria-label="Spam">!</a>
+    <a href="#trash" aria-label="Corbeille">⌫</a>
+  </nav>
   <div class="controls">
     <button id="open-thread">Ouvrir le fil</button>
     <button id="back-list">Retour à la liste</button>
@@ -89,7 +126,7 @@
     window.chrome = { storage: { local: (() => {
       const store = { theme: 'theme-pk', enabled: { 'js-studio-focus-read': true } };
       return {
-        get: (_k, cb) => cb({ ...store }),
+        get: (_k, cb) => cb ? cb({ ...store }) : Promise.resolve({ ...store }),
         set: (patch) => { Object.assign(store, patch); window.__pkStorageListeners.forEach((l) => l(patch, 'local')); },
       };
     })(), onChanged: { addListener: (l) => window.__pkStorageListeners.push(l) } } };
@@ -98,9 +135,11 @@
     const list = document.getElementById('list-view');
     document.getElementById('open-thread').addEventListener('click', () => {
       list.hidden = true; thread.hidden = false; window.scrollTo(0, 0);
+      document.getElementById('pk-new-message-fab').classList.add('pk-fab-hidden');
     });
     document.getElementById('back-list').addEventListener('click', () => {
       thread.hidden = true; list.hidden = false;
+      document.getElementById('pk-new-message-fab').classList.remove('pk-fab-hidden');
     });
   </script>
   <script src="../../../src/extension-pk/themes/studio/focus-read.js"></script>

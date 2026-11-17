@@ -1,7 +1,7 @@
 // Studio · Focus lecture (thread view only).
 // When a conversation is open, the list chrome withdraws — #gb (logo +
-// search), the Studio category strip, the thread action toolbar and the
-// floating reply bar — and only the compact sticky subject plus the message
+// search), the Studio category strip, the thread toolbar and pager, and the
+// floating reply bar — leaving only the compact sticky subject and message
 // remain. The toolbar comes back when the pointer approaches the top edge,
 // the reply bar and the compose FAB when it approaches the bottom edge, and
 // #gb when keyboard focus enters it (Gmail's "/" search). List view is
@@ -15,15 +15,16 @@
   const TOP_ZONE = 44;     // px from the top edge that summons the toolbar
   const BOTTOM_ZONE = 64;  // px from the bottom edge that summons the reply bar
   const HIDE_DELAY = 700;  // ms after the pointer leaves before withdrawing
-  const SCAN_EVERY = 2000; // ms between full scans once a floating bar is found
   const RETRY_EVERY = 750;  // ms while Gmail is still mounting its reply bar
 
   let active = false;
   let reading = false;
   let scheduled = false;
   let floatEl = null;
-  let lastScan = 0;
   let scanRetry = 0;
+  let topLayoutDirty = true;
+  let layoutScheduled = false;
+  let topZone = TOP_ZONE;
 
   const root = document.documentElement;
   const held = { top: false, bottom: false };
@@ -37,6 +38,26 @@
     return !!node && node.getClientRects().length > 0 && getComputedStyle(node).visibility !== 'hidden';
   }
 
+  function toggleClass(name, on) {
+    if (root.classList.contains(name) !== on) root.classList.toggle(name, on);
+  }
+
+  function mark(attribute, nodes) {
+    const wanted = new Set(nodes.filter(Boolean));
+    let changed = false;
+    document.querySelectorAll(`[${attribute}]`).forEach(node => {
+      if (!wanted.has(node)) { node.removeAttribute(attribute); changed = true; }
+    });
+    for (const node of wanted) {
+      if (!node.hasAttribute(attribute)) { node.setAttribute(attribute, ''); changed = true; }
+    }
+    return changed;
+  }
+
+  function setVar(name, value) {
+    if (root.style.getPropertyValue(name) !== value) root.style.setProperty(name, value);
+  }
+
   function labelOf(el) {
     return [
       el.getAttribute('aria-label'),
@@ -46,89 +67,189 @@
     ].filter(Boolean).join(' ').trim();
   }
 
+  // The current sticky header was identified in Gmail's inspector. Keep the
+  // older subject wrapper as a fallback, not as a prerequisite for Focus.
+  function subjectHeader() {
+    return [...document.querySelectorAll('div.V8djrc.byY')].find(visible)
+      || [...document.querySelectorAll('.iY.a98.nH')].find(visible);
+  }
+
   // The full thread view is the only place where the subject header exists.
   function readingView() {
     if (!canHover()) return false;
-    return [...document.querySelectorAll('.iY.a98.nH')].some(visible);
+    return !!subjectHeader();
   }
 
   // Gmail's actual thread toolbar has a stable semantic hook used elsewhere
   // in this extension: .aeH .iH.bzn[gh="mtb"]. Prefer it to translated button
   // labels; keep a subject-relative fallback for Gmail variants.
-  function markTools() {
+  function findTools() {
     const native = [...document.querySelectorAll('.aeH .iH.bzn[gh="mtb"]')].filter(visible);
     if (native.length) {
-      native.forEach(el => el.setAttribute('data-pk-focus-tools', ''));
-      return;
+      const row = native[0].closest('div.G-atb.D.E, div.G-atb.D.F');
+      return row && !row.contains(subjectHeader()) ? row : native[0];
     }
-    const subjectEl = [...document.querySelectorAll('.iY.a98.nH')].find(visible);
-    if (!subjectEl) return;
+    const subjectEl = subjectHeader();
+    if (!subjectEl) return null;
+    const previous = document.querySelector('[data-pk-focus-tools]');
+    if (visible(previous) && !previous.contains(subjectEl)) return previous;
     let best = null;
     for (let wrap = subjectEl.parentElement; wrap && wrap !== document.body && !best; wrap = wrap.parentElement) {
       for (let node = wrap.firstElementChild; node; node = node.nextElementSibling) {
-        if (node.contains(subjectEl) || node.querySelector('.iY')) break;
+        if (node.contains(subjectEl) || node.querySelector('.iY, div.V8djrc.byY')) break;
         if (!visible(node)) continue;
         if (node.querySelectorAll('[role="button"],button,a').length >= 3) best = node;
       }
     }
-    if (!best) return;
-    best.setAttribute('data-pk-focus-tools', '');
+    return best;
   }
 
-  // Floating action bars (reply / forward, 2025 Gmail) are fixed or sticky
-  // ancestors of REAL reply buttons. Every visible candidate is scanned —
-  // never just the first match: an inline "Répondre" button inside the
-  // message must not hide the floating bar from the scan.
-  function markFloatBars() {
-    const now = Date.now();
-    const interval = floatEl?.isConnected ? SCAN_EVERY : RETRY_EVERY;
-    if (now - lastScan < interval) {
-      if (!floatEl?.isConnected && !scanRetry) {
-        scanRetry = setTimeout(() => {
-          scanRetry = 0;
-          schedule();
-        }, interval - (now - lastScan) + 8);
+  // Fix the counter/arrow group, then eliminate the enclosing row's own box
+  // in collapseChromeShells(). Keeping these two jobs separate also supports a
+  // Gmail row shared by the pagination and the thread actions.
+  function findPager(tools) {
+    const previous = document.querySelector('[data-pk-focus-pager]');
+    const subject = subjectHeader();
+    const controls = node => node.querySelectorAll('button, [role="button"]').length;
+    const isPager = node => controls(node) >= 2 && /\d[\s\S]*\d/.test(node.textContent);
+    const safe = node => !node.contains(subject) && node !== tools && !node.contains(tools)
+      && !node.querySelector('.zA, .a3s');
+    const groupFor = signal => {
+      for (let node = signal; node && node !== document.body; node = node.parentElement) {
+        if (!safe(node)) break;
+        if (isPager(node)) return node;
       }
-      return;
+      return null;
+    };
+    // Stable identity first. Do not promote/demote the action marker between
+    // the native toolbar and its G-atb parent on every Gmail mutation.
+    if (previous?.isConnected && safe(previous) && visible(previous) && controls(previous) >= 2) return previous;
+
+    const nativeRows = [...document.querySelectorAll('div.G-atb.D.E, div.G-atb.D.F')]
+      .filter(node => (visible(node) || (node.hasAttribute('data-pk-focus-shell') && [...node.children].some(visible)))
+        && !node.contains(subject));
+    const signals = [...document.querySelectorAll('.Dj, .aqJ')].filter(visible);
+    for (const row of nativeRows) {
+      // Prefer a native group, not a width-constrained whole row. Native
+      // counter text + two buttons also covers Gmail without .Dj/.aqJ.
+      for (const node of row.querySelectorAll('div, span')) {
+        if (safe(node) && visible(node) && isPager(node)) signals.push(node);
+      }
+      if (safe(row) && isPager(row)) signals.push(row);
     }
-    lastScan = now;
-    let found = false;
+    return signals.map(groupFor).find(node => node && visible(node)) || null;
+  }
+
+  function syncTopChrome() {
+    const tools = findTools();
+    const pager = findPager(tools);
+    const toolsChanged = mark('data-pk-focus-tools', [tools]);
+    const pagerChanged = mark('data-pk-focus-pager', [pager]);
+    if (toolsChanged || pagerChanged) topLayoutDirty = true;
+    toggleClass('pk-focus-pager', !!pager);
+  }
+
+  // Taking a control out of flow does NOT reclaim the height of Gmail's
+  // enclosing row if that row has its own height/min-height/padding. Collapse
+  // only ancestors made entirely of the withdrawn chrome; stop as soon as an
+  // ancestor also owns message content or any other visible UI.
+  function collapseChromeShells() {
+    const chromeSelector = '#gb, #pk-studio-tabs, [data-pk-focus-tools], [data-pk-focus-pager]';
+    const chromeOnly = node => {
+      if (node.nodeType === Node.TEXT_NODE) return !node.textContent.trim();
+      if (node.nodeType !== Node.ELEMENT_NODE) return true;
+      if (node.matches(chromeSelector)) return true;
+      if (node.matches('script, style, template, [hidden]')) return true;
+      if (!node.hasChildNodes()) return node.matches('div, span');
+      return [...node.childNodes].every(chromeOnly);
+    };
+    const shells = new Set();
+    for (const control of document.querySelectorAll(chromeSelector)) {
+      for (let shell = control.parentElement; shell && shell !== document.body; shell = shell.parentElement) {
+        if (shell.matches(chromeSelector) || !chromeOnly(shell)) break;
+        shells.add(shell);
+      }
+    }
+    mark('data-pk-focus-shell', [...shells]);
+  }
+
+  // Reserve a clear lane for the left folder rail and the pager cluster. The
+  // rail is aligned by no-left-menu.js to Gmail's burger; while #gb is hidden,
+  // its position can jump, so measure the rail itself after its focus override.
+  function syncTopChromeLayout() {
+    layoutScheduled = false;
+    if (!reading || !topLayoutDirty) return;
+    topLayoutDirty = false;
+    const rail = document.getElementById('pk-no-left-menu-rail');
+    const pager = document.querySelector('[data-pk-focus-pager]');
+    const tools = document.querySelector('[data-pk-focus-tools]');
+    const fab = document.getElementById('pk-new-message-fab');
+    const railEnd = rail ? Math.ceil(rail.getBoundingClientRect().right + 12) : 12;
+    const pagerRect = pager?.getBoundingClientRect();
+    const height = Math.ceil(Math.max(46, pagerRect?.height || 0, tools?.getBoundingClientRect().height || 0));
+    const fabWidth = Math.ceil(fab?.getBoundingClientRect().width || 48);
+    const replyButtons = floatEl ? [...floatEl.querySelectorAll('button,a,[role="button"],[role="link"]')]
+      .filter(node => /^(répondre|repondre|reply|transf[ée]rer|forward)\b/i.test(labelOf(node))) : [];
+    const replyHeight = replyButtons[0]?.getBoundingClientRect().height || 36;
+    const replyBottom = replyButtons.at(-1)?.getBoundingClientRect().bottom;
+    const composeInset = replyBottom === undefined ? 6 : Math.max(0, floatEl.getBoundingClientRect().bottom - replyBottom);
+    topZone = Math.max(TOP_ZONE, height + 8);
+    setVar('--pk-focus-rail-end', `${railEnd}px`);
+    setVar('--pk-focus-pager-reserve', `${pagerRect?.width || 0}px`);
+    setVar('--pk-focus-top-height', `${height}px`);
+    setVar('--pk-focus-fab-width', `${fabWidth}px`);
+    setVar('--pk-focus-compose-height', `${replyHeight}px`);
+    setVar('--pk-focus-compose-inset', `${composeInset}px`);
+  }
+
+  // Resolve the floating native reply row once per DOM identity. Rescanning
+  // an already hidden row would depend on our own visibility override.
+  // Inline reply buttons must not hide the later fixed/sticky candidate.
+  function markFloatBars() {
+    if (floatEl?.isConnected && !floatEl.closest('[hidden], [aria-hidden="true"]')) return;
+    floatEl = null;
     for (const el of document.querySelectorAll('button,a,[role="button"],[role="link"]')) {
       if (!visible(el) || !/^(répondre|repondre|reply|transf[ée]rer|forward)\b/i.test(labelOf(el))) continue;
       for (let node = el.parentElement; node && node !== document.body; node = node.parentElement) {
         const position = getComputedStyle(node).position;
         if ((position === 'fixed' || position === 'sticky') && visible(node)) {
-          if (!node.hasAttribute('data-pk-focus-floatbar')) {
-            const rect = node.getBoundingClientRect();
-            node.style.setProperty('--pk-focus-float-left', `${Math.round(rect.left)}px`);
-            node.style.setProperty('--pk-focus-float-width', `${Math.round(rect.width)}px`);
-            if (!floatEl) floatEl = node;
-            node.setAttribute('data-pk-focus-floatbar', '');
-          }
-          found = true;
-          break; // innermost floating ancestor of this button
+          floatEl = node;
+          break;
         }
       }
+      if (floatEl) break;
     }
-    if (found) {
+    if (mark('data-pk-focus-floatbar', [floatEl])) topLayoutDirty = true;
+    if (floatEl) {
       clearTimeout(scanRetry);
       scanRetry = 0;
-      floatEl = floatEl?.isConnected ? floatEl : [...document.querySelectorAll('[data-pk-focus-floatbar]')].find(el => el.isConnected) || null;
+    } else if (!scanRetry) {
+      scanRetry = setTimeout(() => { scanRetry = 0; schedule(); }, RETRY_EVERY);
     }
   }
 
   function zoneSelector(zone) {
     return zone === 'top'
-      ? '#gb, [data-pk-focus-tools], #pk-studio-tabs'
+      ? '#gb, [data-pk-focus-tools], [data-pk-focus-pager], #pk-studio-tabs'
       : '[data-pk-focus-floatbar], #pk-new-message-fab';
   }
 
   function inTopChrome(target) {
-    return !!target?.closest?.('#gb, [data-pk-focus-tools], #pk-studio-tabs');
+    return !!target?.closest?.('#gb, [data-pk-focus-tools], [data-pk-focus-pager], #pk-studio-tabs');
   }
 
   function inBottomBar(target) {
     return !!target?.closest?.('[data-pk-focus-floatbar], #pk-new-message-fab');
+  }
+
+  function queueHide(zone) {
+    if (held[zone]) return;
+    clearTimeout(timers[zone]);
+    timers[zone] = setTimeout(() => {
+      timers[zone] = 0;
+      const focused = document.activeElement?.closest?.(zoneSelector(zone));
+      if (!held[zone] && !focused) toggleClass(`pk-focus-${zone}`, false);
+    }, HIDE_DELAY);
   }
 
   function hold(zone, on) {
@@ -136,25 +257,18 @@
       held[zone] = true;
       clearTimeout(timers[zone]);
       timers[zone] = 0;
-      root.classList.add(`pk-focus-${zone}`);
+      toggleClass(`pk-focus-${zone}`, true);
       return;
     }
     if (!held[zone]) return;
     held[zone] = false;
-    clearTimeout(timers[zone]);
-    timers[zone] = setTimeout(() => {
-      timers[zone] = 0;
-      // Keyboard focus inside the zone keeps it open (typing a reply or
-      // tabbing through toolbar controls): only the pointer closes it.
-      const focused = document.activeElement?.closest?.(zoneSelector(zone));
-      if (!held[zone] && !focused) root.classList.remove(`pk-focus-${zone}`);
-    }, HIDE_DELAY);
+    queueHide(zone);
   }
 
   function onPointerMove(event) {
     if (!reading) return;
     const target = event.target instanceof Element ? event.target : null;
-    hold('top', inTopChrome(target) || event.clientY <= TOP_ZONE);
+    hold('top', inTopChrome(target) || event.clientY <= topZone);
     hold('bottom', inBottomBar(target) || event.clientY >= window.innerHeight - BOTTOM_ZONE);
   }
 
@@ -167,15 +281,20 @@
   function onFocusIn(event) {
     if (!reading) return;
     const target = event.target instanceof Element ? event.target : null;
-    if (inTopChrome(target)) hold('top', true);
-    else if (inBottomBar(target)) hold('bottom', true);
+    const zone = inTopChrome(target) ? 'top' : inBottomBar(target) ? 'bottom' : null;
+    if (zone) {
+      clearTimeout(timers[zone]);
+      timers[zone] = 0;
+      toggleClass(`pk-focus-${zone}`, true);
+    }
   }
 
   function onFocusOut(event) {
     if (!reading) return;
     const target = event.target instanceof Element ? event.target : null;
-    if (inTopChrome(target)) hold('top', false);
-    if (inBottomBar(target)) hold('bottom', false);
+    // A Gmail focus change must not clear the independent pointer hold.
+    if (inTopChrome(target)) queueHide('top');
+    if (inBottomBar(target)) queueHide('bottom');
   }
 
   function releaseAll() {
@@ -187,13 +306,24 @@
       root.classList.remove(`pk-focus-${zone}`);
     }
     root.classList.remove('pk-focus');
+    root.classList.remove('pk-focus-pager');
+    root.style.removeProperty('--pk-focus-rail-end');
+    root.style.removeProperty('--pk-focus-pager-reserve');
+    root.style.removeProperty('--pk-focus-top-height');
+    root.style.removeProperty('--pk-focus-fab-width');
+    root.style.removeProperty('--pk-focus-compose-height');
+    root.style.removeProperty('--pk-focus-compose-inset');
+    topLayoutDirty = true;
+    topZone = TOP_ZONE;
     floatEl = null;
     clearTimeout(scanRetry);
     scanRetry = 0;
-    document.querySelectorAll('[data-pk-focus-tools],[data-pk-focus-floatbar]')
+    document.querySelectorAll('[data-pk-focus-tools],[data-pk-focus-pager],[data-pk-focus-floatbar],[data-pk-focus-shell]')
       .forEach(el => {
         el.removeAttribute('data-pk-focus-tools');
+        el.removeAttribute('data-pk-focus-pager');
         el.removeAttribute('data-pk-focus-floatbar');
+        el.removeAttribute('data-pk-focus-shell');
         el.style.removeProperty('--pk-focus-float-left');
         el.style.removeProperty('--pk-focus-float-width');
       });
@@ -209,7 +339,7 @@
     if (next !== reading) {
       if (next) {
         reading = true;
-        lastScan = 0; // scan the floating bars right away on entry
+        topLayoutDirty = true;
         root.classList.add('pk-focus');
       } else {
         releaseAll();
@@ -218,10 +348,14 @@
     if (!reading) return;
     if (floatEl && !floatEl.isConnected) {
       floatEl = null;
-      lastScan = 0;
     }
-    markTools();
+    syncTopChrome();
+    collapseChromeShells();
     markFloatBars();
+    if (topLayoutDirty && !layoutScheduled) {
+      layoutScheduled = true;
+      requestAnimationFrame(syncTopChromeLayout);
+    }
   }
 
   function schedule() {
@@ -245,9 +379,18 @@
     if (area !== 'local' || (!changes.theme && !changes.enabled)) return;
     chrome.storage.local.get(['theme', 'enabled'], applyState);
   });
-  new MutationObserver(schedule).observe(document.documentElement, {
-    childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class', 'aria-hidden', 'hidden'],
+  new MutationObserver(records => {
+    const pager = document.querySelector('[data-pk-focus-pager]');
+    const fab = document.getElementById('pk-new-message-fab');
+    if (records.some(record => pager?.contains(record.target) || fab?.contains(record.target) || floatEl?.contains(record.target))) topLayoutDirty = true;
+    schedule();
+  }).observe(document.documentElement, {
+    childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['style', 'class', 'aria-hidden', 'hidden'],
   });
   window.addEventListener('hashchange', schedule);
+  window.addEventListener('resize', () => {
+    topLayoutDirty = true;
+    schedule();
+  });
   schedule();
 })();

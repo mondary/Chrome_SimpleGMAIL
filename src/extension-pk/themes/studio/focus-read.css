@@ -34,30 +34,113 @@ html.pk-focus #pk-studio-tabs {
   display: none !important;
 }
 
-/* Thread toolbar (back arrow, archive, delete…): fixed and withdrawn, so the
-   subject becomes the only top landmark. Summoned by the top edge. */
+/* Gmail can reserve height on wrappers independently of their fixed children.
+   These shells contain ONLY withdrawn chrome, never the subject/message.
+   Their boxes disappear in BOTH hover states: the commands are overlays, not
+   rows that push the reading area down when revealed. display:contents also
+   removes transformed/contained ancestors that would trap fixed controls. */
+html.pk-focus [data-pk-focus-shell] {
+  display: contents !important;
+}
+
+/* Real Gmail rows reported in the inspector, including the E/F variants.
+   A pseudo-element remains a generated layout item even on a contents shell;
+   remove it explicitly instead of only hiding the counter's descendants. */
+html.pk-focus :is(div.G-atb.D.E, div.G-atb.D.F)::before,
+html.pk-focus :is(div.G-atb.D.E, div.G-atb.D.F)::after {
+  content: none !important;
+  display: none !important;
+}
+html.pk-focus :is(div.G-atb.D.E, div.G-atb.D.F):is([data-pk-focus-tools], [data-pk-focus-pager]) {
+  height: auto !important;
+  bottom: auto !important;
+}
+
+/* One contiguous top strip, divided into action and navigation lanes. No new
+   body-level background may cover controls trapped in Gmail stacking contexts.
+   Native controls stay in their original ancestry with their handlers. */
 html.pk-focus [data-pk-focus-tools] {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
-  right: 0 !important;
-  z-index: 994 !important;
+  right: var(--pk-focus-pager-reserve, 0px) !important;
+  width: auto !important;
+  z-index: 995 !important;
   margin: 0 !important;
-  padding: 6px 12px !important;
-  background: rgba(255,255,255,.94) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
-  backdrop-filter: blur(14px) !important;
+  box-sizing: border-box !important;
+  min-height: var(--pk-focus-top-height, 46px) !important;
+  padding: 6px 12px 6px var(--pk-focus-rail-end, 12px) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  background: #fff !important;
+  border: 0 !important;
   border-bottom: 1px solid #f0f0f1 !important;
-  box-shadow: 0 10px 30px rgba(9,9,11,.06) !important;
-  transform: translateY(-110%) !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  /* A transformed action row traps a nested fixed pager. Fade this stable
+     host only: nested native navigation must stay relative to the viewport. */
+  transform: none !important;
   opacity: 0 !important;
   pointer-events: none !important;
-  transition: transform .18s cubic-bezier(.2,.7,.3,1), opacity .18s ease !important;
+  transition: opacity .18s ease !important;
 }
 html.pk-focus.pk-focus-top [data-pk-focus-tools] {
   transform: none !important;
   opacity: 1 !important;
   pointer-events: auto !important;
+}
+html.pk-focus.pk-focus-top [data-pk-focus-tools] :is(button, a, [role="button"], [tabindex]) {
+  pointer-events: auto !important;
+}
+
+/* Counter and previous/next controls overlay the right side of the actions.
+   Their enclosing row's box is eliminated above, whether it is separate or
+   shared with the actions. Neither hover state reserves any vertical space. */
+html.pk-focus [data-pk-focus-pager] {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  left: auto !important;
+  z-index: 995 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  box-sizing: border-box !important;
+  width: max-content !important;
+  max-width: calc(100vw - var(--pk-focus-rail-end, 12px) - 24px) !important;
+  min-height: var(--pk-focus-top-height, 46px) !important;
+  margin: 0 !important;
+  padding: 6px 12px !important;
+  overflow: visible !important;
+  white-space: nowrap !important;
+  background: #fff !important;
+  border: 0 !important;
+  border-bottom: 1px solid #f0f0f1 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity .18s ease !important;
+}
+html.pk-focus.pk-focus-top [data-pk-focus-pager] {
+  transform: none !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+html.pk-focus.pk-focus-top [data-pk-focus-pager] :is(button, a, [role="button"], [tabindex]) {
+  pointer-events: auto !important;
+}
+html.pk-focus:not(.pk-focus-top) :is([data-pk-focus-tools], [data-pk-focus-pager]) * {
+  pointer-events: none !important;
+}
+
+/* The folder rail normally aligns below Gmail's burger. That burger is inside
+   the global bar hidden by Focus, so keep the rail below the revealed strip
+   instead of letting its hover realignment jump it into the back button. */
+html.pk-focus #pk-no-left-menu-rail {
+  top: max(calc(var(--pk-focus-top-height, 46px) + 8px), 56px, var(--pk-folder-top, 56px)) !important;
+  max-height: calc(100dvh - max(calc(var(--pk-focus-top-height, 46px) + 8px), 56px, var(--pk-folder-top, 56px))) !important;
 }
 
 /* Floating reply bar (fixed/sticky native row) and compose FAB: withdrawn
@@ -67,7 +150,7 @@ html.pk-focus [data-pk-focus-floatbar],
 html.pk-focus #pk-new-message-fab {
   position: fixed !important;
   top: auto !important;
-  bottom: 0 !important;
+  bottom: 12px !important;
   z-index: 995 !important;
   opacity: 0 !important;
   visibility: hidden !important;
@@ -76,10 +159,49 @@ html.pk-focus #pk-new-message-fab {
   transition: transform .18s cubic-bezier(.2,.7,.3,1), opacity .18s ease, visibility 0s .18s !important;
 }
 html.pk-focus [data-pk-focus-floatbar] {
-  left: var(--pk-focus-float-left, 0px) !important;
-  right: auto !important;
-  width: var(--pk-focus-float-width, auto) !important;
+  left: auto !important;
+  right: calc(var(--pk-focus-fab-width, 48px) + 24px) !important;
+  width: max-content !important;
+  min-width: 0 !important;
+  max-width: calc(100vw - var(--pk-focus-fab-width, 48px) - 48px) !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+  box-sizing: border-box !important;
   margin: 0 !important;
+}
+html.pk-focus #pk-new-message-fab {
+  /* Override the source userscript's list-only .pk-fab-hidden rule while
+     Focus owns the edge reveal. Keep the FAB outside the reply background. */
+  display: flex !important;
+  right: 12px !important;
+  left: auto !important;
+  z-index: 996 !important;
+  bottom: calc(12px + var(--pk-focus-compose-inset, 6px)) !important;
+  height: var(--pk-focus-compose-height, 36px) !important;
+  width: auto !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 14px !important;
+  gap: 6px !important;
+  border: 1px solid #dadce0 !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  color: #3c4043 !important;
+  font: 500 13px/1 "Google Sans", Roboto, Arial, sans-serif !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+}
+html.pk-focus #pk-new-message-fab:hover {
+  background: #f1f3f4 !important;
+  border-color: #c4c7c5 !important;
+  box-shadow: none !important;
+}
+html.pk-focus #pk-new-message-fab:focus-visible {
+  outline: 2px solid #3c4043 !important;
+  outline-offset: 3px !important;
 }
 html.pk-focus.pk-focus-bottom [data-pk-focus-floatbar],
 html.pk-focus.pk-focus-bottom #pk-new-message-fab {
@@ -90,8 +212,19 @@ html.pk-focus.pk-focus-bottom #pk-new-message-fab {
   transition: transform .18s cubic-bezier(.2,.7,.3,1), opacity .18s ease, visibility 0s 0s !important;
 }
 
+/* Current Gmail sticky header: retain the subject and its controls, but not
+   the inset/margin/min-height reserved for the now withdrawn toolbar. */
+html.pk-focus div.V8djrc.byY {
+  position: sticky !important;
+  top: 0 !important;
+  margin-top: 0 !important;
+  padding-top: 2px !important;
+  min-height: 0 !important;
+  height: auto !important;
+}
 /* Sticky subject: compact single landmark, hairline instead of a bar. */
-html.pk-focus .iY.a98.nH > div.nH:nth-of-type(1) {
+html.pk-focus .iY.a98.nH > div.nH:nth-of-type(1),
+html.pk-focus div.V8djrc.byY {
   padding-top: 2px !important;
   padding-bottom: 6px !important;
   border-bottom: 1px solid #f4f4f5 !important;
@@ -106,6 +239,7 @@ html.pk-focus .AO {
 @media (prefers-reduced-motion: reduce) {
   html.pk-focus #gb,
   html.pk-focus [data-pk-focus-tools],
+  html.pk-focus [data-pk-focus-pager],
   html.pk-focus [data-pk-focus-floatbar],
   html.pk-focus #pk-new-message-fab {
     transition: none !important;

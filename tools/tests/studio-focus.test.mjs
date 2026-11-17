@@ -1,10 +1,10 @@
 // Browser regression suite for Studio Focus lecture: the chrome withdraws in
-// thread view, the toolbar/reply bar/FAB come back from the edges, keyboard
+// thread view, the toolbar/pager/reply bar/FAB come back from the edges, keyboard
 // focus reveals the search bar, list view is untouched, the toggle disables it.
 // Run: node tools/tests/studio-focus.test.mjs (Chrome, or CHROME_BIN, required).
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -49,6 +49,7 @@ try {
   const click = selector => evaluate(`document.querySelector(${JSON.stringify(selector)})?.click()`);
   const move = (x, y) => cdp('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y, buttons: 0 });
   const style = (selector, prop) => evaluate(`getComputedStyle(document.querySelector(${JSON.stringify(selector)})).${prop}`);
+  const rect = selector => evaluate(`(()=>{const r=document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height}})()`);
   const captureDir = new URL('../previews/studio-focus-preview/captures/', import.meta.url);
   const capture = async name => {
     if (process.env.CAPTURE_FOCUS !== '1') return;
@@ -61,17 +62,52 @@ try {
   await cdp('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false });
   await cdp('Page.navigate', { url: fixture });
   await wait(`document.querySelector('#open-thread') && document.querySelector('#pk-studio-tabs')`);
+  // Run the REAL Modules widget too. Only its host guard is extended to this
+  // local fixture; account/navigation messaging is stubbed, never authenticated.
+  const moduleSource = await readFile(new URL('../../src/extension-pk/themes/studio/modules.js', import.meta.url), 'utf8');
+  const moduleFixtureSource = moduleSource.replace("location.hostname === 'mail.google.com' ? 'mail' :",
+    "(location.hostname === 'mail.google.com' || location.protocol === 'file:') ? 'mail' :");
+  assert.notEqual(moduleSource, moduleFixtureSource, 'fixture explicitly adapts only the module host guard');
+  const moduleCss = await readFile(new URL('../../src/extension-pk/themes/studio/modules.css', import.meta.url), 'utf8');
+  await evaluate(`(()=>{
+    const style=document.createElement('style');style.textContent=${JSON.stringify(moduleCss)};document.head.append(style);
+    window.__moduleRequests=[];
+    chrome.runtime={sendMessage:async message=>{__moduleRequests.push(message);return {ok:false}}};
+  })()`);
+  await evaluate(moduleFixtureSource);
+  await wait(`document.querySelector('#gb #pk-studio-modules') && getComputedStyle(document.querySelector('#pk-studio-modules')).opacity === '1'`);
+  await evaluate(`window.__initialModulesNav=document.querySelector('#pk-studio-modules')`);
 
   // List view: untouched.
   assert.equal(await evaluate(`document.documentElement.classList.contains('pk-focus')`), false);
   assert.notEqual(await style('#pk-studio-tabs', 'display'), 'none');
+  const listFabBackground = await style('#pk-new-message-fab', 'backgroundColor');
+  const listFabShadow = await style('#pk-new-message-fab', 'boxShadow');
 
   // Thread view: the chrome withdraws, the containers are marked in place.
   await click('#open-thread');
   await wait(`document.documentElement.classList.contains('pk-focus')`);
   await wait(`document.querySelector('#toolbar').hasAttribute('data-pk-focus-tools')`);
+  await wait(`document.querySelector('#pager-controls').hasAttribute('data-pk-focus-pager')`);
   await wait(`document.querySelector('#floatbar').hasAttribute('data-pk-focus-floatbar')`);
+  await wait(`document.querySelector('#gb #pk-studio-modules')`);
+  assert.equal(await evaluate(`document.querySelector('#pk-studio-modules') === __initialModulesNav`), true,
+    'Focus leaves the original app switch in its usual header position');
+  assert.equal(await evaluate(`document.querySelectorAll('body > #pk-studio-modules, [data-pk-focus-docked], [data-pk-focus-module-clearance]').length`), 0,
+    'no permanent corner triptych, extra return control or subject clearance');
+  assert.equal(await style('#pk-studio-modules', 'position'), 'relative', 'triptych is not a fixed reading overlay');
+  assert.equal(await style('#subject', 'paddingLeft'), '0px', 'subject keeps its original horizontal alignment');
+  assert.equal(await evaluate(`document.querySelector('#canvas').contains(document.querySelector('#pager'))`), false,
+    'pager detection must not depend on Gmail placing the conversation row inside the list workspace');
+  assert.equal(await style('#pager-controls', 'position'), 'fixed', 'pagination controls form a viewport overlay');
+  for (const selector of ['#global-shell', '#pager-shell', '#pager', '#tools-shell']) {
+    assert.equal(await style(selector, 'display'), 'contents', `${selector}: the reserved wrapper box is removed`);
+    assert.equal(await evaluate(`document.querySelector(${JSON.stringify(selector)}).getClientRects().length`), 0,
+      `${selector}: no layout box remains even with an explicit native height`);
+  }
+  await evaluate(`document.querySelector('#pager').classList.remove('G-atb')`);
   await wait(`getComputedStyle(document.querySelector('#toolbar')).opacity === '0'`);
+  await wait(`getComputedStyle(document.querySelector('#pager-controls')).opacity === '0'`);
   await wait(`getComputedStyle(document.querySelector('#gb')).opacity === '0'`);
   await wait(`getComputedStyle(document.querySelector('#floatbar')).visibility === 'hidden'`);
   assert.equal(await style('#pk-studio-tabs', 'display'), 'none', 'category strip hidden while reading');
@@ -79,33 +115,101 @@ try {
   assert.equal(await style('#gb', 'opacity'), '0', 'global bar withdrawn');
   assert.equal(await style('#toolbar', 'position'), 'fixed', 'thread toolbar out of flow');
   assert.equal(await style('#toolbar', 'opacity'), '0', 'thread toolbar withdrawn');
+  assert.equal(await style('#pager-controls', 'position'), 'fixed', 'message pager leaves its own row');
+  assert.ok((await rect('#thread .pane')).top <= 1, 'pager row no longer reserves space above the sticky subject');
+  assert.ok((await rect('.iY.a98.nH')).top <= 1, 'actions wrapper no longer reserves space above the sticky subject');
+  assert.equal(await style('#pager-controls', 'opacity'), '0', 'message pager withdrawn with the toolbar');
   assert.equal(await style('#floatbar', 'position'), 'fixed', 'sticky reply bar leaves the flow');
-  assert.equal(await style('#floatbar', 'bottom'), '0px', 'reply bar is anchored to the screen edge');
+  assert.equal(await style('#floatbar', 'bottom'), '12px', 'reply bar is anchored to the screen edge');
   assert.equal(await style('#floatbar', 'visibility'), 'hidden', 'reply bar withdrawn');
   assert.equal(await evaluate(`document.querySelectorAll('[data-pk-focus-tools]').length`), 1, 'toolbar marked once');
+  assert.equal(await evaluate(`document.querySelectorAll('[data-pk-focus-pager]').length`), 1, 'message pager marked once');
   assert.equal(await evaluate(`document.querySelectorAll('[data-pk-focus-floatbar]').length`), 1, 'float bar marked once despite inline reply button');
   assert.equal(await evaluate(`document.querySelector('#toolbar').getAttribute('gh')`), 'mtb', 'real Gmail thread-toolbar hook is used');
+  assert.equal(await evaluate(`document.querySelector('#pager .Dj').textContent.trim()`), '3 sur 49', 'Gmail message counter stays intact');
   await move(640, 420);
+  const subjectHiddenRect = await rect('.iY.a98.nH');
+  const messageHiddenRect = await rect('.message');
+  const scrollerHiddenHeight = (await rect('.scroller')).height;
   await capture('01-focus');
 
   // Pointer at the top edge summons the thread toolbar only.
   await move(640, 8);
   await wait(`document.documentElement.classList.contains('pk-focus-top')`);
   await wait(`getComputedStyle(document.querySelector('#toolbar')).opacity === '1'`);
+  await wait(`getComputedStyle(document.querySelector('#pager-controls')).opacity === '1'`);
   assert.equal(await style('#gb', 'opacity'), '0', 'search bar stays away on edge hover');
+  const toolbarRect = await rect('#toolbar');
+  const pagerRect = await rect('#pager-controls');
+  const backRect = await rect('#toolbar button');
+  const railRect = await rect('#pk-no-left-menu-rail');
+  const nextRect = await rect('#toolbar button:last-child');
+  const paneRect = await rect('#thread .pane');
+  assert.equal(toolbarRect.top, pagerRect.top, 'toolbar and pagination share the revealed top row');
+  assert.equal(pagerRect.top, 0, 'pagination is aligned to the top edge');
+  assert.ok(paneRect.top <= 1, 'the message pane starts at the top after the pager leaves the flow');
+  assert.ok(backRect.left >= railRect.right + 8, 'back button starts to the right of the folder rail');
+  assert.ok(nextRect.right < pagerRect.left, 'toolbar actions do not collide with the page counter');
+  assert.ok(toolbarRect.bottom + 8 <= railRect.top, 'the left rail starts below the revealed top strip');
+  assert.ok(pagerRect.right >= 1270, 'pager stays aligned to the right edge');
+  assert.equal((await rect('.iY.a98.nH')).top, subjectHiddenRect.top, 'hover must not push the subject down');
+  assert.equal((await rect('.message')).top, messageHiddenRect.top, 'hover must not push the message down');
+  assert.equal((await rect('.scroller')).height, scrollerHiddenHeight, 'hover must not shorten the reading viewport');
   await capture('02-bord-haut');
 
   // Leaving the edge withdraws it again after the delay.
   await move(640, 420);
   await wait(`!document.documentElement.classList.contains('pk-focus-top')`);
+  await move(24, 72);
+  await wait(`getComputedStyle(document.querySelector('#pk-no-left-menu-rail')).opacity === '1'`);
+  await wait(`!document.documentElement.classList.contains('pk-focus-top')`);
+  assert.ok((await rect('#pk-no-left-menu-rail')).top >= 56, 'left rail hover remains below the hidden global header');
+  await capture('05-rail-gauche');
+  await move(640, 420);
 
   // Pointer at the bottom edge summons the reply bar and the FAB.
   await move(640, 796);
   await wait(`document.documentElement.classList.contains('pk-focus-bottom')`);
   await wait(`getComputedStyle(document.querySelector('#floatbar')).visibility === 'visible'`);
+  await wait(`getComputedStyle(document.querySelector('#floatbar')).opacity === '1' && getComputedStyle(document.querySelector('#pk-new-message-fab')).opacity === '1'`);
   assert.equal(await style('#floatbar', 'position'), 'fixed', 'reply bar remains out of flow while revealed');
-  assert.equal(await style('#floatbar', 'bottom'), '0px', 'reply bar overlays the bottom edge, not a footer gap');
+  assert.equal(await style('#floatbar', 'bottom'), '12px', 'reply bar overlays the bottom edge, not a footer gap');
   assert.equal(await style('#pk-new-message-fab', 'visibility'), 'visible', 'compose FAB back at the bottom');
+  assert.notEqual(await style('#pk-new-message-fab', 'display'), 'none', 'Focus overrides the source userscript list-only hiding');
+  const fabRect = await rect('#pk-new-message-fab');
+  const replyRect = await rect('#floatbar');
+  assert.ok(Math.abs(fabRect.height - (await rect('#reply')).height) <= 1,
+    'compose is sized like the native reply controls, not an oversized standalone FAB');
+  assert.ok(Math.abs(fabRect.bottom - (await rect('#forward')).bottom) <= 1,
+    'compose aligns with the native button baseline inside the reply padding');
+  assert.equal(await style('#pk-new-message-fab', 'boxShadow'), 'none', 'compose has no detached floating shadow in Focus');
+  assert.equal(await style('#pk-new-message-fab', 'borderTopStyle'), 'solid', 'compose uses a quiet outlined treatment');
+  assert.ok(replyRect.right + 8 <= fabRect.left, 'reply background and full-width compose button have separate horizontal lanes');
+  assert.ok(Number(await style('#pk-new-message-fab', 'zIndex')) > Number(await style('#floatbar', 'zIndex')),
+    'compose button is above, not underneath, the reply background');
+  for (const selector of ['#pk-new-message-fab', '#reply', '#reply-all', '#forward']) {
+    const box = await rect(selector), x = (box.left + box.right) / 2, y = (box.top + box.bottom) / 2;
+    assert.equal(await evaluate(`document.querySelector(${JSON.stringify(selector)}).contains(document.elementFromPoint(${x},${y}))`), true,
+      `${selector}: bottom control is actually visible and hit-testable`);
+  }
+  await cdp('Emulation.setDeviceMetricsOverride', { width: 384, height: 800, deviceScaleFactor: 1, mobile: false });
+  await wait(`innerWidth === 384`);
+  assert.ok((await rect('#floatbar')).right + 8 <= (await rect('#pk-new-message-fab')).left,
+    'narrow viewport: reply/reply-all/forward wrap without covering the compose button');
+  for (const selector of ['#pk-new-message-fab', '#reply', '#reply-all', '#forward']) {
+    const box = await rect(selector), x = (box.left + box.right) / 2, y = (box.top + box.bottom) / 2;
+    assert.ok(box.left >= 0 && box.right <= 384 && box.top >= 0 && box.bottom <= 800,
+      `${selector}: narrow viewport keeps every bottom control on screen`);
+    assert.equal(await evaluate(`document.querySelector(${JSON.stringify(selector)}).contains(document.elementFromPoint(${x},${y}))`), true,
+      `${selector}: narrow viewport keeps every bottom control clickable`);
+  }
+  await cdp('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false });
+  await wait(`innerWidth === 1280`);
+  await move(640, 796);
+  await evaluate(`document.querySelector('#reply').focus(); document.querySelector('#reply').blur()`);
+  await evaluate(`new Promise(resolve=>{let frame=0;const tick=()=>++frame<60?requestAnimationFrame(tick):resolve();requestAnimationFrame(tick)})`);
+  assert.equal(await style('#floatbar', 'opacity'), '1', 'reply focus changes must not cancel the independent bottom hover');
+  assert.equal(await style('#pk-new-message-fab', 'opacity'), '1', 'compose stays revealed with the reply controls');
   await capture('03-bord-bas');
   await move(640, 420);
   await wait(`!document.documentElement.classList.contains('pk-focus-bottom')`);
@@ -113,14 +217,24 @@ try {
   // Keyboard focus inside the search reveals the global bar ("/" on Gmail).
   await evaluate(`document.querySelector('#search').focus()`);
   await wait(`getComputedStyle(document.querySelector('#gb')).opacity === '1'`);
+  await wait(`document.querySelector('#gb #pk-studio-modules')`);
   await evaluate(`document.querySelector('#search').blur()`);
   await wait(`getComputedStyle(document.querySelector('#gb')).opacity === '0'`);
+  assert.equal(await evaluate(`!!document.querySelector('#gb #pk-studio-modules')`), true,
+    'closing search keeps the app switch in its original header rather than moving it to a corner');
 
   // Back to the list: everything returns instantly, no attribute left behind.
   await click('#back-list');
   await wait(`!document.documentElement.classList.contains('pk-focus')`);
   assert.notEqual(await style('#pk-studio-tabs', 'display'), 'none', 'category strip back');
-  assert.equal(await evaluate(`document.querySelectorAll('[data-pk-focus-tools],[data-pk-focus-floatbar]').length`), 0, 'marks cleaned');
+  assert.equal(await evaluate(`document.querySelectorAll('[data-pk-focus-tools],[data-pk-focus-pager],[data-pk-focus-floatbar],[data-pk-focus-shell]').length`), 0, 'marks cleaned');
+  assert.equal(await style('#global-shell', 'display'), 'block', 'list view restores the global header wrapper');
+  await wait(`document.querySelector('#gb #pk-studio-modules')`);
+  assert.equal(await evaluate(`document.querySelectorAll('#pk-studio-modules').length`), 1, 'list view restores exactly one app switch');
+  assert.equal(await style('#pk-new-message-fab', 'backgroundColor'), listFabBackground, 'list view keeps its original compose colour');
+  assert.equal(await style('#pk-new-message-fab', 'boxShadow'), listFabShadow, 'list view keeps its original compose shadow');
+  assert.equal(await evaluate(`document.documentElement.classList.contains('pk-focus-pager')`), false, 'pager state cleaned');
+  assert.equal(await evaluate(`getComputedStyle(document.documentElement).getPropertyValue('--pk-focus-rail-end').trim()`), '', 'rail offset cleaned');
   await capture('04-liste');
 
   // The setting switches the whole mode off.
@@ -131,16 +245,241 @@ try {
   assert.equal(await evaluate(`document.documentElement.classList.contains('pk-focus')`), false, 'disabled: no focus mode');
   assert.notEqual(await style('#pk-studio-tabs', 'display'), 'none', 'disabled: strip stays');
   assert.equal(await style('#gb', 'position'), 'static', 'disabled: bar stays in flow');
+  assert.equal((await rect('#pager-shell')).height, 58, 'disabled: Gmail pager reservation restored');
+  assert.equal((await rect('#tools-shell')).height, 62, 'disabled: Gmail action reservation restored');
+  const subjectWithChrome = await rect('.iY.a98.nH');
+  const paneWithChrome = await rect('#thread .pane');
   const reservedBar = await evaluate(`document.querySelector('#floatbar').offsetHeight`);
   const scrollerWithFooter = await evaluate(`document.querySelector('.scroller').clientHeight`);
   await evaluate(`chrome.storage.local.set({ enabled: { 'js-studio-focus-read': true } })`);
   await wait(`document.documentElement.classList.contains('pk-focus')`);
   await wait(`getComputedStyle(document.querySelector('#floatbar')).position === 'fixed'`);
+  await wait(`getComputedStyle(document.querySelector('#tools-shell')).display === 'contents'`);
   const scrollerWithoutFooter = await evaluate(`document.querySelector('.scroller').clientHeight`);
   assert.ok(scrollerWithoutFooter >= scrollerWithFooter + reservedBar - 2,
     `removing the sticky bar's flow reservation recovers its height (${scrollerWithFooter} → ${scrollerWithoutFooter}, bar ${reservedBar})`);
+  assert.ok(subjectWithChrome.top - (await rect('.iY.a98.nH')).top >= 180,
+    'global header, pagination and action reservations are all recovered above the subject');
+  assert.ok(paneWithChrome.top - (await rect('#thread .pane')).top >= 120,
+    'global header and pagination wrappers no longer reserve any vertical lane');
 
-  console.log('PASS: focus lecture — Gmail toolbar hook, sticky reply bar leaves the flow, edge summon, keyboard search, clean list fallback, toggle respected.');
+  // Gmail may mount the actions and pagination inside the SAME toolbar row.
+  // The two overlay groups must not become nested fixed/transformed bars.
+  await evaluate(`(()=>{
+    const row=document.querySelector('#pager'), toolbar=document.querySelector('#toolbar');
+    row.classList.add('G-atb'); row.prepend(toolbar);
+    document.querySelector('#tools-shell').remove();
+  })()`);
+  await wait(`getComputedStyle(document.querySelector('#pager')).display === 'contents'`);
+  assert.equal(await style('#toolbar', 'position'), 'fixed', 'shared row: actions remain a viewport overlay');
+  assert.equal(await style('#pager-controls', 'position'), 'fixed', 'shared row: pagination remains a sibling overlay');
+  assert.ok((await rect('.iY.a98.nH')).top <= 1, 'shared row: no reserved space above the subject');
+  await move(640, 8);
+  await wait(`getComputedStyle(document.querySelector('#pager-controls')).opacity === '1' && getComputedStyle(document.querySelector('#toolbar')).opacity === '1'`);
+  assert.equal((await rect('#toolbar')).top, 0, 'shared row: actions return at the viewport edge');
+  assert.equal((await rect('#pager-controls')).top, 0, 'shared row: pagination returns at the same edge');
+  assert.equal((await rect('.iY.a98.nH')).top, subjectHiddenRect.top, 'shared row: hover still never shifts reading');
+  await move(640, 420);
+  await wait(`!document.documentElement.classList.contains('pk-focus-top')`);
+
+  // Collapsing chrome-only wrappers must never hide another piece of UI.
+  await evaluate(`(()=>{
+    const notice=document.createElement('p');notice.id='native-notice';notice.textContent='Information Gmail';
+    document.querySelector('#pager-shell').append(notice);
+  })()`);
+  await wait(`!document.querySelector('#pager-shell').hasAttribute('data-pk-focus-shell')`);
+  assert.ok((await rect('#native-notice')).height > 0, 'a wrapper containing other native content is not collapsed');
+  await evaluate(`document.querySelector('#native-notice').remove()`);
+  await wait(`getComputedStyle(document.querySelector('#pager-shell')).display === 'contents'`);
+  assert.ok((await rect('.iY.a98.nH')).top <= 1, 'chrome-only wrapper collapses again after other content leaves');
+
+  // Use the selectors reported from the user's Gmail inspector, WITHOUT the
+  // old .iY subject hook or the guessed .Dj/.aqJ pager hooks.
+  await evaluate(`chrome.storage.local.set({ enabled: { 'js-studio-focus-read': false } })`);
+  await wait(`!document.documentElement.classList.contains('pk-focus')`);
+  await evaluate(`(()=>{
+    const row=document.querySelector('#pager'), toolbar=document.querySelector('#toolbar');
+    const tools=document.createElement('div');tools.id='tools-shell';tools.append(toolbar);
+    document.querySelector('.scroller').prepend(tools);
+    row.className='G-atb D E';
+    document.querySelector('#pager .Dj').className='native-counter';
+    document.querySelector('#pager .aqJ').className='native-navigation';
+    document.querySelector('.iY.a98.nH').className='V8djrc byY';
+  })()`);
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('#pager'),'::before').content`), '""',
+    'native variant: fixture actually creates the reported pseudo-element');
+  const nativeSubjectBefore = await rect('.V8djrc.byY');
+  await evaluate(`chrome.storage.local.set({ enabled: { 'js-studio-focus-read': true } })`);
+  await wait(`document.documentElement.classList.contains('pk-focus')`);
+  await wait(`getComputedStyle(document.querySelector('#pager-controls')).opacity === '0'`);
+  assert.equal(await style('#pager-controls', 'position'), 'fixed', 'native variant: actual pagination group becomes an overlay');
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('#pager'),'::before').content`), 'none',
+    'native variant: generated toolbar spacer is removed');
+  assert.equal(await style('.V8djrc.byY', 'top'), '0px', 'native variant: sticky header no longer reserves the toolbar offset');
+  assert.equal(await style('.V8djrc.byY', 'marginTop'), '0px', 'native variant: sticky header top margin removed');
+  assert.ok((await rect('.V8djrc.byY')).top <= 1, 'native variant: subject reaches the top of the reading pane');
+  assert.ok(nativeSubjectBefore.top - (await rect('.V8djrc.byY')).top >= 120,
+    'native variant: the previously reserved band is actually recovered');
+  const nativeMessageTop = (await rect('.message')).top;
+  await move(640, 8);
+  await wait(`getComputedStyle(document.querySelector('#pager-controls')).opacity === '1'`);
+  assert.equal((await rect('#pager-controls')).top, 0, 'native variant: pagination returns at the same top edge as actions');
+  assert.equal((await rect('.message')).top, nativeMessageTop, 'native variant: hover never pushes the message');
+  await move(640, 420);
+  await wait(`getComputedStyle(document.querySelector('#pager-controls')).opacity === '0'`);
+  await evaluate(`document.querySelector('#pager').classList.replace('E','F')`);
+  await wait(`getComputedStyle(document.querySelector('#pager-controls')).position === 'fixed'`);
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('#pager'),'::before').content`), 'none',
+    'native variant: .G-atb.D.F receives the same spacer reset');
+  await evaluate(`(()=>{
+    document.querySelector('#pager').prepend(document.querySelector('#toolbar'));
+    document.querySelector('#tools-shell').remove();
+  })()`);
+  await wait(`document.querySelector('#pager').hasAttribute('data-pk-focus-tools') && document.querySelector('#pager-controls').hasAttribute('data-pk-focus-pager') && !document.querySelector('#toolbar').hasAttribute('data-pk-focus-tools')`);
+  await wait(`document.querySelector('#pager').getBoundingClientRect().height === document.querySelector('#pager-controls').getBoundingClientRect().height`);
+  assert.equal(await style('#pager', 'backgroundColor'), await style('#pager-controls', 'backgroundColor'),
+    'native shared row: actions and pagination use the same opaque strip background');
+  await move(640, 8);
+  await wait(`getComputedStyle(document.querySelector('#pager-controls')).opacity === '1' && document.querySelector('#pager-controls').getBoundingClientRect().top === 0`);
+  assert.equal((await rect('#pager-controls')).top, 0, 'native shared row: all controls return at the top edge');
+  assert.equal((await rect('.message')).top, nativeMessageTop, 'native shared row: revealing all controls never moves the message');
+  const nestedToolbar = await rect('#pager');
+  assert.equal(nestedToolbar.bottom, (await rect('#pager-controls')).bottom,
+    'native shared row: actions and pagination have the same strip height');
+
+  // E and F can coexist. Cover both sibling rows and a pager row nested in the
+  // actions wrapper; checking the outer bar's opacity alone is not sufficient.
+  await evaluate(`(()=>{
+    const actions=document.createElement('div');actions.id='native-actions';actions.className='G-atb D E';
+    document.querySelector('#pager').before(actions);
+    actions.append(document.querySelector('#toolbar'));
+    window.__nativeNext=document.querySelector('#pager-controls button:last-child');
+    window.__nativeNextClicks=0;
+    __nativeNext.addEventListener('click',()=>{__nativeNextClicks++});
+  })()`);
+  await wait(`document.querySelector('#native-actions').hasAttribute('data-pk-focus-tools') && document.querySelector('#pager-controls').hasAttribute('data-pk-focus-pager')`);
+  await wait(`getComputedStyle(document.querySelector('#pager-controls')).opacity === '1' && getComputedStyle(document.querySelector('#native-actions')).opacity === '1' && document.querySelector('#pager-controls').getBoundingClientRect().top === 0`);
+  assert.equal((await rect('#pager-controls')).top, 0, 'native E + F: pager is revealed alongside actions, not ignored');
+  assert.equal((await rect('.message')).top, nativeMessageTop, 'native E + F: neither row reserves reading space');
+  const stability = await evaluate(`new Promise(resolve=>{
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      const tools=document.querySelector('[data-pk-focus-tools]'), pager=document.querySelector('#pager-controls');
+      let writes=0, blink=false, frame=0;
+      const observer=new MutationObserver(records=>{writes+=records.length});
+      observer.observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:[
+        'data-pk-focus-tools','data-pk-focus-pager','data-pk-focus-shell','data-pk-focus-floatbar'
+      ]});
+      const step=()=>{
+        document.querySelector('#subject').classList.toggle('gmail-repaint');
+        blink ||= !tools.hasAttribute('data-pk-focus-tools') || !pager.hasAttribute('data-pk-focus-pager')
+          || getComputedStyle(tools).opacity !== '1' || getComputedStyle(pager).opacity !== '1';
+        if(++frame<45)requestAnimationFrame(step);
+        else requestAnimationFrame(()=>{observer.disconnect();resolve({writes,blink})});
+      };
+      step();
+    }));
+  })`);
+  assert.equal(stability.writes, 0, 'unrelated Gmail mutations must not demote/re-promote or rewrite chrome markers');
+  assert.equal(stability.blink, false, 'top controls stay revealed during repeated Gmail mutation scans');
+  await evaluate(`__nativeNext.focus(); __nativeNext.blur()`);
+  await evaluate(`new Promise(resolve=>{let frame=0;const tick=()=>++frame<60?requestAnimationFrame(tick):resolve();requestAnimationFrame(tick)})`);
+  assert.equal(await style('#pager-controls', 'opacity'), '1',
+    'Gmail focus/blur must not cancel the pointer hover and hide the navigation after the delay');
+  assert.equal(await style('[data-pk-focus-tools]', 'opacity'), '1',
+    'Gmail focus/blur must not hide the actions while the pointer remains in the top zone');
+  assert.equal((await rect('[data-pk-focus-tools]')).right, (await rect('#pager-controls')).left,
+    'actions and navigation meet without a gap or two overlapping backgrounds');
+  const idleMutations = await evaluate(`new Promise(resolve=>{
+    let writes=0, frame=0;
+    const observer=new MutationObserver(records=>{writes+=records.length});
+    observer.observe(document.documentElement,{subtree:true,attributes:true,childList:true,characterData:true});
+    const step=()=>{if(++frame<20)requestAnimationFrame(step);else{observer.disconnect();resolve(writes)}};
+    requestAnimationFrame(step);
+  })`);
+  assert.equal(idleMutations, 0, 'revealed chrome must settle: no self-triggered DOM/style/class mutation loop');
+  await evaluate(`document.querySelector('#pager .native-counter').firstChild.data='142 sur 9999'`);
+  await wait(`parseFloat(document.documentElement.style.getPropertyValue('--pk-focus-pager-reserve')) === document.querySelector('#pager-controls').getBoundingClientRect().width`);
+  assert.equal((await rect('[data-pk-focus-tools]')).right, (await rect('#pager-controls')).left,
+    'counter text updates resize the navigation lane without overlap or marker changes');
+  const clickNativeNext = async () => {
+    const button = await rect('#pager-controls button:last-child');
+    const x = (button.left + button.right) / 2, y = (button.top + button.bottom) / 2;
+    assert.ok(x > 0 && x < 1280 && y > 0 && y < 800, 'revealed Next control is inside the viewport');
+    assert.equal(await evaluate(`__nativeNext.contains(document.elementFromPoint(${x},${y}))`), true,
+      'revealed Next is hit-testable, not clipped/covered by the action bar');
+    await cdp('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', clickCount: 1 });
+    await cdp('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', clickCount: 1 });
+  };
+  await clickNativeNext();
+  assert.equal(await evaluate(`__nativeNextClicks`), 1, 'native E + F: real Next control receives pointer clicks');
+
+  await evaluate(`document.querySelector('#native-actions').append(document.querySelector('#pager'))`);
+  await wait(`document.querySelector('#native-actions').hasAttribute('data-pk-focus-tools') && document.querySelector('#pager-controls').hasAttribute('data-pk-focus-pager') && getComputedStyle(document.querySelector('#pager')).display === 'contents'`);
+  assert.equal((await rect('#pager-controls')).top, 0, 'nested E + F: pager remains anchored to the viewport, not a transformed action bar');
+  await clickNativeNext();
+  assert.equal(await evaluate(`__nativeNextClicks`), 2, 'nested E + F: original Next control still works');
+  assert.equal(await evaluate(`__nativeNext === document.querySelector('#pager-controls button:last-child')`), true,
+    'the native pager was not replaced by a clone');
+  await evaluate(`__nativeNext.blur()`);
+  await move(640, 420);
+  await wait(`getComputedStyle(document.querySelector('#pager-controls')).opacity === '0'`);
+  await evaluate(`__nativeNext.focus()`);
+  await wait(`getComputedStyle(document.querySelector('#pager-controls')).opacity === '1'`);
+  assert.equal(await evaluate(`document.activeElement === __nativeNext`), true,
+    'keyboard focus also reveals the real pagination');
+  await evaluate(`__nativeNext.blur()`);
+
+  await evaluate(`chrome.storage.local.set({ enabled: { 'js-studio-focus-read': false } })`);
+  await wait(`!document.documentElement.classList.contains('pk-focus')`);
+  assert.equal(await style('.V8djrc.byY', 'top'), '64px', 'native variant: Gmail sticky offset restored when disabled');
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('#pager'),'::before').content`), '""',
+    'native variant: Gmail pseudo-element restored when disabled');
+
+  // Modules retain their normal header behaviour, but are no longer surfaced
+  // as a fixed overlay during reading. Search can still reveal that header.
+  await evaluate(`chrome.storage.local.set({ enabled: { 'js-studio-focus-read': true } })`);
+  await wait(`document.documentElement.classList.contains('pk-focus') && document.querySelector('#gb #pk-studio-modules')`);
+  await move(640, 420);
+  await wait(`!document.documentElement.classList.contains('pk-focus-top')`);
+  await wait(`getComputedStyle(document.querySelector('#gb')).opacity === '0'`);
+  assert.equal(await style('#gb', 'opacity'), '0', 'reading does not reveal a permanent app switch or header');
+  assert.equal(await evaluate(`document.querySelectorAll('body > #pk-studio-modules, [data-pk-focus-docked], [data-pk-focus-module-clearance]').length`), 0,
+    'permanent triptych positioning remains removed after re-entering Focus');
+  await evaluate(`document.querySelector('#search').focus()`);
+  await wait(`getComputedStyle(document.querySelector('#gb')).opacity === '1'`);
+  for (const app of ['mail', 'calendar', 'drive']) {
+    const selector = `#pk-studio-modules [data-module="${app}"]`;
+    const button = await rect(selector), x = (button.left + button.right) / 2, y = (button.top + button.bottom) / 2;
+    assert.equal(await evaluate(`document.querySelector(${JSON.stringify(selector)}).contains(document.elementFromPoint(${x},${y}))`), true,
+      `${app}: ordinary header switch works when search reveals the header`);
+    assert.notEqual(await evaluate(`document.querySelector(${JSON.stringify(selector)}).getAttribute('aria-label')`), null,
+      `${app}: icon-only control keeps its accessible name`);
+  }
+  await click('#pk-studio-modules [data-module="calendar"]');
+  await wait(`__moduleRequests.at(-1)?.destination === 'calendar' && !document.querySelector('#pk-studio-modules').hasAttribute('aria-busy')`);
+  assert.equal(await evaluate(`__moduleRequests.at(-1).account`), 'demo@example.com', 'ordinary header switch retains the active account');
+  await evaluate(`document.querySelector('#pk-studio-modules [role=status]').textContent=''`);
+  await click('#pk-studio-modules [data-module="drive"]');
+  await wait(`__moduleRequests.at(-1)?.destination === 'drive' && !document.querySelector('#pk-studio-modules').hasAttribute('aria-busy')`);
+  await evaluate(`document.querySelector('#pk-studio-modules [role=status]').textContent=''`);
+  await evaluate(`chrome.storage.local.set({ enabled: { 'js-studio-focus-read': true, 'js-studio-modules': false } })`);
+  await wait(`!document.querySelector('#pk-studio-modules') && !document.querySelector('[data-pk-focus-module-clearance]')`);
+  assert.ok((await rect('.V8djrc.byY')).top <= 1, 'disabling Modules does not restore a reserved top row');
+  await evaluate(`chrome.storage.local.set({ enabled: { 'js-studio-focus-read': true, 'js-studio-modules': true } })`);
+  await wait(`document.querySelector('#gb #pk-studio-modules')`);
+  await evaluate(`(()=>{
+    window.__restoredModulesNav=document.querySelector('#pk-studio-modules');
+    addEventListener('hashchange',()=>{if(location.hash==='#inbox')document.querySelector('#back-list').click()});
+  })()`);
+  const inboxButton = await rect('#pk-studio-modules [data-module="mail"]');
+  const inboxX = (inboxButton.left + inboxButton.right) / 2, inboxY = (inboxButton.top + inboxButton.bottom) / 2;
+  await cdp('Input.dispatchMouseEvent', { type: 'mousePressed', x: inboxX, y: inboxY, button: 'left', clickCount: 1 });
+  await cdp('Input.dispatchMouseEvent', { type: 'mouseReleased', x: inboxX, y: inboxY, button: 'left', clickCount: 1 });
+  await wait(`location.hash === '#inbox' && !document.documentElement.classList.contains('pk-focus') && document.querySelector('#gb #pk-studio-modules')`);
+  assert.equal(await evaluate(`document.querySelector('#pk-studio-modules') === __restoredModulesNav`), true,
+    'normal header envelope still returns to inbox without any fixed corner overlay');
+
+  console.log('PASS: focus lecture — permanent triptych removed, original header/subject alignment preserved, stable hover navigation, zero idle mutations, no bottom overlap at 1280/384 px.');
 } finally {
   socket?.close();
   const exited = new Promise(resolve => chrome.once('exit', resolve));

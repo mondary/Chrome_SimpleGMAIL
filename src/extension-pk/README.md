@@ -11,7 +11,7 @@ visuelle aux onglets `mail.google.com`, sans backend ni compte supplémentaire.
 | Thème | Contenu |
 | --- | --- |
 | *Natif* | Gmail tel quel, avec les scripts cochables du panneau. |
-| *Studio* | 37 tweaks cochables, dont « Boîte à zéro », « Annuler préservé » (le vrai bouton Gmail conservé dans une pilule), « Focus lecture » (barres masquées hors survol en lecture), le renommage des catégories, la bascule à triple logo Mail / Google Agenda / Drive complet et les accents Studio sur Agenda et Drive — bouton apps Google conservé. |
+| *Studio* | 37 tweaks cochables, dont « Boîte à zéro », « Annuler préservé » (le vrai bouton Gmail conservé dans une pilule), « Focus lecture » (actions et pagination réunies au survol haut, rail de dossiers dégagé, réponse au bord bas), le renommage des catégories, la bascule à triple logo Mail / Google Agenda / Drive complet et les accents Studio sur Agenda et Drive — bouton apps Google conservé. |
 | *Simplify* | Fonds photo, boîte vide et volet de lecture (`themes/simplify/`). |
 | *Classique* | Transposition V1 : salutation, avatars, groupes de dates (`themes/simplemail-classic/`). |
 | *Focus* | Liste mono de 900 px, catégories masquables et alignables, compteur total Gmail et raccourcis (`themes/focus-os/`). |
@@ -137,24 +137,54 @@ continue de courir pendant le repli.
 Le tweak **Focus lecture · interface effacée, révélée au bord de l'écran** ne
 s'active que dans un fil ouvert : la barre globale (logo + recherche), le bandeau
 de catégories, la barre d'actions du fil et la barre de réponse flottante quittent
-le flux (`position: fixed` puis hors écran), environ 110 px rendus au contenu ; le
-sujet sticky est compacté (une ligne, hairline) et la colonne de lecture est
+le flux (`position: fixed`, masquées hors survol). Le sujet sticky est compacté (une
+ligne, hairline) et la colonne de lecture est
 resserrée à 920 px. La barre d'actions est détectée par le hook Gmail
 `.aeH .iH.bzn[gh="mtb"]` (même ancrage que le filtre « messages similaires »), sans
-dépendre du libellé localisé « Retour ». Révélation : la souris à moins de 44 px du
-bord haut rappelle la barre d'actions du fil (entrée 180 ms, retrait après 700 ms
-loin du bord) ; à moins de 64 px du bord bas, la barre Répondre / Transférer quitte
-sa position sticky pour une superposition fixe au ras de l'écran, avec le bouton
-« Nouveau message ». Elle ne réserve donc plus un footer blanc quand elle est
-masquée, ni ne raccourcit le message quand elle revient. La recherche réapparaît
-quand le focus clavier entre dans `#gb` (raccourci `/`, Tab). Le focus clavier
-force la zone concernée visible, donc rien n'est piégé ; `prefers-reduced-motion`
-supprime les transitions. Aucun nœud Gmail n'est cloné ni déplacé : le script
-marque les conteneurs sur place (`data-pk-focus-tools`,
-`data-pk-focus-floatbar`) et l'état vit dans des classes sur `<html>`
-(`pk-focus`, `pk-focus-top`, `pk-focus-bottom`). La vue liste n'est jamais touchée ;
-le retour à la liste restaure tout instantanément. Seul un Gmail avec survol est
-concerné (`hover: hover`).
+dépendre du libellé localisé « Retour ». Les rangées natives `div.G-atb.D.E` et
+`div.G-atb.D.F`, relevées dans l’inspecteur Gmail, sont ciblées directement même
+sans `.Dj` / `.aqJ` ; ces anciens hooks restent un repli. Leurs `::before` et
+`::after` sont neutralisés uniquement pendant Focus. Le sticky `div.V8djrc.byY`
+est reconnu comme en-tête de lecture et ramené à `top: 0`, sans marge ni hauteur
+minimale réservée aux commandes. Le groupe natif compteur/flèches est repéré
+par ses anciens hooks ou, dans les rangées natives, par le compteur numérique
+et ses deux boutons. La sélection des actions et de la navigation précède tout
+marquage : la cible ne bascule plus entre parent et enfant à chaque scan.
+Les commandes sont en superposition fixe et les wrappers qui ne contiennent que
+ces commandes perdent leur boîte de mise en page (`display: contents`). Cela
+supprime aussi leurs hauteurs imposées, paddings et contextes de transformation.
+Actions et pagination reviennent ensemble au survol sans déplacer le sujet ni
+le message ; aucune rangée dédiée ne doit subsister, même invisible. Les wrappers
+contenant d'autres éléments visibles ne sont pas neutralisés. La zone des commandes commence après le rail NoLeftMenu et garde un
+espace avant le compteur ; actions et navigation forment deux zones contiguës du
+même bandeau blanc, sans fond supplémentaire posé au-dessus des commandes Gmail.
+Le rail reste sous la barre même lorsque le bandeau Gmail est masqué. La zone de
+survol haute couvre au moins 44 px et la hauteur réelle du bandeau. Actions et
+pagination reviennent ensemble par fondu de 180 ms, sans `transform` sur leurs
+conteneurs pour ne pas piéger une navigation fixe imbriquée ; retrait après 700 ms
+loin du bord. À moins de 64 px du bord bas, Répondre / Répondre à tous / Transférer
+quittent leur position sticky pour une superposition fixe à 12 px du bord inférieur,
+à gauche du bouton « Nouveau message », avec un écart horizontal de 12 px. La
+largeur réelle du bouton réserve sa zone, sa couche reste au-dessus du fond de
+réponse, et les commandes de réponse peuvent passer à la ligne. En lecture, le
+bouton « Nouveau message » prend une forme compacte à contour gris, sans ombre ;
+sa hauteur suit le premier bouton de réponse et son bord inférieur la dernière
+ligne des réponses natives. Son style de vue liste n’est pas modifié. Cette barre
+ne réserve donc plus un footer blanc quand elle est masquée, ni ne raccourcit le
+message quand elle revient. La recherche réapparaît quand le focus clavier entre
+dans `#gb` (raccourci `/`, Tab). Le focus clavier force la zone concernée visible,
+donc rien n'est piégé ; `prefers-reduced-motion` supprime les transitions. Aucun
+nœud Gmail n'est cloné ni déplacé : le script marque les conteneurs sur place
+(`data-pk-focus-tools`, `data-pk-focus-pager`, `data-pk-focus-floatbar`) et l'état
+vit dans des classes sur `<html>` (`pk-focus`, `pk-focus-top`, `pk-focus-bottom`).
+La vue liste n'est jamais touchée ; le retour à la liste restaure tout
+instantanément. Seul un Gmail avec survol est concerné (`hover: hover`).
+Le triptyque Mail / Agenda / Drive reste à sa position habituelle dans `#gb` :
+il est masqué avec cet en-tête en lecture, sans capsule flottante dans le coin
+ni bouton Retour permanent. Aucun dégagement supplémentaire n’est ajouté au sujet.
+La suite simule aussi 45 mises à jour de classe Gmail sans réécriture des marqueurs,
+vérifie l’absence de mutations au repos et le hit-test des commandes du bas à
+1280 et 384 px. Ces vérifications ne remplacent pas une validation dans Gmail réel.
 
 ### Génération des fichiers
 
@@ -210,7 +240,9 @@ Les fichiers `data/*.js` portent l'en-tête « Généré par build.sh » : ne pa
 - `node tools/tests/studio-focus.test.mjs` : retrait du chrome en vue fil, marquage
   unique des conteneurs, réapparition au bord haut (barre d'actions) et bas (réponse +
   FAB) avec vrais événements pointeur, recherche révélée par le focus clavier, retour
-  à la liste sans attribut résiduel et désactivation par réglage. Banc :
+  à la liste sans attribut résiduel et désactivation par réglage. Vérifie aussi les
+  wrappers à hauteur imposée, la rangée actions/pagination commune et l'absence de
+  déplacement du sujet/message au survol. Validation sur DOM fictif uniquement. Banc :
   `tools/previews/studio-focus-preview/` (captures `01-focus` à `04-liste`).
 - QA Gmail du 2 novembre : brouillon jetable supprimé, toast remplacé, puis clic
   sur « Annuler » de la pilule — brouillon rouvert. Aucun courrier personnel touché.
