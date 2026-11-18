@@ -85,7 +85,7 @@
           <div class="scroller">
             <div id="tools-shell">
             <div class="ack iH bzn" id="toolbar" gh="mtb">
-              <button role="button" aria-label="Menu du fil">←</button>
+              <button role="button" aria-label="Retour" id="thread-back">←</button>
               <button role="button" aria-label="Archiver">⌫</button>
               <button role="button" aria-label="Supprimer">🗑</button>
               <button role="button" aria-label="Étiqueter">🏷</button>
@@ -133,14 +133,21 @@
 
     const thread = document.getElementById('thread');
     const list = document.getElementById('list-view');
+    const fab = document.getElementById('pk-new-message-fab');
+    const backToList = () => {
+      thread.hidden = true; list.hidden = false;
+      fab.classList.remove('pk-fab-hidden');
+    };
     document.getElementById('open-thread').addEventListener('click', () => {
       list.hidden = true; thread.hidden = false; window.scrollTo(0, 0);
-      document.getElementById('pk-new-message-fab').classList.add('pk-fab-hidden');
+      fab.classList.add('pk-fab-hidden');
     });
-    document.getElementById('back-list').addEventListener('click', () => {
-      thread.hidden = true; list.hidden = false;
-      document.getElementById('pk-new-message-fab').classList.remove('pk-fab-hidden');
+    // Like Gmail: the toolbar's back control is the real exit, not a hash.
+    document.getElementById('thread-back').addEventListener('click', () => {
+      window.__backClicks = (window.__backClicks || 0) + 1;
+      backToList();
     });
+    document.getElementById('back-list').addEventListener('click', backToList);
   </script>
   <script src="../../../src/extension-pk/themes/studio/focus-read.js"></script>
 </body>

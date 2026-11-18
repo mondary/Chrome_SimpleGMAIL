@@ -30,6 +30,13 @@ conserve la boîte mesurable, donc aucune lecture de layout supplémentaire au r
 dépliage mesuré, re-repli et annulations réelles ; `tools/previews/studio-toast-preview/`
 fournit le banc et ses captures. Validation sur Gmail authentifié encore à faire.
 
+Focus 2026.11.22 : `fixing-accessibility` pour l’équivalence clavier du bouton retour.
+`themes/studio/focus-read.js` envoie Échap au contrôle Gmail réel (`#back` / `.ar0`,
+sinon libellé « Retour » / « Back »), avec repli `#inbox`, et rend la touche à Gmail
+quand un brouillon, un dialogue, un menu ou un champ est ouvert. `studio-focus.test.mjs`
+envoie de vrais événements clavier ; le banc a désormais un vrai bouton retour. Aucun
+changement hors lecture, validation Gmail réel en attente.
+
 Audit performances Gmail 2026.11.7 : boucles d’observation des états vides et du
 surligneur corrigées, scans Studio regroupés, décomptes suspendus en arrière-plan.
 `tools/tests/studio-performance.test.mjs` mesure le DOM/layout au repos et la

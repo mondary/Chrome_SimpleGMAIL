@@ -4,6 +4,13 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.11.22] - 2026-11-18
+
+### Added
+- **Échap revient à la liste en Focus lecture** : le bouton retour ne vit que dans la barre d'actions que le mode efface, donc il ne revenait qu'au survol. Échap envoie désormais un clic au vrai contrôle Gmail (`#back` / `.ar0`, sinon le libellé « Retour » / « Back ») : le dossier, le libellé ou la recherche en cours sont conservés. Sans contrôle reconnu (variante Gmail), `#inbox` sert de repli.
+- **Échap rendu à Gmail quand il a quelque chose à fermer** : brouillon (`.M9` / `.aoI`), boîte de dialogue, menu ou liste déroulante visibles, champ de saisie ou zone éditable (recherche, objet, corps de réponse). Le raccourci est ignoré en vue liste, pendant une répétition de touche et avec Ctrl / Alt / Méta / Maj, pour ne pas voler le plein écran du navigateur.
+- **Vérification headless** : `tools/tests/studio-focus.test.mjs` envoie de vrais événements clavier et vérifie le retour par le contrôle natif (jamais par le hash), les gardes champ / dialogue / brouillon / Maj, et l'inertie en vue liste. Le banc `tools/previews/studio-focus-preview/` porte un vrai bouton retour dans la barre d'outils du fil, comme Gmail.
+
 ## [2026.11.21] - 2026-11-18
 
 ### Changed

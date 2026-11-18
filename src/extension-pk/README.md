@@ -181,6 +181,15 @@ nœud Gmail n'est cloné ni déplacé : le script marque les conteneurs sur plac
 vit dans des classes sur `<html>` (`pk-focus`, `pk-focus-top`, `pk-focus-bottom`).
 La vue liste n'est jamais touchée ; le retour à la liste restaure tout
 instantanément. Seul un Gmail avec survol est concerné (`hover: hover`).
+
+**Échap** ramène à la liste depuis la lecture, comme le bouton retour que le survol
+révèle : le clic part vers le vrai contrôle Gmail (`#back` / `.ar0`, sinon le libellé
+« Retour » / « Back » de la barre d'actions), donc le dossier, le libellé ou la
+recherche en cours sont conservés. Gmail garde Échap quand il a lui-même quelque
+chose à fermer : brouillon (`.M9` / `.aoI`), boîte de dialogue, menu ou liste
+déroulante visibles, champ de saisie ou zone éditable (recherche, objet, corps de
+réponse). Sans barre d'actions reconnue, `#inbox` sert de repli ; le raccourci est
+ignoré en vue liste, pendant une répétition de touche et avec un modificateur.
 Le triptyque Mail / Agenda / Drive reste à sa position habituelle dans `#gb` :
 il est masqué avec cet en-tête en lecture, sans capsule flottante dans le coin
 ni bouton Retour permanent. Aucun dégagement supplémentaire n’est ajouté au sujet.

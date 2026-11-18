@@ -4,7 +4,9 @@
 // floating reply bar — leaving only the compact sticky subject and message
 // remain. The toolbar comes back when the pointer approaches the top edge,
 // the reply bar and the compose FAB when it approaches the bottom edge, and
-// #gb when keyboard focus enters it (Gmail's "/" search). List view is
+// #gb when keyboard focus enters it (Gmail's "/" search). Escape returns to
+// the list through Gmail's real back control, unless Gmail has something of
+// its own to close (compose, dialog, menu, text field). List view is
 // untouched. Gmail nodes are never cloned or moved: containers are marked
 // with data attributes and the state lives in classes on <html>.
 // The visual side lives in focus-read.css (registered with this item).
@@ -16,6 +18,11 @@
   const BOTTOM_ZONE = 64;  // px from the bottom edge that summons the reply bar
   const HIDE_DELAY = 700;  // ms after the pointer leaves before withdrawing
   const RETRY_EVERY = 750;  // ms while Gmail is still mounting its reply bar
+  // Escape returns to the list, like the back control that only comes back on
+  // hover. Gmail keeps its own Escape whenever it has something to close.
+  const EDITABLE = 'input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="textbox"], [role="combobox"]';
+  const NATIVE_CLOSE = '[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], .M9, .aoI';
+  const BACK_LABELS = /^(retour|back|zurück|atras|atrás|indietro|voltar|назад)\b/i;
 
   let active = false;
   let reading = false;
@@ -242,6 +249,47 @@
     return !!target?.closest?.('[data-pk-focus-floatbar], #pk-new-message-fab');
   }
 
+  // ---- Escape returns to the list ---------------------------------------
+
+  // Gmail's real back control lives in the toolbar that Focus withdraws, so
+  // keyboard users get the same exit as the hover reveal. Stable class/id
+  // first, then the translated label. Never change the hash behind its back:
+  // clicking the native control keeps the folder, label or search context.
+  function backControl() {
+    const scope = document.querySelector('[data-pk-focus-tools]') || document.querySelector('.aeH');
+    const legacy = scope?.querySelector('#back, .ar0');
+    if (legacy && visible(legacy)) return legacy;
+    for (const root of scope ? [scope, document] : [document]) {
+      const found = [...root.querySelectorAll('[role="button"], button, a')]
+        .find(node => visible(node) && BACK_LABELS.test(labelOf(node)));
+      if (found) return found;
+    }
+    return null;
+  }
+
+  // Compose, a dialog/menu/dropdown, or any text field keeps Escape for
+  // itself: closing the composer must never drop the reader back to the list.
+  function gmailOwnsEscape(target) {
+    if (target?.closest?.(EDITABLE)) return true;
+    const focused = document.activeElement;
+    if (focused && focused !== document.body && focused.closest?.(EDITABLE)) return true;
+    return [...document.querySelectorAll(NATIVE_CLOSE)].some(visible);
+  }
+
+  function onKeyDown(event) {
+    if (!active || !reading) return;
+    if (event.key !== 'Escape' || event.defaultPrevented || event.repeat) return;
+    if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
+    const target = event.target instanceof Element ? event.target : null;
+    if (gmailOwnsEscape(target)) return;
+    const back = backControl();
+    event.preventDefault();
+    event.stopPropagation();
+    if (back) back.click();
+    // No toolbar rendered (Gmail variant): the requested exit still works.
+    else if (location.hash !== '#inbox') location.hash = '#inbox';
+  }
+
   function queueHide(zone) {
     if (held[zone]) return;
     clearTimeout(timers[zone]);
@@ -368,6 +416,7 @@
   document.documentElement.addEventListener('pointerleave', onPointerLeave);
   document.addEventListener('focusin', onFocusIn);
   document.addEventListener('focusout', onFocusOut);
+  document.addEventListener('keydown', onKeyDown, true);
 
   function applyState(state) {
     active = state.theme === 'theme-pk' && state.enabled?.['js-studio-focus-read'] !== false;

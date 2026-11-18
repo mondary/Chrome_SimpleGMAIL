@@ -48,6 +48,17 @@ try {
   const wait = expression => evaluate(`new Promise((resolve,reject)=>{const start=Date.now();const check=()=>{if(${expression})return resolve(true);if(Date.now()-start>6000)return reject(new Error('Condition timed out: '+${JSON.stringify(expression)}));setTimeout(check,20)};check()})`);
   const click = selector => evaluate(`document.querySelector(${JSON.stringify(selector)})?.click()`);
   const move = (x, y) => cdp('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y, buttons: 0 });
+  // Real key events, not a synthetic DOM event: Gmail's own handlers see them.
+  const pressEscape = async (modifiers = 0) => {
+    const key = { key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27, modifiers };
+    await cdp('Input.dispatchKeyEvent', { type: 'rawKeyDown', ...key });
+    await cdp('Input.dispatchKeyEvent', { type: 'keyUp', ...key });
+    // Headless only: the browser's own Escape handling suspends the page
+    // lifecycle, and a hidden page stops requestAnimationFrame. A real window
+    // never does this, so restore the active state before asserting anything.
+    await cdp('Page.bringToFront').catch(() => {});
+    await cdp('Page.setWebLifecycleState', { state: 'active' });
+  };
   const style = (selector, prop) => evaluate(`getComputedStyle(document.querySelector(${JSON.stringify(selector)})).${prop}`);
   const rect = selector => evaluate(`(()=>{const r=document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height}})()`);
   const captureDir = new URL('../previews/studio-focus-preview/captures/', import.meta.url);
@@ -59,6 +70,7 @@ try {
   };
 
   const fixture = new URL('../previews/studio-focus-preview/index.html', import.meta.url).href;
+  await cdp('Page.enable');
   await cdp('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false });
   await cdp('Page.navigate', { url: fixture });
   await wait(`document.querySelector('#open-thread') && document.querySelector('#pk-studio-tabs')`);
@@ -80,6 +92,11 @@ try {
 
   // List view: untouched.
   assert.equal(await evaluate(`document.documentElement.classList.contains('pk-focus')`), false);
+  // Escape is a reading exit only: the list keeps it for Gmail.
+  await pressEscape();
+  await evaluate(`new Promise(resolve=>setTimeout(resolve,80))`);
+  assert.equal(await evaluate(`document.documentElement.classList.contains('pk-focus')`), false, 'list view: Escape changes nothing');
+  assert.equal(await evaluate(`window.__backClicks || 0`), 0, 'list view: no back click');
   assert.notEqual(await style('#pk-studio-tabs', 'display'), 'none');
   const listFabBackground = await style('#pk-new-message-fab', 'backgroundColor');
   const listFabShadow = await style('#pk-new-message-fab', 'boxShadow');
@@ -223,9 +240,33 @@ try {
   assert.equal(await evaluate(`!!document.querySelector('#gb #pk-studio-modules')`), true,
     'closing search keeps the app switch in its original header rather than moving it to a corner');
 
-  // Back to the list: everything returns instantly, no attribute left behind.
-  await click('#back-list');
+  // Escape returns to the list through the real toolbar control, but only when
+  // Gmail has nothing of its own to close. The hash fallback must stay unused.
+  await evaluate(`(()=>{const i=document.createElement('input');i.id='probe-input';document.body.append(i);i.focus()})()`);
+  await pressEscape();
+  await evaluate(`new Promise(resolve=>setTimeout(resolve,80))`);
+  assert.equal(await evaluate(`document.documentElement.classList.contains('pk-focus')`), true, 'text field keeps Escape');
+  await evaluate(`document.querySelector('#probe-input').remove()`);
+
+  await evaluate(`(()=>{const d=document.createElement('div');d.id='probe-dialog';d.setAttribute('role','dialog');d.style.cssText='position:fixed;inset:0;background:#fff;z-index:100';document.body.append(d)})()`);
+  await pressEscape();
+  await evaluate(`new Promise(resolve=>setTimeout(resolve,80))`);
+  assert.equal(await evaluate(`document.documentElement.classList.contains('pk-focus')`), true, 'dialog keeps Escape');
+  await evaluate(`document.querySelector('#probe-dialog').remove()`);
+
+  await evaluate(`(()=>{const d=document.createElement('div');d.id='probe-compose';d.className='M9';d.style.cssText='position:fixed;right:0;bottom:0;width:240px;height:120px;background:#fff;z-index:100';document.body.append(d)})()`);
+  await pressEscape();
+  await evaluate(`new Promise(resolve=>setTimeout(resolve,80))`);
+  assert.equal(await evaluate(`document.documentElement.classList.contains('pk-focus')`), true, 'compose keeps Escape');
+  await evaluate(`document.querySelector('#probe-compose').remove()`);
+
+  await pressEscape(8); // Shift+Escape stays with the browser
+  await evaluate(`new Promise(resolve=>setTimeout(resolve,80))`);
+  assert.equal(await evaluate(`document.documentElement.classList.contains('pk-focus')`), true, 'modified Escape is ignored');
+
+  await pressEscape();
   await wait(`!document.documentElement.classList.contains('pk-focus')`);
+  assert.equal(await evaluate(`window.__backClicks || 0`), 1, 'Escape clicked the native back control, not a hash');
   assert.notEqual(await style('#pk-studio-tabs', 'display'), 'none', 'category strip back');
   assert.equal(await evaluate(`document.querySelectorAll('[data-pk-focus-tools],[data-pk-focus-pager],[data-pk-focus-floatbar],[data-pk-focus-shell]').length`), 0, 'marks cleaned');
   assert.equal(await style('#global-shell', 'display'), 'block', 'list view restores the global header wrapper');

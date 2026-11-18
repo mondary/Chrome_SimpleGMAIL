@@ -22,7 +22,7 @@ os.makedirs("tweaks", exist_ok=True)
 os.makedirs("scripts", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 
-BENCH_VERSION = "2026.11.21"
+BENCH_VERSION = "2026.11.22"
 
 # ---- 1. Découpage gmail.css en tweaks
 text = open(gmail_css, encoding="utf-8").read()
@@ -126,7 +126,7 @@ ALL.append({"id": "js-studio-toast-undo", "group": "js", "label": "Toast · Annu
             "file": "themes/studio/toast-undo.js",
             "type": "js", "world": "ISOLATED", "runAt": "document_end",
             "version": BENCH_VERSION, "status": "new", "setting": "toast-seconds"})
-ALL.append({"id": "js-studio-focus-read", "group": "js", "label": "Focus lecture · interface effacée, révélée au bord de l'écran",
+ALL.append({"id": "js-studio-focus-read", "group": "js", "label": "Focus lecture · interface effacée, révélée au bord de l'écran · Échap revient à la liste",
             "file": "themes/studio/focus-read.js", "css": ["themes/studio/focus-read.css"],
             "type": "js", "world": "ISOLATED", "runAt": "document_end",
             "version": BENCH_VERSION, "status": "new"})
