@@ -22,7 +22,7 @@ os.makedirs("tweaks", exist_ok=True)
 os.makedirs("scripts", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 
-BENCH_VERSION = "2026.11.20"
+BENCH_VERSION = "2026.11.21"
 
 # ---- 1. Découpage gmail.css en tweaks
 text = open(gmail_css, encoding="utf-8").read()
@@ -122,7 +122,7 @@ ALL.append({"id": "js-studio-empty", "group": "js", "label": "Boîte à zéro ·
             "file": "themes/studio/empty-state.js", "css": ["themes/studio/empty-state.css"],
             "type": "js", "world": "ISOLATED", "runAt": "document_end",
             "version": BENCH_VERSION, "status": "new"})
-ALL.append({"id": "js-studio-toast-undo", "group": "js", "label": "Toast · Annuler préservé (pile mesurée, « +N » au-delà d'une pilule)",
+ALL.append({"id": "js-studio-toast-undo", "group": "js", "label": "Toast · Annuler préservé (une bulle, pile mesurée, puce « +N »)",
             "file": "themes/studio/toast-undo.js",
             "type": "js", "world": "ISOLATED", "runAt": "document_end",
             "version": BENCH_VERSION, "status": "new", "setting": "toast-seconds"})

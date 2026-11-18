@@ -4,6 +4,19 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.11.21] - 2026-11-18
+
+### Changed
+- **Une seule bulle par défaut** : la pile de notifications n'affiche plus qu'une tuile — la plus récente, toast natif Gmail ou pilule « Annuler » préservée. Toutes les autres, de même nature ou non, partagent désormais une chronologie unique et se replient derrière la puce « +N » posée au-dessus d'elle. Un clic déplie la pile complète (la puce passe en « − »), un second replie, et le dépliage se referme seul après 4 s. La puce disparaît dès qu'il ne reste qu'une tuile.
+- **Repli sans perte d'action** : une tuile repliée garde son nœud dans le DOM et sa boîte mesurable — seule la peinture est coupée. La ligne « Annuler » d'origine continue sa fenêtre native pendant le repli et reste cliquable une fois la pile dépliée.
+- **Vérification headless** : `tools/tests/studio-toast.test.mjs` couvre la rafale de 3 toasts natifs (une bulle + « +2 »), le dépliage mesuré (hauteurs réelles, écart de 10 px), le re-repli automatique, les pilules préservées et les annulations réelles. `tools/previews/studio-toast-preview/` décrit le nouveau comportement et ses captures sont regénérées par `capture.mjs`.
+
+### Fixed
+- **Détection des toasts** : le message est lu en `textContent` au lieu de `innerText`, car un élément replié en `visibility:hidden` renvoyait un texte vide et faisait croire à un changement de message.
+- **Pile native seule** : la puce « +N » reçoit son style même quand aucune pilule n'existe encore (le CSS n'était injecté qu'à la création d'une pilule).
+- **Coquille vide** : le `.vh` dont la ligne a été déplacée dans une pilule n'est plus compté comme une bulle de la pile.
+- **Désactivation en cours de vie** : un toast natif replié redevient visible dès que le tweak est désactivé.
+
 ## [2026.11.20] - 2026-11-17
 
 ### Changed

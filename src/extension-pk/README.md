@@ -122,15 +122,17 @@ seulement le rappel. La durée affichée ne dépasse jamais la fenêtre d'annula
 native, même si le réglage est plus long. Vérifié sur Gmail réel avec des brouillons
 jetables ; aucun courrier personnel n'est modifié.
 
-L'empilement est **mesuré** : la tuile la plus récente (toast natif ou pilule) reste
-à 24 px du bord, les autres montent avec un écart constant de 10 px calculé sur leurs
-hauteurs réelles — un message sur deux lignes ne chevauche plus sa voisine, et les
-toasts natifs simultanés ne s'écrasent plus sur le même pixel. Au-delà d'une pilule
-préservée, les anciennes se replient derrière une puce « **+N** » (accessible au
-clavier) : la pile ne recouvre plus le bas du message. Un clic déplie tout (la puce
-passe en « − »), un second replie, et le dépliage se referme seul après 4 s. Les
-lignes « Annuler » repliées restent le vrai nœud Gmail : leur fenêtre d'annulation
-continue de courir pendant le repli.
+L'empilement est **mesuré** : une seule bulle reste affichée — la plus récente,
+toast natif ou pilule — à 24 px du bord. Les tuiles plus anciennes, quelle que soit
+leur nature, partagent la même chronologie et se replient derrière une puce
+« **+N** » posée au-dessus d'elle : la pile ne recouvre plus le bas du message. Un
+clic déplie tout (la puce passe en « − »), un second replie, et le dépliage se
+referme seul après 4 s. Le dépliage est alors mesuré à son tour : les tuiles
+montent avec un écart constant de 10 px calculé sur leurs hauteurs réelles — un
+message sur deux lignes ne chevauche jamais sa voisine, et les toasts natifs
+simultanés ne s'écrasent plus sur le même pixel. Les lignes « Annuler » repliées
+gardent leur nœud dans le DOM : leur fenêtre d'annulation continue de courir
+pendant le repli et reste cliquable une fois la pile dépliée.
 
 ### Focus lecture
 
@@ -235,8 +237,9 @@ Les fichiers `data/*.js` portent l'en-tête « Généré par build.sh » : ne pa
   Vérifie aussi l’annulation en arrière-plan/désactivation et l’espacement des séries.
 - `node tools/tests/studio-toast.test.mjs` : identité du vrai lien Gmail, clic après
   remplacement du toast, deux messages identiques, fermeture clavier et expiration de
-  la pilule ; rafale de 3 toasts natifs sans chevauchement (écarts ≥ hauteur + 9 px),
-  repli « +N », dépliage « − » et refermeture automatique après 4 s.
+  la pilule ; rafale de 3 toasts natifs (une seule bulle affichée, « +2 » au-dessus),
+  dépliage mesuré sans chevauchement (écarts ≥ hauteur + 9 px), repli « +N » et
+  refermeture automatique après 4 s.
 - `node tools/tests/studio-focus.test.mjs` : retrait du chrome en vue fil, marquage
   unique des conteneurs, réapparition au bord haut (barre d'actions) et bas (réponse +
   FAB) avec vrais événements pointeur, recherche révélée par le focus clavier, retour

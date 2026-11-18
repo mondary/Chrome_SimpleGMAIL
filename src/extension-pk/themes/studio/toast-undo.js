@@ -5,14 +5,14 @@
 // its original .bAp alert wrapper. So the pill is a new .vh child of that same
 // wrapper and receives the original row — never a clone.
 //
-// Stack v3 (2026-11-17): every tile — native toasts AND preserved pills — is
-// placed by one measured layout. Gmail stacks its own alerts with inline
-// `bottom` offsets that the css-toast-center tweak overrides with !important:
-// several live toasts then collapsed onto the same pixel. The manager below
-// re-measures real heights each pass: newest tile at the edge (24 px), older
-// ones glide up with an even 10 px gap. Beyond one visible pill, older pills
-// fold behind a "+N" chip (same wrapper keeps the real row alive, its undo
-// window keeps running) so the stack never climbs over the message.
+// Stack v4 (2026-11-18): one bubble by default. Every tile — native toasts
+// AND preserved pills — shares one chronology and one measured layout: the
+// newest sits at the edge (24 px) and, as soon as a second tile exists, the
+// older ones fold behind a "+N" chip stacked above it. Folding keeps the node
+// in the DOM (a real undo row keeps its native window), the chip unfolds the
+// pile on demand and re-folds it after 4 s. Gmail's own inline `bottom`
+// offsets are overridden, so two live alerts can never collapse onto the
+// same pixel.
 (() => {
   if (window.__pkStudioToastUndo) return;
   window.__pkStudioToastUndo = true;
@@ -33,9 +33,10 @@
     '.bAp .vh[data-pk-toast-preserve],.bAp .vh[data-pk-toast-slot]{bottom:var(--pk-toast-bottom,24px)!important}',
     // Reflow is animated only between two placed frames, never on arrival.
     '.bAp .vh[data-pk-toast-preserve],.bAp .vh[data-pk-toast-slot]{transition:bottom .18s cubic-bezier(.2,.7,.3,1),opacity .18s ease}',
-    // Folded pills: the DOM stays (the real undo row keeps its native window),
-    // the measured stack just ignores them until the chip unfolds them.
-    '.bAp [data-pk-toast-preserve][data-pk-toast-collapsed]{display:none!important}',
+    // Folded tiles keep their layout box: only paint and pointer are turned
+    // off, so the stack can still measure them and tell "folded by us" from
+    // "removed by Gmail" (a display:none node loses its rects).
+    '.bAp .vh[data-pk-toast-collapsed]{visibility:hidden!important;pointer-events:none!important}',
     '.bAp [data-pk-toast-preserve].vh .pk-pill-timer{position:absolute!important;top:50%!important;transform:translateY(-50%) rotate(-90deg)!important;transform-origin:center!important;pointer-events:none!important;overflow:visible!important}',
     '.bAp [data-pk-toast-preserve].vh .pk-pill-timer circle{fill:none!important;stroke:#ffd35c!important;stroke-width:2!important;stroke-linecap:round!important}',
     '.bAp .vh .pk-pill-timer{position:absolute!important;top:50%!important;transform:translateY(-50%) rotate(-90deg)!important;transform-origin:center!important;pointer-events:none!important;overflow:visible!important}',
@@ -64,11 +65,18 @@
   }
 
   function visible(node) {
+    // Folded by the stack: still alive, still measurable — only its paint is
+    // off. Gmail removing or hiding it (rects gone) still reads as "gone".
+    if (node.hasAttribute('data-pk-toast-collapsed')) {
+      return node.isConnected && node.getClientRects().length > 0;
+    }
     return node.getClientRects().length > 0 && getComputedStyle(node).visibility !== 'hidden';
   }
 
   function messageOf(vh) {
-    return ((vh.querySelector('.bAq')?.innerText || vh.innerText || '').replace(/\s+/g, ' ')).trim();
+    // textContent, not innerText: a folded tile is visibility:hidden and
+    // innerText would read as empty, which would fake a message change.
+    return ((vh.querySelector('.bAq')?.textContent || vh.textContent || '').replace(/\s+/g, ' ')).trim();
   }
 
   function undoLink(vh) {
@@ -212,6 +220,7 @@
       retire(entry);
     });
     scheduleRetire(entry);
+    entry.seq = ++arrival; // one chronology shared with native toasts
     preserved.add(entry);
   }
 
@@ -219,6 +228,7 @@
 
   function ensureMore() {
     if (moreEl?.isConnected) return moreEl;
+    ensureStyle(); // native-only piles still need the chip's own CSS
     moreEl = document.createElement('button');
     moreEl.type = 'button';
     moreEl.className = 'pk-toast-more';
@@ -295,38 +305,42 @@
       .filter((vh) => natives.includes(vh))
       .sort((a, b) => nativeOrder.get(a) - nativeOrder.get(b)); // oldest → newest
 
-    const pills = [...preserved]
-      .map((entry) => entry.pill)
-      .filter((pill) => pill?.isConnected && !pill.dataset.leaving); // oldest → newest
+    const pillEntries = [...preserved]
+      .filter((entry) => entry.pill?.isConnected && !entry.pill.dataset.leaving); // oldest → newest
 
-    // One visible pill: the newest. Older ones fold behind the chip — their
-    // real row keeps running its undo window inside the same wrapper.
-    const expanded = Date.now() < expandedUntil || pills.length <= 1;
-    const visibleCount = expanded ? pills.length : 1;
-    pills.forEach((pill, index) => {
-      const folded = index < pills.length - visibleCount;
-      if (folded) pill.setAttribute('data-pk-toast-collapsed', '');
-      else pill.removeAttribute('data-pk-toast-collapsed');
+    // One chronology for both kinds: the pile reads as a single stack, so a
+    // native arrives above a pill (and the reverse) exactly as it happened.
+    const tiles = [
+      ...orderedNatives.map((vh) => ({ el: vh, seq: nativeOrder.get(vh) || 0 })),
+      ...pillEntries.map((entry) => ({ el: entry.pill, seq: entry.seq || 0 })),
+    ].sort((a, b) => a.seq - b.seq);
+
+    // One bubble by default: the newest tile. The rest fold behind the chip —
+    // the DOM stays alive, so native rows and undo windows keep running.
+    const expanded = Date.now() < expandedUntil || tiles.length <= 1;
+    const visibleCount = expanded ? tiles.length : Math.min(1, tiles.length);
+    const shown = tiles.slice(tiles.length - visibleCount);
+    tiles.forEach((tile, index) => {
+      const folded = index < tiles.length - visibleCount;
+      if (folded) tile.el.setAttribute('data-pk-toast-collapsed', '');
+      else tile.el.removeAttribute('data-pk-toast-collapsed');
     });
-    const visiblePills = pills.slice(-visibleCount);
-    const hiddenCount = pills.length - visiblePills.length;
+    const hiddenCount = tiles.length - shown.length;
 
     let bottom = STACK_BASE;
-    // Bottom-up: newest native at the edge, then older ones, then the pills
-    // newest → oldest, chip on top. Heights are measured, never assumed.
-    for (const vh of [...orderedNatives].reverse()) {
-      vh.setAttribute('data-pk-toast-slot', '');
-      place(vh, bottom);
-      bottom += vh.offsetHeight + STACK_GAP;
-    }
-    for (const pill of [...visiblePills].reverse()) {
-      place(pill, bottom);
-      bottom += pill.offsetHeight + STACK_GAP;
+    // Bottom-up: newest tile at the edge, then older ones, then the chip on
+    // top. Heights are measured, never assumed.
+    for (const tile of [...shown].reverse()) {
+      if (!tile.el.hasAttribute('data-pk-toast-preserve')) {
+        tile.el.setAttribute('data-pk-toast-slot', '');
+      }
+      place(tile.el, bottom);
+      bottom += tile.el.offsetHeight + STACK_GAP;
     }
     // The chip stays as long as a fold exists: "+N" when folded, "−" on top
     // of the unfolded stack. Its slot is re-measured in the same pass, so it
-    // never lingers where an unfolded pill now sits.
-    if (pills.length > 1) {
+    // never lingers where an unfolded tile now sits.
+    if (tiles.length > 1) {
       const chip = ensureMore();
       updateMore(hiddenCount, expanded);
       place(chip, bottom);
@@ -346,6 +360,10 @@
         vh.removeAttribute('data-pk-toast-slot');
         vh.style.removeProperty('--pk-toast-bottom');
       });
+      // A folded native must come back if the tweak is switched off mid-life.
+      document.querySelectorAll('.bAp .vh[data-pk-toast-collapsed]').forEach((vh) => {
+        if (!vh.hasAttribute('data-pk-toast-preserve')) vh.removeAttribute('data-pk-toast-collapsed');
+      });
       nativeOrder.clear();
       styleEl?.remove();
       styleEl = null;
@@ -353,10 +371,12 @@
     }
     const now = Date.now();
     // Native Gmail toasts only. Preserved pills carry the same .vh class and
-    // must not be mistaken for a new native action.
+    // must not be mistaken for a new native action. A shell whose real row was
+    // moved into a pill has no message left: it is not a tile of its own.
     const liveToasts = [...document.querySelectorAll('.bAp .vh')]
       .filter(vh => !vh.hasAttribute('data-pk-toast-preserve') && !vh.closest('[data-pk-toast-preserve]'))
-      .filter(visible);
+      .filter(visible)
+      .filter(vh => (vh.querySelector('.bAq')?.textContent || '').trim());
 
     if (current) {
       const gone = !current.vh.isConnected || !visible(current.vh);

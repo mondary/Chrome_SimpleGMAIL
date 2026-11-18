@@ -22,6 +22,14 @@ exécute le vrai script Modules sur fixture et vérifie qu’il reste à sa plac
 l’en-tête, sans capsule de coin ni décalage du sujet ; les contrôles accessibles
 et la navigation ordinaire de l’en-tête restent couverts.
 
+Toast 2026.11.21 : `frontend-design` pour la règle « une bulle », `fixing-accessibility`
+pour la puce « +N » clavier et `fixing-motion-performance` pour le repli sans peinture.
+`themes/studio/toast-undo.js` garde une chronologie unique (natif + pilules) ; le repli
+conserve la boîte mesurable, donc aucune lecture de layout supplémentaire au repos.
+`tools/tests/studio-toast.test.mjs` couvre rafale de 3 natifs (1 bulle + « +2 »),
+dépliage mesuré, re-repli et annulations réelles ; `tools/previews/studio-toast-preview/`
+fournit le banc et ses captures. Validation sur Gmail authentifié encore à faire.
+
 Audit performances Gmail 2026.11.7 : boucles d’observation des états vides et du
 surligneur corrigées, scans Studio regroupés, décomptes suspendus en arrière-plan.
 `tools/tests/studio-performance.test.mjs` mesure le DOM/layout au repos et la

@@ -15,22 +15,23 @@
     button { padding: 10px 16px; border: 1px solid #dadce0; background: #fff; border-radius: 8px; font: 13px Arial, sans-serif; cursor: pointer; }
     button:hover { background: #f6f8f9; }
     #undo-count { margin-top: 14px; font-weight: 600; }
-    /* Réplique du toast Gmail : plusieurs .bAp simultanés (Gmail empile ses
-       alertes), chacun avec son .vh dont le contenu est remplacé. */
+    /* Réplique du toast Gmail + du rendu Studio (pilule sombre centrée, même
+       mesure que tweaks/toast-center.css, mais sans !important : le banc a
+       besoin du [hidden] natif pour expirer ses toasts). */
     .b8.UC.bAp { position: fixed; left: 24px; bottom: 24px; z-index: 500; }
-    .bAp .vh { display: flex; align-items: center; gap: 10px; max-width: 480px; padding: 12px 40px 12px 16px; background: #f1f3f4; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,.12); position: relative; }
-    .bAp .vh[hidden] { display: none; }
-    .bAp .aT { display: flex; align-items: center; gap: 10px; }
-    .bAp .bAq { color: #202124; }
-    .bAp #link_undo, .bAp .ag { color: #1a73e8; cursor: pointer; font-weight: 600; }
-    .bAp .bBe { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); border: 0; background: none; font-size: 15px; line-height: 1; color: #5f6368; cursor: pointer; }
+    .bAp .vh { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; width: max-content; max-width: 480px; padding: 10px 52px 10px 20px; background: #09090b; color: #fff; border: 1px solid rgba(255,255,255,.09); border-radius: 9999px; box-shadow: 0 8px 24px rgba(9,9,11,.22); z-index: 990; }
+    .bAp .vh[hidden] { display: none !important; }
+    .bAp .vh .aT { display: flex; align-items: center; gap: 10px; }
+    .bAp .bAq { color: #fff; }
+    .bAp #link_undo, .bAp .ag { color: #ffd35c; cursor: pointer; font-weight: 600; }
+    .bAp .bBe { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); border: 0; background: none; font-size: 15px; line-height: 1; color: #fff; cursor: pointer; }
   </style>
 </head>
 <body>
   <header>Gmail — banc de test toast</header>
   <main>
     <h1>Toast « Annuler » préservé</h1>
-    <p class="hint">Ce banc reproduit le comportement réel observé sur Gmail : un nœud <code>.bAp&nbsp;.vh</code> par alerte simultanée (contenu remplacé à réutilisation), et un gestionnaire d'annulation qui n'accepte que le <strong>vrai nœud</strong> «&nbsp;Annuler&nbsp;» — jamais un clone. Le tweak Studio déplace la ligne originale dans une pilule sous le même <code>.bAp</code>, mesure les hauteurs réelles pour empiler (plus récent à la bordure, 10&nbsp;px d'écart constant) et replie les pilules anciennes derrière une puce «&nbsp;+N&nbsp;». Durée du banc : 3&nbsp;s par pilule.</p>
+    <p class="hint">Ce banc reproduit le comportement réel observé sur Gmail : un nœud <code>.bAp&nbsp;.vh</code> par alerte simultanée (contenu remplacé à réutilisation), et un gestionnaire d'annulation qui n'accepte que le <strong>vrai nœud</strong> «&nbsp;Annuler&nbsp;» — jamais un clone. Le tweak Studio déplace la ligne originale dans une pilule sous le même <code>.bAp</code>, ne garde qu'une bulle visible (la plus récente, natif ou pilule), replie tout le reste derrière une puce «&nbsp;+N&nbsp;» posée au-dessus et mesure le dépliage (hauteurs réelles, 10&nbsp;px d'écart constant). Durée du banc : 3&nbsp;s par pilule.</p>
     <div class="controls">
       <button id="fire-undo">Toast avec Annuler (suppression)</button>
       <button id="fire-info">Toast sans Annuler (erreur traduction)</button>
