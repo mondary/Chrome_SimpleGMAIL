@@ -9,9 +9,12 @@ cd "$(dirname "$0")"
 SG_ROOT="$(cd ../.. && pwd)"                      # Chrome_SimpleGMAIL
 SNIPPETS="$SG_ROOT/vendors/scriptcat-snippets"    # symlink vendors → snippets ScriptCat
 
+# Vendor absent (checkout sans le dépôt ScriptCat) : les scripts déjà
+# construits dans scripts/ servent de source. Ils sont identiques à la
+# dernière génération vendor — seul un checkout complet régénère depuis lui.
 if [ ! -d "$SNIPPETS" ]; then
-  echo "ERREUR: symlink vendors/scriptcat-snippets absent — lance depuis le repo mergé." >&2
-  exit 1
+  echo "ATTENTION: symlink vendors/scriptcat-snippets absent — sources JS reprises depuis scripts/ déjà construits."
+  SNIPPETS=""
 fi
 
 python3 - "$SG_ROOT/src/extension-pk/sources/gmail.css" "$SNIPPETS" << 'PYEOF'
@@ -22,7 +25,7 @@ os.makedirs("tweaks", exist_ok=True)
 os.makedirs("scripts", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 
-BENCH_VERSION = "2026.11.22"
+BENCH_VERSION = "2026.11.23"
 
 # ---- 1. Découpage gmail.css en tweaks
 text = open(gmail_css, encoding="utf-8").read()
@@ -91,9 +94,17 @@ if (typeof GM_getValue === 'undefined') {
 
 js_items = []
 for src, fid, label, ver, status in JS_DEFS:
-    # Local, reviewed fixes take precedence without modifying the shared ScriptCat repo.
+    # Local, reviewed fixes take precedence without modifying the shared
+    # ScriptCat repo. Without the vendor checkout, the last built copy in
+    # scripts/ is the source of truth (regenerating it is a no-op).
     local_source = os.path.join("sources", src)
-    source = local_source if os.path.isfile(local_source) else os.path.join(snippets, src)
+    vendor_source = os.path.join(snippets, src) if snippets else ""
+    built_source = os.path.join("scripts", src)
+    source = local_source if os.path.isfile(local_source) else (
+        vendor_source if vendor_source and os.path.isfile(vendor_source) else built_source)
+    if not os.path.isfile(source):
+        print(f"  ! source introuvable pour {src}, item ignoré")
+        continue
     code = open(source, encoding="utf-8", errors="replace").read()
     needs_gm = "GM_getValue" in code or "GM_setValue" in code
     if needs_gm and "GM_getValue === 'undefined'" not in code:

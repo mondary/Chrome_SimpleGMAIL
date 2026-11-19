@@ -235,6 +235,37 @@
     }
   }
 
+  // ---- Undo toast clearance ----------------------------------------------
+
+  // The reply bar, the compose FAB and Gmail's undo toasts all live at the
+  // bottom edge: the toast sits inside the 64 px hover zone, so revealing the
+  // bands used to paint them OVER « Annuler » (z-index 995/996 vs 990) and
+  // steal its clicks. While a toast tile is painted, both bands glide above
+  // the whole stack instead. Native tiles, preserved pills and the "+N" chip
+  // all count; heights and slots are measured, never assumed.
+  const TOAST_TILES = '.bAp .vh, .pk-toast-more';
+
+  function syncToastLift() {
+    // The bands' lane starts at their left edge (translateY only moves them
+    // vertically, so left/width stay valid while they are withdrawn). Without
+    // any band yet, assume they reach the viewport's middle: lift by default.
+    const bands = [floatEl, document.getElementById('pk-new-message-fab')]
+      .filter(Boolean).map(el => el.getBoundingClientRect().left);
+    const laneLeft = bands.length ? Math.min(...bands) : window.innerWidth / 2;
+    let top = Infinity;
+    for (const el of document.querySelectorAll(TOAST_TILES)) {
+      if (el.hasAttribute('data-pk-toast-collapsed')) continue; // folded: paint is off
+      if (!el.getClientRects().length || getComputedStyle(el).visibility === 'hidden') continue;
+      const rect = el.getBoundingClientRect();
+      if (!rect.width || !rect.height || rect.right < laneLeft) continue; // left of the lane
+      top = Math.min(top, rect.top);
+    }
+    // Rest position is 12 px above the viewport bottom; sit 8 px above the
+    // stack's top edge instead. 0 when no tile reaches the bands' lane.
+    const lift = top === Infinity ? 0 : Math.max(0, Math.ceil(window.innerHeight - top - 4));
+    setVar('--pk-focus-toast-lift', lift ? `${lift}px` : '0px');
+  }
+
   function zoneSelector(zone) {
     return zone === 'top'
       ? '#gb, [data-pk-focus-tools], [data-pk-focus-pager], #pk-studio-tabs'
@@ -361,6 +392,7 @@
     root.style.removeProperty('--pk-focus-fab-width');
     root.style.removeProperty('--pk-focus-compose-height');
     root.style.removeProperty('--pk-focus-compose-inset');
+    root.style.removeProperty('--pk-focus-toast-lift');
     topLayoutDirty = true;
     topZone = TOP_ZONE;
     floatEl = null;
@@ -400,6 +432,7 @@
     syncTopChrome();
     collapseChromeShells();
     markFloatBars();
+    syncToastLift();
     if (topLayoutDirty && !layoutScheduled) {
       layoutScheduled = true;
       requestAnimationFrame(syncTopChromeLayout);
@@ -417,6 +450,13 @@
   document.addEventListener('focusin', onFocusIn);
   document.addEventListener('focusout', onFocusOut);
   document.addEventListener('keydown', onKeyDown, true);
+  // The toast stack and the lifted bands glide on animated bottoms: re-measure
+  // once the movement lands, so the clearance follows the final slot and not a
+  // mid-flight frame. The equality guards in setVar/mark stop any loop.
+  document.addEventListener('transitionend', event => {
+    if (!reading || !(event.target instanceof Element)) return;
+    if (event.target.matches('.bAp .vh, .pk-toast-more, [data-pk-focus-floatbar], #pk-new-message-fab')) schedule();
+  });
 
   function applyState(state) {
     active = state.theme === 'theme-pk' && state.enabled?.['js-studio-focus-read'] !== false;

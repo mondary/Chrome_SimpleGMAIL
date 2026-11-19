@@ -4,6 +4,14 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.11.23] - 2026-11-19
+
+### Fixed
+- **Focus lecture — « Annuler » recouvert par le bandeau bas** : aller cliquer le toast de suppression entrait dans la zone de survol basse (64 px), ce qui révélait Répondre / Répondre à tous / Transférer et « Nouveau message » au-dessus du toast (z-index 995/996 contre 990) — le bouton d'annulation devenait incliquable. Tant qu'une tuile est peinte (toast natif, pilule préservée ou puce « +N »), les deux bandeaux glissent désormais au-dessus de la pile : hauteur mesurée sur le rendu réel, recalculée à l'arrivée, au dépliage et à la disparition (écoute `transitionend` comprise), 8 px d'écart constant. Le dégagement ne s'applique que si la pile croise le couloir horizontal des bandeaux ; sans toast, ils restent à 12 px du bord.
+- **Filet z-index** : la couche toast passe de 990 à 998 (puce « +N » de 991 à 998), au-dessus de toutes les bandes Focus (995/996) et de `#gb` (996) : même un recouvrement géométrique passager ne peut plus peindre « Annuler » sous une commande.
+- **Build sans vendor** : `build.sh` n'échoue plus quand le symlink `vendors/scriptcat-snippets` est absent — les scripts déjà construits dans `scripts/` servent alors de source (comportement inchangé quand le vendor est présent).
+- **Vérification headless** : `tools/tests/studio-focus.test.mjs` ajoute la régression — vrai toast Gmail (structure `.bAp > .vh` + vrai CSS `toast-center`) pendant la révélation des bandeaux : dégagement mesuré à 1280 et 384 px, hit-test et vrai clic pointeur sur `#link_undo`, z-index, retour à 12 px après disparition du toast. Capture `06-toast-annuler`.
+
 ## [2026.11.22] - 2026-11-18
 
 ### Added

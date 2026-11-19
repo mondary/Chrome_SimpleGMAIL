@@ -395,7 +395,10 @@ body { timeline-scope: --pkscroll; }
   border: 1px solid rgba(255,255,255,.09) !important; /* hairline : détache du contenu clair */
   border-radius: 9999px !important;
   box-shadow: 0 8px 24px rgba(9,9,11,.22) !important;
-  z-index: 990 !important;
+  /* Au-dessus du chrome Focus lecture (barres 995, composer/« #gb » 996) :
+   le toast « Annuler » ne doit jamais être recouvert, même en cas de
+   recouvrement géométrique passager (pile qui se déplie, animation en vol). */
+  z-index: 998 !important;
 }
 
 /* Rangée message + action : tout est centré verticalement, sinon « Annuler »

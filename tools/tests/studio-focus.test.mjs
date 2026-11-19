@@ -231,6 +231,76 @@ try {
   await move(640, 420);
   await wait(`!document.documentElement.classList.contains('pk-focus-bottom')`);
 
+  // An undo toast must never be covered by the revealed bottom bands: going
+  // for « Annuler » means entering the 64 px bottom zone, which used to summon
+  // Répondre/Nouveau message right over the toast (z 995/996 vs 990). The
+  // bands now glide above the live toast stack and the toast paints first.
+  const toastCenterCss = await readFile(new URL('../../src/extension-pk/tweaks/toast-center.css', import.meta.url), 'utf8');
+  await evaluate(`(()=>{const s=document.createElement('style');s.id='probe-toast-style';s.textContent=${JSON.stringify(toastCenterCss)};document.head.append(s)})()`);
+  const injectToast = () => evaluate(`(()=>{
+    window.__undoClicks=0;
+    const wrapper=document.createElement('div');wrapper.id='probe-toast';wrapper.className='b8 UC bAp';wrapper.setAttribute('role','alert');
+    const vh=document.createElement('div');vh.className='vh';
+    const msg=document.createElement('div');msg.className='bAq';msg.textContent='La conversation a été déplacée dans la corbeille.';
+    const row=document.createElement('div');row.className='aT';
+    const action=document.createElement('div');action.className='bAo';
+    const link=document.createElement('a');link.id='link_undo';link.href='#';link.textContent='Annuler';
+    link.addEventListener('click',event=>{event.preventDefault();window.__undoClicks++});
+    action.append(link);row.append(action);vh.append(msg,row);wrapper.append(vh);document.body.append(wrapper);
+  })()`);
+  const toastCleared = `(()=>{const t=document.querySelector('#probe-toast .vh').getBoundingClientRect();
+    const f=document.querySelector('#floatbar').getBoundingClientRect();
+    const c=document.querySelector('#pk-new-message-fab').getBoundingClientRect();
+    return f.bottom+8<=t.top+1&&c.bottom+8<=t.top+1})()`;
+  await injectToast();
+  await move(640, 796); // heading for Annuler: the exact gesture that used to cover it
+  await wait(`document.documentElement.classList.contains('pk-focus-bottom')`);
+  await wait(toastCleared);
+  await capture('06-toast-annuler');
+  assert.ok(parseFloat(await evaluate(`getComputedStyle(document.documentElement).getPropertyValue('--pk-focus-toast-lift')`)) > 0,
+    'the live toast raises the bottom bands above the stack');
+  const toastBox = await rect('#probe-toast .vh');
+  assert.ok(toastBox.top >= 24, 'toast stays anchored at its native bottom slot');
+  assert.ok(Number(await style('#probe-toast .vh', 'zIndex')) > Number(await style('#pk-new-message-fab', 'zIndex'))
+    && Number(await style('#probe-toast .vh', 'zIndex')) > Number(await style('#floatbar', 'zIndex')),
+    'the toast layer paints above every Focus band, even on residual overlap');
+  const undoBox = await rect('#link_undo');
+  const undoX = Math.round((undoBox.left + undoBox.right) / 2), undoY = Math.round((undoBox.top + undoBox.bottom) / 2);
+  assert.equal(await evaluate(`document.elementFromPoint(${undoX},${undoY})?.closest('#link_undo') !== null`), true,
+    '« Annuler » is hit-testable while the reply bar and compose are revealed');
+  await cdp('Input.dispatchMouseEvent', { type: 'mousePressed', x: undoX, y: undoY, button: 'left', clickCount: 1 });
+  await cdp('Input.dispatchMouseEvent', { type: 'mouseReleased', x: undoX, y: undoY, button: 'left', clickCount: 1 });
+  assert.equal(await evaluate(`window.__undoClicks`), 1,
+    'a real pointer click on « Annuler » lands on the undo link, not on the reply bar');
+  await evaluate(`document.querySelector('#probe-toast').remove()`);
+  await wait(`parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pk-focus-toast-lift')) === 0`);
+  await wait(`getComputedStyle(document.querySelector('#floatbar')).bottom === '12px'`);
+  assert.equal(await style('#floatbar', 'bottom'), '12px', 'bands return to the screen edge once the toast is gone');
+
+  // Narrow viewport: the centered toast and the bands overlap for sure — the
+  // clearance must hold and everything stays on screen and clickable.
+  await cdp('Emulation.setDeviceMetricsOverride', { width: 384, height: 800, deviceScaleFactor: 1, mobile: false });
+  await wait(`innerWidth === 384`);
+  await injectToast();
+  await move(192, 796);
+  await wait(`document.documentElement.classList.contains('pk-focus-bottom')`);
+  await wait(toastCleared);
+  for (const selector of ['#probe-toast .vh', '#pk-new-message-fab', '#reply']) {
+    const box = await rect(selector);
+    assert.ok(box.left >= 0 && box.right <= 384 && box.top >= 0 && box.bottom <= 800,
+      `narrow viewport: ${selector} stays fully on screen above the toast`);
+  }
+  const narrowUndo = await rect('#link_undo');
+  const nx = Math.round((narrowUndo.left + narrowUndo.right) / 2), ny = Math.round((narrowUndo.top + narrowUndo.bottom) / 2);
+  assert.equal(await evaluate(`document.elementFromPoint(${nx},${ny})?.closest('#link_undo') !== null`), true,
+    'narrow viewport: « Annuler » remains clickable over the summoned bands');
+  await evaluate(`document.querySelector('#probe-toast').remove()`);
+  await cdp('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false });
+  await wait(`innerWidth === 1280`);
+  await evaluate(`document.querySelector('#probe-toast-style').remove()`);
+  await move(640, 420);
+  await wait(`!document.documentElement.classList.contains('pk-focus-bottom')`);
+
   // Keyboard focus inside the search reveals the global bar ("/" on Gmail).
   await evaluate(`document.querySelector('#search').focus()`);
   await wait(`getComputedStyle(document.querySelector('#gb')).opacity === '1'`);

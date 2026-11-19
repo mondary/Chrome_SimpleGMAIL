@@ -145,18 +145,21 @@ html.pk-focus #pk-no-left-menu-rail {
 
 /* Floating reply bar (fixed/sticky native row) and compose FAB: withdrawn
    until the pointer approaches the bottom edge. An in-flow reply row at the
-   end of the thread is never marked, so it keeps working as usual. */
+   end of the thread is never marked, so it keeps working as usual.
+   --pk-focus-toast-lift (measured in focus-read.js) raises both bands above
+   a live undo toast: without it they paint over « Annuler » and steal its
+   clicks, because the toast sits inside the bottom hover zone. */
 html.pk-focus [data-pk-focus-floatbar],
 html.pk-focus #pk-new-message-fab {
   position: fixed !important;
   top: auto !important;
-  bottom: 12px !important;
+  bottom: calc(12px + var(--pk-focus-toast-lift, 0px)) !important;
   z-index: 995 !important;
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
   transform: translateY(100%) !important;
-  transition: transform .18s cubic-bezier(.2,.7,.3,1), opacity .18s ease, visibility 0s .18s !important;
+  transition: transform .18s cubic-bezier(.2,.7,.3,1), opacity .18s ease, bottom .18s cubic-bezier(.2,.7,.3,1), visibility 0s .18s !important;
 }
 html.pk-focus [data-pk-focus-floatbar] {
   left: auto !important;
@@ -177,7 +180,7 @@ html.pk-focus #pk-new-message-fab {
   right: 12px !important;
   left: auto !important;
   z-index: 996 !important;
-  bottom: calc(12px + var(--pk-focus-compose-inset, 6px)) !important;
+  bottom: calc(12px + var(--pk-focus-compose-inset, 6px) + var(--pk-focus-toast-lift, 0px)) !important;
   height: var(--pk-focus-compose-height, 36px) !important;
   width: auto !important;
   min-width: 0 !important;
@@ -209,7 +212,7 @@ html.pk-focus.pk-focus-bottom #pk-new-message-fab {
   visibility: visible !important;
   pointer-events: auto !important;
   transform: none !important;
-  transition: transform .18s cubic-bezier(.2,.7,.3,1), opacity .18s ease, visibility 0s 0s !important;
+  transition: transform .18s cubic-bezier(.2,.7,.3,1), opacity .18s ease, bottom .18s cubic-bezier(.2,.7,.3,1), visibility 0s 0s !important;
 }
 
 /* Current Gmail sticky header: retain the subject and its controls, but not
