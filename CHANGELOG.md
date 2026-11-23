@@ -4,6 +4,10 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.11.32] - 2026-11-23
+### Changed
+- Fiche Chrome Web Store : titre du paquet « PK Simple Gmail · Mondary » et résumé « Made by Mondary · PK-Labs » pour ressortir sur les recherches de marque ; paquet envoyé à l'examen.
+
 ## [2026.11.31] - 2026-11-23
 
 ### Fixed
