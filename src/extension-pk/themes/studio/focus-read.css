@@ -5,9 +5,10 @@
    Nothing is cloned or moved: #gb and the marked toolbar leave the flow with
    position:fixed, so their height is reclaimed while they are withdrawn. */
 
-/* Global bar (logo + search): out of flow, 64 px reclaimed. It only comes
-   back when keyboard focus enters it (Gmail's "/" shortcut, Tab) — hovering
-   the top edge summons the thread toolbar, not the search bar. */
+/* Global bar (logo + search): out of flow, 64 px reclaimed. It slides back
+   two ways: with the whole top band when the pointer approaches the top edge
+   (pk-focus-top — the search sits above the thread actions, like the list),
+   or alone when keyboard focus enters it (Gmail's "/" shortcut, Tab). */
 html.pk-focus #gb {
   position: fixed !important;
   top: 0 !important;
@@ -22,7 +23,8 @@ html.pk-focus #gb {
   box-shadow: 0 10px 30px rgba(9,9,11,.08) !important;
   transition: transform .18s ease, opacity .18s ease !important;
 }
-html.pk-focus #gb:focus-within {
+html.pk-focus #gb:focus-within,
+html.pk-focus.pk-focus-top #gb {
   opacity: 1 !important;
   transform: none !important;
   pointer-events: auto !important;
@@ -89,6 +91,9 @@ html.pk-focus.pk-focus-top [data-pk-focus-tools] {
   transform: none !important;
   opacity: 1 !important;
   pointer-events: auto !important;
+  /* Revealed as the second row of the band: the global bar (search) sits
+     above, measured by focus-read.js. Withdrawn, both stay at the edge. */
+  top: var(--pk-focus-gb-height, 0px) !important;
 }
 html.pk-focus.pk-focus-top [data-pk-focus-tools] :is(button, a, [role="button"], [tabindex]) {
   pointer-events: auto !important;
@@ -127,6 +132,7 @@ html.pk-focus.pk-focus-top [data-pk-focus-pager] {
   transform: none !important;
   opacity: 1 !important;
   pointer-events: auto !important;
+  top: var(--pk-focus-gb-height, 0px) !important;
 }
 html.pk-focus.pk-focus-top [data-pk-focus-pager] :is(button, a, [role="button"], [tabindex]) {
   pointer-events: auto !important;
@@ -137,10 +143,16 @@ html.pk-focus:not(.pk-focus-top) :is([data-pk-focus-tools], [data-pk-focus-pager
 
 /* The folder rail normally aligns below Gmail's burger. That burger is inside
    the global bar hidden by Focus, so keep the rail below the revealed strip
-   instead of letting its hover realignment jump it into the back button. */
+   instead of letting its hover realignment jump it into the back button.
+   While the top band is held, the rail clears the full stack — search row
+   plus actions — and slides back under the hidden chrome once it withdraws. */
 html.pk-focus #pk-no-left-menu-rail {
   top: max(calc(var(--pk-focus-top-height, 46px) + 8px), 56px, var(--pk-folder-top, 56px)) !important;
   max-height: calc(100dvh - max(calc(var(--pk-focus-top-height, 46px) + 8px), 56px, var(--pk-folder-top, 56px))) !important;
+}
+html.pk-focus.pk-focus-top #pk-no-left-menu-rail {
+  top: calc(var(--pk-focus-gb-height, 0px) + var(--pk-focus-top-height, 46px) + 8px) !important;
+  max-height: calc(100dvh - var(--pk-focus-gb-height, 0px) - var(--pk-focus-top-height, 46px) - 8px) !important;
 }
 
 /* Floating reply bar (fixed/sticky native row) and compose FAB: withdrawn

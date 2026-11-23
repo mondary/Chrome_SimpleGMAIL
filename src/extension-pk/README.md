@@ -161,7 +161,11 @@ contenant d'autres éléments visibles ne sont pas neutralisés. La zone des com
 espace avant le compteur ; actions et navigation forment deux zones contiguës du
 même bandeau blanc, sans fond supplémentaire posé au-dessus des commandes Gmail.
 Le rail reste sous la barre même lorsque le bandeau Gmail est masqué. La zone de
-survol haute couvre au moins 44 px et la hauteur réelle du bandeau. Actions et
+survol haute couvre au moins 44 px et la hauteur réelle du bandeau. Le survol haut
+révèle désormais la barre globale complète : la vraie recherche Gmail (logo et
+bascule Mail / Agenda / Drive inclus) s'empile au-dessus des actions et de la
+pagination, décalées de sa hauteur réelle mesurée, et le rail de dossiers glisse
+sous la pile le temps du survol avant de retrouver sa place au retrait. Actions et
 pagination reviennent ensemble par fondu de 180 ms, sans `transform` sur leurs
 conteneurs pour ne pas piéger une navigation fixe imbriquée ; retrait après 700 ms
 loin du bord. À moins de 64 px du bord bas, Répondre / Répondre à tous / Transférer
@@ -174,8 +178,8 @@ sa hauteur suit le premier bouton de réponse et son bord inférieur la dernièr
 ligne des réponses natives. Son style de vue liste n’est pas modifié. Cette barre
 ne réserve donc plus un footer blanc quand elle est masquée, ni ne raccourcit le
 message quand elle revient. La recherche réapparaît quand le focus clavier entre
-dans `#gb` (raccourci `/`, Tab). Le focus clavier force la zone concernée visible,
-donc rien n'est piégé ; `prefers-reduced-motion` supprime les transitions. Aucun
+dans `#gb` (raccourci `/`, Tab), et reste en tête du bandeau de survol ; le focus
+clavier force la zone concernée visible, donc rien n'est piégé ; `prefers-reduced-motion` supprime les transitions. Aucun
 nœud Gmail n'est cloné ni déplacé : le script marque les conteneurs sur place
 (`data-pk-focus-tools`, `data-pk-focus-pager`, `data-pk-focus-floatbar`) et l'état
 vit dans des classes sur `<html>` (`pk-focus`, `pk-focus-top`, `pk-focus-bottom`).

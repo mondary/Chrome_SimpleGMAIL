@@ -159,20 +159,26 @@ try {
   const scrollerHiddenHeight = (await rect('.scroller')).height;
   await capture('01-focus');
 
-  // Pointer at the top edge summons the thread toolbar only.
+  // Pointer at the top edge summons the whole top chrome: the search bar
+  // (real #gb) above the thread actions and the pagination.
   await move(640, 8);
   await wait(`document.documentElement.classList.contains('pk-focus-top')`);
   await wait(`getComputedStyle(document.querySelector('#toolbar')).opacity === '1'`);
   await wait(`getComputedStyle(document.querySelector('#pager-controls')).opacity === '1'`);
-  assert.equal(await style('#gb', 'opacity'), '0', 'search bar stays away on edge hover');
+  await wait(`getComputedStyle(document.querySelector('#gb')).opacity === '1'`);
+  assert.equal(await style('#gb', 'transform'), 'none', 'search bar slides in with the hover band');
+  assert.equal(await style('#gb', 'pointerEvents'), 'auto', 'search bar is interactive in the hover band');
+  const gbRect = await rect('#gb');
   const toolbarRect = await rect('#toolbar');
   const pagerRect = await rect('#pager-controls');
   const backRect = await rect('#toolbar button');
   const railRect = await rect('#pk-no-left-menu-rail');
   const nextRect = await rect('#toolbar button:last-child');
   const paneRect = await rect('#thread .pane');
+  const searchRect = await rect('#search');
   assert.equal(toolbarRect.top, pagerRect.top, 'toolbar and pagination share the revealed top row');
-  assert.equal(pagerRect.top, 0, 'pagination is aligned to the top edge');
+  assert.equal(pagerRect.top, Math.round(gbRect.bottom), 'actions row stacks below the search bar');
+  assert.ok(gbRect.top <= 1, 'search bar starts at the top edge');
   assert.ok(paneRect.top <= 1, 'the message pane starts at the top after the pager leaves the flow');
   assert.ok(backRect.left >= railRect.right + 8, 'back button starts to the right of the folder rail');
   assert.ok(nextRect.right < pagerRect.left, 'toolbar actions do not collide with the page counter');
@@ -181,11 +187,16 @@ try {
   assert.equal((await rect('.iY.a98.nH')).top, subjectHiddenRect.top, 'hover must not push the subject down');
   assert.equal((await rect('.message')).top, messageHiddenRect.top, 'hover must not push the message down');
   assert.equal((await rect('.scroller')).height, scrollerHiddenHeight, 'hover must not shorten the reading viewport');
+  const sx = Math.round((searchRect.left + searchRect.right) / 2), sy = Math.round((searchRect.top + searchRect.bottom) / 2);
+  assert.equal(await evaluate(`(() => { const hit = document.elementFromPoint(${sx},${sy}); return !!hit && document.querySelector('#search') === hit; })()`), true,
+    'revealed search field is hit-testable inside the hover band');
   await capture('02-bord-haut');
 
-  // Leaving the edge withdraws it again after the delay.
+  // Leaving the edge withdraws the whole band again after the delay.
   await move(640, 420);
   await wait(`!document.documentElement.classList.contains('pk-focus-top')`);
+  await wait(`getComputedStyle(document.querySelector('#gb')).opacity === '0'`);
+  await wait(`getComputedStyle(document.querySelector('#gb')).transform !== 'none'`);
   await move(24, 72);
   await wait(`getComputedStyle(document.querySelector('#pk-no-left-menu-rail')).opacity === '1'`);
   await wait(`!document.documentElement.classList.contains('pk-focus-top')`);
@@ -433,8 +444,9 @@ try {
   assert.ok((await rect('.iY.a98.nH')).top <= 1, 'shared row: no reserved space above the subject');
   await move(640, 8);
   await wait(`getComputedStyle(document.querySelector('#pager-controls')).opacity === '1' && getComputedStyle(document.querySelector('#toolbar')).opacity === '1'`);
-  assert.equal((await rect('#toolbar')).top, 0, 'shared row: actions return at the viewport edge');
-  assert.equal((await rect('#pager-controls')).top, 0, 'shared row: pagination returns at the same edge');
+  const sharedRowTop = (await rect('#toolbar')).top;
+  assert.equal(sharedRowTop, Math.round((await rect('#gb')).bottom), 'shared row: actions return below the revealed search bar');
+  assert.equal((await rect('#pager-controls')).top, sharedRowTop, 'shared row: pagination returns at the same edge');
   assert.equal((await rect('.iY.a98.nH')).top, subjectHiddenRect.top, 'shared row: hover still never shifts reading');
   await move(640, 420);
   await wait(`!document.documentElement.classList.contains('pk-focus-top')`);
@@ -480,7 +492,8 @@ try {
   const nativeMessageTop = (await rect('.message')).top;
   await move(640, 8);
   await wait(`getComputedStyle(document.querySelector('#pager-controls')).opacity === '1'`);
-  assert.equal((await rect('#pager-controls')).top, 0, 'native variant: pagination returns at the same top edge as actions');
+  assert.equal((await rect('#pager-controls')).top, Math.round((await rect('#gb')).bottom),
+    'native variant: pagination returns below the search bar, like the actions');
   assert.equal((await rect('.message')).top, nativeMessageTop, 'native variant: hover never pushes the message');
   await move(640, 420);
   await wait(`getComputedStyle(document.querySelector('#pager-controls')).opacity === '0'`);
@@ -497,8 +510,9 @@ try {
   assert.equal(await style('#pager', 'backgroundColor'), await style('#pager-controls', 'backgroundColor'),
     'native shared row: actions and pagination use the same opaque strip background');
   await move(640, 8);
-  await wait(`getComputedStyle(document.querySelector('#pager-controls')).opacity === '1' && document.querySelector('#pager-controls').getBoundingClientRect().top === 0`);
-  assert.equal((await rect('#pager-controls')).top, 0, 'native shared row: all controls return at the top edge');
+  await wait(`getComputedStyle(document.querySelector('#pager-controls')).opacity === '1' && document.querySelector('#pager-controls').getBoundingClientRect().top === document.querySelector('#gb').getBoundingClientRect().bottom`);
+  assert.equal((await rect('#pager-controls')).top, Math.round((await rect('#gb')).bottom),
+    'native shared row: all controls return below the revealed search bar');
   assert.equal((await rect('.message')).top, nativeMessageTop, 'native shared row: revealing all controls never moves the message');
   const nestedToolbar = await rect('#pager');
   assert.equal(nestedToolbar.bottom, (await rect('#pager-controls')).bottom,
@@ -515,8 +529,9 @@ try {
     __nativeNext.addEventListener('click',()=>{__nativeNextClicks++});
   })()`);
   await wait(`document.querySelector('#native-actions').hasAttribute('data-pk-focus-tools') && document.querySelector('#pager-controls').hasAttribute('data-pk-focus-pager')`);
-  await wait(`getComputedStyle(document.querySelector('#pager-controls')).opacity === '1' && getComputedStyle(document.querySelector('#native-actions')).opacity === '1' && document.querySelector('#pager-controls').getBoundingClientRect().top === 0`);
-  assert.equal((await rect('#pager-controls')).top, 0, 'native E + F: pager is revealed alongside actions, not ignored');
+  await wait(`getComputedStyle(document.querySelector('#pager-controls')).opacity === '1' && getComputedStyle(document.querySelector('#native-actions')).opacity === '1' && document.querySelector('#pager-controls').getBoundingClientRect().top === document.querySelector('#gb').getBoundingClientRect().bottom`);
+  assert.equal((await rect('#pager-controls')).top, Math.round((await rect('#gb')).bottom),
+    'native E + F: pager is revealed alongside actions, not ignored');
   assert.equal((await rect('.message')).top, nativeMessageTop, 'native E + F: neither row reserves reading space');
   const stability = await evaluate(`new Promise(resolve=>{
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
@@ -572,7 +587,8 @@ try {
 
   await evaluate(`document.querySelector('#native-actions').append(document.querySelector('#pager'))`);
   await wait(`document.querySelector('#native-actions').hasAttribute('data-pk-focus-tools') && document.querySelector('#pager-controls').hasAttribute('data-pk-focus-pager') && getComputedStyle(document.querySelector('#pager')).display === 'contents'`);
-  assert.equal((await rect('#pager-controls')).top, 0, 'nested E + F: pager remains anchored to the viewport, not a transformed action bar');
+  assert.equal((await rect('#pager-controls')).top, Math.round((await rect('#gb')).bottom),
+    'nested E + F: pager remains anchored to the viewport, not a transformed action bar');
   await clickNativeNext();
   assert.equal(await evaluate(`__nativeNextClicks`), 2, 'nested E + F: original Next control still works');
   assert.equal(await evaluate(`__nativeNext === document.querySelector('#pager-controls button:last-child')`), true,

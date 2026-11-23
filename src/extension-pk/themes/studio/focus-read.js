@@ -2,9 +2,11 @@
 // When a conversation is open, the list chrome withdraws — #gb (logo +
 // search), the Studio category strip, the thread toolbar and pager, and the
 // floating reply bar — leaving only the compact sticky subject and message
-// remain. The toolbar comes back when the pointer approaches the top edge,
-// the reply bar and the compose FAB when it approaches the bottom edge, and
-// #gb when keyboard focus enters it (Gmail's "/" search). Escape returns to
+// remain. The top edge summons the whole top chrome in one band: the global
+// bar (logo + search) above the thread toolbar and pager, so reading keeps
+// the search a hover away. The reply bar and the compose FAB come back when
+// the pointer approaches the bottom edge, and #gb also slides in on its own
+// when keyboard focus enters it (Gmail's "/" search). Escape returns to
 // the list through Gmail's real back control, unless Gmail has something of
 // its own to close (compose, dialog, menu, text field). List view is
 // untouched. Gmail nodes are never cloned or moved: containers are marked
@@ -208,6 +210,10 @@
     const pager = document.querySelector('[data-pk-focus-pager]');
     const tools = document.querySelector('[data-pk-focus-tools]');
     const fab = document.getElementById('pk-new-message-fab');
+    // The global bar joins the hover band above the actions row; its real
+    // height shifts the revealed rows down (measured, never assumed — it
+    // stays valid while withdrawn because translateY only moves it).
+    const gbHeight = Math.ceil(document.getElementById('gb')?.getBoundingClientRect().height || 0);
     const railEnd = rail ? Math.ceil(rail.getBoundingClientRect().right + 12) : 12;
     const pagerRect = pager?.getBoundingClientRect();
     const height = Math.ceil(Math.max(46, pagerRect?.height || 0, tools?.getBoundingClientRect().height || 0));
@@ -219,6 +225,7 @@
     const composeInset = replyBottom === undefined ? 6 : Math.max(0, floatEl.getBoundingClientRect().bottom - replyBottom);
     topZone = Math.max(TOP_ZONE, height + 8);
     setVar('--pk-focus-rail-end', `${railEnd}px`);
+    setVar('--pk-focus-gb-height', `${gbHeight}px`);
     setVar('--pk-focus-pager-reserve', `${pagerRect?.width || 0}px`);
     setVar('--pk-focus-top-height', `${height}px`);
     setVar('--pk-focus-fab-width', `${fabWidth}px`);
@@ -449,6 +456,7 @@
     root.classList.remove('pk-focus');
     root.classList.remove('pk-focus-pager');
     root.style.removeProperty('--pk-focus-rail-end');
+    root.style.removeProperty('--pk-focus-gb-height');
     root.style.removeProperty('--pk-focus-pager-reserve');
     root.style.removeProperty('--pk-focus-top-height');
     root.style.removeProperty('--pk-focus-fab-width');
