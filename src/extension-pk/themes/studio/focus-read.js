@@ -6,9 +6,12 @@
 // bar (logo + search) slides in at its official spot — measured while the
 // list is in natural flow and pinned as the band anchor, so clicking Mail
 // never makes it jump — with the thread toolbar and pager stacked beneath.
-// The reply bar and the compose FAB come back when when
+// The reply bar and the compose FAB come back when
 // the pointer approaches the bottom edge, and #gb also slides in on its own
-// when keyboard focus enters it (Gmail's "/" search). Escape returns to
+// when keyboard focus enters it (Gmail's "/" search). Only a deliberate Tab
+// reveals the bands from the keyboard: Gmail focuses the pager after J/K and
+// the label button for "l", and that focus must never paint them over the
+// subject. Escape returns to
 // the list through Gmail's real back control, unless Gmail has something of
 // its own to close (compose, dialog, menu, text field). List view is
 // untouched. Gmail nodes are never cloned or moved: containers are marked
@@ -42,9 +45,15 @@
   let topLayoutDirty = true;
   let layoutScheduled = false;
   let topZone = TOP_ZONE;
+  // Deliberate keyboard navigation into the chrome is Tab only. Gmail moves
+  // focus by itself after its actions — the pager arrow after J/K, the label
+  // button when "l" opens the menu — and that must never paint the bands
+  // over the subject. Any other key or pointer gesture cancels the intent.
+  let tabIntent = false;
 
   const root = document.documentElement;
   const held = { top: false, bottom: false };
+  const byFocus = { top: false, bottom: false };
   const timers = { top: 0, bottom: 0 };
 
   function canHover() {
@@ -292,12 +301,6 @@
     setVar('--pk-focus-toast-lift', lift ? `${lift}px` : '0px');
   }
 
-  function zoneSelector(zone) {
-    return zone === 'top'
-      ? '#gb, [data-pk-focus-tools], [data-pk-focus-pager], #pk-studio-tabs'
-      : '[data-pk-focus-floatbar], #pk-new-message-fab';
-  }
-
   function inTopChrome(target) {
     return !!target?.closest?.('#gb, [data-pk-focus-tools], [data-pk-focus-pager], #pk-studio-tabs');
   }
@@ -363,6 +366,9 @@
   // Registered on the window in capture phase: it runs before Gmail's own
   // document-level handlers, so the reading shortcuts cannot be swallowed.
   function onKeyDown(event) {
+    // Track keyboard intent here: our handled keys stop propagation, so a
+    // separate document listener would miss them.
+    tabIntent = event.key === 'Tab';
     if (!active || !reading) return;
     if (event.defaultPrevented) return;
     if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
@@ -397,8 +403,7 @@
     clearTimeout(timers[zone]);
     timers[zone] = setTimeout(() => {
       timers[zone] = 0;
-      const focused = document.activeElement?.closest?.(zoneSelector(zone));
-      if (!held[zone] && !focused) toggleClass(`pk-focus-${zone}`, false);
+      if (!held[zone] && !byFocus[zone]) toggleClass(`pk-focus-${zone}`, false);
     }, HIDE_DELAY);
   }
 
@@ -416,6 +421,7 @@
   }
 
   function onPointerMove(event) {
+    tabIntent = false;
     if (!reading) return;
     const target = event.target instanceof Element ? event.target : null;
     hold('top', inTopChrome(target) || event.clientY <= topZone);
@@ -429,10 +435,11 @@
   }
 
   function onFocusIn(event) {
-    if (!reading) return;
+    if (!reading || !tabIntent) return;
     const target = event.target instanceof Element ? event.target : null;
     const zone = inTopChrome(target) ? 'top' : inBottomBar(target) ? 'bottom' : null;
     if (zone) {
+      byFocus[zone] = true;
       clearTimeout(timers[zone]);
       timers[zone] = 0;
       toggleClass(`pk-focus-${zone}`, true);
@@ -443,14 +450,16 @@
     if (!reading) return;
     const target = event.target instanceof Element ? event.target : null;
     // A Gmail focus change must not clear the independent pointer hold.
-    if (inTopChrome(target)) queueHide('top');
-    if (inBottomBar(target)) queueHide('bottom');
+    if (inTopChrome(target)) { byFocus.top = false; queueHide('top'); }
+    if (inBottomBar(target)) { byFocus.bottom = false; queueHide('bottom'); }
   }
 
   function releaseAll() {
     reading = false;
+    tabIntent = false;
     for (const zone of ['top', 'bottom']) {
       held[zone] = false;
+      byFocus[zone] = false;
       clearTimeout(timers[zone]);
       timers[zone] = 0;
       root.classList.remove(`pk-focus-${zone}`);
@@ -526,6 +535,7 @@
   }
 
   document.addEventListener('pointermove', onPointerMove, { passive: true });
+  document.addEventListener('pointerdown', () => { tabIntent = false; }, true);
   document.documentElement.addEventListener('pointerleave', onPointerLeave);
   document.addEventListener('focusin', onFocusIn);
   document.addEventListener('focusout', onFocusOut);

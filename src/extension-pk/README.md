@@ -186,8 +186,11 @@ ligne des réponses natives. Son style de vue liste n’est pas modifié. Cette 
 ne réserve donc plus un footer blanc quand elle est masquée, ni ne raccourcit le
 message quand elle revient. La recherche réapparaît quand le focus clavier entre
 dans `#gb` (raccourci `/`, Tab) — seule, à la même place officielle ancrée — et
-reste la première rangée du bandeau de survol ; le focus
-clavier force la zone concernée visible, donc rien n'est piégé ; `prefers-reduced-motion` supprime les transitions. Aucun
+reste la première rangée du bandeau de survol. Seul un **Tab volontaire** révèle
+les bandes au clavier : Gmail redonne le focus à la flèche du pager après J/K ou
+au bouton Étiqueter après `l`, et ce focus programmé ne peint plus jamais le
+bandeau sur le sujet — le titre reste lisible pendant les actions, le bandeau ne
+revient que par le survol (ou Tab) ; `prefers-reduced-motion` supprime les transitions. Aucun
 nœud Gmail n'est cloné ni déplacé : le script marque les conteneurs sur place
 (`data-pk-focus-tools`, `data-pk-focus-pager`, `data-pk-focus-floatbar`) et l'état
 vit dans des classes sur `<html>` (`pk-focus`, `pk-focus-top`, `pk-focus-bottom`).

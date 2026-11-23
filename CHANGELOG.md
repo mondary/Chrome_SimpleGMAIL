@@ -4,6 +4,15 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.11.30] - 2026-11-23
+
+### Fixed
+- **Focus lecture — le bandeau ne s'affiche plus pendant les actions** : après J/K ou Étiqueter (`l`), Gmail redonne le focus à la flèche du pager ou au bouton Étiqueter, et cet événement de focus révélait le bandeau au-dessus du sujet — le titre était masqué au moment même où on attend le feedback de l'action. Désormais, seul un **Tab volontaire** révèle les bandes au clavier : toute autre touche (J, K, l…) ou un geste pointeur annule l'intention, et le focus programmé par Gmail ne les peint plus jamais. Le survol garde sa révélation ; à la sortie du focus, le bandeau se retire normalement.
+- **Bandeau plus jamais collé après un survol+action** : `queueHide` ne consulte plus `document.activeElement` — un focus Gmail résiduel sur la pagination retenait le bandeau indéfiniment après un simple survol. Le maintien vient maintenant d'un drapeau de focus volontaire (`byFocus`), remis à zéro à la sortie.
+
+### Vérification
+- `tools/tests/studio-focus.test.mjs` : focus programmé du pager et du bouton Étiqueter → aucune révélation et opacité de la barre à 0 ; intention Tab annoncée + focus dans `#gb` → bandeau révélé ; retrait après le départ du focus (900 ms) ; le test historique « vraie pagination révélée au clavier » annonce désormais le Tab, comme la règle.
+
 ## [2026.11.29] - 2026-11-23
 
 ### Added

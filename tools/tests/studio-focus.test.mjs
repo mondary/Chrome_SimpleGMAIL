@@ -51,7 +51,8 @@ try {
   // Real key events, not a synthetic DOM event: Gmail's own handlers see them.
   const pressKey = async (key, modifiers = 0) => {
     const single = key.length === 1;
-    const keyCode = single ? key.toUpperCase().charCodeAt(0) : 27;
+    const named = { Escape: 27, Tab: 9, Enter: 13 };
+    const keyCode = single ? key.toUpperCase().charCodeAt(0) : (named[key] ?? 0);
     const event = {
       key,
       code: single ? `Key${key.toUpperCase()}` : key,
@@ -59,6 +60,9 @@ try {
       nativeVirtualKeyCode: keyCode,
       modifiers,
     };
+    // Tab moves the browser focus: the page itself must be focused first in
+    // headless, or the default traversal has no target.
+    await cdp('Page.bringToFront').catch(() => {});
     await cdp('Input.dispatchKeyEvent', { type: 'rawKeyDown', ...event });
     await cdp('Input.dispatchKeyEvent', { type: 'keyUp', ...event });
     // Headless only: the browser's own Escape handling suspends the page
@@ -347,6 +351,38 @@ try {
   assert.equal(await evaluate(`window.__olderClicks || 0`), 1, 'K left the other arrow alone');
   assert.equal(await evaluate(`document.documentElement.classList.contains('pk-focus')`), true, 'J/K keep the reading mode engaged');
 
+  // Gmail moves focus by itself after its actions (the pager after J/K, the
+  // label button when "l" opens its menu): that focus must never paint the
+  // band over the subject. Only a deliberate Tab reveals it.
+  await evaluate(`document.querySelector('#pager-controls button:last-child').focus()`);
+  await evaluate(`new Promise(resolve=>setTimeout(resolve,120))`);
+  assert.equal(await evaluate(`document.documentElement.classList.contains('pk-focus-top')`), false,
+    'programmatic pager focus does not summon the band');
+  assert.equal(await style('#toolbar', 'opacity'), '0', 'the subject keeps its row after J/K');
+  await evaluate(`document.querySelector('#toolbar button[aria-label="Étiqueter"]').focus()`);
+  await evaluate(`new Promise(resolve=>setTimeout(resolve,120))`);
+  assert.equal(await evaluate(`document.documentElement.classList.contains('pk-focus-top')`), false,
+    'label-menu focus does not summon the band');
+  await evaluate(`document.activeElement.blur()`);
+  await evaluate(`new Promise(resolve=>setTimeout(resolve,120))`);
+  // Headless quirk: element.focus() only dispatches focus events while the
+  // window has focus, and evaluations alone do not grant it — a real key does.
+  await cdp('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, nativeVirtualKeyCode: 65 });
+  await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, nativeVirtualKeyCode: 65 });
+  // The headless browser swallows a real Tab before the renderer: announce
+  // the same keydown the extension reads, then land the focus inside #gb.
+  await evaluate(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }))`);
+  await evaluate(`document.querySelector('#search').focus()`);
+  await evaluate(`new Promise(resolve=>setTimeout(resolve,150))`);
+  assert.equal(await evaluate(`document.documentElement.contains(document.activeElement) && document.activeElement === document.querySelector('#search')`), true,
+    'the Tab-announced focus landed in the global bar');
+  assert.equal(await evaluate(`document.documentElement.classList.contains('pk-focus-top')`), true,
+    'a Tab-announced focus still reveals the band');
+  await evaluate(`document.activeElement.blur()`);
+  await evaluate(`new Promise(resolve=>setTimeout(resolve,900))`);
+  assert.equal(await evaluate(`document.documentElement.classList.contains('pk-focus-top')`), false,
+    'the band withdraws after the focus leaves');
+
   // Reading detection survives a Gmail rename of the sticky subject: the
   // thread toolbar hook over a real message body keeps the mode engaged.
   await evaluate(`document.querySelector('.iY.a98.nH').classList.remove('iY', 'a98', 'nH')`);
@@ -600,10 +636,12 @@ try {
   await evaluate(`__nativeNext.blur()`);
   await move(640, 420);
   await wait(`getComputedStyle(document.querySelector('#pager-controls')).opacity === '0'`);
+  // Keyboard access is a deliberate Tab: announce it, then land the focus.
+  await evaluate(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }))`);
   await evaluate(`__nativeNext.focus()`);
   await wait(`getComputedStyle(document.querySelector('#pager-controls')).opacity === '1'`);
   assert.equal(await evaluate(`document.activeElement === __nativeNext`), true,
-    'keyboard focus also reveals the real pagination');
+    'a Tab-announced keyboard focus reveals the real pagination');
   await evaluate(`__nativeNext.blur()`);
 
   await evaluate(`chrome.storage.local.set({ enabled: { 'js-studio-focus-read': false } })`);
