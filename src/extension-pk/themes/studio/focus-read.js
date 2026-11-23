@@ -2,10 +2,11 @@
 // When a conversation is open, the list chrome withdraws — #gb (logo +
 // search), the Studio category strip, the thread toolbar and pager, and the
 // floating reply bar — leaving only the compact sticky subject and message
-// remain. The top edge summons the whole top chrome in one band: the thread
-// toolbar and pager keep the pointer's arrival edge, and the global bar
-// (logo + search) stacks beneath them, so the search is one hover away
-// without ever covering Retour. The reply bar and the compose FAB come back when
+// remain. The top edge summons the whole top chrome in one band: the global
+// bar (logo + search) slides in at its official spot — measured while the
+// list is in natural flow and pinned as the band anchor, so clicking Mail
+// never makes it jump — with the thread toolbar and pager stacked beneath.
+// The reply bar and the compose FAB come back when when
 // the pointer approaches the bottom edge, and #gb also slides in on its own
 // when keyboard focus enters it (Gmail's "/" search). Escape returns to
 // the list through Gmail's real back control, unless Gmail has something of
@@ -496,7 +497,15 @@
         releaseAll();
       }
     }
-    if (!reading) return;
+    if (!reading) {
+      // Anchor for the next hover band: the bar's real spot while the list
+      // chrome is in natural flow (never measurable once withdrawn).
+      const gb = document.getElementById('gb');
+      if (gb && !root.classList.contains('pk-focus')) {
+        setVar('--pk-focus-gb-top', `${Math.round(gb.getBoundingClientRect().top + window.scrollY)}px`);
+      }
+      return;
+    }
     if (floatEl && !floatEl.isConnected) {
       floatEl = null;
     }

@@ -162,11 +162,14 @@ espace avant le compteur ; actions et navigation forment deux zones contiguës d
 même bandeau blanc, sans fond supplémentaire posé au-dessus des commandes Gmail.
 Le rail reste sous la barre même lorsque le bandeau Gmail est masqué. La zone de
 survol haute couvre au moins 44 px et la hauteur réelle du bandeau. Le survol haut
-garde les actions et la pagination au bord même de l'écran — le point d'arrivée du
-curseur, donc Retour reste sous le pointeur — et la vraie recherche Gmail (logo et
-bascule Mail / Agenda / Drive inclus) s'empile en dessous, à sa hauteur réelle
-mesurée ; le rail de dossiers glisse sous la pile le temps du survol avant de
-retrouver sa place au retrait. Actions et
+révèle la barre globale complète **à sa place officielle** : la position réelle de
+`#gb` (logo, recherche, bascule Mail / Agenda / Drive) est mesurée en vue liste
+tant qu'elle vit dans son flux naturel, puis sert d'ancrage au bandeau
+(`--pk-focus-gb-top`) — le survol peint la barre exactement là où vit
+l'officielle, donc cliquer Mail ou un libellé ne la fait pas sauter. Les actions
+et la pagination s'empilent en dessous, à la hauteur réelle mesurée de la barre ;
+le rail de dossiers glisse sous la pile le temps du survol avant de retrouver sa
+place au retrait. Actions et
 pagination reviennent ensemble par fondu de 180 ms, sans `transform` sur leurs
 conteneurs pour ne pas piéger une navigation fixe imbriquée ; retrait après 700 ms
 loin du bord. À moins de 64 px du bord bas, Répondre / Répondre à tous / Transférer
@@ -179,8 +182,8 @@ sa hauteur suit le premier bouton de réponse et son bord inférieur la dernièr
 ligne des réponses natives. Son style de vue liste n’est pas modifié. Cette barre
 ne réserve donc plus un footer blanc quand elle est masquée, ni ne raccourcit le
 message quand elle revient. La recherche réapparaît quand le focus clavier entre
-dans `#gb` (raccourci `/`, Tab) — seule, à sa place officielle au-dessus de la
-lecture — et reste la dernière rangée du bandeau de survol ; le focus
+dans `#gb` (raccourci `/`, Tab) — seule, à la même place officielle ancrée — et
+reste la première rangée du bandeau de survol ; le focus
 clavier force la zone concernée visible, donc rien n'est piégé ; `prefers-reduced-motion` supprime les transitions. Aucun
 nœud Gmail n'est cloné ni déplacé : le script marque les conteneurs sur place
 (`data-pk-focus-tools`, `data-pk-focus-pager`, `data-pk-focus-floatbar`) et l'état

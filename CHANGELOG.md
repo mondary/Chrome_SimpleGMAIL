@@ -4,6 +4,14 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.11.27] - 2026-11-23
+
+### Fixed
+- **Focus lecture — retour à l'ordre validé et ancrage à la place officielle** : l'inversion du 2026.11.26 (actions au bord, recherche en dessous) enterrait le burger, la recherche et le triptyque sous la barre d'actions — rejeté. L'ordre du 2026.11.25 est rétabli : la barre globale (recherche + burger + Mail / Agenda / Drive) est la première rangée du bandeau de survol, actions et pagination en dessous. Le saut au clic Mail est corrigé à la source cette fois : la position réelle de `#gb` est **mesurée en vue liste** tant qu'elle vit dans son flux naturel, puis sert d'ancrage au bandeau (`--pk-focus-gb-top`) — le survol peint la barre exactement là où vit l'officielle, quel que soit le décalage (marge Gmail, tweak, enrobage), donc plus aucun saut du triptyque au clic Mail. La révélation par focus clavier (`/`, Tab) reste seule, à la même place ancrée.
+
+### Vérification
+- `tools/tests/studio-focus.test.mjs` : l'ancre `--pk-focus-gb-top` doit être posée pendant la vue liste, la barre de recherche peinte à cette ancre, actions/pagination alignées sur son bas réel (hit-test Retour et champ de recherche conservés) ; sections native/shared/nested E+F revenues à l'attente « sous la barre ». Le banc modules devient insensible à l'entrelacement du rafraîchissement périodique (correspondance par destination, plus par dernière requête).
+
 ## [2026.11.26] - 2026-11-23
 
 ### Fixed

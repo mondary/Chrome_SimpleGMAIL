@@ -5,14 +5,15 @@
    Nothing is cloned or moved: #gb and the marked toolbar leave the flow with
    position:fixed, so their height is reclaimed while they are withdrawn. */
 
-/* Global bar (logo + search): out of flow, 64 px reclaimed. It slides back
-   two ways: stacked UNDER the actions row when the top edge is hovered
-   (pk-focus-top) — the actions keep the pointer's arrival point, so Retour
-   stays under the cursor — or alone at its official top spot when keyboard
-   focus enters it (Gmail's "/" shortcut, Tab). */
+/* Global bar (logo + search): out of flow, its height reclaimed. It slides
+   back to its OFFICIAL spot — the position measured in the list view is
+   pinned through --pk-focus-gb-top — so clicking Mail or a label never
+   makes the triptyque jump. Two reveals: the top band (pk-focus-top), with
+   the actions row stacking beneath it, or alone on keyboard focus
+   (Gmail's "/" shortcut, Tab). */
 html.pk-focus #gb {
   position: fixed !important;
-  top: 0 !important;
+  top: var(--pk-focus-gb-top, 0px) !important;
   left: 0 !important;
   right: 0 !important;
   z-index: 996 !important;
@@ -24,16 +25,11 @@ html.pk-focus #gb {
   box-shadow: 0 10px 30px rgba(9,9,11,.08) !important;
   transition: transform .18s ease, opacity .18s ease !important;
 }
-html.pk-focus #gb:focus-within {
-  opacity: 1 !important;
-  transform: none !important;
-  pointer-events: auto !important;
-}
+html.pk-focus #gb:focus-within,
 html.pk-focus.pk-focus-top #gb {
   opacity: 1 !important;
   transform: none !important;
   pointer-events: auto !important;
-  top: var(--pk-focus-top-height, 46px) !important;
 }
 
 /* Category strip belongs to the list: hidden while reading, back instantly
@@ -97,6 +93,9 @@ html.pk-focus.pk-focus-top [data-pk-focus-tools] {
   transform: none !important;
   opacity: 1 !important;
   pointer-events: auto !important;
+  /* Second row of the band: beneath the search bar, at its measured
+     official top plus height. Withdrawn, both stay at the edge. */
+  top: calc(var(--pk-focus-gb-top, 0px) + var(--pk-focus-gb-height, 0px)) !important;
 }
 html.pk-focus.pk-focus-top [data-pk-focus-tools] :is(button, a, [role="button"], [tabindex]) {
   pointer-events: auto !important;
@@ -135,6 +134,7 @@ html.pk-focus.pk-focus-top [data-pk-focus-pager] {
   transform: none !important;
   opacity: 1 !important;
   pointer-events: auto !important;
+  top: calc(var(--pk-focus-gb-top, 0px) + var(--pk-focus-gb-height, 0px)) !important;
 }
 html.pk-focus.pk-focus-top [data-pk-focus-pager] :is(button, a, [role="button"], [tabindex]) {
   pointer-events: auto !important;
@@ -153,8 +153,8 @@ html.pk-focus #pk-no-left-menu-rail {
   max-height: calc(100dvh - max(calc(var(--pk-focus-top-height, 46px) + 8px), 56px, var(--pk-folder-top, 56px))) !important;
 }
 html.pk-focus.pk-focus-top #pk-no-left-menu-rail {
-  top: calc(var(--pk-focus-gb-height, 0px) + var(--pk-focus-top-height, 46px) + 8px) !important;
-  max-height: calc(100dvh - var(--pk-focus-gb-height, 0px) - var(--pk-focus-top-height, 46px) - 8px) !important;
+  top: calc(var(--pk-focus-gb-top, 0px) + var(--pk-focus-gb-height, 0px) + var(--pk-focus-top-height, 46px) + 8px) !important;
+  max-height: calc(100dvh - var(--pk-focus-gb-top, 0px) - var(--pk-focus-gb-height, 0px) - var(--pk-focus-top-height, 46px) - 8px) !important;
 }
 
 /* Floating reply bar (fixed/sticky native row) and compose FAB: withdrawn
