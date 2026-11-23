@@ -2,9 +2,10 @@
 // When a conversation is open, the list chrome withdraws — #gb (logo +
 // search), the Studio category strip, the thread toolbar and pager, and the
 // floating reply bar — leaving only the compact sticky subject and message
-// remain. The top edge summons the whole top chrome in one band: the global
-// bar (logo + search) above the thread toolbar and pager, so reading keeps
-// the search a hover away. The reply bar and the compose FAB come back when
+// remain. The top edge summons the whole top chrome in one band: the thread
+// toolbar and pager keep the pointer's arrival edge, and the global bar
+// (logo + search) stacks beneath them, so the search is one hover away
+// without ever covering Retour. The reply bar and the compose FAB come back when
 // the pointer approaches the bottom edge, and #gb also slides in on its own
 // when keyboard focus enters it (Gmail's "/" search). Escape returns to
 // the list through Gmail's real back control, unless Gmail has something of

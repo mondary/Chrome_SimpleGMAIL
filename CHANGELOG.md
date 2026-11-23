@@ -4,6 +4,14 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.11.26] - 2026-11-23
+
+### Fixed
+- **Focus lecture — Retour redevenu le point d'arrivée du survol haut** : la barre de recherche s'était empilée AU-DESSUS des actions, si bien que le curseur qui remontait atterrissait dans le champ de recherche et n'atteignait jamais Retour / Archiver / Spam / Corbeille. Le bandeau rétablît l'ordre naturel : actions et pagination restent au bord même de l'écran (le point d'arrivée), et la vraie recherche Gmail (logo + bascule Mail / Agenda / Drive) s'empile EN DESSOUS, à sa hauteur réelle mesurée. Le saut du triptyque au clic Mail est réduit d'autant : le bandeau de survol est désormais plus bas, comme demandé. La révélation par focus clavier (`/`, Tab) garde la barre à sa place officielle, seule au-dessus de la lecture.
+
+### Vérification
+- `tools/tests/studio-focus.test.mjs` : nouveau hit-test du vrai bouton Retour au centre réel (l'assertion qui manquait et aurait attrapé la régression), rangée actions/pagination attendue au bord 0, recherche empilée sous le bas réel des actions, champ de recherche hit-testé à sa nouvelle place ; les sections native/shared/nested E+F reviennent à l'attente d'origine (bord 0). Le rail reste sous la pile complète (somme inchangée).
+
 ## [2026.11.25] - 2026-11-23
 
 ### Added

@@ -6,9 +6,10 @@
    position:fixed, so their height is reclaimed while they are withdrawn. */
 
 /* Global bar (logo + search): out of flow, 64 px reclaimed. It slides back
-   two ways: with the whole top band when the pointer approaches the top edge
-   (pk-focus-top — the search sits above the thread actions, like the list),
-   or alone when keyboard focus enters it (Gmail's "/" shortcut, Tab). */
+   two ways: stacked UNDER the actions row when the top edge is hovered
+   (pk-focus-top) — the actions keep the pointer's arrival point, so Retour
+   stays under the cursor — or alone at its official top spot when keyboard
+   focus enters it (Gmail's "/" shortcut, Tab). */
 html.pk-focus #gb {
   position: fixed !important;
   top: 0 !important;
@@ -23,11 +24,16 @@ html.pk-focus #gb {
   box-shadow: 0 10px 30px rgba(9,9,11,.08) !important;
   transition: transform .18s ease, opacity .18s ease !important;
 }
-html.pk-focus #gb:focus-within,
+html.pk-focus #gb:focus-within {
+  opacity: 1 !important;
+  transform: none !important;
+  pointer-events: auto !important;
+}
 html.pk-focus.pk-focus-top #gb {
   opacity: 1 !important;
   transform: none !important;
   pointer-events: auto !important;
+  top: var(--pk-focus-top-height, 46px) !important;
 }
 
 /* Category strip belongs to the list: hidden while reading, back instantly
@@ -91,9 +97,6 @@ html.pk-focus.pk-focus-top [data-pk-focus-tools] {
   transform: none !important;
   opacity: 1 !important;
   pointer-events: auto !important;
-  /* Revealed as the second row of the band: the global bar (search) sits
-     above, measured by focus-read.js. Withdrawn, both stay at the edge. */
-  top: var(--pk-focus-gb-height, 0px) !important;
 }
 html.pk-focus.pk-focus-top [data-pk-focus-tools] :is(button, a, [role="button"], [tabindex]) {
   pointer-events: auto !important;
@@ -132,7 +135,6 @@ html.pk-focus.pk-focus-top [data-pk-focus-pager] {
   transform: none !important;
   opacity: 1 !important;
   pointer-events: auto !important;
-  top: var(--pk-focus-gb-height, 0px) !important;
 }
 html.pk-focus.pk-focus-top [data-pk-focus-pager] :is(button, a, [role="button"], [tabindex]) {
   pointer-events: auto !important;
