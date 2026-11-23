@@ -23,6 +23,12 @@
   const EDITABLE = 'input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="textbox"], [role="combobox"]';
   const NATIVE_CLOSE = '[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], .M9, .aoI';
   const BACK_LABELS = /^(retour|back|zurück|atras|atrás|indietro|voltar|назад)\b/i;
+  // J / K walk the conversations while reading, like the pager arrows the
+  // hover reveals: j = older (deeper in the list), k = newer — the same
+  // mapping the Focus theme already uses. Translated labels first, then the
+  // fixture's wording; a missing arrow never steals the key from Gmail.
+  const PAGER_OLDER = /^(plus ancien|older|message suivant|suiv|next)/i;
+  const PAGER_NEWER = /^(plus récent|plus recent|newer|message précédent|message precedent|préc|previous)/i;
 
   let active = false;
   let reading = false;
@@ -81,17 +87,28 @@
       || [...document.querySelectorAll('.iY.a98.nH')].find(visible);
   }
 
+  // Gmail's actual thread toolbar hook, shared with the similar-messages
+  // filter. Only the conversation view carries it (gh="mtb").
+  function nativeThreadBars() {
+    return [...document.querySelectorAll('.aeH .iH.bzn[gh="mtb"]')].filter(visible);
+  }
+
   // The full thread view is the only place where the subject header exists.
+  // If Gmail renames that sticky header, a real thread toolbar over a real
+  // message body still means reading: the list toolbar never has a message
+  // body under it.
   function readingView() {
     if (!canHover()) return false;
-    return !!subjectHeader();
+    if (subjectHeader()) return true;
+    const bar = nativeThreadBars()[0];
+    return !!bar && !![...document.querySelectorAll('.a3s, .ii')].find(visible);
   }
 
   // Gmail's actual thread toolbar has a stable semantic hook used elsewhere
   // in this extension: .aeH .iH.bzn[gh="mtb"]. Prefer it to translated button
   // labels; keep a subject-relative fallback for Gmail variants.
   function findTools() {
-    const native = [...document.querySelectorAll('.aeH .iH.bzn[gh="mtb"]')].filter(visible);
+    const native = nativeThreadBars();
     if (native.length) {
       const row = native[0].closest('div.G-atb.D.E, div.G-atb.D.F');
       return row && !row.contains(subjectHeader()) ? row : native[0];
@@ -298,27 +315,72 @@
     return null;
   }
 
-  // Compose, a dialog/menu/dropdown, or any text field keeps Escape for
-  // itself: closing the composer must never drop the reader back to the list.
-  function gmailOwnsEscape(target) {
+  // Compose, a dialog/menu/dropdown, or any text field keeps Escape — and
+  // every letter key — for itself: closing the composer must never drop the
+  // reader back to the list, and typing "j" in a draft must type a "j".
+  function gmailHasPriority(target) {
     if (target?.closest?.(EDITABLE)) return true;
     const focused = document.activeElement;
     if (focused && focused !== document.body && focused.closest?.(EDITABLE)) return true;
     return [...document.querySelectorAll(NATIVE_CLOSE)].some(visible);
   }
 
+  // The conversation pager arrows, found in the withdrawn chrome: Focus only
+  // fades them with opacity, so the controls stay measurable and clickable.
+  // The marked pager wins, then the toolbar row, then the whole .aeH block.
+  function pagerButton(pattern) {
+    const scopes = [
+      document.querySelector('[data-pk-focus-pager]'),
+      document.querySelector('[data-pk-focus-tools]'),
+      document.querySelector('.aeH'),
+    ];
+    for (const scope of scopes) {
+      if (!scope) continue;
+      const found = [...scope.querySelectorAll('button, [role="button"], a')].find(node =>
+        !node.disabled && node.getAttribute('aria-disabled') !== 'true' && visible(node) && pattern.test(labelOf(node)));
+      if (found) return found;
+    }
+    return null;
+  }
+
+  // Gmail controls use both Closure mouseup and delegated click handlers,
+  // exactly like the Focus theme's pager activation.
+  function clickControl(node) {
+    for (const type of ['mousedown', 'mouseup', 'click']) {
+      node.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window, button: 0 }));
+    }
+  }
+
+  // Registered on the window in capture phase: it runs before Gmail's own
+  // document-level handlers, so the reading shortcuts cannot be swallowed.
   function onKeyDown(event) {
     if (!active || !reading) return;
-    if (event.key !== 'Escape' || event.defaultPrevented || event.repeat) return;
+    if (event.defaultPrevented) return;
     if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
     const target = event.target instanceof Element ? event.target : null;
-    if (gmailOwnsEscape(target)) return;
-    const back = backControl();
+    if (event.key === 'Escape') {
+      if (event.repeat) return;
+      if (gmailHasPriority(target)) return;
+      const back = backControl();
+      event.preventDefault();
+      event.stopPropagation();
+      if (back) back.click();
+      // No toolbar rendered (Gmail variant): the requested exit still works.
+      else if (location.hash !== '#inbox') location.hash = '#inbox';
+      return;
+    }
+    // J / K browse conversations from the keyboard, driving the same native
+    // pager arrows the hover reveals. An unfound arrow leaves the key alone,
+    // so Gmail's own shortcuts keep working untouched; the other reading
+    // keys (arrows scroll, o opens, e archives) stay Gmail's altogether.
+    const key = typeof event.key === 'string' ? event.key.toLowerCase() : '';
+    if (key !== 'j' && key !== 'k') return;
+    if (gmailHasPriority(target)) return;
+    const arrow = pagerButton(key === 'j' ? PAGER_OLDER : PAGER_NEWER);
+    if (!arrow) return;
     event.preventDefault();
     event.stopPropagation();
-    if (back) back.click();
-    // No toolbar rendered (Gmail variant): the requested exit still works.
-    else if (location.hash !== '#inbox') location.hash = '#inbox';
+    clickControl(arrow);
   }
 
   function queueHide(zone) {
@@ -449,7 +511,7 @@
   document.documentElement.addEventListener('pointerleave', onPointerLeave);
   document.addEventListener('focusin', onFocusIn);
   document.addEventListener('focusout', onFocusOut);
-  document.addEventListener('keydown', onKeyDown, true);
+  window.addEventListener('keydown', onKeyDown, true);
   // The toast stack and the lifted bands glide on animated bottoms: re-measure
   // once the movement lands, so the clearance follows the final slot and not a
   // mid-flight frame. The equality guards in setVar/mark stop any loop.

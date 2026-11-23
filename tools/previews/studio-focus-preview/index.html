@@ -92,7 +92,7 @@
             </div>
             </div>
             <div class="iY a98 nH"><div class="nH" id="subject">Un sujet volontairement long pour éprouver le mode focus</div></div>
-            <div class="message">
+            <div class="message a3s">
               <p>Voici le contenu du message. En mode Focus lecture, seuls le sujet compact et ce texte restent à l'écran.</p>
               <p>La barre de recherche, les onglets de catégories, la barre d'outils du fil et la barre de réponse se sont effacés.</p>
               <p>Approchez la souris du bord haut pour retrouver les actions du fil, du bord bas pour répondre, ou utilisez « / » pour la recherche.</p>
@@ -148,6 +148,12 @@
       backToList();
     });
     document.getElementById('back-list').addEventListener('click', backToList);
+    // The pager arrows are the real conversation controls: count every click
+    // that arrives through them, whatever event produced it.
+    const [newerArrow, olderArrow] = document.querySelectorAll('.aqJ button');
+    for (const [node, name] of [[newerArrow, '__newerClicks'], [olderArrow, '__olderClicks']]) {
+      node.addEventListener('click', () => { window[name] = (window[name] || 0) + 1; });
+    }
   </script>
   <script src="../../../src/extension-pk/themes/studio/focus-read.js"></script>
 </body>

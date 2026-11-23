@@ -4,6 +4,18 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.11.24] - 2026-11-23
+
+### Added
+- **Focus lecture — J / K naviguent entre les conversations** : en lecture, `J` ouvre la conversation plus ancienne et `K` la plus récente, en actionnant les vraies flèches de pagination Gmail (même mapping que le thème Focus : mousedown + mouseup + click, libellés FR/EN, flèche désactivée respectée aux bornes). La flèche non trouvée ne vole jamais la touche : quand Gmail connaît lui-même `j`/`k` (raccourcis activés), son comportement reste intact, et les autres touches de lecture (flèches de défilement, `o`, `e`…) ne sont pas interceptées. Un champ de saisie, un brouillon, un dialogue ou une touche modifiée (Maj/Ctrl/Alt/Meta) gardent leurs lettres ; la répétition de touche est permise pour avancer conversation par conversation.
+
+### Fixed
+- **Activation du mode à l'épreuve des renommages Gmail** : la détection lecture ne dépend plus du seul en-tête sticky `div.V8djrc.byY` / `.iY.a98.nH`. Si Gmail renomme ces classes, la vraie barre de fil `.aeH .iH.bzn[gh="mtb"]` au-dessus d'un corps de message (`.a3s` / `.ii`) suffit à engager Focus — la barre de liste n'a jamais de corps de message sous elle. Avant, un tel renommage tuait tout le tweak : interface non effacée, Échap inerte.
+- **Échap et J/K à l'épreuve des handlers Gmail** : l'écoute clavier passe de `document` à `window` en capture, donc elle s'exécute avant les gestionnaires Gmail au niveau document qui peuvent avaler l'événement ; les gardes (`defaultPrevented`, modificateurs) restent respectées.
+
+### Vérification
+- `tools/tests/studio-focus.test.mjs` : vrais événements clavier CDP pour `J`/`K` (clics comptés sur les deux flèches natives du banc, mode lecture maintenu), gardes champ de saisie / dialogue / brouillon / Maj, inertie totale en vue liste, et détection lecture maintenue après retrait des classes d'en-tête sticky (repli `mtb` + corps de message). Le banc ajoute la classe `.a3s` au corps du message fictif, comme Gmail.
+
 ## [2026.11.23] - 2026-11-19
 
 ### Fixed

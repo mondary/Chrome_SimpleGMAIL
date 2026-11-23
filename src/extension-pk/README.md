@@ -190,6 +190,15 @@ chose à fermer : brouillon (`.M9` / `.aoI`), boîte de dialogue, menu ou liste
 déroulante visibles, champ de saisie ou zone éditable (recherche, objet, corps de
 réponse). Sans barre d'actions reconnue, `#inbox` sert de repli ; le raccourci est
 ignoré en vue liste, pendant une répétition de touche et avec un modificateur.
+**J / K** parcourent les conversations sans quitter la lecture : `J` ouvre la plus
+ancienne, `K` la plus récente, via les vraies flèches de pagination Gmail que le
+survol révèle — flèche désactivée respectée, libellés FR/EN, répétition permise.
+Si la flèche n'est pas trouvée, la touche reste à Gmail (raccourcis natifs actifs
+ou non), et flèches, `o`, `e` ne sont jamais interceptés. Un champ de saisie, un
+brouillon, un dialogue ou une touche modifiée gardent leurs lettres. L'écoute
+clavier vit sur `window` en capture, donc un handler Gmail ne peut plus l'avaler ;
+la détection lecture survit au renommage de l'en-tête sticky (repli : barre de fil
+`gh="mtb"` au-dessus d'un corps de message réel).
 Le triptyque Mail / Agenda / Drive reste à sa position habituelle dans `#gb` :
 il est masqué avec cet en-tête en lecture, sans capsule flottante dans le coin
 ni bouton Retour permanent. Aucun dégagement supplémentaire n’est ajouté au sujet.
@@ -251,10 +260,13 @@ Les fichiers `data/*.js` portent l'en-tête « Généré par build.sh » : ne pa
   refermeture automatique après 4 s.
 - `node tools/tests/studio-focus.test.mjs` : retrait du chrome en vue fil, marquage
   unique des conteneurs, réapparition au bord haut (barre d'actions) et bas (réponse +
-  FAB) avec vrais événements pointeur, recherche révélée par le focus clavier, retour
-  à la liste sans attribut résiduel et désactivation par réglage. Vérifie aussi les
-  wrappers à hauteur imposée, la rangée actions/pagination commune et l'absence de
-  déplacement du sujet/message au survol. Validation sur DOM fictif uniquement. Banc :
+  FAB) avec vrais événements pointeur, recherche révélée par le focus clavier, J/K
+  pilotant les vraies flèches de pagination (avec gardes champ/dialogue/brouillon/Maj
+  et inertie en vue liste), détection lecture résistante au renommage de l'en-tête
+  sticky, retour à la liste sans attribut résiduel et désactivation par réglage.
+  Vérifie aussi les wrappers à hauteur imposée, la rangée actions/pagination commune
+  et l'absence de déplacement du sujet/message au survol. Validation sur DOM fictif
+  uniquement. Banc :
   `tools/previews/studio-focus-preview/` (captures `01-focus` à `04-liste`).
 - QA Gmail du 2 novembre : brouillon jetable supprimé, toast remplacé, puis clic
   sur « Annuler » de la pilule — brouillon rouvert. Aucun courrier personnel touché.
@@ -273,3 +285,5 @@ Les fichiers `data/*.js` portent l'en-tête « Généré par build.sh » : ne pa
   bloque et les icônes s'affichent en toutes lettres à la place des pictos.
 - La validation sur Gmail réel doit se faire dans un navigateur isolé
   (skill `ego-browser`), jamais dans le navigateur personnel.
+
+Si PKMail vous est utile : [Ko-fi](https://ko-fi.com/pouark)
