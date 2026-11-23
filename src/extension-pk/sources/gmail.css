@@ -122,6 +122,16 @@ div.aBS.J-J5-Ji {
     opacity: 1 !important;
 }
 
+/* Native drawer deliberately opened — the burger flips aria-expanded to
+   "true" (the same signal the Simplify theme reads): the rail yields
+   completely, hover included, until the drawer is closed again. */
+html:has(#gb [data-ogmb][aria-expanded="true"]) #pk-no-left-menu-rail,
+html:has(#gb [aria-label="Menu principal"][aria-expanded="true"]) #pk-no-left-menu-rail,
+html:has(#gb [aria-label="Main menu"][aria-expanded="true"]) #pk-no-left-menu-rail {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
 #pk-no-left-menu-rail a {
     display: grid !important;
     flex: 0 0 40px !important;

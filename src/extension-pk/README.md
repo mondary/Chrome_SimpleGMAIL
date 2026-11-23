@@ -103,7 +103,10 @@ Le clavier utilise les flèches, Début/Fin puis Entrée/Espace pour activer.
 Dans les réglages de l’extension, activer **NoLeftMenu · dossiers au survol**.
 Le menu natif Gmail reste masqué ; survoler la zone sous le burger révèle six icônes
 grises uniquement : Boîte de réception, Messages suivis, Messages envoyés, Brouillons,
-Spam et Corbeille. Aucun panneau, fond, bordure ou ombre ; apparition et disparition
+Spam et Corbeille. Quand le tiroir natif est ouvert volontairement — le burger passe
+`aria-expanded` à `true`, le même signal que le thème Simplify — le rail s'efface
+entièrement, survol compris, et les clics traversent vers le tiroir ; il reprend son
+comportement normal à la fermeture. Aucun panneau, fond, bordure ou ombre ; apparition et disparition
 par fondu de 160 ms, désactivé en mouvement réduit. Les liens ouvrent les dossiers
 Gmail du compte courant même si leurs entrées natives sont absentes du menu caché.
 Aucune catégorie ni aucun libellé ajouté. Accessible au clavier, noms FR/EN ; le

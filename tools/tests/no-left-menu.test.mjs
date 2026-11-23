@@ -111,6 +111,8 @@ test('only icons fade: no white panel, border, shadow, full-height rail or slidi
   assert.match(container, /box-shadow:\s*none\s*!important/);
   assert.doesNotMatch(container, /bottom:|translate|transition:\s*left/);
   assert.match(css, /#pk-no-left-menu-rail:hover,[\s\S]*?#pk-no-left-menu-rail:has\(a:focus-visible\)\s*\{\s*opacity:\s*1/s);
+  assert.match(css, /html:has\(#gb \[data-ogmb\]\[aria-expanded="true"\]\) #pk-no-left-menu-rail[\s\S]*?opacity:\s*0\s*!important[\s\S]*?pointer-events:\s*none\s*!important/s,
+    'an opened native drawer silences the rail entirely, hover included');
   assert.doesNotMatch(css, /:focus-within/, 'mouse clicks must not latch the icons open after hover ends');
   assert.match(css, /a:focus-visible\s*\{[^}]*outline:\s*2px/s);
   assert.match(css, /prefers-reduced-motion: reduce/);

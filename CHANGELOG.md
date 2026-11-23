@@ -4,6 +4,14 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.11.28] - 2026-11-23
+
+### Fixed
+- **NoLeftMenu — le rail s'efface quand le tiroir natif est ouvert** : ouvrir le menu du burger laissait les six icônes du rail apparaître au survol par-dessus la navigation native. Désormais, quand le burger passe `aria-expanded` à `true` (le même signal que lit le thème Simplify), le rail passe en `opacity: 0` + `pointer-events: none` — survol compris, les clics traversent vers le tiroir — et reprend son comportement normal à la fermeture. Règle CSS `:has()` dans la source de la tweak (FR/EN et variantes de libellé du burger couvertes), spécificité supérieure aux règles de révélation.
+
+### Vérification
+- `tools/tests/no-left-menu.test.mjs` : la CSS générée doit contenir la suppression `aria-expanded="true"` (opacité 0 + pointeur muet) en plus des asserts existants (fondu 160 ms, pas de `:focus-within`, panneau transparent).
+
 ## [2026.11.27] - 2026-11-23
 
 ### Fixed
