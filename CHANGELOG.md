@@ -4,6 +4,14 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.11.29] - 2026-11-23
+
+### Added
+- **Kit média Chrome Web Store** : `store/cws/` regroupe l'icône 128 px, la tuile 440×280, le marquee 1400×560 et cinq captures 1280×800 prêtes pour la fiche du Store. `store/cws/manifest.json` documente la correspondance entre les fichiers publiés et leurs sources Studio dans `store/screenshots/`.
+
+### Changed
+- **Version locale** : passage à 2026.11.29 pour le dépôt et l'extension locale ; aucun changement de code ni de comportement.
+
 ## [2026.11.28] - 2026-11-23
 
 ### Fixed

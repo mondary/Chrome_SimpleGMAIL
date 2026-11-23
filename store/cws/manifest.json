@@ -1,0 +1,23 @@
+{
+  "app": "PK Simple Gmail",
+  "live": "https://chromewebstore.google.com/detail/pk-simple-gmail/kijhhekofbbmdgnheepmjcenehmgepgl",
+  "icon": "icon-128.png",
+  "small_promo_tile": "tile-440x280.png",
+  "marquee": "marquee-1400x560.png",
+  "screenshots": [
+    "01-hero-1280x800.png",
+    "02-pk-simple-gmail-studio-social.png",
+    "03-pk-simple-gmail-studio-forums.png",
+    "04-pk-simple-gmail-bo-te-de-r-ception.png",
+    "05-pk-simple-gmail-avant.png"
+  ],
+  "sources": {
+    "hero": "store/screenshots/12-studio-empty.png",
+    "screens": [
+      "store/screenshots/13-studio-social.png",
+      "store/screenshots/14-studio-forums.png",
+      "store/screenshots/01-inbox.png",
+      "store/screenshots/03-avant.png"
+    ]
+  }
+}
