@@ -28,7 +28,7 @@
   // Escape returns to the list, like the back control that only comes back on
   // hover. Gmail keeps its own Escape whenever it has something to close.
   const EDITABLE = 'input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="textbox"], [role="combobox"]';
-  const NATIVE_CLOSE = '[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], .M9, .aoI';
+  const NATIVE_CLOSE = '[role="dialog"], [role="alertdialog"], [aria-modal="true"], [role="menu"], [role="listbox"], .M9, .aoI';
   const BACK_LABELS = /^(retour|back|zurück|atras|atrás|indietro|voltar|назад)\b/i;
   // J / K walk the conversations while reading, like the pager arrows the
   // hover reveals: j = older (deeper in the list), k = newer — the same
@@ -334,6 +334,13 @@
     if (target?.closest?.(EDITABLE)) return true;
     const focused = document.activeElement;
     if (focused && focused !== document.body && focused.closest?.(EDITABLE)) return true;
+    return gmailLayerOpen();
+  }
+
+  // Gmail's own overlay layer is up (attachment preview/lightbox, dialog,
+  // open menu): the Focus bands freeze behind it — suppressed and without
+  // transitions — so nothing can blink or paint over the modal.
+  function gmailLayerOpen() {
     return [...document.querySelectorAll(NATIVE_CLOSE)].some(visible);
   }
 
@@ -466,6 +473,7 @@
     }
     root.classList.remove('pk-focus');
     root.classList.remove('pk-focus-pager');
+    root.classList.remove('pk-focus-modal');
     root.style.removeProperty('--pk-focus-rail-end');
     root.style.removeProperty('--pk-focus-gb-height');
     root.style.removeProperty('--pk-focus-pager-reserve');
@@ -515,6 +523,9 @@
       }
       return;
     }
+    // A Gmail overlay (attachment preview, dialog, menu) freezes every band:
+    // no paint, no transitions, nothing that could blink behind the modal.
+    toggleClass('pk-focus-modal', gmailLayerOpen());
     if (floatEl && !floatEl.isConnected) {
       floatEl = null;
     }

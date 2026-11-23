@@ -4,6 +4,14 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.11.31] - 2026-11-23
+
+### Fixed
+- **Focus lecture — plus de clignotement derrière une prévisualisation de pièce jointe** : quand une image (ou une pièce jointe) s'ouvre en aperçu, Gmail monte une couche modale et les bandes Focus — Répondre / Répondre à tous / Transférer et le bouton « Nouveau message » — continuaient de peindre et d'animer derrière, avec des transitions qui se relançaient (visible au-dessus du fond sombre de l'aperçu). Désormais une couche Gmail ouverte (`role="dialog"`, `aria-modal`, menu, brouillon — les mêmes signaux qu'Échap respecte) pose `pk-focus-modal` sur `<html>` : toutes les bandes Focus sont gelées derrière le modal — opacité 0, `visibility: hidden`, pointeurs muets, transitions coupées — donc plus aucun clignotement ni peinture au-dessus de l'aperçu. À la fermeture, les bandes retrouvent leur survol normal.
+
+### Vérification
+- `tools/tests/studio-focus.test.mjs` : une prévisualisation fictive (`role="dialog"` + `aria-modal`) pose la classe, force `visibility: hidden` / opacité 0 / durée de transition 0 sur la barre de réponse et le bouton « Nouveau message » ; le survol du bord bas ne peut pas les peindre par-dessus ; la fermeture restaure les transitions natives (0,18 s) et le survol.
+
 ## [2026.11.30] - 2026-11-23
 
 ### Fixed

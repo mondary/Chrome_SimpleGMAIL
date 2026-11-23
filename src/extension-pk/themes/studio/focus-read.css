@@ -253,6 +253,21 @@ html.pk-focus .AO {
   max-width: min(calc(100% - 2 * var(--pk-margin-side, 5%)), 920px) !important;
 }
 
+/* Gmail's own overlay is up (attachment preview/lightbox, dialog, open menu):
+   the whole Focus chrome freezes behind it — no paint, no transitions — so
+   nothing blinks or bleeds over the modal. The marker is toggled by
+   focus-read.js from the same native-close signals Escape respects. */
+html.pk-focus.pk-focus-modal #gb,
+html.pk-focus.pk-focus-modal [data-pk-focus-tools],
+html.pk-focus.pk-focus-modal [data-pk-focus-pager],
+html.pk-focus.pk-focus-modal [data-pk-focus-floatbar],
+html.pk-focus.pk-focus-modal #pk-new-message-fab {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html.pk-focus #gb,
   html.pk-focus [data-pk-focus-tools],

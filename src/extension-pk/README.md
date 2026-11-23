@@ -203,7 +203,10 @@ révèle : le clic part vers le vrai contrôle Gmail (`#back` / `.ar0`, sinon le
 recherche en cours sont conservés. Gmail garde Échap quand il a lui-même quelque
 chose à fermer : brouillon (`.M9` / `.aoI`), boîte de dialogue, menu ou liste
 déroulante visibles, champ de saisie ou zone éditable (recherche, objet, corps de
-réponse). Sans barre d'actions reconnue, `#inbox` sert de repli ; le raccourci est
+réponse). La même détection (`aria-modal`, dialogue, menu, brouillon) **gèle les
+bandes** pendant une prévisualisation de pièce jointe ou une boîte de dialogue :
+ni peinture ni transition derrière le modal, donc plus aucun clignotement des
+boutons Répondre / Transférer ni du bouton « Nouveau message ». Sans barre d'actions reconnue, `#inbox` sert de repli ; le raccourci est
 ignoré en vue liste, pendant une répétition de touche et avec un modificateur.
 **J / K** parcourent les conversations sans quitter la lecture : `J` ouvre la plus
 ancienne, `K` la plus récente, via les vraies flèches de pagination Gmail que le

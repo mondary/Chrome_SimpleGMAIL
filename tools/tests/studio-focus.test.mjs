@@ -330,6 +330,24 @@ try {
   await move(640, 420);
   await wait(`!document.documentElement.classList.contains('pk-focus-bottom')`);
 
+  // Gmail's attachment preview (a native dialog) freezes the Focus bands:
+  // nothing paints, nothing transitions behind the modal — no blinking.
+  await evaluate(`(()=>{const d=document.createElement('div');d.id='probe-preview';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:900';document.body.append(d)})()`);
+  await wait(`document.documentElement.classList.contains('pk-focus-modal')`);
+  for (const selector of ['#floatbar', '#pk-new-message-fab']) {
+    assert.equal(await style(selector, 'visibility'), 'hidden', `${selector}: hidden behind the preview`);
+    assert.equal(await style(selector, 'opacity'), '0', `${selector}: nothing paints behind the preview`);
+    assert.equal(await style(selector, 'transitionDuration'), '0s', `${selector}: no transition churn behind the preview`);
+  }
+  await move(640, 796);
+  await evaluate(`new Promise(resolve=>setTimeout(resolve,250))`);
+  assert.equal(await style('#floatbar', 'visibility'), 'hidden', 'edge hover cannot paint the reply bar over the preview');
+  await evaluate(`document.querySelector('#probe-preview').remove()`);
+  await wait(`!document.documentElement.classList.contains('pk-focus-modal')`);
+  assert.match(await style('#floatbar', 'transitionDuration'), /0\.18s/, 'closing the preview restores the native transitions');
+  await move(640, 420);
+  await wait(`!document.documentElement.classList.contains('pk-focus-bottom')`);
+
   // Keyboard focus inside the search reveals the global bar ("/" on Gmail).
   await evaluate(`document.querySelector('#search').focus()`);
   await wait(`getComputedStyle(document.querySelector('#gb')).opacity === '1'`);
