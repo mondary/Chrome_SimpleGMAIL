@@ -348,7 +348,55 @@ try {
   await move(640, 420);
   await wait(`!document.documentElement.classList.contains('pk-focus-bottom')`);
 
-  // Keyboard focus inside the search reveals the global bar ("/" on Gmail).
+  // Gmail's label menu ("l" or the Étiqueter button) rides the toolbar: it is
+  // mounted INSIDE the band row, next to its anchor. Treating it as a modal
+  // layer froze the band hosting it — visibility:hidden hid the menu too, the
+  // layer signal dropped, the band came back, the signal returned… a 50 ms
+  // self-sustained flash of the whole interface: band, markers, shells and
+  // the reading column bouncing. A layer inside a band is part of that band's
+  // own UI and never freezes its host; real overlays (attachment preview,
+  // dialogs ported outside the bands) still do.
+  await move(640, 8);
+  await wait(`document.documentElement.classList.contains('pk-focus-top')`);
+  await wait(`getComputedStyle(document.querySelector('#toolbar')).opacity === '1'`);
+  await evaluate(`(() => {
+    const menu = document.createElement('div');
+    menu.id = 'probe-label-menu';
+    menu.setAttribute('role', 'menu');
+    menu.textContent = 'Menu étiquettes';
+    menu.style.cssText = 'position:absolute;top:40px;left:60px;width:180px;height:240px;background:#fff;border:1px solid #ccc;z-index:500';
+    document.querySelector('[data-pk-focus-tools]').append(menu);
+  })()`);
+  await evaluate(`new Promise(resolve=>setTimeout(resolve,250))`);
+  assert.equal(await evaluate(`document.documentElement.classList.contains('pk-focus-modal')`), false,
+    'a menu mounted inside the band never freezes its host band');
+  const menuFlicker = await evaluate(`new Promise(resolve=>{
+    let classWrites = 0, markWrites = 0, styleWrites = 0;
+    const root = document.documentElement;
+    const o1 = new MutationObserver(rs => { classWrites += rs.length; });
+    o1.observe(root, { attributes: true, attributeFilter: ['class'] });
+    const o2 = new MutationObserver(rs => { markWrites += rs.length; });
+    o2.observe(document, { subtree: true, attributes: true, attributeFilter: ['data-pk-focus-tools','data-pk-focus-pager','data-pk-focus-shell','data-pk-focus-floatbar'] });
+    const o3 = new MutationObserver(rs => { styleWrites += rs.length; });
+    o3.observe(root, { attributes: true, attributeFilter: ['style'] });
+    let frame = 0;
+    const step = () => { if (++frame < 45) requestAnimationFrame(step); else { o1.disconnect(); o2.disconnect(); o3.disconnect(); resolve({ classWrites, markWrites, styleWrites }); } };
+    requestAnimationFrame(step);
+  })`);
+  assert.equal(menuFlicker.classWrites, 0, 'no html class churn while the label menu is open inside the band');
+  assert.equal(menuFlicker.markWrites, 0, 'no marker churn while the label menu is open inside the band');
+  assert.equal(menuFlicker.styleWrites, 0, 'no CSS variable churn while the label menu is open inside the band');
+  assert.equal(await style('#toolbar', 'opacity'), '1', 'the revealed band stays steady with its menu');
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('#probe-label-menu')).visibility`), 'visible',
+    'the label menu itself stays visible and usable');
+  assert.equal(await evaluate(`document.elementFromPoint(150, 160) && document.querySelector('#probe-label-menu').contains(document.elementFromPoint(150, 160))`), true,
+    'the label menu is hit-testable inside the revealed band');
+  await evaluate(`document.querySelector('#probe-label-menu').remove()`);
+  await evaluate(`new Promise(resolve=>setTimeout(resolve,250))`);
+  assert.equal(await evaluate(`document.documentElement.classList.contains('pk-focus-top')`), true,
+    'the band survives the menu closing while the pointer stays at the top');
+  await move(640, 420);
+  await wait(`!document.documentElement.classList.contains('pk-focus-top')`);
   await evaluate(`document.querySelector('#search').focus()`);
   await wait(`getComputedStyle(document.querySelector('#gb')).opacity === '1'`);
   await wait(`document.querySelector('#gb #pk-studio-modules')`);
@@ -368,6 +416,58 @@ try {
   assert.equal(await evaluate(`window.__newerClicks || 0`), 1, 'K clicks the native previous/newer arrow');
   assert.equal(await evaluate(`window.__olderClicks || 0`), 1, 'K left the other arrow alone');
   assert.equal(await evaluate(`document.documentElement.classList.contains('pk-focus')`), true, 'J/K keep the reading mode engaged');
+
+  // Gmail remounts the thread toolbar after J/K (new conversation, new DOM
+  // nodes); the freshly mounted row can measure far taller than its controls
+  // for a frame or two — mid-render, mid-animation. That single frame used to
+  // poison --pk-focus-top-height for good (the row's enforced min-height fed
+  // the measurement back): the hover band stayed half-screen tall, white over
+  // the reading area with the action buttons centered mid-screen, and the top
+  // hover zone swallowed half the pane until the mode was left. The height now
+  // comes from the row's children — never the min-height box — is capped, and
+  // re-measures once Gmail settles, so the band heals on its own.
+  await evaluate(`(() => {
+    window.__bandBefore = parseFloat(document.documentElement.style.getPropertyValue('--pk-focus-top-height')) || 0;
+    const old = document.querySelector('[data-pk-focus-tools]');
+    const fresh = old.cloneNode(true);
+    fresh.removeAttribute('data-pk-focus-tools');
+    const probe = document.createElement('div');
+    probe.id = 'probe-swap';
+    probe.style.height = '420px';
+    fresh.append(probe);
+    old.replaceWith(fresh);
+    fresh.querySelector('#thread-back').addEventListener('click', () => {
+      window.__backClicks = (window.__backClicks || 0) + 1;
+      document.querySelector('#thread').hidden = true;
+      document.querySelector('#list-view').hidden = false;
+      document.querySelector('#pk-new-message-fab').classList.remove('pk-fab-hidden');
+    });
+  })()`);
+  await wait(`document.querySelector('[data-pk-focus-tools]')?.id === 'toolbar' && document.querySelector('[data-pk-focus-tools]').contains(document.querySelector('#probe-swap'))`);
+  // Wait for the re-measure to have actually run (the value must move off its
+  // pre-swap reading) before the transient goes away, or the assert below
+  // would read a stale value and pass on the old ratcheting code.
+  await wait(`parseFloat(document.documentElement.style.getPropertyValue('--pk-focus-top-height')) !== window.__bandBefore`);
+  const cappedBand = await evaluate(`parseFloat(document.documentElement.style.getPropertyValue('--pk-focus-top-height'))`);
+  assert.ok(cappedBand <= 120, `a transient tall toolbar frame is capped, never half-screen (${cappedBand}px)`);
+  await evaluate(`document.querySelector('#probe-swap').remove()`);
+  await wait(`parseFloat(document.documentElement.style.getPropertyValue('--pk-focus-top-height')) <= 62`);
+  const healedBand = await evaluate(`parseFloat(document.documentElement.style.getPropertyValue('--pk-focus-top-height'))`);
+  assert.ok(healedBand <= 62, `the band heals to its natural height once the swap settles (${healedBand}px)`);
+  await move(640, 8);
+  await wait(`getComputedStyle(document.querySelector('#toolbar')).opacity === '1'`);
+  const swappedToolsRect = await rect('[data-pk-focus-tools]');
+  const swappedBackRect = await rect('#thread-back');
+  assert.ok(swappedToolsRect.height <= 62, `the remounted action row stays a single band row (${swappedToolsRect.height}px)`);
+  assert.ok(swappedBackRect.bottom <= swappedToolsRect.bottom + 1 && swappedBackRect.top < 150,
+    'the remounted actions sit inside the band under the search bar, not centered mid-screen');
+  await move(640, 420);
+  await wait(`!document.documentElement.classList.contains('pk-focus-top')`);
+  await move(640, 300);
+  await evaluate(`new Promise(resolve=>setTimeout(resolve,200))`);
+  assert.equal(await evaluate(`document.documentElement.classList.contains('pk-focus-top')`), false,
+    'a pointer mid-screen must not summon the band: the hover zone healed too');
+  await move(640, 420);
 
   // Gmail moves focus by itself after its actions (the pager after J/K, the
   // label button when "l" opens its menu): that focus must never paint the

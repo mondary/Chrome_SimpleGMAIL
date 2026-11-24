@@ -4,6 +4,22 @@ Historique des versions de SimpleMail.
 
 ## Releases
 
+## [2026.11.34] - 2026-11-24
+
+### Fixed
+- **Focus lecture — plus de clignotement de toute l'interface au moment d'étiqueter** : le menu d'étiquettes de Gmail (touche `l` ou bouton Étiqueter) est monté **dans la rangée d'actions** du bandeau, à côté de son bouton d'ancrage. Le gel des bandes derrière une couche Gmail (2026.11.31) le prenait pour un modal : `pk-focus-modal` masquait la bande qui l'héberge — donc le menu aussi — le signal « couche ouverte » tombait, la bande revenait, le menu revenait, et la boucle se relançait toutes les ~50 ms : bandeau qui flashe, marqueurs et shells `display:contents` qui churnent, colonne de lecture qui saute. Désormais une couche montée **à l'intérieur** d'une bande fait partie de sa propre UI et ne la gèle jamais ; seules les couches **hors** bandes (aperçu de pièce jointe, dialogs portés au niveau du document) figent les bandes, comme avant. Le gel fige aussi les marqueurs/shells pendant qu'il est actif, pour qu'aucun re-scan de bandes masquées ne secoue la lecture derrière un modal. Échap et les lettres (J/K, `l`…) continuent de respecter **toute** couche Gmail ouverte, y compris le menu d'étiquettes, comme depuis 2026.11.24.
+
+### Vérification
+- `tools/tests/studio-focus.test.mjs` : nouveau test de régression — menu `role="menu"` monté dans la rangée d'actions révélée : aucune classe `pk-focus-modal`, zéro écriture de classe/marqueur/variable CSS sur 45 frames, bandeau et menu stables et cliquables, le bandeau survit à la fermeture du menu. Le test échoue sur le code 2026.11.33 (churn de classe au premier assert).
+
+## [2026.11.33] - 2026-11-24
+
+### Fixed
+- **Focus lecture — le bandeau haut ne prend plus la moitié de l'écran après J/K** : après un changement de conversation (J, K), Gmail remonte la barre d'outils du fil et la frame de re-mesure pouvait surprendre la rangée encore en cours de re-rendu. La hauteur du bandeau (`--pk-focus-top-height`) se verrouillait alors sur une valeur énorme — bande blanche haute comme la moitié de l'écran, boutons d'action centrés au milieu de l'écran, zone de survol du bord haut avalant la moitié du panneau de lecture — et ne guérissait jamais : le `min-height` issu de la variable nourrissait la mesure suivante (cliquet). Désormais la hauteur vient des **enfants** de la rangée (jamais de la boîte que le `min-height` contrôle), est **plafonnée** (120 px, une vraie rangée du bandeau n'enveloppe jamais), et se re-mesure quand Gmail stabilise sa barre (compteur, états des boutons) : la bande **guérit seule**. En durcissement : `--pk-focus-gb-height` est plafonnée elle aussi (200 px — #gb est une barre unique de ~64 px, toute valeur plus grande est un artefact de frame), et le repli de détection de la barre d'outils ne peut plus marquer un bloc de message comme barre d'action (même garde `.zA / .a3s / .ii` que la pagination).
+
+### Vérification
+- `tools/tests/studio-focus.test.mjs` : nouveau test de régression — la barre d'outils remontée avec une frame transitoire haute (420 px) reste plafonnée, guérit à sa hauteur naturelle une fois la bascule terminée, le bouton Retour reste dans le bandeau sous la recherche (pas au milieu de l'écran), et un pointeur en milieu d'écran ne peut plus invoquer le bandeau (la zone de survol est guérie aussi). Le test échoue sur l'ancien code (433 px verrouillés).
+
 ## [2026.11.32] - 2026-11-23
 ### Changed
 - Fiche Chrome Web Store : titre du paquet « PK Simple Gmail · Mondary » et résumé « Made by Mondary · PK-Labs » pour ressortir sur les recherches de marque ; paquet envoyé à l'examen.

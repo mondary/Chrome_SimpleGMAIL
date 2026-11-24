@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PK Simple Gmail · Mondary",
-  "version": "2026.11.32",
+  "version": "2026.11.34",
   "description": "Une interface Gmail plus simple, six thèmes et des réglages à la carte — Made by Mondary · PK-Labs.",
   "permissions": [
     "storage",

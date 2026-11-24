@@ -29,6 +29,8 @@
   // hover. Gmail keeps its own Escape whenever it has something to close.
   const EDITABLE = 'input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="textbox"], [role="combobox"]';
   const NATIVE_CLOSE = '[role="dialog"], [role="alertdialog"], [aria-modal="true"], [role="menu"], [role="listbox"], .M9, .aoI';
+  // The Focus band hosts: their own mounted layers ride with them.
+  const BAND_HOSTS = '#gb, [data-pk-focus-tools], [data-pk-focus-pager], [data-pk-focus-floatbar], #pk-new-message-fab';
   const BACK_LABELS = /^(retour|back|zurück|atras|atrás|indietro|voltar|назад)\b/i;
   // J / K walk the conversations while reading, like the pager arrows the
   // hover reveals: j = older (deeper in the list), k = newer — the same
@@ -135,6 +137,10 @@
       for (let node = wrap.firstElementChild; node; node = node.nextElementSibling) {
         if (node.contains(subjectEl) || node.querySelector('.iY, div.V8djrc.byY')) break;
         if (!visible(node)) continue;
+        // Message/list content is never the toolbar — findPager's safe() has
+        // this guard; a message block with three links must not become the
+        // action row while Gmail remounts the real toolbar after J/K.
+        if (node.querySelector('.zA, .a3s, .ii')) continue;
         if (node.querySelectorAll('[role="button"],button,a').length >= 3) best = node;
       }
     }
@@ -223,11 +229,34 @@
     const fab = document.getElementById('pk-new-message-fab');
     // The global bar joins the hover band above the actions row; its real
     // height shifts the revealed rows down (measured, never assumed — it
-    // stays valid while withdrawn because translateY only moves it).
-    const gbHeight = Math.ceil(document.getElementById('gb')?.getBoundingClientRect().height || 0);
+    // stays valid while withdrawn because translateY only moves it). #gb is
+    // one ~64 px bar: anything taller is a mid-render/animated frame, never
+    // a real band anchor, so clamp it.
+    const gbHeight = Math.min(200, Math.ceil(document.getElementById('gb')?.getBoundingClientRect().height || 0));
     const railEnd = rail ? Math.ceil(rail.getBoundingClientRect().right + 12) : 12;
     const pagerRect = pager?.getBoundingClientRect();
-    const height = Math.ceil(Math.max(46, pagerRect?.height || 0, tools?.getBoundingClientRect().height || 0));
+    // Band height = the row's tallest CHILD plus our 12 px vertical padding,
+    // never the fixed box itself: the box wears min-height from this very
+    // variable, so measuring it feeds the value back and ratchets. One frame
+    // caught mid-swap after J/K (toolbar remounting or re-rendering taller
+    // than its controls) locked a half-screen band — white strip over the
+    // reading area, action buttons centered mid-screen, top hover zone
+    // swallowing half the pane — until the mode was left entirely. Children
+    // of the flex row (align-items: center) keep their natural height, so the
+    // value also heals by itself at the next re-measure. The pager subtree is
+    // skipped when it nests in the shared action row: it wears the same
+    // enforced min-height and would re-feed it. The cap bounds any transient
+    // Gmail state; a real band row is a single unwrapped flex line.
+    const rowHeight = (node, skip) => {
+      let tallest = 0;
+      if (node) for (const child of node.children) {
+        if (skip && (child === skip || child.contains(skip))) continue;
+        tallest = Math.max(tallest, child.getBoundingClientRect().height);
+      }
+      return tallest;
+    };
+    // 12 px of the row's own vertical padding + the 1 px hairline border.
+    const height = Math.ceil(Math.min(120, Math.max(46, rowHeight(pager) + 13, rowHeight(tools, pager) + 13)));
     const fabWidth = Math.ceil(fab?.getBoundingClientRect().width || 48);
     const replyButtons = floatEl ? [...floatEl.querySelectorAll('button,a,[role="button"],[role="link"]')]
       .filter(node => /^(répondre|repondre|reply|transf[ée]rer|forward)\b/i.test(labelOf(node))) : [];
@@ -334,14 +363,28 @@
     if (target?.closest?.(EDITABLE)) return true;
     const focused = document.activeElement;
     if (focused && focused !== document.body && focused.closest?.(EDITABLE)) return true;
-    return gmailLayerOpen();
+    return anyLayerOpen();
   }
 
-  // Gmail's own overlay layer is up (attachment preview/lightbox, dialog,
-  // open menu): the Focus bands freeze behind it — suppressed and without
-  // transitions — so nothing can blink or paint over the modal.
-  function gmailLayerOpen() {
+  // Any Gmail layer up at all — in-band or not — keeps Escape and the letter
+  // keys for Gmail: a menu riding the toolbar is still something Gmail must
+  // close before the reader may leave.
+  function anyLayerOpen() {
     return [...document.querySelectorAll(NATIVE_CLOSE)].some(visible);
+  }
+
+  // Gmail's own overlay layer is up OUTSIDE every band (attachment
+  // preview/lightbox, dialog, body-level menu): the Focus bands freeze behind
+  // it — suppressed and without transitions — so nothing can blink or paint
+  // over the modal. A layer mounted INSIDE a band (the label menu rides the
+  // toolbar row next to its anchor button) is that band's own UI, not an
+  // overlay above it: freezing the host would hide Gmail's menu, drop the
+  // layer signal, bring the band back, return the signal — a 50 ms
+  // self-sustained flash of the whole interface (band, markers, shells and
+  // the reading column bouncing). Only out-of-band layers freeze.
+  function gmailLayerOpen() {
+    return [...document.querySelectorAll(NATIVE_CLOSE)].some(node =>
+      visible(node) && !node.closest?.(BAND_HOSTS));
   }
 
   // The conversation pager arrows, found in the withdrawn chrome: Focus only
@@ -523,14 +566,20 @@
       }
       return;
     }
-    // A Gmail overlay (attachment preview, dialog, menu) freezes every band:
-    // no paint, no transitions, nothing that could blink behind the modal.
+    // A Gmail overlay (attachment preview, dialog, out-of-band menu) freezes
+    // every band: no paint, no transitions, nothing that could blink behind
+    // the modal.
     toggleClass('pk-focus-modal', gmailLayerOpen());
     if (floatEl && !floatEl.isConnected) {
       floatEl = null;
     }
-    syncTopChrome();
-    collapseChromeShells();
+    // While the freeze is up, the band nodes are CSS-hidden: they would fail
+    // every visibility scan and churn the marks/shells behind the overlay.
+    // Freeze that bookkeeping too; the closing mutations re-run it.
+    if (!root.classList.contains('pk-focus-modal')) {
+      syncTopChrome();
+      collapseChromeShells();
+    }
     markFloatBars();
     syncToastLift();
     if (topLayoutDirty && !layoutScheduled) {
@@ -570,9 +619,12 @@
     chrome.storage.local.get(['theme', 'enabled'], applyState);
   });
   new MutationObserver(records => {
+    const tools = document.querySelector('[data-pk-focus-tools]');
     const pager = document.querySelector('[data-pk-focus-pager]');
     const fab = document.getElementById('pk-new-message-fab');
-    if (records.some(record => pager?.contains(record.target) || fab?.contains(record.target) || floatEl?.contains(record.target))) topLayoutDirty = true;
+    // Gmail settling its own toolbar after a J/K swap (counter text, button
+    // states) re-arms the measurement so a transient tall frame heals.
+    if (records.some(record => tools?.contains(record.target) || pager?.contains(record.target) || fab?.contains(record.target) || floatEl?.contains(record.target))) topLayoutDirty = true;
     schedule();
   }).observe(document.documentElement, {
     childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['style', 'class', 'aria-hidden', 'hidden'],
